@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { LayoutDashboard, GraduationCap, LogOut, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, LogOut } from 'lucide-react';
 import GoogleSignInButton from './components/shared/GoogleSignInButton';
 import JoinRoom from './components/shared/JoinRoom';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentView from './components/student/StudentView';
 import StudentNameModal from './components/student/StudentNameModal';
-import { auth } from './lib/firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from './firebase';
+import { onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import toast from 'react-hot-toast';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -54,13 +55,30 @@ function App() {
   }, []);
 
   const handleLogin = async () => {
-    // TODO: Implement actual Google Sign In
-    console.log('Login clicked');
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      // User will be set automatically by onAuthChange listener
+      setView('teacher');
+      toast.success('Successfully signed in!');
+    } catch (error) {
+      console.error('Login failed:', error);
+      toast.error('Failed to sign in. Please try again.');
+    }
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
+    // Sign out from Firebase if user is authenticated
+    if (user) {
+      await signOut(auth);
+    }
+
+    // Reset all application state
+    setUser(null);
+    setStudentName('');
     setView('landing');
+    setActiveTab('student');
+    setShowNameModal(false);
   };
 
   const handleJoinRoom = (code) => {
@@ -95,38 +113,22 @@ function App() {
       {/* Navigation Bar */}
       <nav className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between transition-colors duration-200">
         <div className="flex items-center gap-2 font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
-          <div className="w-8 h-8 bg-brand-accent rounded-lg flex items-center justify-center text-white">
-            S
-          </div>
+          <img
+            src="/shape of the day logo.png"
+            alt="Shape of the Day"
+            className="w-8 h-8"
+          />
           Shape of the Day
         </div>
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 transition-colors"
-            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          {user && (
-            <div className="flex items-center gap-2 text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
-              <img
-                src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`}
-                alt="Profile"
-                className="w-8 h-8 rounded-full"
-              />
-              <span className="hidden sm:inline">{user.email}</span>
-            </div>
-          )}
-
-          {user && (
+          {view !== 'landing' && (
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors"
               title="Sign Out"
             >
               <LogOut className="w-5 h-5" />
+              <span className="text-sm font-medium">Sign Out</span>
             </button>
           )}
         </div>
@@ -137,9 +139,11 @@ function App() {
         {view === 'landing' && (
           <div className="min-h-screen flex flex-col items-center justify-center p-4 -mt-16">
             <div className="text-center mb-12 space-y-4">
-              <div className="w-20 h-20 bg-brand-accent rounded-2xl flex items-center justify-center text-white text-4xl font-bold mx-auto shadow-xl mb-6">
-                S
-              </div>
+              <img
+                src="/shape of the day logo.png"
+                alt="Shape of the Day"
+                className="w-32 h-32 mx-auto mb-6"
+              />
               <h1 className="text-4xl md:text-6xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">
                 Shape of the Day
               </h1>
@@ -154,8 +158,8 @@ function App() {
                 <button
                   onClick={() => setActiveTab('student')}
                   className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'student'
-                      ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary'
-                      : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary'
+                    : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                 >
                   Student
@@ -163,8 +167,8 @@ function App() {
                 <button
                   onClick={() => setActiveTab('teacher')}
                   className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'teacher'
-                      ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary'
-                      : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary'
+                    : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                 >
                   Teacher

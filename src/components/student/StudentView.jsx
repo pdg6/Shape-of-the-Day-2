@@ -3,7 +3,6 @@ import MiniCalendar from './MiniCalendar';
 import CurrentTaskList from './CurrentTaskList';
 import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
-import { Layout } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const StudentView = ({ studentName, onNameSubmit }) => {
@@ -69,23 +68,60 @@ const StudentView = ({ studentName, onNameSubmit }) => {
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Header */}
             <header className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
-                <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brand-accent/10 rounded-xl flex items-center justify-center text-brand-accent">
-                            <Layout className="w-6 h-6" />
+                <div className="w-[85%] md:w-[70%] mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
+                    {/* Desktop: Horizontal layout */}
+                    <div className="hidden md:flex items-center justify-between w-full">
+                        {/* Left: Greeting and Name */}
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-bold whitespace-nowrap">
+                                Good Morning, <span className="text-brand-accent">{studentName}</span>! 👋
+                            </h2>
                         </div>
-                        <div>
-                            <h1 className="font-bold text-lg leading-tight">Shape of the Day</h1>
-                            <p className="text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary font-medium">
+
+                        {/* Center: Task Progress */}
+                        <div className="flex-1 flex justify-center px-4">
+                            <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
+                                You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
+                            </p>
+                        </div>
+
+                        {/* Right: Date and Live indicator */}
+                        <div className="flex items-center gap-3">
+                            <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
                                 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                             </p>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">Live</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                            <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">Live</span>
+                    {/* Mobile: Stacked layout */}
+                    <div className="flex md:hidden flex-col gap-2 w-full">
+                        {/* Row 1: Greeting and Name */}
+                        <div className="flex items-center justify-center">
+                            <h2 className="text-base font-bold text-center">
+                                Good Morning, <span className="text-brand-accent">{studentName}</span>! 👋
+                            </h2>
+                        </div>
+
+                        {/* Row 2: Task Progress */}
+                        <div className="flex justify-center">
+                            <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary text-center">
+                                You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
+                            </p>
+                        </div>
+
+                        {/* Row 3: Date and Live */}
+                        <div className="flex items-center justify-center gap-3">
+                            <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                            </p>
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">Live</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -93,16 +129,6 @@ const StudentView = ({ studentName, onNameSubmit }) => {
 
             {/* Main Content */}
             <main className="w-[85%] md:w-[70%] mx-auto px-4 py-6 pb-24">
-                {/* Greeting */}
-                <div className="mb-8">
-                    <h2 className="text-2xl font-bold mb-2">
-                        Good Morning, <span className="text-brand-accent">{studentName}</span>! 👋
-                    </h2>
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                        You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today.
-                    </p>
-                </div>
-
                 {/* Calendar Strip */}
                 <MiniCalendar
                     selectedDate={selectedDate}
