@@ -60,9 +60,9 @@ const QuestionOverlay = ({ task, onClose, onUpdateComment }) => {
     const activeColor = activeAction ? activeAction.activeColor : 'text-gray-500';
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
             <div
-                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-2 ${borderColor} transform transition-all scale-100 animate-in zoom-in-95 duration-200`}
+                className={`bg-brand-darkSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-2 ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
