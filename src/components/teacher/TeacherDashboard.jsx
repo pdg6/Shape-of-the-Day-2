@@ -41,11 +41,11 @@ const TeacherDashboard = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-64px)] bg-gray-50">
+        <div className="flex h-[calc(100vh-64px)] bg-brand-light dark:bg-brand-dark transition-colors duration-300">
             {/* Mobile Menu Overlay */}
             {isMobileMenuOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
@@ -54,17 +54,17 @@ const TeacherDashboard = () => {
             <aside
                 className={`
           fixed lg:static inset-y-0 left-0 z-50
-          bg-white border-r border-gray-200 transition-all duration-300 ease-in-out
+          bg-brand-lightSurface dark:bg-brand-darkSurface border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out
           ${isSidebarOpen ? 'w-64' : 'w-20'}
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
             >
                 <div className="h-full flex flex-col">
                     {/* Mobile Header */}
-                    <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200">
-                        <span className="font-bold text-gray-800">Menu</span>
+                    <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+                        <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Menu</span>
                         <button onClick={() => setIsMobileMenuOpen(false)}>
-                            <X className="w-6 h-6 text-gray-500" />
+                            <X className="w-6 h-6 text-gray-500 dark:text-gray-400" />
                         </button>
                     </div>
 
@@ -82,15 +82,15 @@ const TeacherDashboard = () => {
                                         setIsMobileMenuOpen(false);
                                     }}
                                     className={`
-                    w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors
+                    w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-2
                     ${isActive
-                                            ? 'bg-blue-50 text-blue-600'
-                                            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}
+                                            ? 'bg-brand-accent/10 border-brand-accent/20 text-brand-accent'
+                                            : 'border-transparent text-brand-textDarkSecondary dark:text-brand-textSecondary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary'}
                   `}
                                     title={!isSidebarOpen ? item.label : ''}
                                 >
-                                    <Icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                                    <span className={`font-medium whitespace-nowrap transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block'}`}>
+                                    <Icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-brand-accent' : 'text-gray-400 dark:text-gray-500'}`} />
+                                    <span className={`font-medium whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block'}`}>
                                         {item.label}
                                     </span>
                                 </button>
@@ -99,10 +99,10 @@ const TeacherDashboard = () => {
                     </nav>
 
                     {/* Sidebar Toggle (Desktop) */}
-                    <div className="hidden lg:flex p-4 border-t border-gray-200">
+                    <div className="hidden lg:flex p-4 border-t border-gray-200 dark:border-gray-800">
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="w-full flex items-center justify-center p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                            className="w-full flex items-center justify-center p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
                         >
                             {isSidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                         </button>
@@ -113,14 +113,14 @@ const TeacherDashboard = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Mobile Menu Trigger */}
-                <div className="lg:hidden p-4 bg-white border-b border-gray-200 flex items-center gap-3">
+                <div className="lg:hidden p-4 bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
-                        className="p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                        className="p-2 -ml-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
                     >
                         <Menu className="w-6 h-6" />
                     </button>
-                    <span className="font-semibold text-gray-800">
+                    <span className="font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                         {menuItems.find(i => i.id === activeTab)?.label}
                     </span>
                 </div>

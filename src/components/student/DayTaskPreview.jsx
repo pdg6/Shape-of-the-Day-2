@@ -11,7 +11,7 @@ const DayTaskPreview = ({ date, tasks, onImport }) => {
     }
 
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 mb-6">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     Tasks for {new Date(date).toLocaleDateString()}
@@ -29,7 +29,7 @@ const DayTaskPreview = ({ date, tasks, onImport }) => {
                 {tasks.map((task) => (
                     <div
                         key={task.id}
-                        className="bg-brand-light dark:bg-brand-dark p-3 rounded-lg border border-gray-200 dark:border-gray-700 text-sm"
+                        className="bg-brand-light dark:bg-brand-dark p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-sm"
                     >
                         <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
                             {task.title}

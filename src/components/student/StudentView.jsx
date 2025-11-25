@@ -5,7 +5,7 @@ import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
 import toast from 'react-hot-toast';
 
-const StudentView = ({ studentName, onNameSubmit }) => {
+const StudentView = ({ studentName, onEditName }) => {
     const today = new Date().toISOString().split('T')[0];
     const [selectedDate, setSelectedDate] = useState(today);
     const [showNameModal, setShowNameModal] = useState(!studentName);
@@ -26,6 +26,22 @@ const StudentView = ({ studentName, onNameSubmit }) => {
         ]
     });
 
+    const syncToTeacher = (taskId, status, comment = '') => {
+        const task = currentTasks.find(t => t.id === taskId);
+        const completedCount = currentTasks.filter(t => t.status === 'done').length;
+
+        const studentState = {
+            studentName,
+            currentTask: task ? task.title : taskId,
+            status,
+            progress: completedCount,
+            studentComment: comment
+        };
+
+        // Simulate sync to backend
+        console.log('[SYNC] Student State:', studentState);
+    };
+
     const handleUpdateStatus = (taskId, newStatus) => {
         // Optimistic update
         setCurrentTasks((prev) =>
@@ -34,8 +50,7 @@ const StudentView = ({ studentName, onNameSubmit }) => {
             )
         );
 
-        // Simulate live update to teacher
-        console.log(`[LIVE UPDATE] Task ${taskId} status changed to ${newStatus}`);
+        syncToTeacher(taskId, newStatus);
 
         if (newStatus === 'stuck') {
             toast.error("Teacher notified that you're stuck!");
@@ -43,6 +58,19 @@ const StudentView = ({ studentName, onNameSubmit }) => {
             toast('Teacher notified that you have a question.', { icon: '🙋' });
         } else if (newStatus === 'done') {
             toast.success("Great job! Task completed.");
+        }
+    };
+
+    const handleUpdateComment = (taskId, comment) => {
+        setCurrentTasks((prev) =>
+            prev.map((task) =>
+                task.id === taskId ? { ...task, comment } : task
+            )
+        );
+
+        const task = currentTasks.find(t => t.id === taskId);
+        if (task) {
+            syncToTeacher(taskId, task.status, comment);
         }
     };
 
@@ -72,11 +100,15 @@ const StudentView = ({ studentName, onNameSubmit }) => {
                     {/* Desktop: Horizontal layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
                         {/* Left: Greeting and Name */}
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-bold whitespace-nowrap">
-                                Good Morning, <span className="text-brand-accent">{studentName}</span>! 👋
+                        {/* Left: Greeting and Name */}
+                        <button
+                            onClick={onEditName}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-transparent hover:border-brand-accent/30 hover:bg-brand-accent/5 active:scale-95 active:border-brand-accent active:ring-2 active:ring-brand-accent/20 transition-all duration-300 cursor-pointer outline-none group"
+                        >
+                            <h2 className="text-lg font-bold whitespace-nowrap group-hover:text-brand-accent transition-colors">
+                                Good Morning, <span className="text-brand-accent group-hover:underline decoration-wavy underline-offset-4">{studentName}</span>! 👋
                             </h2>
-                        </div>
+                        </button>
 
                         {/* Center: Task Progress */}
                         <div className="flex-1 flex justify-center px-4">
@@ -154,6 +186,7 @@ const StudentView = ({ studentName, onNameSubmit }) => {
                         <CurrentTaskList
                             tasks={currentTasks}
                             onUpdateStatus={handleUpdateStatus}
+                            onUpdateComment={handleUpdateComment}
                         />
                     ) : (
                         <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
@@ -172,6 +205,7 @@ const StudentView = ({ studentName, onNameSubmit }) => {
                 <StudentNameModal
                     onSubmit={handleNameSubmit}
                     initialName={studentName}
+                    onClose={() => setShowNameModal(false)}
                 />
             )}
         </div>

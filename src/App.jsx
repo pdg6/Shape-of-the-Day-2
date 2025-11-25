@@ -105,10 +105,12 @@ function App() {
     <div className="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-200">
       <Toaster position="top-right" />
 
-      <StudentNameModal
-        isOpen={showNameModal}
-        onSubmit={handleNameSubmit}
-      />
+      {showNameModal && (
+        <StudentNameModal
+          onSubmit={handleNameSubmit}
+          onClose={() => setShowNameModal(false)}
+        />
+      )}
 
       {/* Navigation Bar */}
       <nav className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between transition-colors duration-200">
@@ -206,7 +208,7 @@ function App() {
         )}
 
         {view === 'teacher' && <TeacherDashboard />}
-        {view === 'student' && <StudentView studentName={studentName} />}
+        {view === 'student' && <StudentView studentName={studentName} onEditName={() => setShowNameModal(true)} />}
       </main>
     </div>
   );

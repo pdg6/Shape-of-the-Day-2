@@ -6,7 +6,7 @@ const GoogleSignInButton = ({ onClick, isLoading = false, disabled = false }) =>
         <button
             onClick={onClick}
             disabled={isLoading || disabled}
-            className="flex items-center justify-center gap-3 w-full bg-white text-gray-700 font-medium py-2.5 px-4 rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+            className="flex items-center justify-center gap-3 w-full bg-white dark:bg-brand-darkSurface text-gray-700 dark:text-gray-200 font-medium py-2.5 px-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-brand-darkSurface transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
         >
             {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
