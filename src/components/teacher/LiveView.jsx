@@ -2,9 +2,9 @@ import React from 'react';
 
 const LiveView = () => {
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h2 className="text-xl font-bold mb-4">Live View</h2>
-            <p className="text-gray-600">Real-time student progress.</p>
+        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 transition-colors duration-200">
+            <h2 className="text-xl font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">LiveView</h2>
+            <p className="text-gray-600 dark:text-brand-textSecondary">Real-time student progress.</p>
         </div>
     );
 };
