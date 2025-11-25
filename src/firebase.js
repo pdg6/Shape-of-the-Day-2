@@ -1,22 +1,26 @@
-// Firebase configuration and initialization
-import { initializeApp } from 'firebase/app';
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// TODO: Replace with your actual Firebase config from the Firebase Console
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "your-app.firebaseapp.com",
-    projectId: "your-project-id",
-    storageBucket: "your-app.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "your-app-id"
+    apiKey: "AIzaSyCOcf7vTV7UxkfdMSEQVjllBq4JeWibyP8",
+    authDomain: "shape-of-the-day.firebaseapp.com",
+    projectId: "shape-of-the-day",
+    storageBucket: "shape-of-the-day.firebasestorage.app",
+    messagingSenderId: "628524163762",
+    appId: "1:628524163762:web:cd32f4f05831075b259fab",
+    measurementId: "G-WJWMVT9Z0S"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-// Initialize Firebase services
+// Initialize Firebase services for authentication and database
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
