@@ -1,8 +1,61 @@
 @import "tailwindcss";
 
+@import "tailwindcss";
+
 @layer base {
     body {
         @apply bg-[#141211] text-[#F2EFEA] antialiased;
+    }
+}
+
+@layer components {
+    .student-tile {
+        @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
+        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
+        @apply border-gray-200 dark:border-gray-600;
+    }
+
+    .student-tile:hover {
+        @apply border-emerald-400;
+    }
+
+    .student-tile:focus-within,
+    .student-tile:focus {
+        @apply outline-none border-emerald-500;
+        /* Note: ring utilities might need explicit ring-2 or similar in usage or here */
+    }
+
+    .student-arrow {
+        @apply transition-all duration-200;
+    }
+
+    .group:hover .student-arrow {
+        @apply translate-x-1 text-emerald-500;
+    }
+
+    .teacher-tile {
+        @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
+        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
+        @apply border-gray-200 dark:border-gray-600;
+    }
+
+    .teacher-tile:hover {
+        @apply border-blue-400;
+    }
+
+    .teacher-tile:focus-within,
+    .teacher-tile:focus {
+        @apply outline-none border-blue-500;
+    }
+
+    .teacher-arrow {
+        @apply transition-all duration-200;
+    }
+
+    .group:hover .teacher-arrow {
+        @apply translate-x-1 text-blue-500;
     }
 }
 

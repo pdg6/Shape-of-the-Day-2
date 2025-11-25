@@ -63,8 +63,10 @@ const MiniCalendar = ({ selectedDate, onSelectDate }) => {
 
     return (
         <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 transition-colors">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Schedule</h2>
+            <div className="flex items-center justify-between mb-4 px-7">
+                <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                    {new Date().toLocaleString('default', { month: 'long' })} Schedule
+                </h2>
                 <div className="flex gap-2">
                     <button
                         onClick={() => scroll('left')}
@@ -100,17 +102,17 @@ const MiniCalendar = ({ selectedDate, onSelectDate }) => {
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                flex flex-col items-center justify-center min-w-[4.5rem] flex-1 p-3 rounded-xl border-2 transition-all duration-200
+                flex flex-col items-center justify-center min-w-[4.5rem] flex-1 p-3 rounded-xl border-2 transition-all duration-200 outline-none
+                focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
                 ${isSelected
-                                    ? 'bg-brand-accent text-white border-brand-accent shadow-md scale-105 z-10'
-                                    : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-brand-accent/30 hover:bg-brand-accent/5 dark:hover:bg-brand-dark'}
-                ${isToday && !isSelected ? 'border-brand-accent dark:border-brand-accent text-brand-accent dark:text-brand-accent' : ''}
+                                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface border-emerald-500 shadow-sm scale-105 z-10'
+                                    : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-gray-400 dark:hover:border-gray-500'}
               `}
                         >
-                            <span className={`text-xs font-medium mb-1 ${isSelected ? 'text-white/80' : isToday ? 'text-brand-accent' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
+                            <span className={`text-xs font-medium mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary ${isToday ? 'underline decoration-emerald-500 decoration-2 underline-offset-4' : ''}`}>
                                 {day}
                             </span>
-                            <span className={`text-xl font-bold ${isSelected ? 'text-white' : isToday ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                            <span className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {date}
                             </span>
                         </button>

@@ -30,24 +30,25 @@ const JoinRoom = ({ onJoin, isLoading = false }) => {
                     onChange={handleChange}
                     placeholder="Class Code"
                     maxLength={6}
-                    className={`w-full pl-4 pr-14 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all 
+                    className={`w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
                         bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
                         ${error
-                            ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50'
-                            : 'border-gray-200 dark:border-gray-600 focus:border-brand-accent focus:ring-blue-200 dark:focus:ring-blue-900'
+                            ? 'border-red-300 focus:border-red-500 focus:ring-red-200 focus:ring-emerald-500 dark:border-red-500/50'
+                            : 'border-gray-200 dark:border-gray-600 focus:border-emerald-500'
                         }`}
                     disabled={isLoading}
+                    enterKeyHint="go"
                 />
                 <button
                     type="submit"
                     disabled={code.length !== 6 || isLoading}
-                    className="absolute right-1.5 p-1.5 bg-brand-accent text-white rounded-md hover:bg-brand-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+                    className="absolute right-1.5 p-1.5 bg-brand-accent text-white rounded-md hover:bg-brand-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm group"
                     title="Join Room"
                 >
                     {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                        <ArrowRight className="w-5 h-5" />
+                        <ArrowRight className="w-5 h-5 transition-all group-hover:translate-x-1 group-hover:text-emerald-300" />
                     )}
                 </button>
             </div>

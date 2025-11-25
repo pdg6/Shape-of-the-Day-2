@@ -29,7 +29,7 @@ const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
             onClick={onClose}
         >
             <div
-                className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300 border border-gray-200 dark:border-gray-700 relative"
+                className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300 border border-gray-200 dark:border-gray-700 relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button */}
@@ -55,14 +55,14 @@ const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
                             onChange={handleChange}
                             placeholder="Your Name"
                             className={`
-                                w-full px-6 py-4 text-xl text-center rounded-xl transition-all duration-300
-                                bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder:text-brand-textDarkSecondary/50 dark:placeholder:text-brand-textSecondary/50
-                                border-2 outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-brand-darkSurface shadow-[0_4px_10px_rgba(0,0,0,0.05)]
+                                w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
+                                bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
                                 ${error
                                     ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50'
                                     : 'border-gray-200 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-200 dark:focus:ring-emerald-900/50'}
                             `}
                             autoFocus
+                            enterKeyHint="go"
                         />
                         <div className="flex justify-between mt-3 px-2">
                             <span className="text-sm text-red-500 min-h-[1.25rem] font-medium">{error}</span>
@@ -73,14 +73,13 @@ const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
                         type="submit"
                         disabled={!name.trim()}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full border-2 border-emerald-600 text-emerald-500 py-4 rounded-xl font-bold text-xl 
-                        hover:bg-emerald-600/10 hover:border-emerald-500 hover:text-emerald-400 hover:scale-[1.02] active:scale-[0.98]
-                        disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100
-                        transition-all duration-300 flex items-center justify-center gap-3 
-                        shadow-[0_4px_10px_rgba(16,185,129,0.1)] hover:shadow-[0_8px_15px_rgba(16,185,129,0.2)]"
+                        className="w-full pl-4 pr-4 py-2.5 text-lg rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
+                        bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary 
+                        border-gray-200 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
+                        relative text-center group"
                     >
-                        Enter Classroom
-                        <ArrowRight className="w-6 h-6" />
+                        Join Class
+                        <ArrowRight className="w-6 h-6 absolute right-4 top-1/2 -translate-y-1/2 transition-all group-hover:translate-x-1 group-hover:text-emerald-500" />
                     </button>
                 </form>
             </div>

@@ -5,7 +5,7 @@ import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
 import toast from 'react-hot-toast';
 
-const StudentView = ({ studentName, onEditName }) => {
+const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class", isLive = true }) => {
     const today = new Date().toISOString().split('T')[0];
     const [selectedDate, setSelectedDate] = useState(today);
     const [showNameModal, setShowNameModal] = useState(!studentName);
@@ -106,7 +106,7 @@ const StudentView = ({ studentName, onEditName }) => {
                             className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-transparent hover:border-brand-accent/30 hover:bg-brand-accent/5 active:scale-95 active:border-brand-accent active:ring-2 active:ring-brand-accent/20 transition-all duration-300 cursor-pointer outline-none group"
                         >
                             <h2 className="text-lg font-bold whitespace-nowrap group-hover:text-brand-accent transition-colors">
-                                Good Morning, <span className="text-brand-accent group-hover:underline decoration-wavy underline-offset-4">{studentName}</span>! 👋
+                                Good Morning, <span className="text-brand-accent group-hover:underline decoration-wavy underline-offset-4">{studentName}</span>!
                             </h2>
                         </button>
 
@@ -117,14 +117,16 @@ const StudentView = ({ studentName, onEditName }) => {
                             </p>
                         </div>
 
-                        {/* Right: Date and Live indicator */}
+                        {/* Right: Class Name and Status */}
                         <div className="flex items-center gap-3">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
-                                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                {className}
                             </p>
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">Live</span>
+                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                    {isLive ? 'Live' : 'Idle'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -145,14 +147,16 @@ const StudentView = ({ studentName, onEditName }) => {
                             </p>
                         </div>
 
-                        {/* Row 3: Date and Live */}
+                        {/* Row 3: Class Name and Status */}
                         <div className="flex items-center justify-center gap-3">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                {className}
                             </p>
                             <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">Live</span>
+                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                    {isLive ? 'Live' : 'Idle'}
+                                </span>
                             </div>
                         </div>
                     </div>
