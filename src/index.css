@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@layer base {
+    body {
+        @apply bg-[#141211] text-[#F2EFEA] antialiased;
+    }
+}
+
+@layer utilities {
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+}

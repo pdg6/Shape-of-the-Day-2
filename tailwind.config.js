@@ -1,0 +1,51 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+    content: [
+        "./index.html",
+        "./src/**/*.{js,ts,jsx,tsx}",
+    ],
+    darkMode: 'class',
+    theme: {
+        extend: {
+            colors: {
+                // Semantic colors that adapt to dark/light mode via class usage
+                // We will define specific hex codes here and use them in classes
+                brand: {
+                    dark: '#141211',       // Dark mode dominant
+                    darkSurface: '#1F1C1A', // Dark mode secondary
+                    light: '#E5E5E5',      // Light mode dominant (Light Grey)
+                    lightSurface: '#FFFFFF', // Light mode surface
+                    accent: '#105BA6',     // Primary action blue
+                    textPrimary: '#F2EFEA', // Dark mode text primary
+                    textSecondary: '#A8A29D', // Dark mode text secondary
+                    textDarkPrimary: '#141211', // Light mode text primary
+                    textDarkSecondary: '#57534E', // Light mode text secondary
+                },
+                status: {
+                    progress: '#059669', // Emerald
+                    stuck: '#DC2626',    // Red
+                    question: '#D97706', // Amber
+                    complete: '#2563EB', // Bright Blue
+                }
+            },
+            fontFamily: {
+                sans: ['Inter', 'sans-serif'],
+            },
+            animation: {
+                'fade-in': 'fadeIn 0.5s ease-out',
+                'slide-up': 'slideUp 0.5s ease-out',
+            },
+            keyframes: {
+                fadeIn: {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                slideUp: {
+                    '0%': { transform: 'translateY(20px)', opacity: '0' },
+                    '100%': { transform: 'translateY(0)', opacity: '1' },
+                },
+            },
+        },
+    },
+    plugins: [],
+}
