@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X } from 'lucide-react';
+import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon } from 'lucide-react';
+import { Task, TaskStatus } from '../../types';
 
-const STATUS_ACTIONS = [
+/**
+ * Configuration for the different task status actions.
+ * Each object defines the look and feel for a specific status button.
+ */
+interface StatusAction {
+    id: TaskStatus;
+    label: string;
+    icon: LucideIcon;
+    activeColor: string;
+    hover: string;
+    borderColor: string;
+}
+
+const STATUS_ACTIONS: StatusAction[] = [
     {
         id: 'todo',
         label: 'Reset',
@@ -44,14 +58,27 @@ const STATUS_ACTIONS = [
     }
 ];
 
-const QuestionOverlay = ({ task, onClose, onUpdateComment }) => {
+/**
+ * Props for the QuestionOverlay component.
+ */
+interface QuestionOverlayProps {
+    task: Task;
+    onClose: () => void;
+    onUpdateComment: (taskId: string, comment: string) => void;
+}
+
+/**
+ * QuestionOverlay Component
+ * 
+ * A modal overlay that appears when a student marks a task as "Stuck" or "Question".
+ * It allows them to type a specific question or comment for the teacher.
+ */
+const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpdateComment }) => {
     const [comment, setComment] = useState(task.comment || '');
     const maxChars = 200;
 
+    // Sync comment changes to the parent component
     useEffect(() => {
-        // Sync comment on unmount or when it changes (debounced could be better but per requirement "As they type")
-        // We'll sync on change for "real-time" feel, but maybe debounce slightly in a real app.
-        // For now, let's just call it.
         onUpdateComment(task.id, comment);
     }, [comment, task.id, onUpdateComment]);
 
@@ -121,8 +148,24 @@ const QuestionOverlay = ({ task, onClose, onUpdateComment }) => {
     );
 };
 
-const TaskCard = ({ task, onUpdateStatus, onOpenOverlay }) => {
-    const getStatusBadge = (status) => {
+/**
+ * Props for the TaskCard component.
+ */
+interface TaskCardProps {
+    task: Task;
+    onUpdateStatus: (taskId: string, status: TaskStatus) => void;
+    onOpenOverlay: (task: Task) => void;
+}
+
+/**
+ * TaskCard Component
+ * 
+ * Displays a single task with its details and status controls.
+ * Handles the logic for clicking status buttons and opening the question overlay.
+ */
+const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay }) => {
+    // Helper to render the small status badge next to the title
+    const getStatusBadge = (status: TaskStatus) => {
         switch (status) {
             case 'stuck': return <span className="px-2 py-0.5 text-red-600 dark:text-red-500 rounded text-[10px] font-bold uppercase tracking-wider border border-red-600 dark:border-red-500">Stuck</span>;
             case 'question': return <span className="px-2 py-0.5 text-amber-600 dark:text-amber-500 rounded text-[10px] font-bold uppercase tracking-wider border border-amber-600 dark:border-amber-500">Question</span>;
@@ -138,20 +181,12 @@ const TaskCard = ({ task, onUpdateStatus, onOpenOverlay }) => {
 
     const isDone = task.status === 'done';
 
-    const handleActionClick = (actionId) => {
+    const handleActionClick = (actionId: TaskStatus) => {
         onUpdateStatus(task.id, actionId);
 
         // Open overlay for Question or Stuck statuses
         if (actionId === 'question' || actionId === 'stuck') {
-            // We pass the task with the NEW status conceptually, but state might not be updated yet.
-            // So we pass the current task and the overlay will pick up the status from the task prop or we can pass it.
-            // Actually, onUpdateStatus triggers a state update in parent. 
-            // We should call onOpenOverlay immediately. 
-            // Note: The task passed to onOpenOverlay might still have the OLD status if we use 'task' directly here.
-            // However, the overlay renders based on the 'task' passed to it.
-            // If we want the overlay to show the NEW status styling immediately, we might need to handle that.
-            // But since onUpdateStatus is optimistic in StudentView, the re-render should happen fast.
-            // Let's just open it. The re-render will update the overlay's task prop if we pass the ID or if we pass the object.
+            // We pass the task with the NEW status conceptually
             onOpenOverlay({ ...task, status: actionId });
         }
     };
@@ -212,10 +247,25 @@ const TaskCard = ({ task, onUpdateStatus, onOpenOverlay }) => {
     );
 };
 
-const CurrentTaskList = ({ tasks, onUpdateStatus, onUpdateComment }) => {
-    const [overlayTask, setOverlayTask] = useState(null);
+/**
+ * Props for the CurrentTaskList component.
+ */
+interface CurrentTaskListProps {
+    tasks: Task[];
+    onUpdateStatus: (taskId: string, status: TaskStatus) => void;
+    onUpdateComment: (taskId: string, comment: string) => void;
+}
 
-    const handleOpenOverlay = (task) => {
+/**
+ * CurrentTaskList Component
+ * 
+ * Renders the list of active tasks for the day.
+ * It handles sorting (completed tasks go to the bottom) and manages the overlay state.
+ */
+const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus, onUpdateComment }) => {
+    const [overlayTask, setOverlayTask] = useState<Task | null>(null);
+
+    const handleOpenOverlay = (task: Task) => {
         setOverlayTask(task);
     };
 

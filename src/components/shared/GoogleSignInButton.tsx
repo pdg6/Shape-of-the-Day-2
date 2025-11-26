@@ -1,13 +1,45 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 
-const GoogleSignInButton = ({ onClick, isLoading = false, disabled = false }) => {
+/**
+ * Interface defining the props (inputs) for the GoogleSignInButton component.
+ * 
+ * @property onClick - Function to call when the button is clicked.
+ * @property isLoading - Optional boolean. If true, shows a loading spinner. Defaults to false.
+ * @property disabled - Optional boolean. If true, the button is unclickable. Defaults to false.
+ */
+interface GoogleSignInButtonProps {
+    onClick: () => void;
+    isLoading?: boolean;
+    disabled?: boolean;
+}
+
+/**
+ * GoogleSignInButton Component
+ * 
+ * A reusable button component styled specifically for Google Sign-In.
+ * It handles loading states and disabled states automatically based on props.
+ * 
+ * Usage:
+ * <GoogleSignInButton onClick={handleLogin} isLoading={isLoggingIn} />
+ */
+const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
+    onClick,
+    isLoading = false,
+    disabled = false
+}) => {
     return (
         <button
             onClick={onClick}
             disabled={isLoading || disabled}
+            // Tailwind classes for styling:
+            // flex/items-center/justify-center: Centers content
+            // w-full: Takes full width of container
+            // bg-brand-darkSurface: Uses our custom theme color
+            // transition-all: Smoothly animates hover/focus states
             className="flex items-center justify-center gap-3 w-full bg-brand-darkSurface dark:bg-brand-darkSurface text-gray-700 dark:text-gray-200 font-medium py-2.5 px-4 rounded-lg border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-brand-darkSurface transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
         >
+            {/* Conditional rendering: Show spinner if loading, otherwise show Google logo */}
             {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
             ) : (

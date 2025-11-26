@@ -1,6 +1,12 @@
 import React from 'react';
 
-const LiveView = () => {
+/**
+ * LiveView Component
+ * 
+ * Placeholder for the real-time dashboard where teachers can see student progress,
+ * status updates (stuck/question), and active tasks.
+ */
+const LiveView: React.FC = () => {
     return (
         <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 transition-colors duration-200">
             <h2 className="text-xl font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">LiveView</h2>

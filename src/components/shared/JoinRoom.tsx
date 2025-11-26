@@ -1,23 +1,56 @@
 import React, { useState } from 'react';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
-const JoinRoom = ({ onJoin, isLoading = false }) => {
-    const [code, setCode] = useState('');
-    const [error, setError] = useState('');
+/**
+ * Props for the JoinRoom component.
+ * @property onJoin - Callback function triggered when the user submits a valid code. Receives the code string.
+ * @property isLoading - Optional boolean to show loading state during submission.
+ */
+interface JoinRoomProps {
+    onJoin: (code: string) => void;
+    isLoading?: boolean;
+}
 
-    const handleSubmit = (e) => {
+/**
+ * JoinRoom Component
+ * 
+ * A form component that allows students to enter a 6-digit class code.
+ * It includes validation to ensure only numbers are entered and the length is correct.
+ */
+const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, isLoading = false }) => {
+    // State to hold the current input value
+    const [code, setCode] = useState<string>('');
+    // State to hold any validation error messages
+    const [error, setError] = useState<string>('');
+
+    /**
+     * Handles the form submission.
+     * Prevents default browser refresh, validates the code, and calls onJoin.
+     */
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validation: Must be exactly 6 digits and numeric
         if (code.length !== 6 || !/^\d+$/.test(code)) {
             setError('Please enter a valid 6-digit code');
             return;
         }
+
+        // Clear errors and submit
         setError('');
         onJoin(code);
     };
 
-    const handleChange = (e) => {
+    /**
+     * Handles input changes.
+     * Enforces numeric input only and limits length to 6 characters.
+     */
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Remove any non-digit characters
         const value = e.target.value.replace(/\D/g, '').slice(0, 6);
         setCode(value);
+
+        // Clear error message as soon as user starts typing again
         if (error) setError('');
     };
 
@@ -30,6 +63,9 @@ const JoinRoom = ({ onJoin, isLoading = false }) => {
                     onChange={handleChange}
                     placeholder="Class Code"
                     maxLength={6}
+                    // Styling:
+                    // tracking-[0.5em]: Spreads out the numbers for better readability
+                    // font-mono: Uses monospaced font for alignment
                     className={`w-full px-4 py-2.5 text-base text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
                         bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
                         ${error
@@ -41,6 +77,7 @@ const JoinRoom = ({ onJoin, isLoading = false }) => {
                 />
                 <button
                     type="submit"
+                    // Disable if code is incomplete or currently loading
                     disabled={code.length !== 6 || isLoading}
                     className="absolute right-1.5 p-1.5 bg-brand-dark text-white rounded-md hover:bg-brand-dark/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm group"
                     title="Join Room"
@@ -52,6 +89,7 @@ const JoinRoom = ({ onJoin, isLoading = false }) => {
                     )}
                 </button>
             </div>
+            {/* Error Message Display */}
             {error && (
                 <p className="mt-2 text-sm text-red-500 text-center animate-in fade-in slide-in-from-top-1">
                     {error}

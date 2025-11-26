@@ -1,7 +1,27 @@
 import React from 'react';
 import { Download } from 'lucide-react';
+import { Task } from '../../types';
 
-const DayTaskPreview = ({ date, tasks, onImport }) => {
+/**
+ * Props for the DayTaskPreview component.
+ * @property date - The date string (e.g., "2023-10-27") for the previewed tasks.
+ * @property tasks - Array of Task objects scheduled for that day.
+ * @property onImport - Callback function to import these tasks into the "My Day" view.
+ */
+interface DayTaskPreviewProps {
+    date: string;
+    tasks: Task[];
+    onImport: () => void;
+}
+
+/**
+ * DayTaskPreview Component
+ * 
+ * Displays a summary of tasks scheduled for a future date.
+ * Allows the student to "import" these tasks into their current daily view.
+ */
+const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport }) => {
+    // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
             <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 text-center mb-6">

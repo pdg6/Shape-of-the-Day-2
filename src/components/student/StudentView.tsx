@@ -4,29 +4,71 @@ import CurrentTaskList from './CurrentTaskList';
 import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
 import toast from 'react-hot-toast';
+import { Task, TaskStatus } from '../../types';
 
-const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class", isLive = true }) => {
+/**
+ * Props for the StudentView component.
+ * @property studentName - The name of the currently logged-in student.
+ * @property onEditName - Callback to change the student's name (e.g., if they made a typo).
+ * @property onNameSubmit - Callback when the student first enters their name.
+ * @property className - Optional name of the class (e.g., "Mrs. Smith's Class").
+ * @property isLive - Optional boolean indicating if the classroom session is active.
+ */
+interface StudentViewProps {
+    studentName: string;
+    onEditName: (name: string) => void;
+    onNameSubmit: (name: string) => void;
+    className?: string;
+    isLive?: boolean;
+}
+
+/**
+ * StudentView Component
+ * 
+ * The main dashboard for the student. It orchestrates:
+ * 1. The calendar for selecting dates.
+ * 2. The list of tasks for the selected day.
+ * 3. The logic for updating task statuses and comments.
+ * 4. The modal for entering the student's name.
+ */
+const StudentView: React.FC<StudentViewProps> = ({
+    studentName,
+    onEditName,
+    onNameSubmit,
+    className = "Mrs. Smith's Class",
+    isLive = true
+}) => {
+    // Get today's date in YYYY-MM-DD format for initial state
     const today = new Date().toISOString().split('T')[0];
-    const [selectedDate, setSelectedDate] = useState(today);
-    const [showNameModal, setShowNameModal] = useState(!studentName);
 
-    // "My Day" tasks
-    const [currentTasks, setCurrentTasks] = useState([
+    // State for the currently selected date in the calendar
+    const [selectedDate, setSelectedDate] = useState<string>(today);
+
+    // State to control the visibility of the name entry modal
+    // Show it automatically if no studentName is provided
+    const [showNameModal, setShowNameModal] = useState<boolean>(!studentName);
+
+    // State for the tasks currently in the student's "My Day" view
+    const [currentTasks, setCurrentTasks] = useState<Task[]>([
         { id: '1', title: 'Morning Check-in', description: 'Say hello to the class!', status: 'todo', dueDate: '9:00 AM' },
         { id: '2', title: 'Math Worksheet', description: 'Complete pages 10-12', status: 'in_progress', dueDate: '10:30 AM' },
     ]);
 
-    // Mock database of tasks by date
-    const [availableTasks] = useState({
+    // Mock database of tasks available for future dates
+    // In a real app, this would come from an API/backend
+    const [availableTasks] = useState<Record<string, Task[]>>({
         [today]: [], // Already imported
-        // Tomorrow
+        // Tomorrow's tasks
         [new Date(Date.now() + 86400000).toISOString().split('T')[0]]: [
             { id: '3', title: 'Reading Time', description: 'Read for 20 minutes', status: 'todo', dueDate: '1:00 PM' },
             { id: '4', title: 'Art Project', description: 'Draw your favorite animal', status: 'todo', dueDate: '2:30 PM' },
         ]
     });
 
-    const syncToTeacher = (taskId, status, comment = '') => {
+    /**
+     * Simulates syncing the student's progress to the teacher's dashboard.
+     */
+    const syncToTeacher = (taskId: string, status: TaskStatus, comment: string = '') => {
         const task = currentTasks.find(t => t.id === taskId);
         const completedCount = currentTasks.filter(t => t.status === 'done').length;
 
@@ -42,8 +84,12 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
         console.log('[SYNC] Student State:', studentState);
     };
 
-    const handleUpdateStatus = (taskId, newStatus) => {
-        // Optimistic update
+    /**
+     * Updates the status of a specific task (e.g., todo -> in_progress).
+     * Also triggers toast notifications and syncs to backend.
+     */
+    const handleUpdateStatus = (taskId: string, newStatus: TaskStatus) => {
+        // Optimistic update: Update UI immediately before server confirms
         setCurrentTasks((prev) =>
             prev.map((task) =>
                 task.id === taskId ? { ...task, status: newStatus } : task
@@ -52,6 +98,7 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
 
         syncToTeacher(taskId, newStatus);
 
+        // Show feedback to the student
         if (newStatus === 'stuck') {
             toast.error("Teacher notified that you're stuck!");
         } else if (newStatus === 'question') {
@@ -61,7 +108,10 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
         }
     };
 
-    const handleUpdateComment = (taskId, comment) => {
+    /**
+     * Updates the comment for a specific task.
+     */
+    const handleUpdateComment = (taskId: string, comment: string) => {
         setCurrentTasks((prev) =>
             prev.map((task) =>
                 task.id === taskId ? { ...task, comment } : task
@@ -74,6 +124,9 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
         }
     };
 
+    /**
+     * Imports tasks from a future date into the current day's view.
+     */
     const handleImportTasks = () => {
         const tasksToImport = availableTasks[selectedDate] || [];
         if (tasksToImport.length === 0) return;
@@ -82,40 +135,41 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
         toast.success(`Imported ${tasksToImport.length} tasks to your day`);
     };
 
-    const handleNameSubmit = (name) => {
+    /**
+     * Handles the submission of the student's name from the modal.
+     */
+    const handleNameSubmit = (name: string) => {
         onNameSubmit(name);
         setShowNameModal(false);
     };
 
-    // Determine what to show
+    // Determine what content to show based on the selected date
     const isToday = selectedDate === today;
     const previewTasks = availableTasks[selectedDate] || [];
     const showPreview = !isToday && previewTasks.length > 0;
 
-    //Greeting Header
     return (
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
-            {/* Header */}
+            {/* Header Section */}
             <header className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800">
                 <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
-                    {/* Desktop: Horizontal layout */}
+                    {/* Desktop Layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
-                        {/* Left: Greeting and Name */}
-                        {/* Left: Greeting and Name */}
+                        {/* Greeting */}
                         <div className="flex items-center gap-2 px-4 py-2">
                             <h2 className="text-lg font-bold whitespace-nowrap">
                                 Good Morning, <span className="dark:text-brand-textPrimary">{studentName}</span>!
                             </h2>
                         </div>
 
-                        {/* Center: Task Progress */}
+                        {/* Progress Summary */}
                         <div className="flex-1 flex justify-center px-4">
                             <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
                                 You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
                             </p>
                         </div>
 
-                        {/* Right: Class Name and Status */}
+                        {/* Class Info */}
                         <div className="flex items-center gap-3">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
                                 {className}
@@ -129,23 +183,18 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
                         </div>
                     </div>
 
-                    {/* Mobile: Stacked layout */}
+                    {/* Mobile Layout (Stacked) */}
                     <div className="flex md:hidden flex-col gap-2 w-full">
-                        {/* Row 1: Greeting and Name */}
                         <div className="flex items-center justify-center">
                             <h2 className="text-base font-bold text-center">
                                 Good Morning, <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">{studentName}</span>!
                             </h2>
                         </div>
-
-                        {/* Row 2: Task Progress */}
                         <div className="flex justify-center">
                             <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary text-center">
                                 You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
                             </p>
                         </div>
-
-                        {/* Row 3: Class Name and Status */}
                         <div className="flex items-center justify-center gap-3">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                 {className}
@@ -161,24 +210,25 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
                 </div>
             </header>
 
-            {/* Main Content */}
-            {/* Main Content */}
+            {/* Main Content Area */}
             <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
-                {/* Calendar Strip */}
+                {/* Date Selection Calendar */}
                 <MiniCalendar
                     selectedDate={selectedDate}
                     onSelectDate={setSelectedDate}
                 />
 
-                {/* Task List */}
+                {/* Task List Section */}
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold text-lg">Your Tasks</h3>
                         <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border border-gray-200 dark:border-gray-700">
+                            {/* Calculate completion percentage */}
                             {Math.round((currentTasks.filter(t => t.status === 'done').length / Math.max(currentTasks.length, 1)) * 100)}% Complete
                         </div>
                     </div>
 
+                    {/* Conditional Rendering based on date selection */}
                     {showPreview ? (
                         <DayTaskPreview
                             date={selectedDate}
@@ -203,7 +253,7 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
                 </div>
             </main>
 
-            {/* Name Modal */}
+            {/* Name Entry Modal */}
             {showNameModal && (
                 <StudentNameModal
                     onSubmit={handleNameSubmit}

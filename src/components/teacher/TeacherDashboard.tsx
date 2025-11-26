@@ -8,7 +8,8 @@ import {
     Menu,
     X,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    LucideIcon
 } from 'lucide-react';
 import TaskManager from './TaskManager';
 import ShapeOfDay from './ShapeOfDay';
@@ -16,12 +17,32 @@ import LiveView from './LiveView';
 import StudentRoster from './StudentRoster';
 import ClassPlanner from './ClassPlanner';
 
-const TeacherDashboard = () => {
-    const [activeTab, setActiveTab] = useState('tasks');
+/**
+ * Definition for a navigation item in the sidebar.
+ */
+interface MenuItem {
+    id: 'tasks' | 'shape' | 'live' | 'roster' | 'planner';
+    label: string;
+    icon: LucideIcon;
+}
+
+/**
+ * TeacherDashboard Component
+ * 
+ * The main layout for the teacher's view. It includes:
+ * 1. A collapsible sidebar for navigation.
+ * 2. A mobile-responsive menu.
+ * 3. A content area that switches between different sub-components (TaskManager, LiveView, etc.).
+ */
+const TeacherDashboard: React.FC = () => {
+    // State to track the currently active view
+    const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
+
+    // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const menuItems = [
+    const menuItems: MenuItem[] = [
         { id: 'tasks', label: 'Task Manager', icon: LayoutDashboard },
         { id: 'shape', label: 'Shape of Day', icon: Clock },
         { id: 'live', label: 'Live View', icon: Activity },
@@ -29,6 +50,9 @@ const TeacherDashboard = () => {
         { id: 'planner', label: 'Class Planner', icon: Calendar },
     ];
 
+    /**
+     * Renders the appropriate component based on the active tab.
+     */
     const renderContent = () => {
         switch (activeTab) {
             case 'tasks': return <TaskManager />;
@@ -42,7 +66,7 @@ const TeacherDashboard = () => {
 
     return (
         <div className="flex h-[calc(100vh-64px)] bg-brand-light dark:bg-brand-dark transition-colors duration-300">
-            {/* Mobile Menu Overlay */}
+            {/* Mobile Menu Overlay (Darkens background when menu is open on mobile) */}
             {isMobileMenuOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
@@ -50,7 +74,7 @@ const TeacherDashboard = () => {
                 />
             )}
 
-            {/* Sidebar */}
+            {/* Sidebar Navigation */}
             <aside
                 className={`
           fixed lg:static inset-y-0 left-0 z-50
@@ -60,7 +84,7 @@ const TeacherDashboard = () => {
         `}
             >
                 <div className="h-full flex flex-col">
-                    {/* Mobile Header */}
+                    {/* Mobile Header (Close button) */}
                     <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
                         <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Menu</span>
                         <button onClick={() => setIsMobileMenuOpen(false)}>
@@ -98,7 +122,7 @@ const TeacherDashboard = () => {
                         })}
                     </nav>
 
-                    {/* Sidebar Toggle (Desktop) */}
+                    {/* Sidebar Toggle Button (Desktop only) */}
                     <div className="hidden lg:flex p-4 border-t border-gray-200 dark:border-gray-800">
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -110,9 +134,9 @@ const TeacherDashboard = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
+            {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {/* Mobile Menu Trigger */}
+                {/* Mobile Menu Trigger Bar */}
                 <div className="lg:hidden p-4 bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
@@ -125,7 +149,7 @@ const TeacherDashboard = () => {
                     </span>
                 </div>
 
-                {/* Content Area */}
+                {/* Actual Page Content */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">
                     <div className="max-w-7xl mx-auto">
                         {renderContent()}

@@ -1,13 +1,39 @@
 import React, { useState } from 'react';
 import { ArrowRight, GraduationCap, X } from 'lucide-react';
 
-const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
-    const [name, setName] = useState(initialName);
-    const [error, setError] = useState('');
+/**
+ * Props for the StudentNameModal component.
+ * @property onSubmit - Callback function called when the user submits a valid name.
+ * @property initialName - Optional initial value for the name input.
+ * @property onClose - Optional callback to close the modal (e.g., via the X button or background click).
+ */
+interface StudentNameModalProps {
+    onSubmit: (name: string) => void;
+    initialName?: string;
+    onClose?: () => void;
+}
 
-    const handleSubmit = (e) => {
+/**
+ * StudentNameModal Component
+ * 
+ * A modal dialog that prompts the student to enter their name before joining a class.
+ * It includes validation to ensure the name is not empty and is within a reasonable length.
+ */
+const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialName = '', onClose }) => {
+    // State for the name input field
+    const [name, setName] = useState<string>(initialName);
+    // State for validation error messages
+    const [error, setError] = useState<string>('');
+
+    /**
+     * Handles form submission.
+     * Validates that the name is not empty before calling onSubmit.
+     */
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        // Stop propagation to prevent clicks from bubbling up to the background (which might close the modal)
         e.stopPropagation();
+
         if (!name.trim()) {
             setError('Please enter your name');
             return;
@@ -15,10 +41,15 @@ const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
         onSubmit(name);
     };
 
-    const handleChange = (e) => {
+    /**
+     * Handles input changes.
+     * Enforces a maximum length of 12 characters.
+     */
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         if (value.length <= 12) {
             setName(value);
+            // Clear error message when user starts typing
             if (error) setError('');
         }
     };
@@ -32,7 +63,7 @@ const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
                 className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300 border border-gray-200 dark:border-gray-700 relative"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Close Button */}
+                {/* Close Button (only shown if onClose prop is provided) */}
                 {onClose && (
                     <button
                         onClick={onClose}
@@ -54,6 +85,9 @@ const StudentNameModal = ({ onSubmit, initialName = '', onClose }) => {
                             value={name}
                             onChange={handleChange}
                             placeholder="Your Name"
+                            // Styling:
+                            // tracking-[0.5em]: Spreads out letters for style
+                            // font-mono: Monospace font for alignment
                             className={`
                                 w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
                                 bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans

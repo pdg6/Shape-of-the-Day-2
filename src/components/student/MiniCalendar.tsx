@@ -1,15 +1,35 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const MiniCalendar = ({ selectedDate, onSelectDate }) => {
-    const scrollContainerRef = React.useRef(null);
+/**
+ * Props for the MiniCalendar component.
+ * @property selectedDate - The currently selected date string (ISO format: YYYY-MM-DD).
+ * @property onSelectDate - Callback function triggered when a date is selected.
+ */
+interface MiniCalendarProps {
+    selectedDate: string;
+    onSelectDate: (date: string) => void;
+}
+
+/**
+ * MiniCalendar Component
+ * 
+ * A horizontal scrolling calendar strip that allows students to select a date.
+ * It centers around "today" and allows dragging to scroll.
+ */
+const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate }) => {
+    // Ref to the scrollable container DOM element
+    const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+    // State for drag-to-scroll functionality
     const [isDragging, setIsDragging] = React.useState(false);
     const [startX, setStartX] = React.useState(0);
     const [scrollLeft, setScrollLeft] = React.useState(0);
 
-    // Generate dates centered around today (e.g., -3 to +10 days)
+    // Generate an array of Date objects centered around today (e.g., -3 to +10 days)
+    // Memoized to prevent recalculation on every render
     const days = React.useMemo(() => {
-        const result = [];
+        const result: Date[] = [];
         const today = new Date();
         // Start 3 days ago to center today in the view
         for (let i = -3; i < 11; i++) {
@@ -20,16 +40,22 @@ const MiniCalendar = ({ selectedDate, onSelectDate }) => {
         return result;
     }, []);
 
-    const formatDate = (date) => {
+    /**
+     * Helper to format a Date object into useful parts for display.
+     */
+    const formatDate = (date: Date) => {
         return {
-            day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-            date: date.getDate(),
-            full: date.toISOString().split('T')[0],
+            day: date.toLocaleDateString('en-US', { weekday: 'short' }), // e.g., "Mon"
+            date: date.getDate(), // e.g., 23
+            full: date.toISOString().split('T')[0], // e.g., "2023-10-23"
             isToday: new Date().toDateString() === date.toDateString()
         };
     };
 
-    const scroll = (direction) => {
+    /**
+     * Programmatically scrolls the container left or right.
+     */
+    const scroll = (direction: 'left' | 'right') => {
         if (scrollContainerRef.current) {
             const scrollAmount = 200;
             scrollContainerRef.current.scrollBy({
@@ -39,7 +65,10 @@ const MiniCalendar = ({ selectedDate, onSelectDate }) => {
         }
     };
 
-    const handleMouseDown = (e) => {
+    // --- Drag-to-Scroll Handlers ---
+
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (!scrollContainerRef.current) return;
         setIsDragging(true);
         setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
         setScrollLeft(scrollContainerRef.current.scrollLeft);
@@ -53,8 +82,8 @@ const MiniCalendar = ({ selectedDate, onSelectDate }) => {
         setIsDragging(false);
     };
 
-    const handleMouseMove = (e) => {
-        if (!isDragging) return;
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging || !scrollContainerRef.current) return;
         e.preventDefault();
         const x = e.pageX - scrollContainerRef.current.offsetLeft;
         const walk = (x - startX) * 2; // Scroll speed multiplier
@@ -99,6 +128,7 @@ const MiniCalendar = ({ selectedDate, onSelectDate }) => {
                         <button
                             key={full}
                             onClick={() => {
+                                // Only select if we weren't dragging
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
