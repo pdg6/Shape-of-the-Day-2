@@ -92,10 +92,11 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
     const previewTasks = availableTasks[selectedDate] || [];
     const showPreview = !isToday && previewTasks.length > 0;
 
+    //Greeting Header
     return (
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Header */}
-            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800 sticky top-0 z-10">
+            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800">
                 <div className="w-[85%] md:w-[70%] mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
                     {/* Desktop: Horizontal layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
@@ -136,7 +137,7 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
                         {/* Row 1: Greeting and Name */}
                         <div className="flex items-center justify-center">
                             <h2 className="text-base font-bold text-center">
-                                Good Morning, <span className="text-brand-accent">{studentName}</span>! 👋
+                                Good Morning, <span className="text-brand-accent">{studentName}</span>!
                             </h2>
                         </div>
 

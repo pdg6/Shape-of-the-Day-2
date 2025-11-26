@@ -139,18 +139,18 @@ function App() {
       {/* Main Content */}
       <main>
         {view === 'landing' && (
-          <div className="min-h-screen flex flex-col items-center justify-center p-4 -mt-16">
-            <div className="text-center mb-12 space-y-4">
+          <div className="min-h-screen flex flex-col items-center md:justify-center p-4 py-12">
+            <div className="text-center mb-6 md:mb-12 space-y-4">
               <img
                 src="/shape of the day logo.png"
                 alt="Shape of the Day"
-                className="w-32 h-32 mx-auto mb-6"
+                className="w-20 h-20 md:w-32 md:h-32 mx-auto mb-4 md:mb-6"
               />
-              <h1 className="text-4xl md:text-6xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">
+              <h1 className="text-3xl md:text-6xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">
                 Shape of the Day
               </h1>
-              <p className="text-xl text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-lg mx-auto">
-                Seamless classroom management for modern teachers and students.
+              <p className="text-lg md:text-xl text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-lg mx-auto">
+                A digital organizer for teachers and students
               </p>
             </div>
 
