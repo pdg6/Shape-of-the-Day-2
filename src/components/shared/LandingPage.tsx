@@ -10,7 +10,7 @@ import JoinRoom from './JoinRoom';
  */
 interface LandingPageProps {
     onLogin: () => void;
-    onJoin: (code: string, name: string) => void;
+    onJoin: (code: string, name: string, classId: string) => void;
 }
 
 /**

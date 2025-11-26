@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db, auth } from '../../firebase';
+import { Classroom } from '../../types';
+import { useClassStore } from '../../store/classStore';
 import {
     LayoutDashboard,
     Clock,
     Users,
-    Calendar,
     Activity,
     Menu,
     X,
@@ -11,21 +14,24 @@ import {
     ChevronRight,
     LucideIcon,
     Sun,
-    Moon
+    Moon,
+    ChevronDown,
+    Plus,
+    Check,
+    History,
+    BookOpen
 } from 'lucide-react';
 import TaskManager from './TaskManager';
 import ShapeOfDay from './ShapeOfDay';
 import LiveView from './LiveView';
-import StudentRoster from './StudentRoster';
-import ClassPlanner from './ClassPlanner';
+import ClassroomManager from './ClassroomManager';
 import ConnectionSidebar from './ConnectionSidebar';
-import { useClassStore } from '../../store/classStore';
 
 /**
  * Definition for a navigation item in the sidebar.
  */
 interface MenuItem {
-    id: 'tasks' | 'shape' | 'live' | 'roster' | 'planner';
+    id: 'tasks' | 'shape' | 'live' | 'classrooms';
     label: string;
     icon: LucideIcon;
 }
@@ -44,22 +50,60 @@ const TeacherDashboard: React.FC = () => {
     const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
 
     // Global state
-    const { darkMode, toggleDarkMode } = useClassStore();
+    const { darkMode, toggleDarkMode, setCurrentClassId } = useClassStore();
 
+    // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
     // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // State for Class Selector and Sub-navigation
+    const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+    const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
+    const [classroomSubTab, setClassroomSubTab] = useState<'classes' | 'history'>('classes');
 
     // Hardcoded for Stage 1 Demo - In real app, this comes from the loaded Class object
     const DEMO_CLASS_CODE = "123456";
     const DEMO_CLASS_ID = "demo-class-123";
 
+    const { currentClassId } = useClassStore(); // Get current class ID from store
+
+    // Fetch Classrooms
+    React.useEffect(() => {
+        const fetchClassrooms = async () => {
+            if (!auth.currentUser) return;
+            try {
+                const q = query(collection(db, 'classrooms'), where('teacherId', '==', auth.currentUser.uid));
+                const snapshot = await getDocs(q);
+                const data: Classroom[] = [];
+                snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() } as Classroom));
+                setClassrooms(data);
+
+                // If no class is selected but we have classes, select the first one
+                if (data.length > 0 && !currentClassId) {
+                    setCurrentClassId(data[0].id);
+                }
+            } catch (error) {
+                console.error("Error fetching classrooms:", error);
+            }
+        };
+        fetchClassrooms();
+    }, [auth.currentUser, setCurrentClassId, currentClassId]);
+
+    // Set the current class ID in the global store on mount if not set (Demo Fallback)
+    React.useEffect(() => {
+        if (!currentClassId) {
+            setCurrentClassId(DEMO_CLASS_ID);
+        }
+    }, [setCurrentClassId, currentClassId]);
+
+    const currentClass = classrooms.find(c => c.id === currentClassId);
+
     const menuItems: MenuItem[] = [
         { id: 'tasks', label: 'Task Manager', icon: LayoutDashboard },
         { id: 'shape', label: 'Shape of Day', icon: Clock },
         { id: 'live', label: 'Live View', icon: Activity },
-        { id: 'roster', label: 'Student Roster', icon: Users },
-        { id: 'planner', label: 'Class Planner', icon: Calendar },
+        { id: 'classrooms', label: 'Classrooms', icon: Users },
     ];
 
     /**
@@ -70,8 +114,7 @@ const TeacherDashboard: React.FC = () => {
             case 'tasks': return <TaskManager />;
             case 'shape': return <ShapeOfDay />;
             case 'live': return <LiveView />;
-            case 'roster': return <StudentRoster />;
-            case 'planner': return <ClassPlanner />;
+            case 'classrooms': return <ClassroomManager activeView={classroomSubTab} />;
             default: return <TaskManager />;
         }
     };
@@ -109,27 +152,53 @@ const TeacherDashboard: React.FC = () => {
                         {menuItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = activeTab === item.id;
+                            const isClassrooms = item.id === 'classrooms';
 
                             return (
-                                <button
-                                    key={item.id}
-                                    onClick={() => {
-                                        setActiveTab(item.id);
-                                        setIsMobileMenuOpen(false);
-                                    }}
-                                    className={`
-                    w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-2
-                    ${isActive
-                                            ? 'bg-brand-accent/10 border-brand-accent/20 text-brand-accent'
-                                            : 'border-transparent text-brand-textDarkSecondary dark:text-brand-textSecondary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary'}
-                  `}
-                                    title={!isSidebarOpen ? item.label : ''}
-                                >
-                                    <Icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-brand-accent' : 'text-gray-400 dark:text-gray-500'}`} />
-                                    <span className={`font-medium whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block'}`}>
-                                        {item.label}
-                                    </span>
-                                </button>
+                                <div key={item.id} className="space-y-1">
+                                    <button
+                                        onClick={() => {
+                                            setActiveTab(item.id);
+                                            if (!isClassrooms) setIsMobileMenuOpen(false);
+                                        }}
+                                        className={`
+                                            w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-2
+                                            ${isActive
+                                                ? 'bg-brand-accent/10 border-brand-accent/20 text-brand-accent'
+                                                : 'border-transparent text-brand-textDarkSecondary dark:text-brand-textSecondary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary'}
+                                        `}
+                                        title={!isSidebarOpen ? item.label : ''}
+                                    >
+                                        <Icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-brand-accent' : 'text-gray-400 dark:text-gray-500'}`} />
+                                        <span className={`font-medium whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block'}`}>
+                                            {item.label}
+                                        </span>
+                                    </button>
+
+                                    {/* Sub-menu for Classrooms */}
+                                    {isClassrooms && isActive && isSidebarOpen && (
+                                        <div className="pl-11 space-y-1 animate-in slide-in-from-left-2 duration-200">
+                                            <button
+                                                onClick={() => {
+                                                    setClassroomSubTab('classes');
+                                                    setIsMobileMenuOpen(false);
+                                                }}
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${classroomSubTab === 'classes' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                                            >
+                                                My Classes
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    setClassroomSubTab('history');
+                                                    setIsMobileMenuOpen(false);
+                                                }}
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${classroomSubTab === 'history' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
+                                            >
+                                                History & Analytics
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             );
                         })}
                     </nav>
@@ -173,6 +242,75 @@ const TeacherDashboard: React.FC = () => {
                         {menuItems.find(i => i.id === activeTab)?.label}
                     </span>
                 </div>
+
+                {/* Desktop Header with Class Dropdown */}
+                <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-4">
+                        <h1 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            {menuItems.find(i => i.id === activeTab)?.label}
+                        </h1>
+                    </div>
+
+                    {/* Class Selector Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsClassDropdownOpen(!isClassDropdownOpen)}
+                            className="flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-xl hover:border-brand-accent transition-colors min-w-[200px] justify-between"
+                        >
+                            <div className="flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentClass?.color || '#3B82F6' }} />
+                                <span className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                    {currentClass?.name || 'Select Class'}
+                                </span>
+                            </div>
+                            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isClassDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isClassDropdownOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setIsClassDropdownOpen(false)}
+                                />
+                                <div className="absolute right-0 top-full mt-2 w-64 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-xl border-[3px] border-gray-200 dark:border-gray-700 z-20 overflow-hidden animate-in zoom-in-95 duration-100">
+                                    <div className="max-h-64 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                                        {classrooms.map(cls => (
+                                            <button
+                                                key={cls.id}
+                                                onClick={() => {
+                                                    setCurrentClassId(cls.id);
+                                                    setIsClassDropdownOpen(false);
+                                                }}
+                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentClassId === cls.id
+                                                    ? 'bg-brand-accent/10 text-brand-accent'
+                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cls.color || '#3B82F6' }} />
+                                                    <span className="truncate max-w-[140px]">{cls.name}</span>
+                                                </div>
+                                                {currentClassId === cls.id && <Check className="w-4 h-4" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="p-2 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('classrooms');
+                                                setClassroomSubTab('classes');
+                                                setIsClassDropdownOpen(false);
+                                            }}
+                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold hover:bg-brand-accent/90 transition-colors"
+                                        >
+                                            <Plus className="w-4 h-4" /> Add New Class
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </header>
 
                 {/* Actual Page Content */}
                 <main className="flex-1 overflow-y-auto p-4 lg:p-8">

@@ -48,10 +48,18 @@ export interface User {
 // Phase A: Static Configuration (Stored in 'classrooms' collection)
 export interface Classroom {
     id: string;             // Auto-generated ID
-    code: string;           // 6-char join code (e.g., "7X99L")
+    joinCode: string;       // 6-char join code (e.g., "7X99L")
     teacherId: string;      // UID of the teacher
     name: string;           // Class name (e.g., "Mrs. Smith's 5th Grade")
-    contentLibrary: Task[]; // List of available tasks for this class
+    subject?: string;       // e.g., "Computer Science"
+    gradeLevel?: string;    // e.g., "Grade 10"
+    color?: string;         // Hex code
+    presentationSettings?: {
+        defaultView: 'grid' | 'list';
+        showTimeEstimates: boolean;
+        allowStudentSorting: boolean;
+    };
+    contentLibrary?: Task[]; // List of available tasks for this class
 }
 
 // Phase B: The Live Session (Ephemeral - Stored in 'classrooms/{classId}/live_students')
@@ -66,13 +74,16 @@ export interface LiveStudent {
         tasksCompleted: number;
         activeTasks: string[]; // IDs of active tasks
     };
+    currentMessage?: string; // Student's question or comment
 }
 
 // Phase C: The Analytics Vault (Persistent - Stored in 'analytics_logs')
-// NO NAMES allowed here.
+// Names are now preserved for grading history (Option A).
 export interface AnalyticsLog {
     id?: string;
     classroomId: string;
+    studentId: string;      // Preserved ID
+    studentName: string;    // Preserved Name
     date: string;           // YYYY-MM-DD
     sessionDuration: number;// Milliseconds
     taskPerformance: {

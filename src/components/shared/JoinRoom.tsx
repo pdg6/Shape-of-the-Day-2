@@ -7,7 +7,7 @@ import { LiveStudent } from '../../types';
 import toast from 'react-hot-toast';
 
 interface JoinRoomProps {
-    onJoin: (code: string, name: string) => void;
+    onJoin: (code: string, name: string, classId: string) => void;
     initialCode?: string; // Optional: Pre-fill code from URL
 }
 
@@ -82,7 +82,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
             }
 
             toast.success(`Joined as ${name}!`);
-            onJoin(code, name); // Notify parent to switch view
+            onJoin(code, name, targetClassId); // Notify parent to switch view
 
         } catch (err) {
             console.error("Join Error:", err);

@@ -53,7 +53,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                     <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-gray-50/50 dark:bg-gray-900/20">
 
                         {/* Join URL */}
-                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-brand-accent/20 bg-brand-accent/5">
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-[3px] border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Join at</span>
                             <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 shape-of-the-day.com
@@ -61,7 +61,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                         </div>
 
                         {/* Class Code */}
-                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-brand-accent/20 bg-brand-accent/5">
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-[3px] border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
                             <span className="text-xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
@@ -96,7 +96,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-100 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
                                             {student.displayName.charAt(0).toUpperCase()}

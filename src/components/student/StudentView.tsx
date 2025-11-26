@@ -5,19 +5,27 @@ import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
+import { doc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '../../firebase';
+import { LogOut } from 'lucide-react';
+import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
 
 /**
  * Props for the StudentView component.
  * @property studentName - The name of the currently logged-in student.
+ * @property classId - The ID of the class the student is connected to.
  * @property onEditName - Callback to change the student's name (e.g., if they made a typo).
  * @property onNameSubmit - Callback when the student first enters their name.
+ * @property onSignOut - Callback when the student signs out.
  * @property className - Optional name of the class (e.g., "Mrs. Smith's Class").
  * @property isLive - Optional boolean indicating if the classroom session is active.
  */
 interface StudentViewProps {
     studentName: string;
+    classId: string;
     onEditName: (name: string) => void;
     onNameSubmit: (name: string) => void;
+    onSignOut: () => void;
     className?: string;
     isLive?: boolean;
 }
@@ -33,8 +41,10 @@ interface StudentViewProps {
  */
 const StudentView: React.FC<StudentViewProps> = ({
     studentName,
+    classId,
     onEditName,
     onNameSubmit,
+    onSignOut,
     className = "Mrs. Smith's Class",
     isLive = true
 }) => {
@@ -66,22 +76,32 @@ const StudentView: React.FC<StudentViewProps> = ({
     });
 
     /**
-     * Simulates syncing the student's progress to the teacher's dashboard.
+     * Syncs the student's progress to the teacher's dashboard via Firestore.
      */
-    const syncToTeacher = (taskId: string, status: TaskStatus, comment: string = '') => {
+    const syncToTeacher = async (taskId: string, status: TaskStatus, comment: string = '') => {
+        if (!auth.currentUser || !classId) return;
+
         const task = currentTasks.find(t => t.id === taskId);
         const completedCount = currentTasks.filter(t => t.status === 'done').length;
+        const activeTasks = currentTasks.filter(t => t.status === 'in_progress').map(t => t.id);
 
-        const studentState = {
-            studentName,
-            currentTask: task ? task.title : taskId,
-            status,
-            progress: completedCount,
-            studentComment: comment
-        };
+        try {
+            const studentRef = doc(db, 'classrooms', classId, 'live_students', auth.currentUser.uid);
 
-        // Simulate sync to backend
-        console.log('[SYNC] Student State:', studentState);
+            await updateDoc(studentRef, {
+                currentStatus: status,
+                currentTaskId: taskId,
+                'metrics.tasksCompleted': completedCount,
+                'metrics.activeTasks': activeTasks,
+                currentMessage: comment,
+                lastActive: new Date() // Heartbeat
+            });
+
+            console.log('[SYNC] Updated Firestore for student:', auth.currentUser.uid);
+        } catch (error) {
+            console.error("Failed to sync student state:", error);
+            // Don't show toast for background sync errors to avoid spamming the user
+        }
     };
 
     /**
@@ -143,6 +163,23 @@ const StudentView: React.FC<StudentViewProps> = ({
         setShowNameModal(false);
     };
 
+    /**
+     * Handles the student signing out.
+     * Scrubs session data before logging out.
+     */
+    const handleSignOut = async () => {
+        if (auth.currentUser && classId) {
+            try {
+                await scrubAndSaveSession(classId, auth.currentUser.uid);
+                toast.success('Session saved. Goodbye!');
+            } catch (error) {
+                console.error("Error saving session:", error);
+                toast.error('Error saving session data.');
+            }
+        }
+        onSignOut();
+    };
+
     // Determine what content to show based on the selected date
     const isToday = selectedDate === today;
     const previewTasks = availableTasks[selectedDate] || [];
@@ -178,7 +215,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             </div>
                         </div>
 
-                        {/* Class Info */}
+                        {/* Class Info & Sign Out */}
                         <div className="flex items-center gap-4">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
                                 {className}
@@ -189,6 +226,13 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     {isLive ? 'Live' : 'Offline'}
                                 </span>
                             </div>
+                            <button
+                                onClick={handleSignOut}
+                                className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                                title="Leave Class"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
 
@@ -198,11 +242,20 @@ const StudentView: React.FC<StudentViewProps> = ({
                             <h2 className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 Hi, <span className="text-brand-accent">{studentName}</span>
                             </h2>
-                            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                                <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                                <span className={`text-[10px] font-bold uppercase tracking-wider ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                                    {isLive ? 'Live' : 'Offline'}
-                                </span>
+                            <div className="flex items-center gap-2">
+                                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                        {isLive ? 'Live' : 'Offline'}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={handleSignOut}
+                                    className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    title="Leave Class"
+                                >
+                                    <LogOut className="w-4 h-4" />
+                                </button>
                             </div>
                         </div>
 

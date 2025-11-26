@@ -31,6 +31,7 @@ function App() {
     // Student specific state
     const [showNameModal, setShowNameModal] = useState(false);
     const [studentName, setStudentName] = useState('');
+    const [classId, setClassId] = useState('');
 
     // Theme state: managed by global store
     const darkMode = useClassStore((state) => state.darkMode);
@@ -91,6 +92,7 @@ function App() {
         // Reset all application state
         setUser(null);
         setStudentName('');
+        setClassId('');
         setView('landing');
         setShowNameModal(false);
     };
@@ -98,9 +100,10 @@ function App() {
     /**
      * Handles a student joining a room via code.
      */
-    const handleJoinRoom = (code: string, name: string) => {
-        console.log('Joining room:', code, 'as', name);
+    const handleJoinRoom = (code: string, name: string, joinedClassId: string) => {
+        console.log('Joining room:', code, 'as', name, 'ID:', joinedClassId);
         setStudentName(name);
+        setClassId(joinedClassId);
         setView('student');
     };
 
@@ -186,8 +189,10 @@ function App() {
                 {view === 'student' && (
                     <StudentView
                         studentName={studentName}
+                        classId={classId}
                         onEditName={() => setShowNameModal(true)}
                         onNameSubmit={handleNameSubmit}
+                        onSignOut={handleLogout}
                     />
                 )}
             </main>
