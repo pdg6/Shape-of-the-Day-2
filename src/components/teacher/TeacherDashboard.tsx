@@ -16,6 +16,7 @@ import ShapeOfDay from './ShapeOfDay';
 import LiveView from './LiveView';
 import StudentRoster from './StudentRoster';
 import ClassPlanner from './ClassPlanner';
+import ConnectionSidebar from './ConnectionSidebar';
 
 /**
  * Definition for a navigation item in the sidebar.
@@ -33,6 +34,7 @@ interface MenuItem {
  * 1. A collapsible sidebar for navigation.
  * 2. A mobile-responsive menu.
  * 3. A content area that switches between different sub-components (TaskManager, LiveView, etc.).
+ * 4. The new ConnectionSidebar for managing student joins.
  */
 const TeacherDashboard: React.FC = () => {
     // State to track the currently active view
@@ -41,6 +43,10 @@ const TeacherDashboard: React.FC = () => {
     // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Hardcoded for Stage 1 Demo - In real app, this comes from the loaded Class object
+    const DEMO_CLASS_CODE = "123456";
+    const DEMO_CLASS_ID = "demo-class-123";
 
     const menuItems: MenuItem[] = [
         { id: 'tasks', label: 'Task Manager', icon: LayoutDashboard },
@@ -65,7 +71,7 @@ const TeacherDashboard: React.FC = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-64px)] bg-brand-light dark:bg-brand-dark transition-colors duration-300">
+        <div className="flex h-[calc(100vh-64px)] bg-brand-light dark:bg-brand-dark transition-colors duration-300 relative overflow-hidden">
             {/* Mobile Menu Overlay (Darkens background when menu is open on mobile) */}
             {isMobileMenuOpen && (
                 <div
@@ -77,7 +83,7 @@ const TeacherDashboard: React.FC = () => {
             {/* Sidebar Navigation */}
             <aside
                 className={`
-          fixed lg:static inset-y-0 left-0 z-50
+          fixed lg:static inset-y-0 left-0 z-40
           bg-brand-lightSurface dark:bg-brand-darkSurface border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out
           ${isSidebarOpen ? 'w-64' : 'w-20'}
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -135,7 +141,7 @@ const TeacherDashboard: React.FC = () => {
             </aside>
 
             {/* Main Content Wrapper */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Menu Trigger Bar */}
                 <div className="lg:hidden p-4 bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
                     <button
@@ -150,12 +156,18 @@ const TeacherDashboard: React.FC = () => {
                 </div>
 
                 {/* Actual Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-8">
+                <main className="flex-1 overflow-y-auto p-4 lg:p-8 pr-[80px] lg:pr-[80px]"> {/* Add padding-right to avoid overlap with ConnectionSidebar */}
                     <div className="max-w-7xl mx-auto">
                         {renderContent()}
                     </div>
                 </main>
             </div>
+
+            {/* Connection Sidebar (Right Side) */}
+            <ConnectionSidebar
+                classCode={DEMO_CLASS_CODE}
+                classId={DEMO_CLASS_ID}
+            />
         </div>
     );
 };
