@@ -97,7 +97,7 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Header */}
             <header className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800">
-                <div className="w-[85%] md:w-[70%] mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
+                <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
                     {/* Desktop: Horizontal layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
                         {/* Left: Greeting and Name */}
@@ -165,7 +165,8 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
             </header>
 
             {/* Main Content */}
-            <main className="w-[85%] md:w-[70%] mx-auto px-4 py-6 pb-24">
+            {/* Main Content */}
+            <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
                 {/* Calendar Strip */}
                 <MiniCalendar
                     selectedDate={selectedDate}
