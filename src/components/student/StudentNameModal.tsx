@@ -60,7 +60,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
             onClick={onClose}
         >
             <div
-                className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300 border border-gray-200 dark:border-gray-700 relative"
+                className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl w-full max-w-md p-8 animate-in fade-in zoom-in duration-300 border-[3px] border-gray-200 dark:border-gray-700 relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button (only shown if onClose prop is provided) */}
@@ -89,7 +89,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                             // tracking-[0.5em]: Spreads out letters for style
                             // font-mono: Monospace font for alignment
                             className={`
-                                w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
+                                w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-[3px] focus:outline-none transition-all hover:border-emerald-400 
                                 bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
                                 ${error
                                     ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50'
@@ -107,7 +107,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                         type="submit"
                         disabled={!name.trim()}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full pl-4 pr-4 py-2.5 text-lg rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
+                        className="w-full pl-4 pr-4 py-2.5 text-lg rounded-lg border-[3px] focus:outline-none transition-all hover:border-emerald-400 
                         bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary 
                         border-gray-200 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
                         relative text-center group"

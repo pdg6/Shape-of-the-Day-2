@@ -9,7 +9,9 @@ import {
     X,
     ChevronLeft,
     ChevronRight,
-    LucideIcon
+    LucideIcon,
+    Sun,
+    Moon
 } from 'lucide-react';
 import TaskManager from './TaskManager';
 import ShapeOfDay from './ShapeOfDay';
@@ -17,6 +19,7 @@ import LiveView from './LiveView';
 import StudentRoster from './StudentRoster';
 import ClassPlanner from './ClassPlanner';
 import ConnectionSidebar from './ConnectionSidebar';
+import { useClassStore } from '../../store/classStore';
 
 /**
  * Definition for a navigation item in the sidebar.
@@ -39,6 +42,9 @@ interface MenuItem {
 const TeacherDashboard: React.FC = () => {
     // State to track the currently active view
     const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
+
+    // Global state
+    const { darkMode, toggleDarkMode } = useClassStore();
 
     // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -84,14 +90,14 @@ const TeacherDashboard: React.FC = () => {
             <aside
                 className={`
           fixed lg:static inset-y-0 left-0 z-40
-          bg-brand-lightSurface dark:bg-brand-darkSurface border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out
+          bg-brand-lightSurface dark:bg-brand-darkSurface transition-all duration-300 ease-in-out
           ${isSidebarOpen ? 'w-64' : 'w-20'}
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
             >
                 <div className="h-full flex flex-col">
                     {/* Mobile Header (Close button) */}
-                    <div className="lg:hidden flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+                    <div className="lg:hidden flex items-center justify-between p-4">
                         <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Menu</span>
                         <button onClick={() => setIsMobileMenuOpen(false)}>
                             <X className="w-6 h-6 text-gray-500 dark:text-gray-400" />
@@ -128,11 +134,24 @@ const TeacherDashboard: React.FC = () => {
                         })}
                     </nav>
 
-                    {/* Sidebar Toggle Button (Desktop only) */}
-                    <div className="hidden lg:flex p-4 border-t border-gray-200 dark:border-gray-800">
+                    {/* Sidebar Footer Actions */}
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
+                        {/* Theme Toggle */}
+                        <button
+                            onClick={toggleDarkMode}
+                            className={`w-full flex items-center justify-center p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors ${isSidebarOpen ? 'gap-3' : ''}`}
+                            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        >
+                            {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                            <span className={`font-medium whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block w-0 overflow-hidden'}`}>
+                                {darkMode ? 'Dark Mode' : 'Light Mode'}
+                            </span>
+                        </button>
+
+                        {/* Sidebar Toggle (Desktop only) */}
                         <button
                             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="w-full flex items-center justify-center p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                            className="hidden lg:flex w-full items-center justify-center p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
                         >
                             {isSidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                         </button>
@@ -143,7 +162,7 @@ const TeacherDashboard: React.FC = () => {
             {/* Main Content Wrapper */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Menu Trigger Bar */}
-                <div className="lg:hidden p-4 bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800 flex items-center gap-3">
+                <div className="lg:hidden p-4 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center gap-3">
                     <button
                         onClick={() => setIsMobileMenuOpen(true)}
                         className="p-2 -ml-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"

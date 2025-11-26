@@ -42,42 +42,33 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
     return (
         <div
             className={`
-                fixed right-0 top-[64px] h-[calc(100vh-64px)] w-80 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-2xl transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-gray-800 z-50
+                fixed right-0 top-[64px] h-[calc(100vh-64px)] w-80 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-2xl transition-transform duration-300 ease-in-out z-50
                 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
             `}
         >
             <div className="h-full flex flex-col">
-                {/* Header with Close Button */}
-                <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
-                    <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Class Info</h2>
-                    <button
-                        onClick={() => setSidebarOpen(false)}
-                        className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
-                </div>
-
                 {/* Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* QR Code Section */}
-                    <div className="p-4 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-800 space-y-3 bg-gray-50/50 dark:bg-gray-900/20">
+                    <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-gray-50/50 dark:bg-gray-900/20">
 
                         {/* Join URL */}
-                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-transparent bg-white dark:bg-gray-800 shadow-sm">
-                            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Join at</span>
-                            <span className="text-brand-accent font-bold text-sm">shape-of-the-day.com</span>
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-brand-accent/20 bg-brand-accent/5">
+                            <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Join at</span>
+                            <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                shape-of-the-day.com
+                            </span>
                         </div>
 
                         {/* Class Code */}
                         <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
-                            <span className="text-2xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
+                            <span className="text-xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
                             </span>
                         </div>
 
-                        <div className="w-48 h-48 bg-white p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mt-2">
+                        <div className="w-48 h-48 bg-white p-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm mt-2">
                             <QRCodeSVG
                                 value={joinUrl}
                                 style={{ width: '100%', height: '100%' }}
@@ -105,7 +96,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border border-gray-100 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-100 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
                                             {student.displayName.charAt(0).toUpperCase()}
@@ -128,6 +119,17 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                             )}
                         </div>
                     </div>
+                </div>
+
+                {/* Footer with Close Button */}
+                <div className="p-4 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                    <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="w-full flex items-center justify-center gap-2 p-3 text-gray-500 hover:text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-all font-medium"
+                        title="Close Sidebar"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
         </div>

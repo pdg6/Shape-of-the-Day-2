@@ -151,60 +151,64 @@ const StudentView: React.FC<StudentViewProps> = ({
     return (
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Header Section */}
-            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800">
+            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-50 backdrop-blur-md bg-opacity-80 dark:bg-opacity-80">
                 <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
                     {/* Desktop Layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
                         {/* Greeting */}
-                        <div className="flex items-center gap-2 px-4 py-2">
-                            <h2 className="text-lg font-bold whitespace-nowrap">
-                                Good Morning, <span className="dark:text-brand-textPrimary">{studentName}</span>!
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-lg font-bold whitespace-nowrap text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                Good Morning,
+                                <button
+                                    onClick={() => onEditName(studentName)}
+                                    className="ml-1 text-brand-accent hover:underline decoration-2 underline-offset-4 decoration-brand-accent/30 hover:decoration-brand-accent transition-all"
+                                    title="Edit Name"
+                                >
+                                    {studentName}
+                                </button>!
                             </h2>
                         </div>
 
                         {/* Progress Summary */}
                         <div className="flex-1 flex justify-center px-4">
-                            <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
-                                You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
-                            </p>
+                            <div className="px-4 py-1.5 bg-brand-light dark:bg-brand-dark rounded-full border-[3px] border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
+                                    You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
+                                </p>
+                            </div>
                         </div>
 
                         {/* Class Info */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
                                 {className}
                             </p>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                                    {isLive ? 'Live' : 'Idle'}
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border-[3px] transition-all duration-300 ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-400'}`} />
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    {isLive ? 'Live' : 'Offline'}
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Mobile Layout (Stacked) */}
-                    <div className="flex md:hidden flex-col gap-2 w-full">
-                        <div className="flex items-center justify-center">
-                            <h2 className="text-base font-bold text-center">
-                                Good Morning, <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">{studentName}</span>!
+                    <div className="flex md:hidden flex-col gap-3 w-full py-2">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                Hi, <span className="text-brand-accent">{studentName}</span>
                             </h2>
-                        </div>
-                        <div className="flex justify-center">
-                            <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary text-center">
-                                You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
-                            </p>
-                        </div>
-                        <div className="flex items-center justify-center gap-3">
-                            <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                                {className}
-                            </p>
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-brand-light dark:bg-brand-dark rounded-lg border border-gray-200 dark:border-gray-700">
-                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                                <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                                    {isLive ? 'Live' : 'Idle'}
+                            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    {isLive ? 'Live' : 'Offline'}
                                 </span>
                             </div>
+                        </div>
+
+                        <div className="flex items-center justify-between bg-brand-light dark:bg-brand-dark p-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+                            <span className="text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary">Tasks Left</span>
+                            <span className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{currentTasks.filter(t => t.status !== 'done').length}</span>
                         </div>
                     </div>
                 </div>
@@ -222,7 +226,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-bold text-lg">Your Tasks</h3>
-                        <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border border-gray-200 dark:border-gray-700">
+                        <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border-[3px] border-gray-200 dark:border-gray-700">
                             {/* Calculate completion percentage */}
                             {Math.round((currentTasks.filter(t => t.status === 'done').length / Math.max(currentTasks.length, 1)) * 100)}% Complete
                         </div>
@@ -242,7 +246,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             onUpdateComment={handleUpdateComment}
                         />
                     ) : (
-                        <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                        <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
                             <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                 {previewTasks.length > 0
                                     ? "Import these tasks to start working on them."

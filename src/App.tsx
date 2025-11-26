@@ -32,17 +32,8 @@ function App() {
     const [showNameModal, setShowNameModal] = useState(false);
     const [studentName, setStudentName] = useState('');
 
-    // Theme state: persists dark mode preference to localStorage
-    const [darkMode, setDarkMode] = useState(() => {
-        if (typeof window !== 'undefined') {
-            const savedMode = localStorage.getItem('darkMode');
-            if (savedMode !== null) {
-                return savedMode === 'true';
-            }
-            return true; // Default to dark mode
-        }
-        return true;
-    });
+    // Theme state: managed by global store
+    const darkMode = useClassStore((state) => state.darkMode);
 
     // Effect to apply dark mode class to the HTML element
     useEffect(() => {
@@ -107,10 +98,10 @@ function App() {
     /**
      * Handles a student joining a room via code.
      */
-    const handleJoinRoom = (code: string) => {
-        console.log('Joining room:', code);
-        // In a real app, we would validate the code against the backend here
-        setShowNameModal(true);
+    const handleJoinRoom = (code: string, name: string) => {
+        console.log('Joining room:', code, 'as', name);
+        setStudentName(name);
+        setView('student');
     };
 
     /**
@@ -145,7 +136,7 @@ function App() {
             )}
 
             {/* Navigation Bar */}
-            <nav className="bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-700 px-6 py-3 flex items-center justify-between transition-colors duration-200">
+            <nav className="bg-brand-lightSurface dark:bg-brand-darkSurface px-6 py-3 flex items-center justify-between transition-colors duration-200">
                 <div className="flex items-center gap-2 font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     <img
                         src="/shape of the day logo.png"
@@ -159,21 +150,15 @@ function App() {
                     {view === 'teacher' && (
                         <button
                             onClick={() => useClassStore.getState().toggleSidebar()}
-                            className="p-2.5 rounded-xl bg-blue-900/20 text-blue-500 hover:bg-blue-900/30 transition-colors border border-blue-500/20"
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-accent/5 text-blue-500 hover:bg-blue-900/30 transition-colors border border-blue-500/20"
                             title="Class Connection Info"
                         >
                             <QrCode className="w-5 h-5" />
+                            <span className="text-sm font-bold">Join Code</span>
                         </button>
                     )}
 
-                    {/* Theme Toggle Button */}
-                    <button
-                        onClick={() => setDarkMode(!darkMode)}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
-                        title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                    >
-                        {darkMode ? "☀️" : "🌙"}
-                    </button>
+                    {/* Theme Toggle Button Removed (Moved to TeacherSidebar) */}
 
                     {view !== 'landing' && (
                         <button

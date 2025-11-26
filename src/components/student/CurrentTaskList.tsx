@@ -89,7 +89,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
             <div
-                className={`bg-brand-darkSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-2 ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
+                className={`bg-brand-darkSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -125,7 +125,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                             value={comment}
                             onChange={(e) => setComment(e.target.value.slice(0, maxChars))}
                             placeholder="I don't understand..."
-                            className="w-full h-32 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-2 border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-transparent resize-none transition-all outline-none"
+                            className="w-full h-32 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-transparent resize-none transition-all outline-none"
                             autoFocus
                         />
                         <div className="absolute bottom-2 right-2 text-xs text-gray-400">
@@ -167,11 +167,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
     // Helper to render the small status badge next to the title
     const getStatusBadge = (status: TaskStatus) => {
         switch (status) {
-            case 'stuck': return <span className="px-2 py-0.5 text-red-600 dark:text-red-500 rounded text-[10px] font-bold uppercase tracking-wider border border-red-600 dark:border-red-500">Stuck</span>;
-            case 'question': return <span className="px-2 py-0.5 text-amber-600 dark:text-amber-500 rounded text-[10px] font-bold uppercase tracking-wider border border-amber-600 dark:border-amber-500">Question</span>;
-            case 'in_progress': return <span className="px-2 py-0.5 text-emerald-600 dark:text-emerald-500 rounded text-[10px] font-bold uppercase tracking-wider border border-emerald-600 dark:border-emerald-500">Active</span>;
-            case 'done': return <span className="px-2 py-0.5 text-blue-600 dark:text-blue-500 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-600 dark:border-blue-500">Done</span>;
-            default: return <span className="px-2 py-0.5 text-gray-500 dark:text-gray-400 rounded text-[10px] font-bold uppercase tracking-wider border border-gray-300 dark:border-gray-600">To Do</span>;
+            case 'stuck': return <span className="px-2.5 py-1 text-red-600 dark:text-red-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">Stuck</span>;
+            case 'question': return <span className="px-2.5 py-1 text-amber-600 dark:text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">Question</span>;
+            case 'in_progress': return <span className="px-2.5 py-1 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">Active</span>;
+            case 'done': return <span className="px-2.5 py-1 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">Done</span>;
+            default: return <span className="px-2.5 py-1 text-gray-500 dark:text-gray-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">To Do</span>;
         }
     };
 
@@ -192,32 +192,33 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
     };
 
     return (
-        <div className={`bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl hover:shadow-[0_8px_15px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_8px_15px_rgba(0,0,0,0.2)] transition-all duration-300 border-2 ${cardBorderClass} w-full max-w-full`}>
+        <div className={`bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-2xl hover:shadow-lg dark:hover:shadow-black/30 transition-all duration-300 border-[3px] ${cardBorderClass} w-full max-w-full hover:scale-[1.005]`}>
             <div className="flex items-start justify-between gap-4">
-                <div className={`flex-1 transition-opacity duration-300 ${isDone ? 'opacity-50 grayscale' : ''}`}>
-                    <div className="flex items-center gap-3 mb-1 flex-wrap">
-                        <h3 className={`font-bold ${isDone ? 'text-gray-500 dark:text-gray-500' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                <div className={`flex-1 transition-opacity duration-300 ${isDone ? 'opacity-60' : ''}`}>
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <h3 className={`text-lg font-bold ${isDone ? 'text-gray-500 dark:text-gray-500 line-through decoration-2 decoration-gray-300 dark:decoration-gray-600' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                             {task.title}
                         </h3>
                         {task.dueDate && (
-                            <span className={`text-sm font-medium ${isDone ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${isDone ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400'}`}>
                                 {task.dueDate}
                             </span>
                         )}
                         {getStatusBadge(task.status)}
                     </div>
-                    <p className={`text-sm ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
+                    <p className={`text-sm leading-relaxed ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
                         {task.description}
                     </p>
                     {/* Show comment preview if exists */}
                     {task.comment && (
-                        <div className="mt-2 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-brand-light dark:bg-brand-dark p-2 rounded border border-gray-100 dark:border-gray-800">
+                        <div className="mt-3 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-brand-light dark:bg-brand-dark p-3 rounded-lg border border-gray-100 dark:border-gray-800 flex items-start gap-2">
+                            <span className="text-brand-accent font-bold">Note:</span>
                             "{task.comment}"
                         </div>
                     )}
                 </div>
 
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border border-gray-100 dark:border-gray-800">
                     {STATUS_ACTIONS.map((action) => {
                         const Icon = action.icon;
                         const isActive = task.status === action.id;
@@ -231,13 +232,17 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                                 onClick={() => handleActionClick(action.id)}
                                 title={action.label}
                                 className={`
-                  p-1.5 rounded-full transition-all duration-200
+                  p-2 rounded-lg transition-all duration-200 relative group
                   ${isActive
-                                        ? `${action.activeColor} scale-110 shadow-sm bg-transparent`
-                                        : `text-gray-400 dark:text-gray-500 ${action.hover}`}
+                                        ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm ring-1 ring-black/5 dark:ring-white/10`
+                                        : `text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-brand-darkSurface hover:text-gray-600 dark:hover:text-gray-300`}
                 `}
                             >
-                                <Icon className="w-5 h-5" />
+                                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                                {/* Tooltip */}
+                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                    {action.label}
+                                </span>
                             </button>
                         );
                     })}
@@ -275,8 +280,14 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
 
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border border-dashed border-gray-300 dark:border-gray-700 w-full">
-                <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">No tasks for today. Select a date to import tasks.</p>
+            <div className="flex flex-col items-center justify-center py-16 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl border-[3px] border-dashed border-gray-300 dark:border-gray-700 w-full text-center">
+                <div className="w-16 h-16 bg-brand-light dark:bg-brand-dark rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                </div>
+                <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">All Caught Up!</h3>
+                <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-xs mx-auto">
+                    You have no tasks for today. Enjoy your free time or check upcoming days.
+                </p>
             </div>
         );
     }

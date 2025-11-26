@@ -91,7 +91,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
     };
 
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 mb-6 transition-colors">
+        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl shadow-sm border-[3px] border-gray-200 dark:border-gray-700 mb-6 transition-colors">
             <div className="flex items-center justify-between mb-4 px-7">
                 <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     {new Date().toLocaleString('default', { month: 'long' })} Schedule
@@ -132,7 +132,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                flex flex-col items-center justify-center min-w-[4.5rem] flex-1 p-3 rounded-xl border-2 transition-all duration-200 outline-none
+                flex flex-col items-center justify-center min-w-[4.5rem] flex-1 p-3 rounded-xl border-[3px] transition-all duration-200 outline-none
                 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
                 ${isSelected
                                     ? 'bg-brand-lightSurface dark:bg-brand-darkSurface border-emerald-500 shadow-sm scale-105 z-10'

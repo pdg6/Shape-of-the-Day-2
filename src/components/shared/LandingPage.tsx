@@ -10,7 +10,7 @@ import JoinRoom from './JoinRoom';
  */
 interface LandingPageProps {
     onLogin: () => void;
-    onJoin: (code: string) => void;
+    onJoin: (code: string, name: string) => void;
 }
 
 /**
@@ -41,23 +41,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </p>
             </div>
 
-            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-lg border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden">
                 {/* Tabs for switching modes */}
-                <div className="flex">
+                <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-xl m-2">
+                    <div
+                        className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-brand-darkSurface rounded-lg shadow-sm transition-all duration-300 ease-out ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
+                            }`}
+                    />
                     <button
                         onClick={() => setActiveTab('student')}
-                        className={`flex-1 py-3 text-center font-bold text-sm transition-colors ${activeTab === 'student'
-                            ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-emerald-600 dark:text-emerald-400'
-                            : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`relative flex-1 py-3 text-center font-bold text-sm transition-colors z-10 ${activeTab === 'student'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                             }`}
                     >
                         Student
                     </button>
                     <button
                         onClick={() => setActiveTab('teacher')}
-                        className={`flex-1 py-3 text-center font-bold text-sm transition-colors ${activeTab === 'teacher'
-                            ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-blue-600 dark:text-blue-400'
-                            : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`relative flex-1 py-3 text-center font-bold text-sm transition-colors z-10 ${activeTab === 'teacher'
+                            ? 'text-blue-600 dark:text-blue-400'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                             }`}
                     >
                         Teacher

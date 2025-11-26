@@ -7,7 +7,7 @@ import { LiveStudent } from '../../types';
 import toast from 'react-hot-toast';
 
 interface JoinRoomProps {
-    onJoin: (code: string) => void;
+    onJoin: (code: string, name: string) => void;
     initialCode?: string; // Optional: Pre-fill code from URL
 }
 
@@ -69,10 +69,20 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                 }
             };
 
-            await setDoc(doc(db, 'classrooms', targetClassId, 'live_students', uid), newStudentData);
+            try {
+                await setDoc(doc(db, 'classrooms', targetClassId, 'live_students', uid), newStudentData);
+            } catch (dbError) {
+                console.error("Firestore write failed:", dbError);
+                if (targetClassId === 'demo-class-123') {
+                    console.warn("Proceeding in Demo Mode despite DB error");
+                    toast('Demo Mode: Backend sync unavailable', { icon: '⚠️' });
+                } else {
+                    throw dbError; // Re-throw for non-demo classes
+                }
+            }
 
             toast.success(`Joined as ${name}!`);
-            onJoin(code); // Notify parent to switch view
+            onJoin(code, name); // Notify parent to switch view
 
         } catch (err) {
             console.error("Join Error:", err);
@@ -97,7 +107,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         placeholder="Enter 6-digit code"
                         maxLength={6}
                         className={`
-                            w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-xl border-2 outline-none transition-all
+                            w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-xl border-[3px] outline-none transition-all
                             bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary
                             placeholder:text-sm placeholder:font-sans placeholder:tracking-normal
                             ${error
@@ -116,7 +126,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="What's your name?"
-                        className="w-full px-4 py-3 text-center text-lg rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 outline-none transition-all"
+                        className="w-full px-4 py-3 text-center text-lg rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 outline-none transition-all"
                     />
                 </div>
             </div>
