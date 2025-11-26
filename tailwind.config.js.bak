@@ -11,11 +11,11 @@ export default {
                 // Semantic colors that adapt to dark/light mode via class usage
                 // We will define specific hex codes here and use them in classes
                 brand: {
-                    dark: '#141211',       // Dark mode dominant
-                    darkSurface: '#1F1C1A', // Dark mode secondary
+                    dark: '#10100eff',       // Dark mode dominant
+                    darkSurface: '#10100eff', // Dark mode secondary
                     light: '#E5E5E5',      // Light mode dominant (Light Grey)
-                    lightSurface: '#FFFFFF', // Light mode surface
-                    accent: '#105BA6',     // Primary action blue
+                    lightSurface: '#ffffffe9', // Light mode surface
+                    accent: '#2563EB',     // Primary action blue
                     textPrimary: '#F2EFEA', // Dark mode text primary
                     textSecondary: '#A8A29D', // Dark mode text secondary
                     textDarkPrimary: '#141211', // Light mode text primary

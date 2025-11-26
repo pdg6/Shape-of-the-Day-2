@@ -160,7 +160,7 @@ function App() {
                 <button
                   onClick={() => setActiveTab('student')}
                   className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'student'
-                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary'
+                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-emerald-600 dark:text-emerald-400'
                     : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                 >
@@ -169,7 +169,7 @@ function App() {
                 <button
                   onClick={() => setActiveTab('teacher')}
                   className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'teacher'
-                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary'
+                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-blue-600 dark:text-blue-400'
                     : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                     }`}
                 >
@@ -181,11 +181,10 @@ function App() {
               <div className="p-8">
                 {activeTab === 'student' ? (
                   <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
-                    <div className="text-green-600 dark:text-green-400">
+                    <div className="text-emerald-600 dark:text-emerald-400">
                       <GraduationCap className="w-12 h-12" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-2">Student</h2>
                       <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Join a room to see your daily tasks.</p>
                     </div>
                     <JoinRoom onJoin={handleJoinRoom} />
@@ -196,7 +195,6 @@ function App() {
                       <LayoutDashboard className="w-12 h-12" />
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-2">Teacher</h2>
                       <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
                     </div>
                     <GoogleSignInButton onClick={handleLogin} />

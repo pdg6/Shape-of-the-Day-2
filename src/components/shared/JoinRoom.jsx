@@ -30,7 +30,7 @@ const JoinRoom = ({ onJoin, isLoading = false }) => {
                     onChange={handleChange}
                     placeholder="Class Code"
                     maxLength={6}
-                    className={`w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
+                    className={`w-full px-4 py-2.5 text-base text-center tracking-[0.5em] font-mono rounded-lg border-2 focus:outline-none transition-all hover:border-emerald-400 
                         bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
                         ${error
                             ? 'border-red-300 focus:border-red-500 focus:ring-red-200 focus:ring-emerald-500 dark:border-red-500/50'
@@ -42,7 +42,7 @@ const JoinRoom = ({ onJoin, isLoading = false }) => {
                 <button
                     type="submit"
                     disabled={code.length !== 6 || isLoading}
-                    className="absolute right-1.5 p-1.5 bg-brand-accent text-white rounded-md hover:bg-brand-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm group"
+                    className="absolute right-1.5 p-1.5 bg-brand-dark text-white rounded-md hover:bg-brand-dark/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm group"
                     title="Join Room"
                 >
                     {isLoading ? (

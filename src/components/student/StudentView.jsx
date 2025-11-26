@@ -102,14 +102,11 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
                     <div className="hidden md:flex items-center justify-between w-full">
                         {/* Left: Greeting and Name */}
                         {/* Left: Greeting and Name */}
-                        <button
-                            onClick={onEditName}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-transparent hover:border-brand-accent/30 hover:bg-brand-accent/5 active:scale-95 active:border-brand-accent active:ring-2 active:ring-brand-accent/20 transition-all duration-300 cursor-pointer outline-none group"
-                        >
-                            <h2 className="text-lg font-bold whitespace-nowrap group-hover:text-brand-accent transition-colors">
-                                Good Morning, <span className="text-brand-accent group-hover:underline decoration-wavy underline-offset-4">{studentName}</span>!
+                        <div className="flex items-center gap-2 px-4 py-2">
+                            <h2 className="text-lg font-bold whitespace-nowrap">
+                                Good Morning, <span className="dark:text-brand-textPrimary">{studentName}</span>!
                             </h2>
-                        </button>
+                        </div>
 
                         {/* Center: Task Progress */}
                         <div className="flex-1 flex justify-center px-4">
@@ -137,7 +134,7 @@ const StudentView = ({ studentName, onEditName, className = "Mrs. Smith's Class"
                         {/* Row 1: Greeting and Name */}
                         <div className="flex items-center justify-center">
                             <h2 className="text-base font-bold text-center">
-                                Good Morning, <span className="text-brand-accent">{studentName}</span>!
+                                Good Morning, <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">{studentName}</span>!
                             </h2>
                         </div>
 
