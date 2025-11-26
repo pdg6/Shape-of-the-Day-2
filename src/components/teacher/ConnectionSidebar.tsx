@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { QrCode, Users, ChevronRight, User } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { LiveStudent } from '../../types';
 
@@ -12,7 +12,7 @@ interface ConnectionSidebarProps {
 }
 
 const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classId }) => {
-    const { isSidebarOpen, setSidebarOpen, activeStudentCount, setActiveStudentCount } = useClassStore();
+    const { isSidebarOpen, setSidebarOpen, setActiveStudentCount } = useClassStore();
     const [liveStudents, setLiveStudents] = useState<LiveStudent[]>([]);
 
     // Listen for real-time updates to the roster
@@ -42,130 +42,94 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
     return (
         <div
             className={`
-                fixed right-0 top-0 h-full bg-white dark:bg-brand-darkSurface shadow-2xl z-50 transition-all duration-300 ease-in-out border-l border-gray-200 dark:border-gray-700
-                ${isSidebarOpen ? 'w-[350px]' : 'w-[60px]'}
+                fixed right-0 top-[64px] h-[calc(100vh-64px)] w-80 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-2xl transition-transform duration-300 ease-in-out border-l border-gray-200 dark:border-gray-800 z-50
+                ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
             `}
         >
-            {/* COLLAPSED STATE */}
-            {!isSidebarOpen && (
-                <div
-                    className="h-full flex flex-col items-center py-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    onClick={() => setSidebarOpen(true)}
-                >
-                    {/* Top: QR Icon */}
-                    <div className="p-2 bg-brand-accent/10 rounded-lg text-brand-accent mb-8">
-                        <QrCode className="w-6 h-6" />
-                    </div>
-
-                    {/* Middle: Vertical Text */}
-                    <div className="flex-1 flex items-center justify-center">
-                        <span className="transform -rotate-90 text-lg font-bold tracking-widest text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap">
-                            {classCode}
-                        </span>
-                    </div>
-
-                    {/* Bottom: Student Count */}
-                    <div className="mt-8 relative">
-                        <Users className="w-6 h-6 text-gray-400" />
-                        {activeStudentCount > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                                {activeStudentCount}
-                            </span>
-                        )}
-                    </div>
+            <div className="h-full flex flex-col">
+                {/* Header with Close Button */}
+                <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
+                    <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Class Info</h2>
+                    <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
                 </div>
-            )}
 
-            {/* EXPANDED STATE */}
-            {isSidebarOpen && (
-                <div className="h-full flex flex-col">
-                    {/* Header */}
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-start justify-between bg-gray-50 dark:bg-gray-800/50">
-                        <div>
-                            <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">Join Class</h2>
-                            <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Scan to connect instantly</p>
+                {/* Content Area */}
+                <div className="flex-1 flex flex-col overflow-hidden">
+                    {/* QR Code Section */}
+                    <div className="p-4 flex flex-col items-center justify-center border-b border-gray-200 dark:border-gray-800 space-y-3 bg-gray-50/50 dark:bg-gray-900/20">
+
+                        {/* Join URL */}
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-transparent bg-white dark:bg-gray-800 shadow-sm">
+                            <span className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Join at</span>
+                            <span className="text-brand-accent font-bold text-sm">shape-of-the-day.com</span>
                         </div>
-                        <button
-                            onClick={() => setSidebarOpen(false)}
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
-                        >
-                            <ChevronRight className="w-6 h-6 text-gray-500" />
-                        </button>
-                    </div>
 
-                    {/* QR Code Section (Fixed at top) */}
-                    <div className="p-6 flex flex-col items-center justify-center bg-white dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-700">
-                        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-3">
+                        {/* Class Code */}
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-2 border-brand-accent/20 bg-brand-accent/5">
+                            <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
+                            <span className="text-2xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
+                                {classCode}
+                            </span>
+                        </div>
+
+                        <div className="w-48 h-48 bg-white p-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mt-2">
                             <QRCodeSVG
                                 value={joinUrl}
-                                size={160}
+                                style={{ width: '100%', height: '100%' }}
                                 level={"H"}
-                                includeMargin={true}
+                                includeMargin={false}
                             />
                         </div>
-                        <div className="text-center w-full">
-                            <p className="text-xs text-gray-500 mb-1 uppercase tracking-wider font-semibold">Class Code</p>
-                            <div className="flex items-center justify-center gap-2 bg-gray-50 dark:bg-gray-800/50 py-2 px-4 rounded-lg border border-gray-100 dark:border-gray-700">
-                                <span className="text-2xl font-mono font-bold text-brand-accent tracking-[0.2em]">{classCode}</span>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => {
-                                navigator.clipboard.writeText(joinUrl);
-                                // Could add a toast here
-                            }}
-                            className="mt-3 text-xs text-brand-accent hover:underline font-medium"
-                        >
-                            Copy Join Link
-                        </button>
                     </div>
 
-                    {/* Live Roster Section (Scrollable) */}
-                    <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-brand-darkSurface/50">
-                        <div className="p-4">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between sticky top-0 bg-gray-50 dark:bg-brand-darkSurface/50 py-2 z-10">
+                    {/* Live Roster Section */}
+                    <div className="flex-1 overflow-y-auto bg-brand-lightSurface dark:bg-brand-darkSurface">
+                        <div className="p-4 space-y-2">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-brand-lightSurface dark:bg-brand-darkSurface py-2 z-10">
                                 <span>Live Students</span>
-                                <span className="bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded-full text-[10px]">
+                                <span className="bg-brand-accent/10 text-brand-accent px-2 py-0.5 rounded-full text-[10px] font-bold">
                                     {liveStudents.length}
                                 </span>
                             </h3>
 
-                            <div className="space-y-2">
-                                {liveStudents.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400 text-sm italic">
-                                        Waiting for students to join...
-                                    </div>
-                                ) : (
-                                    liveStudents.map((student) => (
-                                        <div
-                                            key={student.uid}
-                                            className="flex items-center gap-3 p-3 bg-white dark:bg-brand-darkSurface rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm animate-in slide-in-from-bottom-2 duration-300 hover:shadow-md transition-shadow"
-                                        >
-                                            <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-xs shrink-0">
-                                                {student.displayName.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
-                                                    {student.displayName}
-                                                </p>
-                                                <p className="text-xs text-gray-500 truncate">
-                                                    {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
-                                                </p>
-                                            </div>
-                                            {/* Status Indicator Dot */}
-                                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${student.currentStatus === 'stuck' ? 'bg-red-500 animate-pulse ring-2 ring-red-200 dark:ring-red-900' :
-                                                    student.currentStatus === 'question' ? 'bg-amber-500 animate-pulse ring-2 ring-amber-200 dark:ring-amber-900' :
-                                                        student.currentStatus === 'done' ? 'bg-blue-500' :
-                                                            'bg-emerald-500'
-                                                }`} />
+                            {liveStudents.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400 text-sm italic">
+                                    Waiting for students...
+                                </div>
+                            ) : (
+                                liveStudents.map((student) => (
+                                    <div
+                                        key={student.uid}
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border border-gray-100 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
+                                            {student.displayName.charAt(0).toUpperCase()}
                                         </div>
-                                    ))
-                                )}
-                            </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                                {student.displayName}
+                                            </p>
+                                            <p className="text-[10px] text-gray-500 truncate">
+                                                {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
+                                            </p>
+                                        </div>
+                                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${student.currentStatus === 'stuck' ? 'bg-red-500 animate-pulse ring-2 ring-red-100 dark:ring-red-900/30' :
+                                            student.currentStatus === 'question' ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
+                                                student.currentStatus === 'done' ? 'bg-blue-500' :
+                                                    'bg-emerald-500'
+                                            }`} />
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

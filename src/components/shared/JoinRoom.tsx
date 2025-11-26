@@ -34,39 +34,33 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
         setIsJoining(true);
 
         try {
+            let targetClassId = '';
+
+            // --- DEMO WORKFLOW ---
+            // Always accept '123456' and map it to the persistent demo class ID.
+            if (code === '123456') {
+                targetClassId = 'demo-class-123';
+            } else {
+                // Future Real Implementation:
+                // const q = query(collection(db, 'classrooms'), where('code', '==', code));
+                // const snapshot = await getDocs(q);
+                // if (snapshot.empty) throw new Error('Class not found');
+                // targetClassId = snapshot.docs[0].id;
+
+                setError('Invalid Code. Please use "123456" for the demo.');
+                setIsJoining(false);
+                return;
+            }
+
             // 2. Authenticate Anonymously
             const userCredential = await signInAnonymously(auth);
             const uid = userCredential.user.uid;
 
-            // 3. Create the Live Student Document
-            // Note: In a real app, we would first query to find the 'classId' associated with this 'code'.
-            // For this demo, we are assuming a static mapping or that the code IS the ID for simplicity,
-            // OR we will handle the ID lookup in the parent component.
-            // Let's assume for now we are just passing the code up, but the data write happens here.
-
-            // FIXME: Ideally, we need the actual Firestore Document ID of the classroom, not just the 6-digit code.
-            // For the purpose of this "Stage 1" implementation, let's assume we have a way to get it, 
-            // or we mock it. 
-            // *CRITICAL*: To make this work with the Sidebar, we need to write to the SAME collection the Sidebar listens to.
-            // Let's assume a hardcoded test class ID for now if one isn't found, or query for it.
-
-            // For this implementation step, we will just simulate the write success and let the parent handle the view switch.
-            // The actual DB write logic should ideally be:
-            // const classQuery = query(collection(db, 'classrooms'), where('code', '==', code));
-            // const classSnapshot = await getDocs(classQuery);
-            // if (classSnapshot.empty) throw new Error("Class not found");
-            // const classId = classSnapshot.docs[0].id;
-
-            // For now, we'll pass the name up to the parent (App.tsx) which handles the view switch,
-            // but we SHOULD perform the DB write here to follow the "Privacy Architecture".
-
-            // Let's simulate the DB write to a "demo-class" for testing the Sidebar connection immediately.
-            const demoClassId = "demo-class-123";
-
+            // 3. Create the Live Student Document in the target class
             const newStudentData: LiveStudent = {
                 uid: uid,
                 displayName: name,
-                joinedAt: serverTimestamp() as any, // Cast for type compatibility
+                joinedAt: serverTimestamp() as any,
                 currentStatus: 'todo',
                 taskHistory: [],
                 metrics: {
@@ -75,7 +69,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                 }
             };
 
-            await setDoc(doc(db, 'classrooms', demoClassId, 'live_students', uid), newStudentData);
+            await setDoc(doc(db, 'classrooms', targetClassId, 'live_students', uid), newStudentData);
 
             toast.success(`Joined as ${name}!`);
             onJoin(code); // Notify parent to switch view

@@ -156,7 +156,7 @@ const TeacherDashboard: React.FC = () => {
                 </div>
 
                 {/* Actual Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-8 pr-[80px] lg:pr-[80px]"> {/* Add padding-right to avoid overlap with ConnectionSidebar */}
+                <main className="flex-1 overflow-y-auto p-4 lg:p-8">
                     <div className="max-w-7xl mx-auto">
                         {renderContent()}
                     </div>

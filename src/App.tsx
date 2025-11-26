@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { LogOut } from 'lucide-react';
+import { LogOut, QrCode } from 'lucide-react';
 import LandingPage from './components/shared/LandingPage';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentView from './components/student/StudentView';
@@ -8,6 +8,7 @@ import StudentNameModal from './components/student/StudentNameModal';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider, User } from 'firebase/auth';
 import toast from 'react-hot-toast';
+import { useClassStore } from './store/classStore';
 
 /**
  * App Component
@@ -154,6 +155,17 @@ function App() {
                     Shape of the Day
                 </div>
                 <div className="flex items-center gap-4">
+                    {/* Teacher View: QR Code Sidebar Toggle */}
+                    {view === 'teacher' && (
+                        <button
+                            onClick={() => useClassStore.getState().toggleSidebar()}
+                            className="p-2.5 rounded-xl bg-blue-900/20 text-blue-500 hover:bg-blue-900/30 transition-colors border border-blue-500/20"
+                            title="Class Connection Info"
+                        >
+                            <QrCode className="w-5 h-5" />
+                        </button>
+                    )}
+
                     {/* Theme Toggle Button */}
                     <button
                         onClick={() => setDarkMode(!darkMode)}

@@ -26,27 +26,27 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
     const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
 
     return (
-        <div className="min-h-screen flex flex-col items-center md:justify-center p-4 py-12">
-            <div className="text-center mb-6 md:mb-12 space-y-4">
+        <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center p-4 overflow-hidden">
+            <div className="text-center mb-6 space-y-2">
                 <img
                     src="/shape of the day logo.png"
                     alt="Shape of the Day"
-                    className="w-20 h-20 md:w-32 md:h-32 mx-auto mb-4 md:mb-6"
+                    className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-2"
                 />
-                <h1 className="text-3xl md:text-6xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">
+                <h1 className="text-2xl md:text-4xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">
                     Shape of the Day
                 </h1>
-                <p className="text-lg md:text-xl text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-lg mx-auto">
+                <p className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-md mx-auto">
                     A digital organizer for teachers and students
                 </p>
             </div>
 
-            <div className="w-full max-w-md bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                 {/* Tabs for switching modes */}
                 <div className="flex">
                     <button
                         onClick={() => setActiveTab('student')}
-                        className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'student'
+                        className={`flex-1 py-3 text-center font-bold text-sm transition-colors ${activeTab === 'student'
                             ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-emerald-600 dark:text-emerald-400'
                             : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
@@ -55,7 +55,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                     </button>
                     <button
                         onClick={() => setActiveTab('teacher')}
-                        className={`flex-1 py-4 text-center font-bold transition-colors ${activeTab === 'teacher'
+                        className={`flex-1 py-3 text-center font-bold text-sm transition-colors ${activeTab === 'teacher'
                             ? 'bg-brand-lightSurface dark:bg-brand-darkSurface text-blue-600 dark:text-blue-400'
                             : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
@@ -65,24 +65,24 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-8">
+                <div className="p-6">
                     {activeTab === 'student' ? (
-                        <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
+                        <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
                             <div className="text-emerald-600 dark:text-emerald-400">
-                                <GraduationCap className="w-12 h-12" />
+                                <GraduationCap className="w-8 h-8" />
                             </div>
                             <div>
-                                <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Join a room to see your daily tasks.</p>
+                                <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Join a room to see your daily tasks.</p>
                             </div>
                             <JoinRoom onJoin={onJoin} />
                         </div>
                     ) : (
-                        <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                             <div className="text-blue-600 dark:text-blue-400">
-                                <LayoutDashboard className="w-12 h-12" />
+                                <LayoutDashboard className="w-8 h-8" />
                             </div>
                             <div>
-                                <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
+                                <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
                             </div>
                             <GoogleSignInButton onClick={onLogin} />
                         </div>
