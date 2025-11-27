@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { LogOut, QrCode, ChevronDown, Check, Plus } from 'lucide-react';
+
 import LandingPage from './components/shared/LandingPage';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentView from './components/student/StudentView';
@@ -31,8 +31,6 @@ function App() {
     const [studentName, setStudentName] = useState('');
     const [classId, setClassId] = useState('');
 
-    // Class Selector State
-    const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
 
     // Global Store
     const {
@@ -40,8 +38,7 @@ function App() {
         currentClassId,
         setCurrentClassId,
         classrooms,
-        setClassrooms,
-        setIsClassModalOpen
+        setClassrooms
     } = useClassStore();
 
     // Effect to apply dark mode class to the HTML element
@@ -75,11 +72,37 @@ function App() {
                 const snapshot = await getDocs(q);
                 const data: Classroom[] = [];
                 snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() } as Classroom));
-                setClassrooms(data);
 
-                // If no class is selected but we have classes, select the first one
-                if (data.length > 0 && !currentClassId) {
-                    setCurrentClassId(data[0].id);
+                // Add placeholder classrooms if none exist
+                if (data.length === 0) {
+                    const placeholderClassrooms: Classroom[] = [
+                        {
+                            id: 'class-1',
+                            joinCode: 'ABC123',
+                            teacherId: user.uid,
+                            name: 'Computer Science 101',
+                            subject: 'Computer Science',
+                            gradeLevel: 'Grade 10',
+                            color: '#3B82F6',
+                        },
+                        {
+                            id: 'class-2',
+                            joinCode: 'XYZ789',
+                            teacherId: user.uid,
+                            name: 'Web Development',
+                            subject: 'Technology',
+                            gradeLevel: 'Grade 11',
+                            color: '#10B981',
+                        },
+                    ];
+                    setClassrooms(placeholderClassrooms);
+                    setCurrentClassId(placeholderClassrooms[0].id);
+                } else {
+                    setClassrooms(data);
+                    // If no class is selected but we have classes, select the first one
+                    if (data.length > 0 && !currentClassId) {
+                        setCurrentClassId(data[0].id);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching classrooms:", error);
@@ -136,7 +159,7 @@ function App() {
     }
 
     return (
-        <div className="min-h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-200">
+        <div className="flex flex-col h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-200">
             <Toaster position="top-right" />
 
             {/* Global Name Modal (can be triggered from anywhere) */}
@@ -148,7 +171,8 @@ function App() {
             )}
 
             {/* Navigation Bar */}
-            <nav className="bg-brand-lightSurface dark:bg-brand-darkSurface px-6 py-3 flex items-center justify-between transition-colors duration-200 border-b border-gray-200 dark:border-gray-800">
+            <nav className="flex-shrink-0 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 py-3 flex items-center justify-between transition-colors duration-200 border-b border-gray-200 dark:border-gray-800">
+                {/* Left Section: Logo and Title */}
                 <div className="flex items-center gap-2 font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     <img
                         src="/shape of the day logo.png"
@@ -158,86 +182,22 @@ function App() {
                     Shape of the Day
                 </div>
 
-                {/* Class Selector (Teacher View Only) */}
-                {view === 'teacher' && (
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsClassDropdownOpen(!isClassDropdownOpen)}
-                            className="flex items-center gap-3 px-4 py-2 bg-brand-accent/5 border border-brand-accent/20 rounded-xl text-brand-accent hover:bg-brand-accent/10 transition-colors min-w-[200px] justify-between"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentClass?.color || '#3B82F6' }} />
-                                <span className="font-bold text-sm">
-                                    {currentClass?.name || 'Select Class'}
-                                </span>
-                            </div>
-                            <ChevronDown className={`w-4 h-4 transition-transform ${isClassDropdownOpen ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {isClassDropdownOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setIsClassDropdownOpen(false)}
-                                />
-                                <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-xl border-[3px] border-gray-200 dark:border-gray-700 z-20 overflow-hidden animate-in zoom-in-95 duration-100">
-                                    <div className="max-h-64 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                        {classrooms.map(cls => (
-                                            <button
-                                                key={cls.id}
-                                                onClick={() => {
-                                                    setCurrentClassId(cls.id);
-                                                    setIsClassDropdownOpen(false);
-                                                }}
-                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentClassId === cls.id
-                                                    ? 'bg-brand-accent/10 text-brand-accent'
-                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cls.color || '#3B82F6' }} />
-                                                    <span className="truncate max-w-[140px]">{cls.name}</span>
-                                                </div>
-                                                {currentClassId === cls.id && <Check className="w-4 h-4" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div className="p-2 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                        <button
-                                            onClick={() => {
-                                                setIsClassModalOpen(true, null);
-                                                setIsClassDropdownOpen(false);
-                                            }}
-                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold hover:bg-brand-accent/90 transition-colors"
-                                        >
-                                            <Plus className="w-4 h-4" /> Add New Class
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                {/* Center Section: Classroom Name */}
+                {view === 'teacher' && currentClass && (
+                    <span className="absolute left-1/2 -translate-x-1/2 font-bold text-xl text-brand-accent">
+                        {currentClass.name}
+                    </span>
                 )}
 
-                <div className="flex items-center gap-4">
-                    {/* Teacher View: QR Code Sidebar Toggle */}
-                    {view === 'teacher' && (
-                        <button
-                            onClick={() => useClassStore.getState().toggleSidebar()}
-                            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-brand-accent/5 text-blue-500 hover:bg-blue-900/30 transition-colors border border-blue-500/20"
-                            title="Class Connection Info"
-                        >
-                            <QrCode className="w-5 h-5" />
-                            <span className="text-sm font-bold">Join Code</span>
-                        </button>
-                    )}
-
-
+                {/* Right Section: Date */}
+                <div className="font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                 </div>
+
             </nav>
 
             {/* Main Content Area */}
-            <main>
+            <main className="flex-1 min-h-0 overflow-hidden">
                 {view === 'landing' && (
                     <LandingPage
                         onLogin={login}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Clock, Activity, Users, Menu, X, LogOut, Settings, ChevronRight, Plus, ChevronDown, Moon, Sun, BarChart2, ChevronLeft } from 'lucide-react';
+import { LayoutDashboard, Clock, Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
@@ -8,6 +8,8 @@ import LiveView from './LiveView';
 import ClassroomManager from './ClassroomManager';
 import ConnectionSidebar from './ConnectionSidebar';
 import { ClassFormModal } from './ClassFormModal';
+import SettingsOverlay from './SettingsOverlay';
+import JoinCodeOverlay from './JoinCodeOverlay';
 
 interface MenuItem {
     id: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms';
@@ -24,9 +26,7 @@ const TeacherDashboard: React.FC = () => {
         isSidebarOpen,
         toggleSidebar,
         setSidebarOpen,
-        setIsClassModalOpen,
-        darkMode,
-        toggleDarkMode
+        setIsClassModalOpen
     } = useClassStore();
 
     const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
@@ -34,11 +34,13 @@ const TeacherDashboard: React.FC = () => {
     const [classroomSubTab, setClassroomSubTab] = useState<'classes' | 'history' | 'analytics'>('history');
     const [isClassroomsMenuOpen, setIsClassroomsMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isJoinCodeOpen, setIsJoinCodeOpen] = useState(false);
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
     const menuItems: MenuItem[] = [
-        { id: 'classrooms', label: currentClass ? currentClass.name : 'Classrooms', icon: Users },
+        { id: 'classrooms', label: 'Classrooms', icon: School },
         { id: 'tasks', label: 'Task Manager', icon: LayoutDashboard },
         { id: 'shape', label: 'Shape of Day', icon: Clock },
         { id: 'live', label: 'Live View', icon: Activity },
@@ -46,15 +48,17 @@ const TeacherDashboard: React.FC = () => {
     ];
 
     const handleTabChange = (tabId: MenuItem['id']) => {
+        // Set the active tab
+        setActiveTab(tabId);
+
+        // Toggle classrooms menu if clicking classrooms
         if (tabId === 'classrooms') {
             setIsClassroomsMenuOpen(!isClassroomsMenuOpen);
-            return;
+        } else {
+            // Close classrooms menu when clicking other tabs
+            setIsClassroomsMenuOpen(false);
         }
 
-        // Close classrooms menu when clicking other tabs
-        setIsClassroomsMenuOpen(false);
-
-        setActiveTab(tabId);
         // Close mobile sidebar on selection
         if (window.innerWidth < 768) {
             setSidebarOpen(false);
@@ -78,7 +82,7 @@ const TeacherDashboard: React.FC = () => {
     };
 
     return (
-        <div className="flex h-[100dvh] bg-brand-bg dark:bg-brand-darkBg text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
+        <div className="flex h-full bg-brand-bg dark:bg-brand-darkBg text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
@@ -91,10 +95,10 @@ const TeacherDashboard: React.FC = () => {
             <aside className={`
                 fixed md:static inset-y-0 left-0 z-30
                 ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
-                transform transition-all duration-300 ease-in-out flex flex-col h-full border-r-[3px] border-transparent
+                transform transition-all duration-300 ease-in-out flex flex-col h-full border-r-[3px] border-transparent overflow-hidden
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
-                <div className="p-4 flex justify-end md:hidden">
+                <div className="p-4 flex justify-end md:hidden flex-shrink-0">
                     <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
                         <X />
                     </button>
@@ -106,42 +110,28 @@ const TeacherDashboard: React.FC = () => {
                             <button
                                 onClick={() => handleTabChange(item.id)}
                                 className={`
-                                    w-full flex items-center p-3 rounded-xl transition-all duration-200 font-bold border-[3px]
-                                    bg-brand-lightSurface dark:bg-brand-darkSurface relative overflow-hidden
+                                    relative flex items-center rounded-xl transition-all duration-300 font-bold border-[3px] overflow-hidden
+                                    bg-brand-lightSurface dark:bg-brand-darkSurface
                                     ${activeTab === item.id
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
                                         : 'border-transparent text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
                                     }
-                                    ${isCollapsed ? 'justify-center' : ''}
+                                    ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
                                 `}
                                 title={isCollapsed ? item.label : undefined}
                             >
-                                <div className="flex items-center min-w-[20px]">
+                                <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'
+                                    }`}>
                                     <item.icon size={20} className="flex-shrink-0" />
                                 </div>
-                                
+
                                 <span className={`
-                                    whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
-                                    ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                                    whitespace-nowrap transition-all duration-300 ease-in-out
+                                    ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                                 `}>
                                     {item.label}
                                 </span>
 
-                                {/* Chevrons for sub-menus (only visible when expanded) */}
-                                <div className={`
-                                    ml-auto transition-all duration-300 ease-in-out flex items-center
-                                    ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
-                                `}>
-                                    {item.id === 'live' && activeTab === 'live' && (
-                                        <ChevronRight size={16} className="text-brand-accent" />
-                                    )}
-                                    {item.id === 'data' && activeTab === 'data' && (
-                                        <ChevronRight size={16} className="text-brand-accent" />
-                                    )}
-                                    {item.id === 'classrooms' && (
-                                        <ChevronDown size={16} className={`transition-transform ${isClassroomsMenuOpen ? 'rotate-180' : ''}`} />
-                                    )}
-                                </div>
                             </button>
 
                             {/* Sub-menu for Live View */}
@@ -197,11 +187,10 @@ const TeacherDashboard: React.FC = () => {
                                             key={cls.id}
                                             onClick={() => handleClassSelect(cls.id)}
                                             className={`
-                                                w-full text-left p-2 text-sm rounded-lg font-medium transition-colors flex items-center gap-2
+                                                w-full text-left p-2 text-sm rounded-lg font-medium transition-colors
                                                 ${currentClassId === cls.id ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}
                                             `}
                                         >
-                                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cls.color || '#3B82F6' }} />
                                             <span className="truncate">{cls.name}</span>
                                         </button>
                                     ))}
@@ -218,13 +207,13 @@ const TeacherDashboard: React.FC = () => {
                     ))}
 
                     {/* Sidebar Toggle */}
-                    <div className={`hidden md:flex ${isCollapsed ? 'justify-center' : 'justify-start'} px-3 pt-2`}>
-                        <button 
+                    <div className="px-3 pt-2">
+                        <button
                             onClick={() => {
                                 setIsCollapsed(!isCollapsed);
                                 setIsClassroomsMenuOpen(false);
-                            }} 
-                            className="p-2 text-brand-accent hover:text-brand-accent/80 transition-colors rounded-lg hover:bg-brand-accent/10"
+                            }}
+                            className="hidden md:flex items-center justify-center w-full h-10 text-brand-accent hover:text-brand-accent/80 transition-colors rounded-lg hover:bg-brand-accent/10"
                         >
                             {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                         </button>
@@ -233,45 +222,60 @@ const TeacherDashboard: React.FC = () => {
 
                 <div className="p-4 space-y-2 flex-shrink-0">
                     <button
-                        onClick={toggleDarkMode}
-                        className={`w-full flex items-center p-3 text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
-                        title={isCollapsed ? (darkMode ? 'Dark Mode' : 'Light Mode') : undefined}
+                        onClick={() => setIsJoinCodeOpen(true)}
+                        className={`group relative flex items-center h-12 rounded-xl transition-colors duration-300 font-bold overflow-hidden ${isCollapsed ? 'w-12 justify-center' : 'w-full'
+                            }`}
+                        title={isCollapsed ? 'Join Code' : undefined}
                     >
-                        <div className="flex items-center min-w-[20px]">
-                            {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+                        <div className={`flex items-center justify-center w-12 flex-shrink-0 transition-colors ${isJoinCodeOpen
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-green-600 dark:text-green-400'
+                            }`}>
+                            <QrCode size={20} />
                         </div>
                         <span className={`
-                            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                            whitespace-nowrap transition-all duration-300 ease-in-out
+                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0'}
+                            ${isJoinCodeOpen
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-gray-500 group-hover:text-green-600 dark:group-hover:text-green-400'
+                            }
                         `}>
-                            {darkMode ? 'Dark Mode' : 'Light Mode'}
+                            Join Code
                         </span>
                     </button>
-                    <button 
-                        className={`w-full flex items-center p-3 text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
+
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className={`group relative flex items-center h-12 rounded-xl transition-colors duration-300 font-bold overflow-hidden ${isCollapsed ? 'w-12' : 'w-full'
+                            }`}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
-                        <div className="flex items-center min-w-[20px]">
+                        <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-600 dark:text-gray-100 transition-colors">
                             <Settings size={20} />
                         </div>
                         <span className={`
-                            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                            whitespace-nowrap transition-all duration-300 ease-in-out
+                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0'}
+                            ${isSettingsOpen
+                                ? 'text-gray-600 dark:text-gray-100'
+                                : 'text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-100'
+                            }
                         `}>
                             Settings
                         </span>
                     </button>
                     <button
                         onClick={logout}
-                        className={`w-full flex items-center p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
+                        className="group relative flex items-center h-12 rounded-xl transition-colors duration-300 font-bold overflow-hidden w-full"
                         title={isCollapsed ? 'Sign Out' : undefined}
                     >
-                        <div className="flex items-center min-w-[20px]">
+                        <div className="flex items-center justify-center w-12 flex-shrink-0 text-red-500 transition-colors">
                             <LogOut size={20} />
                         </div>
                         <span className={`
-                            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                            whitespace-nowrap transition-all duration-300 ease-in-out text-gray-500 group-hover:text-red-500 dark:group-hover:text-red-400
+                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0'}
                         `}>
                             Sign Out
                         </span>
@@ -308,6 +312,15 @@ const TeacherDashboard: React.FC = () => {
 
                 {/* Global Modals */}
                 <ClassFormModal />
+                <SettingsOverlay isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+                {currentClass && (
+                    <JoinCodeOverlay
+                        isOpen={isJoinCodeOpen}
+                        onClose={() => setIsJoinCodeOpen(false)}
+                        classCode={currentClass.joinCode}
+                        classId={currentClass.id}
+                    />
+                )}
             </main>
         </div>
     );
