@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Link as LinkIcon, Image as ImageIcon, Plus, Check, Upload, Loader, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, Link as LinkIcon, Plus, Check, Upload, Loader, Trash2, AlertCircle, X } from 'lucide-react';
 import { validateFile, sanitizeTaskData, isValidURL } from '../../utils/validation';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -234,10 +234,6 @@ export default function TaskManager() {
 
             {/* LEFT: Task Builder Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="mb-6 shrink-0">
-                    <h2 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Task Builder</h2>
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Create multiple tasks and assign them to specific classes.</p>
-                </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-20 custom-scrollbar">
                     {tasks.map((task, index) => (
@@ -261,9 +257,10 @@ export default function TaskManager() {
                             </div>
 
                             <div className="p-6 space-y-6">
-                                {/* Title & Description */}
-                                <div className="space-y-4">
-                                    <div>
+                                {/* Row 1: Title & Schedule */}
+                                <div className="flex flex-col md:flex-row gap-6">
+                                    {/* Title */}
+                                    <div className="flex-[2]">
                                         <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Title</label>
                                         <input
                                             type="text"
@@ -273,80 +270,114 @@ export default function TaskManager() {
                                             placeholder="e.g. Read Chapter 4"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
-                                        <textarea
-                                            value={task.description}
-                                            onChange={e => updateTask(task.id, 'description', e.target.value)}
-                                            className="w-full p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg focus:border-brand-accent outline-none h-20 text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 transition-colors"
-                                            placeholder="Instructions... (Paste image to upload)"
-                                        />
-                                    </div>
-                                </div>
 
-                                {/* Media & Dates Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Media Inputs */}
-                                    <div className="space-y-3">
-                                        <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Attachments</label>
-
-                                        {/* File Upload Box */}
-                                        <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-brand-accent transition-colors text-center group">
-                                            <input
-                                                type="file"
-                                                onChange={(e) => e.target.files && handleFileUpload(task.id, e.target.files[0])}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                            />
-                                            <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
-                                                {task.isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
-                                                <span className="text-xs font-medium">{task.isUploading ? 'Uploading...' : 'Upload File / Image'}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-2">
-                                            <div className="flex-1 relative">
-                                                <LinkIcon size={14} className="absolute left-2.5 top-3 text-gray-400" />
-                                                <input
-                                                    type="url"
-                                                    value={task.linkURL}
-                                                    onChange={e => updateTask(task.id, 'linkURL', e.target.value)}
-                                                    className="w-full pl-8 p-2 text-xs bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:border-brand-accent outline-none transition-colors"
-                                                    placeholder="Link URL"
-                                                />
-                                            </div>
-                                            <div className="flex-1 relative">
-                                                <ImageIcon size={14} className="absolute left-2.5 top-3 text-gray-400" />
-                                                <input
-                                                    type="url"
-                                                    value={task.imageURL}
-                                                    onChange={e => updateTask(task.id, 'imageURL', e.target.value)}
-                                                    className="w-full pl-8 p-2 text-xs bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:border-brand-accent outline-none transition-colors"
-                                                    placeholder="Image URL"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Date Inputs */}
-                                    <div className="space-y-3">
-                                        <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Schedule</label>
+                                    {/* Schedule */}
+                                    <div className="flex-1">
                                         <div className="flex gap-2">
                                             <div className="flex-1">
-                                                <span className="text-[10px] text-gray-400 block mb-1">Start</span>
+                                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Assign</label>
                                                 <input
                                                     type="date"
                                                     value={task.startDate}
                                                     onChange={e => updateTask(task.id, 'startDate', e.target.value)}
-                                                    className="w-full p-1.5 text-sm bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none transition-colors"
+                                                    className="w-full p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none transition-colors text-sm font-medium"
                                                 />
                                             </div>
                                             <div className="flex-1">
-                                                <span className="text-[10px] text-gray-400 block mb-1">End</span>
+                                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Due</label>
                                                 <input
                                                     type="date"
                                                     value={task.endDate}
                                                     onChange={e => updateTask(task.id, 'endDate', e.target.value)}
-                                                    className="w-full p-1.5 text-sm bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none transition-colors"
+                                                    className="w-full p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none transition-colors text-sm font-medium"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Row 2: Description */}
+                                <div>
+                                    <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
+                                    <textarea
+                                        value={task.description}
+                                        onChange={e => updateTask(task.id, 'description', e.target.value)}
+                                        className="w-full p-3 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg focus:border-brand-accent outline-none h-24 text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 transition-colors resize-none"
+                                        placeholder="Instructions..."
+                                    />
+                                </div>
+
+                                {/* Row 3: Attachments */}
+                                <div>
+                                    <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Attachments</label>
+
+                                    <div className="space-y-3">
+                                        {/* Active Attachments List */}
+                                        {(task.imageURL || task.linkURL) && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                                {task.imageURL && (
+                                                    <div className="flex items-center gap-3 p-2 bg-brand-accent/5 border border-brand-accent/20 rounded-lg group relative">
+                                                        <div className="w-10 h-10 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-600">
+                                                            <img src={task.imageURL} alt="Attachment" className="w-full h-full object-cover" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">Image Attachment</p>
+                                                            <p className="text-[10px] text-gray-500 truncate">Image</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => updateTask(task.id, 'imageURL', '')}
+                                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded transition-colors"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                                {task.linkURL && (
+                                                    <div className="flex items-center gap-3 p-2 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg group relative">
+                                                        <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
+                                                            <LinkIcon size={18} className="text-blue-500" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">{task.linkURL}</p>
+                                                            <p className="text-[10px] text-gray-500 truncate">Link</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => updateTask(task.id, 'linkURL', '')}
+                                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded transition-colors"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Upload / Add Area */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* File Upload */}
+                                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-brand-accent transition-all text-center group cursor-pointer">
+                                                <input
+                                                    type="file"
+                                                    onChange={(e) => e.target.files && handleFileUpload(task.id, e.target.files[0])}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
+                                                    {task.isUploading ? <Loader size={20} className="animate-spin" /> : <Upload size={20} />}
+                                                    <span className="text-xs font-bold">{task.isUploading ? 'Uploading...' : 'Upload File / Image'}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Add Link Input */}
+                                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-gray-50 dark:bg-gray-900 focus-within:border-brand-accent transition-colors">
+                                                <div className="pl-3 text-gray-400">
+                                                    <LinkIcon size={16} />
+                                                </div>
+                                                <input
+                                                    type="url"
+                                                    value={task.linkURL}
+                                                    onChange={e => updateTask(task.id, 'linkURL', e.target.value)}
+                                                    className="w-full p-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
+                                                    placeholder="Paste URL here..."
                                                 />
                                             </div>
                                         </div>

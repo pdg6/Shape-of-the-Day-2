@@ -1,330 +1,314 @@
 import React, { useState } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
-import { Classroom } from '../../types';
+import { LayoutDashboard, Clock, Activity, Users, Menu, X, LogOut, Settings, ChevronRight, Plus, ChevronDown, Moon, Sun, BarChart2, ChevronLeft } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
-import {
-    LayoutDashboard,
-    Clock,
-    Users,
-    Activity,
-    Menu,
-    X,
-    ChevronLeft,
-    ChevronRight,
-    LucideIcon,
-    Sun,
-    Moon,
-    ChevronDown,
-    Plus,
-    Check,
-    History,
-    BookOpen
-} from 'lucide-react';
 import TaskManager from './TaskManager';
 import ShapeOfDay from './ShapeOfDay';
 import LiveView from './LiveView';
 import ClassroomManager from './ClassroomManager';
 import ConnectionSidebar from './ConnectionSidebar';
+import { ClassFormModal } from './ClassFormModal';
 
-/**
- * Definition for a navigation item in the sidebar.
- */
 interface MenuItem {
-    id: 'tasks' | 'shape' | 'live' | 'classrooms';
+    id: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms';
     label: string;
-    icon: LucideIcon;
+    icon: React.ElementType;
 }
 
-/**
- * TeacherDashboard Component
- * 
- * The main layout for the teacher's view. It includes:
- * 1. A collapsible sidebar for navigation.
- * 2. A mobile-responsive menu.
- * 3. A content area that switches between different sub-components (TaskManager, LiveView, etc.).
- * 4. The new ConnectionSidebar for managing student joins.
- */
 const TeacherDashboard: React.FC = () => {
-    // State to track the currently active view
+    const { logout } = useAuth();
+    const {
+        classrooms,
+        currentClassId,
+        setCurrentClassId,
+        isSidebarOpen,
+        toggleSidebar,
+        setSidebarOpen,
+        setIsClassModalOpen,
+        darkMode,
+        toggleDarkMode
+    } = useClassStore();
+
     const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
-
-    // Global state
-    const { darkMode, toggleDarkMode, setCurrentClassId } = useClassStore();
-
-    // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
-    // State for sidebar visibility (Desktop: collapsed/expanded, Mobile: hidden/shown)
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-    // State for Class Selector and Sub-navigation
-    const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-    const [isClassDropdownOpen, setIsClassDropdownOpen] = useState(false);
-    const [classroomSubTab, setClassroomSubTab] = useState<'classes' | 'history'>('classes');
-
-    // Hardcoded for Stage 1 Demo - In real app, this comes from the loaded Class object
-    const DEMO_CLASS_CODE = "123456";
-    const DEMO_CLASS_ID = "demo-class-123";
-
-    const { currentClassId } = useClassStore(); // Get current class ID from store
-
-    // Fetch Classrooms
-    React.useEffect(() => {
-        const fetchClassrooms = async () => {
-            if (!auth.currentUser) return;
-            try {
-                const q = query(collection(db, 'classrooms'), where('teacherId', '==', auth.currentUser.uid));
-                const snapshot = await getDocs(q);
-                const data: Classroom[] = [];
-                snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() } as Classroom));
-                setClassrooms(data);
-
-                // If no class is selected but we have classes, select the first one
-                if (data.length > 0 && !currentClassId) {
-                    setCurrentClassId(data[0].id);
-                }
-            } catch (error) {
-                console.error("Error fetching classrooms:", error);
-            }
-        };
-        fetchClassrooms();
-    }, [auth.currentUser, setCurrentClassId, currentClassId]);
-
-    // Set the current class ID in the global store on mount if not set (Demo Fallback)
-    React.useEffect(() => {
-        if (!currentClassId) {
-            setCurrentClassId(DEMO_CLASS_ID);
-        }
-    }, [setCurrentClassId, currentClassId]);
+    const [liveViewSubTab, setLiveViewSubTab] = useState<'tasks' | 'students'>('tasks');
+    const [classroomSubTab, setClassroomSubTab] = useState<'classes' | 'history' | 'analytics'>('history');
+    const [isClassroomsMenuOpen, setIsClassroomsMenuOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
     const menuItems: MenuItem[] = [
+        { id: 'classrooms', label: currentClass ? currentClass.name : 'Classrooms', icon: Users },
         { id: 'tasks', label: 'Task Manager', icon: LayoutDashboard },
         { id: 'shape', label: 'Shape of Day', icon: Clock },
         { id: 'live', label: 'Live View', icon: Activity },
-        { id: 'classrooms', label: 'Classrooms', icon: Users },
+        { id: 'data', label: 'Data', icon: BarChart2 },
     ];
 
-    /**
-     * Renders the appropriate component based on the active tab.
-     */
+    const handleTabChange = (tabId: MenuItem['id']) => {
+        if (tabId === 'classrooms') {
+            setIsClassroomsMenuOpen(!isClassroomsMenuOpen);
+            return;
+        }
+
+        // Close classrooms menu when clicking other tabs
+        setIsClassroomsMenuOpen(false);
+
+        setActiveTab(tabId);
+        // Close mobile sidebar on selection
+        if (window.innerWidth < 768) {
+            setSidebarOpen(false);
+        }
+    };
+
+    const handleClassSelect = (classId: string) => {
+        setCurrentClassId(classId);
+        // Optional: Navigate to a specific view when class changes?
+        // For now, just stay on current view but update context
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'tasks': return <TaskManager />;
             case 'shape': return <ShapeOfDay />;
-            case 'live': return <LiveView />;
-            case 'classrooms': return <ClassroomManager activeView={classroomSubTab} />;
+            case 'live': return <LiveView activeView={liveViewSubTab} />;
+            case 'data': return <ClassroomManager activeView={classroomSubTab} />;
             default: return <TaskManager />;
         }
     };
 
     return (
-        <div className="flex h-[calc(100vh-64px)] bg-brand-light dark:bg-brand-dark transition-colors duration-300 relative overflow-hidden">
-            {/* Mobile Menu Overlay (Darkens background when menu is open on mobile) */}
-            {isMobileMenuOpen && (
+        <div className="flex h-[100dvh] bg-brand-bg dark:bg-brand-darkBg text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
+            {/* Mobile Sidebar Overlay */}
+            {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                    onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar Navigation */}
-            <aside
-                className={`
-          fixed lg:static inset-y-0 left-0 z-40
-          bg-brand-lightSurface dark:bg-brand-darkSurface transition-all duration-300 ease-in-out
-          ${isSidebarOpen ? 'w-64' : 'w-20'}
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        `}
-            >
-                <div className="h-full flex flex-col">
-                    {/* Mobile Header (Close button) */}
-                    <div className="lg:hidden flex items-center justify-between p-4">
-                        <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Menu</span>
-                        <button onClick={() => setIsMobileMenuOpen(false)}>
-                            <X className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                        </button>
-                    </div>
+            <aside className={`
+                fixed md:static inset-y-0 left-0 z-30
+                ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
+                transform transition-all duration-300 ease-in-out flex flex-col h-full border-r-[3px] border-transparent
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            `}>
+                <div className="p-4 flex justify-end md:hidden">
+                    <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
+                        <X />
+                    </button>
+                </div>
 
-                    {/* Navigation Items */}
-                    <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                        {menuItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = activeTab === item.id;
-                            const isClassrooms = item.id === 'classrooms';
+                <nav className="flex-1 min-h-0 p-4 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden">
+                    {menuItems.map(item => (
+                        <div key={item.id}>
+                            <button
+                                onClick={() => handleTabChange(item.id)}
+                                className={`
+                                    w-full flex items-center p-3 rounded-xl transition-all duration-200 font-bold border-[3px]
+                                    bg-brand-lightSurface dark:bg-brand-darkSurface relative overflow-hidden
+                                    ${activeTab === item.id
+                                        ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
+                                        : 'border-transparent text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
+                                    }
+                                    ${isCollapsed ? 'justify-center' : ''}
+                                `}
+                                title={isCollapsed ? item.label : undefined}
+                            >
+                                <div className="flex items-center min-w-[20px]">
+                                    <item.icon size={20} className="flex-shrink-0" />
+                                </div>
+                                
+                                <span className={`
+                                    whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
+                                    ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                                `}>
+                                    {item.label}
+                                </span>
 
-                            return (
-                                <div key={item.id} className="space-y-1">
-                                    <button
-                                        onClick={() => {
-                                            setActiveTab(item.id);
-                                            if (!isClassrooms) setIsMobileMenuOpen(false);
-                                        }}
-                                        className={`
-                                            w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-2
-                                            ${isActive
-                                                ? 'bg-brand-accent/10 border-brand-accent/20 text-brand-accent'
-                                                : 'border-transparent text-brand-textDarkSecondary dark:text-brand-textSecondary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary'}
-                                        `}
-                                        title={!isSidebarOpen ? item.label : ''}
-                                    >
-                                        <Icon className={`w-6 h-6 shrink-0 ${isActive ? 'text-brand-accent' : 'text-gray-400 dark:text-gray-500'}`} />
-                                        <span className={`font-medium whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block'}`}>
-                                            {item.label}
-                                        </span>
-                                    </button>
-
-                                    {/* Sub-menu for Classrooms */}
-                                    {isClassrooms && isActive && isSidebarOpen && (
-                                        <div className="pl-11 space-y-1 animate-in slide-in-from-left-2 duration-200">
-                                            <button
-                                                onClick={() => {
-                                                    setClassroomSubTab('classes');
-                                                    setIsMobileMenuOpen(false);
-                                                }}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${classroomSubTab === 'classes' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
-                                            >
-                                                My Classes
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setClassroomSubTab('history');
-                                                    setIsMobileMenuOpen(false);
-                                                }}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${classroomSubTab === 'history' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-50 dark:hover:bg-gray-800/50'}`}
-                                            >
-                                                History & Analytics
-                                            </button>
-                                        </div>
+                                {/* Chevrons for sub-menus (only visible when expanded) */}
+                                <div className={`
+                                    ml-auto transition-all duration-300 ease-in-out flex items-center
+                                    ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'}
+                                `}>
+                                    {item.id === 'live' && activeTab === 'live' && (
+                                        <ChevronRight size={16} className="text-brand-accent" />
+                                    )}
+                                    {item.id === 'data' && activeTab === 'data' && (
+                                        <ChevronRight size={16} className="text-brand-accent" />
+                                    )}
+                                    {item.id === 'classrooms' && (
+                                        <ChevronDown size={16} className={`transition-transform ${isClassroomsMenuOpen ? 'rotate-180' : ''}`} />
                                     )}
                                 </div>
-                            );
-                        })}
-                    </nav>
+                            </button>
 
-                    {/* Sidebar Footer Actions */}
-                    <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
-                        {/* Theme Toggle */}
-                        <button
-                            onClick={toggleDarkMode}
-                            className={`w-full flex items-center justify-center p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors ${isSidebarOpen ? 'gap-3' : ''}`}
-                            title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-                        >
-                            {darkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-                            <span className={`font-medium whitespace-nowrap transition-all duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 hidden lg:block w-0 overflow-hidden'}`}>
-                                {darkMode ? 'Dark Mode' : 'Light Mode'}
-                            </span>
-                        </button>
+                            {/* Sub-menu for Live View */}
+                            <div className={`
+                                overflow-hidden transition-all duration-300 ease-in-out
+                                ${!isCollapsed && item.id === 'live' && activeTab === 'live' ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'}
+                            `}>
+                                <div className="ml-9 space-y-1">
+                                    <button
+                                        onClick={() => setLiveViewSubTab('tasks')}
+                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'tasks' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        By Task
+                                    </button>
+                                    <button
+                                        onClick={() => setLiveViewSubTab('students')}
+                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'students' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        By Student
+                                    </button>
+                                </div>
+                            </div>
 
-                        {/* Sidebar Toggle (Desktop only) */}
-                        <button
-                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                            className="hidden lg:flex w-full items-center justify-center p-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                            {/* Sub-menu for Data (Classrooms) */}
+                            <div className={`
+                                overflow-hidden transition-all duration-300 ease-in-out
+                                ${!isCollapsed && item.id === 'data' && activeTab === 'data' ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'}
+                            `}>
+                                <div className="ml-9 space-y-1">
+                                    <button
+                                        onClick={() => setClassroomSubTab('history')}
+                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'history' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        History
+                                    </button>
+                                    <button
+                                        onClick={() => setClassroomSubTab('analytics')}
+                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'analytics' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        Analytics
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Sub-menu for Classrooms Selector */}
+                            <div className={`
+                                overflow-hidden transition-all duration-300 ease-in-out
+                                ${!isCollapsed && item.id === 'classrooms' && isClassroomsMenuOpen ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'}
+                            `}>
+                                <div className="ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 space-y-1">
+                                    {classrooms.map(cls => (
+                                        <button
+                                            key={cls.id}
+                                            onClick={() => handleClassSelect(cls.id)}
+                                            className={`
+                                                w-full text-left p-2 text-sm rounded-lg font-medium transition-colors flex items-center gap-2
+                                                ${currentClassId === cls.id ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}
+                                            `}
+                                        >
+                                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: cls.color || '#3B82F6' }} />
+                                            <span className="truncate">{cls.name}</span>
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() => setIsClassModalOpen(true)}
+                                        className="w-full text-left p-2 text-sm rounded-lg font-bold text-brand-accent hover:bg-brand-accent/10 transition-colors flex items-center gap-2 mt-2"
+                                    >
+                                        <Plus size={14} />
+                                        Add Class
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Sidebar Toggle */}
+                    <div className={`hidden md:flex ${isCollapsed ? 'justify-center' : 'justify-start'} px-3 pt-2`}>
+                        <button 
+                            onClick={() => {
+                                setIsCollapsed(!isCollapsed);
+                                setIsClassroomsMenuOpen(false);
+                            }} 
+                            className="p-2 text-brand-accent hover:text-brand-accent/80 transition-colors rounded-lg hover:bg-brand-accent/10"
                         >
-                            {isSidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                            {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
                         </button>
                     </div>
+                </nav>
+
+                <div className="p-4 space-y-2 flex-shrink-0">
+                    <button
+                        onClick={toggleDarkMode}
+                        className={`w-full flex items-center p-3 text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
+                        title={isCollapsed ? (darkMode ? 'Dark Mode' : 'Light Mode') : undefined}
+                    >
+                        <div className="flex items-center min-w-[20px]">
+                            {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+                        </div>
+                        <span className={`
+                            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
+                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                        `}>
+                            {darkMode ? 'Dark Mode' : 'Light Mode'}
+                        </span>
+                    </button>
+                    <button 
+                        className={`w-full flex items-center p-3 text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
+                        title={isCollapsed ? 'Settings' : undefined}
+                    >
+                        <div className="flex items-center min-w-[20px]">
+                            <Settings size={20} />
+                        </div>
+                        <span className={`
+                            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
+                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                        `}>
+                            Settings
+                        </span>
+                    </button>
+                    <button
+                        onClick={logout}
+                        className={`w-full flex items-center p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors font-bold ${isCollapsed ? 'justify-center' : ''}`}
+                        title={isCollapsed ? 'Sign Out' : undefined}
+                    >
+                        <div className="flex items-center min-w-[20px]">
+                            <LogOut size={20} />
+                        </div>
+                        <span className={`
+                            whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out
+                            ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 ml-3'}
+                        `}>
+                            Sign Out
+                        </span>
+                    </button>
                 </div>
             </aside>
 
-            {/* Main Content Wrapper */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                {/* Mobile Menu Trigger Bar */}
-                <div className="lg:hidden p-4 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center gap-3">
-                    <button
-                        onClick={() => setIsMobileMenuOpen(true)}
-                        className="p-2 -ml-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                    <span className="font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        {menuItems.find(i => i.id === activeTab)?.label}
-                    </span>
-                </div>
-
-                {/* Desktop Header with Class Dropdown */}
-                <header className="hidden lg:flex items-center justify-between px-8 py-4 bg-brand-lightSurface dark:bg-brand-darkSurface border-b border-gray-200 dark:border-gray-800">
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col min-w-0 relative">
+                {/* Header */}
+                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-6 z-10">
                     <div className="flex items-center gap-4">
-                        <h1 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            {menuItems.find(i => i.id === activeTab)?.label}
-                        </h1>
-                    </div>
-
-                    {/* Class Selector Dropdown */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setIsClassDropdownOpen(!isClassDropdownOpen)}
-                            className="flex items-center gap-3 px-4 py-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-xl hover:border-brand-accent transition-colors min-w-[200px] justify-between"
-                        >
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: currentClass?.color || '#3B82F6' }} />
-                                <span className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                    {currentClass?.name || 'Select Class'}
-                                </span>
-                            </div>
-                            <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isClassDropdownOpen ? 'rotate-180' : ''}`} />
+                        <button onClick={toggleSidebar} className="md:hidden p-2 text-gray-500">
+                            <Menu />
                         </button>
-
-                        {isClassDropdownOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-10"
-                                    onClick={() => setIsClassDropdownOpen(false)}
-                                />
-                                <div className="absolute right-0 top-full mt-2 w-64 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-xl border-[3px] border-gray-200 dark:border-gray-700 z-20 overflow-hidden animate-in zoom-in-95 duration-100">
-                                    <div className="max-h-64 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                                        {classrooms.map(cls => (
-                                            <button
-                                                key={cls.id}
-                                                onClick={() => {
-                                                    setCurrentClassId(cls.id);
-                                                    setIsClassDropdownOpen(false);
-                                                }}
-                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentClassId === cls.id
-                                                    ? 'bg-brand-accent/10 text-brand-accent'
-                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary'
-                                                    }`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: cls.color || '#3B82F6' }} />
-                                                    <span className="truncate max-w-[140px]">{cls.name}</span>
-                                                </div>
-                                                {currentClassId === cls.id && <Check className="w-4 h-4" />}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div className="p-2 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                                        <button
-                                            onClick={() => {
-                                                setActiveTab('classrooms');
-                                                setClassroomSubTab('classes');
-                                                setIsClassDropdownOpen(false);
-                                            }}
-                                            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold hover:bg-brand-accent/90 transition-colors"
-                                        >
-                                            <Plus className="w-4 h-4" /> Add New Class
-                                        </button>
-                                    </div>
-                                </div>
-                            </>
-                        )}
+                        <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            {menuItems.find(i => i.id === activeTab)?.label}
+                        </h2>
                     </div>
                 </header>
 
-                {/* Actual Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-8">
-                    <div className="max-w-7xl mx-auto">
-                        {renderContent()}
-                    </div>
-                </main>
-            </div>
+                {/* Content Body */}
+                <div className="flex-1 overflow-hidden p-6 relative">
+                    {renderContent()}
+                </div>
 
-            {/* Connection Sidebar (Right Side) */}
-            <ConnectionSidebar
-                classCode={DEMO_CLASS_CODE}
-                classId={DEMO_CLASS_ID}
-            />
+                {/* Connection Sidebar (Right) */}
+                {currentClass && (
+                    <ConnectionSidebar
+                        classCode={currentClass.joinCode}
+                        classId={currentClass.id}
+                    />
+                )}
+
+                {/* Global Modals */}
+                <ClassFormModal />
+            </main>
         </div>
     );
 };

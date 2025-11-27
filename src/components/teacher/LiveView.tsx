@@ -3,8 +3,7 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { AlertCircle, HelpCircle, CheckCircle, Clock, Activity, Users, LayoutList, List } from 'lucide-react';
-import clsx from 'clsx';
+import { AlertCircle, HelpCircle, CheckCircle, Activity, Users } from 'lucide-react';
 
 /**
  * LiveView Component
@@ -14,12 +13,15 @@ import clsx from 'clsx';
  * 1. By Student: List of students with status and progress.
  * 2. By Task: Cards for each task showing class distribution.
  */
-const LiveView: React.FC = () => {
+interface LiveViewProps {
+    activeView?: 'students' | 'tasks';
+}
+
+const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
     const { currentClassId } = useClassStore();
     const [students, setStudents] = useState<LiveStudent[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<'students' | 'tasks'>('tasks');
 
     // Fetch Live Students
     useEffect(() => {
@@ -92,22 +94,6 @@ const LiveView: React.FC = () => {
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                         {students.length} Active
                     </div>
-
-                    {/* View Toggle */}
-                    <div className="flex bg-brand-lightSurface dark:bg-brand-darkSurface p-1 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
-                        <button
-                            onClick={() => setViewMode('tasks')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'tasks' ? 'bg-brand-accent text-white shadow-sm' : 'text-gray-500 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary'}`}
-                        >
-                            <LayoutList className="w-4 h-4" /> By Task
-                        </button>
-                        <button
-                            onClick={() => setViewMode('students')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-colors ${viewMode === 'students' ? 'bg-brand-accent text-white shadow-sm' : 'text-gray-500 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary'}`}
-                        >
-                            <List className="w-4 h-4" /> By Student
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -122,7 +108,7 @@ const LiveView: React.FC = () => {
                         Students will appear here when they join using the class code.
                     </p>
                 </div>
-            ) : viewMode === 'students' ? (
+            ) : activeView === 'students' ? (
                 <StudentListView students={students} totalTasks={tasks.length} tasks={tasks} />
             ) : (
                 <TaskListView tasks={tasks} students={students} />

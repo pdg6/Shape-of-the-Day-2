@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
+import React, { useState, useEffect, useMemo } from 'react';
+import { collection, deleteDoc, doc, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../../firebase';
 import { Classroom, AnalyticsLog } from '../../types';
-import { Plus, Trash2, Edit2, Calendar as CalendarIcon, Users, BookOpen, Settings, X, Check, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Edit2, Calendar as CalendarIcon, Users, BookOpen, X, Check, RefreshCw, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
+import { useClassStore } from '../../store/classStore';
 
 /**
  * ClassroomManager Component
@@ -12,76 +13,35 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
  * Allows teachers to:
  * 1. Create, Edit, Delete Classrooms.
  * 2. View historical analytics (Calendar view).
- * 3. Drill down into daily summaries with persistent student names.
+ * 3. View deep dive analytics (Dashboards & KPIs).
  */
 interface ClassroomManagerProps {
-    activeView?: 'classes' | 'history';
+    activeView?: 'classes' | 'history' | 'analytics';
 }
 
 const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'classes' }) => {
-    // We can still keep local state if we want internal navigation, but for now let's sync with prop
-    // Actually, if we want the sidebar to control it, we should rely on the prop.
-    // However, to avoid breaking internal links (like "View History" on a card), we might need an internal override or callback.
-    // For simplicity, let's just use the prop as the source of truth for the tab, but we need to handle "View History" click.
-    // If "View History" is clicked, we can't easily update the parent state without a callback.
-    // BUT, the user requirement was "instead of having it as a floating button", implying the sidebar is the primary nav.
-    // Let's use a local state that initializes from prop, but updates when prop changes.
-
-    const [internalTab, setInternalTab] = useState<'classes' | 'history'>(activeView);
+    const [internalTab, setInternalTab] = useState<'classes' | 'history' | 'analytics'>(activeView);
 
     useEffect(() => {
         setInternalTab(activeView);
     }, [activeView]);
 
-    const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Global Store
+    const { classrooms, setClassrooms, currentClassId, setCurrentClassId, setIsClassModalOpen } = useClassStore();
 
-    // --- State for Class CRUD ---
-    const [showClassModal, setShowClassModal] = useState(false);
-    const [editingClass, setEditingClass] = useState<Classroom | null>(null);
-    const [formData, setFormData] = useState({
-        name: '',
-        subject: '',
-        gradeLevel: '',
-        color: '#3B82F6'
-    });
-
-    // --- State for History/Calendar ---
-    const [selectedClassId, setSelectedClassId] = useState<string>('');
+    // --- State for History/Analytics ---
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [logs, setLogs] = useState<AnalyticsLog[]>([]);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [showDaySummary, setShowDaySummary] = useState(false);
 
-    // Fetch Classrooms
-    useEffect(() => {
-        const fetchClassrooms = async () => {
-            if (!auth.currentUser) return;
-            try {
-                const q = query(collection(db, 'classrooms'), where('teacherId', '==', auth.currentUser.uid));
-                const snapshot = await getDocs(q);
-                const data: Classroom[] = [];
-                snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() } as Classroom));
-                setClassrooms(data);
-                if (data.length > 0 && !selectedClassId) {
-                    setSelectedClassId(data[0].id);
-                }
-            } catch (error) {
-                handleError(error, 'fetching classrooms');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchClassrooms();
-    }, []);
-
-    // Fetch Logs for Calendar (when class or month changes)
+    // Fetch Logs for Calendar/Analytics (when class changes)
     useEffect(() => {
         const fetchLogs = async () => {
-            if (!selectedClassId) return;
+            if (!currentClassId) return;
             try {
                 // In a real app, we'd query by date range. For now, fetch all for the class and filter client-side.
-                const q = query(collection(db, 'analytics_logs'), where('classroomId', '==', selectedClassId));
+                const q = query(collection(db, 'analytics_logs'), where('classroomId', '==', currentClassId));
                 const snapshot = await getDocs(q);
                 const data: AnalyticsLog[] = [];
                 snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() } as AnalyticsLog));
@@ -90,57 +50,109 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 handleError(error, 'fetching history');
             }
         };
-        if (internalTab === 'history') {
+        if (internalTab === 'history' || internalTab === 'analytics') {
             fetchLogs();
         }
-    }, [selectedClassId, internalTab]);
+    }, [currentClassId, internalTab]);
+
+    // --- Analytics Calculations ---
+    const analyticsData = useMemo(() => {
+        if (logs.length === 0) return null;
+
+        const totalSessions = logs.length;
+        const uniqueStudents = new Set(logs.map(l => l.studentId)).size;
+
+        // Avg Session Duration
+        const totalDuration = logs.reduce((acc, log) => acc + log.sessionDuration, 0);
+        const avgSessionDuration = Math.round((totalDuration / totalSessions) / 60000); // in minutes
+
+        // Task Stats
+        let totalTasksAttempted = 0;
+        let totalTasksCompleted = 0; // Assuming all logged tasks are completed for now, or check status
+        let totalStuckEvents = 0;
+        const taskStats: Record<string, { title: string, attempts: number, stuckCount: number, totalTime: number }> = {};
+        const studentStats: Record<string, { name: string, stuckCount: number, sessions: number }> = {};
+
+        logs.forEach(log => {
+            // Student Stats
+            if (!studentStats[log.studentId]) {
+                studentStats[log.studentId] = { name: log.studentName, stuckCount: 0, sessions: 0 };
+            }
+            studentStats[log.studentId].sessions++;
+
+            log.taskPerformance.forEach(task => {
+                totalTasksAttempted++;
+                totalTasksCompleted++; // In this model, logged performance usually implies completion or end of session
+                if (task.statusWasStuck) {
+                    totalStuckEvents++;
+                    studentStats[log.studentId].stuckCount++;
+                }
+
+                // Task Difficulty Stats
+                if (!taskStats[task.taskId]) {
+                    taskStats[task.taskId] = { title: task.title, attempts: 0, stuckCount: 0, totalTime: 0 };
+                }
+                taskStats[task.taskId].attempts++;
+                if (task.statusWasStuck) taskStats[task.taskId].stuckCount++;
+                taskStats[task.taskId].totalTime += task.timeToComplete_ms;
+            });
+        });
+
+        const completionRate = Math.round((totalTasksCompleted / totalTasksAttempted) * 100) || 0;
+        const stuckRate = Math.round((totalStuckEvents / totalTasksAttempted) * 100) || 0;
+
+        // Top Difficult Tasks (by stuck rate + avg time)
+        const difficultTasks = Object.values(taskStats)
+            .map(t => ({
+                ...t,
+                avgTime: Math.round(t.totalTime / t.attempts / 1000), // seconds
+                stuckRate: (t.stuckCount / t.attempts)
+            }))
+            .sort((a, b) => (b.stuckRate * 100 + b.avgTime) - (a.stuckRate * 100 + a.avgTime))
+            .slice(0, 5);
+
+        // Students Needing Support
+        const studentsNeedingSupport = Object.values(studentStats)
+            .sort((a, b) => b.stuckCount - a.stuckCount)
+            .slice(0, 5);
+
+        // Engagement Trend (Last 7 Days)
+        const last7Days = eachDayOfInterval({ start: subDays(new Date(), 6), end: new Date() });
+        const trendData = last7Days.map(day => {
+            const dateStr = format(day, 'yyyy-MM-dd');
+            const dayLogs = logs.filter(l => l.date === dateStr);
+            return {
+                day: format(day, 'EEE'),
+                count: dayLogs.length
+            };
+        });
+
+        return {
+            avgSessionDuration,
+            completionRate,
+            stuckRate,
+            uniqueStudents,
+            difficultTasks,
+            studentsNeedingSupport,
+            trendData
+        };
+    }, [logs]);
+
 
     // --- CRUD Handlers ---
-
-    const handleSaveClass = async () => {
-        if (!formData.name) return handleError(new Error('Class name is required'));
-        if (!auth.currentUser) return;
-
-        try {
-            if (editingClass) {
-                // Update
-                await updateDoc(doc(db, 'classrooms', editingClass.id), {
-                    name: formData.name,
-                    subject: formData.subject,
-                    gradeLevel: formData.gradeLevel,
-                    color: formData.color
-                });
-                setClassrooms(prev => prev.map(c => c.id === editingClass.id ? { ...c, ...formData } : c));
-                handleSuccess('Class updated successfully');
-            } else {
-                // Create
-                const newClass = {
-                    teacherId: auth.currentUser.uid,
-                    joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-                    name: formData.name,
-                    subject: formData.subject,
-                    gradeLevel: formData.gradeLevel,
-                    color: formData.color,
-                    presentationSettings: { defaultView: 'grid', showTimeEstimates: true, allowStudentSorting: false },
-                    contentLibrary: []
-                };
-                const ref = await addDoc(collection(db, 'classrooms'), newClass);
-                setClassrooms(prev => [...prev, { id: ref.id, ...newClass } as Classroom]);
-                handleSuccess('Class created successfully');
-            }
-            setShowClassModal(false);
-            setEditingClass(null);
-            setFormData({ name: '', subject: '', gradeLevel: '', color: '#3B82F6' });
-        } catch (error) {
-            handleError(error, 'saving class');
-        }
-    };
 
     const handleDeleteClass = async (id: string) => {
         if (!confirm('Are you sure? This will delete the class and all associated data.')) return;
         try {
             await deleteDoc(doc(db, 'classrooms', id));
-            setClassrooms(prev => prev.filter(c => c.id !== id));
+            const updatedClassrooms = classrooms.filter(c => c.id !== id);
+            setClassrooms(updatedClassrooms);
+
+            // If deleted class was selected, select another one
+            if (currentClassId === id) {
+                setCurrentClassId(updatedClassrooms.length > 0 ? updatedClassrooms[0].id : null);
+            }
+
             handleSuccess('Class deleted');
         } catch (error) {
             handleError(error, 'deleting class');
@@ -148,20 +160,11 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
     };
 
     const openEditModal = (cls: Classroom) => {
-        setEditingClass(cls);
-        setFormData({
-            name: cls.name,
-            subject: cls.subject || '',
-            gradeLevel: cls.gradeLevel || '',
-            color: cls.color || '#3B82F6'
-        });
-        setShowClassModal(true);
+        setIsClassModalOpen(true, cls);
     };
 
     const openCreateModal = () => {
-        setEditingClass(null);
-        setFormData({ name: '', subject: '', gradeLevel: '', color: '#3B82F6' });
-        setShowClassModal(true);
+        setIsClassModalOpen(true, null);
     };
 
     // --- Calendar Helpers ---
@@ -182,18 +185,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
     return (
         <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Classroom Manager</h2>
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Configure classes and view attendance history.</p>
-                </div>
-                {/* Toggle buttons removed as per request - controlled by sidebar now */}
-            </div>
-
             {/* Content Area */}
             <div className="flex-1 overflow-hidden">
-                {internalTab === 'classes' ? (
+                {internalTab === 'classes' && (
                     <div className="h-full overflow-y-auto pr-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {/* Add New Card */}
@@ -236,7 +230,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
                                     <div className="p-4 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between">
                                         <button
-                                            onClick={() => { setSelectedClassId(cls.id); setInternalTab('history'); }}
+                                            onClick={() => { setCurrentClassId(cls.id); setInternalTab('history'); }}
                                             className="text-sm font-bold text-brand-accent hover:underline"
                                         >
                                             View History
@@ -254,19 +248,13 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             ))}
                         </div>
                     </div>
-                ) : (
+                )}
+
+                {internalTab === 'history' && (
                     <div className="h-full flex flex-col">
                         {/* History Toolbar */}
                         <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-4">
-                                <select
-                                    value={selectedClassId}
-                                    onChange={(e) => setSelectedClassId(e.target.value)}
-                                    className="p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none"
-                                >
-                                    {classrooms.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                </select>
-                                <div className="h-8 w-[3px] bg-gray-200 dark:bg-gray-700" />
                                 <div className="flex items-center gap-2">
                                     <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
                                         <ChevronLeft className="w-5 h-5" />
@@ -326,70 +314,152 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                         </div>
                     </div>
                 )}
-            </div>
 
-            {/* Create/Edit Class Modal */}
-            {showClassModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] border-gray-200 dark:border-gray-700 p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
-                            <button onClick={() => setShowClassModal(false)}><X className="w-6 h-6" /></button>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-bold mb-1">Class Name</label>
-                                <input
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full p-2 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg bg-transparent"
-                                    placeholder="e.g. Period 1 - Math"
-                                />
+                {internalTab === 'analytics' && (
+                    <div className="h-full overflow-y-auto pr-2 space-y-6">
+                        {!analyticsData ? (
+                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
+                                <p>No analytics data available yet.</p>
                             </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-1">Subject</label>
-                                <input
-                                    type="text"
-                                    value={formData.subject}
-                                    onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                                    className="w-full p-2 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg bg-transparent"
-                                    placeholder="e.g. Mathematics"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-1">Grade Level</label>
-                                <input
-                                    type="text"
-                                    value={formData.gradeLevel}
-                                    onChange={e => setFormData({ ...formData, gradeLevel: e.target.value })}
-                                    className="w-full p-2 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg bg-transparent"
-                                    placeholder="e.g. 10th Grade"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-bold mb-1">Theme Color</label>
-                                <div className="flex gap-2">
-                                    {['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'].map(color => (
-                                        <button
-                                            key={color}
-                                            onClick={() => setFormData({ ...formData, color })}
-                                            className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-brand-textDarkPrimary dark:border-white scale-110' : 'border-transparent'}`}
-                                            style={{ backgroundColor: color }}
-                                        />
-                                    ))}
+                        ) : (
+                            <>
+                                {/* KPI Tiles */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg. Session</span>
+                                            <Clock className="w-5 h-5 text-brand-accent" />
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.avgSessionDuration}</span>
+                                            <span className="text-sm text-gray-500">mins</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Completion Rate</span>
+                                            <CheckCircle className="w-5 h-5 text-green-500" />
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.completionRate}%</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stuck Rate</span>
+                                            <AlertCircle className="w-5 h-5 text-amber-500" />
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.stuckRate}%</span>
+                                            <span className="text-sm text-gray-500">of tasks</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Students</span>
+                                            <Users className="w-5 h-5 text-purple-500" />
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.uniqueStudents}</span>
+                                            <span className="text-sm text-gray-500">total</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <button
-                                onClick={handleSaveClass}
-                                className="w-full py-3 bg-brand-accent text-white font-bold rounded-lg mt-4 hover:bg-blue-600 transition-colors"
-                            >
-                                {editingClass ? 'Save Changes' : 'Create Class'}
-                            </button>
-                        </div>
+
+                                {/* Charts Row */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    {/* Task Difficulty */}
+                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
+                                            <TrendingUp className="w-5 h-5 text-brand-accent" />
+                                            Most Challenging Tasks
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {analyticsData.difficultTasks.map((task, i) => (
+                                                <div key={i} className="space-y-2">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="font-medium truncate max-w-[70%]">{task.title}</span>
+                                                        <span className="text-gray-500">{task.avgTime}s avg</span>
+                                                    </div>
+                                                    <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
+                                                        <div
+                                                            className="bg-amber-500 h-full"
+                                                            style={{ width: `${task.stuckRate * 100}%` }}
+                                                            title={`Stuck Rate: ${Math.round(task.stuckRate * 100)}%`}
+                                                        />
+                                                        <div
+                                                            className="bg-brand-accent h-full"
+                                                            style={{ width: `${100 - (task.stuckRate * 100)}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {analyticsData.difficultTasks.length === 0 && (
+                                                <p className="text-gray-400 text-sm italic">No data available.</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Engagement Trend */}
+                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm flex flex-col">
+                                        <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
+                                            <BarChart3 className="w-5 h-5 text-brand-accent" />
+                                            Activity (Last 7 Days)
+                                        </h3>
+                                        <div className="flex-1 flex items-end justify-between gap-2 min-h-[200px]">
+                                            {analyticsData.trendData.map((day, i) => {
+                                                const maxVal = Math.max(...analyticsData.trendData.map(d => d.count), 1);
+                                                const height = (day.count / maxVal) * 100;
+                                                return (
+                                                    <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
+                                                        <div
+                                                            className="w-full bg-brand-accent/20 dark:bg-brand-accent/10 rounded-t-lg relative group-hover:bg-brand-accent/40 transition-colors"
+                                                            style={{ height: `${height}%` }}
+                                                        >
+                                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                {day.count}
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-xs font-bold text-gray-400">{day.day}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Needs Support */}
+                                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
+                                        <AlertCircle className="w-5 h-5 text-red-500" />
+                                        Students Needing Support
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {analyticsData.studentsNeedingSupport.map((student, i) => (
+                                            <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-800">
+                                                <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-red-600 font-bold">
+                                                    {student.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{student.name}</p>
+                                                    <p className="text-xs text-gray-500">{student.stuckCount} stuck events</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {analyticsData.studentsNeedingSupport.length === 0 && (
+                                            <p className="text-gray-400 text-sm italic col-span-full">No students flagged for support.</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
             {/* Daily Summary Modal */}
             {showDaySummary && selectedDate && (
@@ -468,11 +538,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                             </div>
                                                         </td>
                                                         <td className="p-4">
-                                                            {log.taskPerformance.some(t => t.statusWasStuck) ? (
-                                                                <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-full">Needs Help</span>
-                                                            ) : (
-                                                                <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded-full">On Track</span>
-                                                            )}
+                                                            <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold">
+                                                                Completed
+                                                            </span>
                                                         </td>
                                                     </tr>
                                                 ))}
