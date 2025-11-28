@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
 import { doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
-import { LogOut, Calendar, ListTodo } from 'lucide-react';
+import { LogOut, Calendar, ListTodo, Home } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
 
 /**
@@ -57,6 +57,9 @@ const StudentView: React.FC<StudentViewProps> = ({
     // State to control the visibility of the name entry modal
     // Show it automatically if no studentName is provided
     const [showNameModal, setShowNameModal] = useState<boolean>(!studentName);
+
+    // Mobile tab navigation state
+    const [mobileTab, setMobileTab] = useState<'home' | 'tasks' | 'schedule'>('home');
 
     // State for the tasks currently in the student's "My Day" view
     const [currentTasks, setCurrentTasks] = useState<Task[]>([
@@ -156,6 +159,20 @@ const StudentView: React.FC<StudentViewProps> = ({
     };
 
     /**
+     * Imports a single task from schedule to current day's view.
+     */
+    const handleImportTask = (task: Task) => {
+        // Check if task already exists
+        if (currentTasks.some(t => t.id === task.id)) {
+            toast.error('Task already in your list!');
+            return;
+        }
+
+        setCurrentTasks(prev => [...prev, task]);
+        toast.success(`Added "${task.title}" to today's tasks`);
+    };
+
+    /**
      * Handles the submission of the student's name from the modal.
      */
     const handleNameSubmit = (name: string) => {
@@ -187,8 +204,8 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     return (
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
-            {/* Header Section */}
-            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-sidebar backdrop-blur-md bg-opacity-80 dark:bg-opacity-80 border-b-[3px] border-gray-200 dark:border-gray-700">
+            {/* Header Section - Desktop Only (Mobile uses tab-based content) */}
+            <header className="hidden md:block bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-sidebar backdrop-blur-md bg-opacity-80 dark:bg-opacity-80 border-b-[3px] border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
                     {/* Desktop Layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
@@ -267,15 +284,68 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </div>
             </header>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 pt-6 pb-24 md:pb-8">
-                {/* Calendar Widget */}
-                <div data-calendar className="mb-6">
-                    <MiniCalendar
-                        selectedDate={selectedDate}
-                        onSelectDate={setSelectedDate}
-                    />
+            {/* Mobile Tab-Specific Content */}
+            {mobileTab === 'home' && (
+                <div className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-6 border-b-[3px] border-gray-200 dark:border-gray-700">
+                    <div className="text-center mb-4">
+                        <h1 className="text-2xl font-bold text-brand-accent mb-1">Shape of the Day</h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{className}</p>
+                    </div>
+                    <div className="text-center mb-4">
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Welcome,</p>
+                        <h2 className="text-xl font-bold text-brand-accent">{studentName}</h2>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-4 border-[3px] border-gray-200 dark:border-gray-700 text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tasks Today</p>
+                            <p className="text-3xl font-bold text-brand-accent">{currentTasks.filter(t => t.status !== 'done').length}</p>
+                        </div>
+                        <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-4 border-[3px] border-gray-200 dark:border-gray-700 text-center">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
+                            <p className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-[3px] ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+                            <span className={`text-sm font-bold uppercase ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {isLive ? 'Live' : 'Offline'}
+                            </span>
+                        </div>
+                        <button
+                            onClick={handleSignOut}
+                            className="px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl border-[3px] border-red-200 dark:border-red-800 transition-colors font-bold text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-w-[100px]"
+                        >
+                            Sign Out
+                        </button>
+                    </div>
                 </div>
+            )}
+
+            {mobileTab === 'tasks' && (
+                <div className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-4 border-b-[3px] border-gray-200 dark:border-gray-700 sticky top-0 z-sidebar">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{className}</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content - Hidden on mobile Home tab */}
+            <main className={`flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 pt-6 pb-24 md:pb-8 ${mobileTab === 'home' ? 'hidden md:block' : ''}`}>
+                {/* Calendar Widget - Schedule tab or desktop */}
+                {(mobileTab === 'schedule' || window.innerWidth >= 768) && (
+                    <div data-calendar className="mb-6">
+                        <MiniCalendar
+                            selectedDate={selectedDate}
+                            onSelectDate={setSelectedDate}
+                        />
+                    </div>
+                )}
 
                 {/* Task List Section */}
                 <div className="mb-6">
@@ -293,6 +363,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             date={selectedDate}
                             tasks={previewTasks}
                             onImport={handleImportTasks}
+                            onImportTask={handleImportTask}
                         />
                     ) : isToday ? (
                         <CurrentTaskList
@@ -321,33 +392,41 @@ const StudentView: React.FC<StudentViewProps> = ({
                 />
             )}
 
-            {/* Mobile Bottom Navigation - Following iOS/Android patterns */}
+            {/* Mobile Bottom Navigation - 3 Tabs */}
             <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
-                <div className="flex justify-around items-center h-16 px-4">
+                <div className="flex justify-around items-center h-16 px-2">
                     <button
-                        onClick={() => {
-                            // Scroll to tasks section (already at top usually)
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                        aria-label="Tasks"
+                        onClick={() => setMobileTab('home')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${mobileTab === 'home'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        aria-label="Home"
                     >
-                        <ListTodo className="w-5 h-5 text-brand-accent" />
-                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Tasks</span>
+                        <Home className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Home</span>
                     </button>
                     <button
-                        onClick={() => {
-                            // Scroll to calendar section
-                            const calendarEl = document.querySelector('[data-calendar]');
-                            if (calendarEl) {
-                                calendarEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
-                        }}
-                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                        onClick={() => setMobileTab('tasks')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${mobileTab === 'tasks'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        aria-label="Tasks"
+                    >
+                        <ListTodo className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Tasks</span>
+                    </button>
+                    <button
+                        onClick={() => setMobileTab('schedule')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${mobileTab === 'schedule'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
                         aria-label="Schedule"
                     >
-                        <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                        <span className="text-[10px] font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary">Schedule</span>
+                        <Calendar className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Schedule</span>
                     </button>
                 </div>
             </nav>

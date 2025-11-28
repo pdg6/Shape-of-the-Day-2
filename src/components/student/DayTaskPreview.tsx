@@ -12,6 +12,7 @@ interface DayTaskPreviewProps {
     date: string;
     tasks: Task[];
     onImport: () => void;
+    onImportTask?: (task: Task) => void; // Import individual task
 }
 
 /**
@@ -20,7 +21,7 @@ interface DayTaskPreviewProps {
  * Displays a summary of tasks scheduled for a future date.
  * Allows the student to "import" these tasks into their current daily view.
  */
-const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport }) => {
+const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, onImportTask }) => {
     // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
@@ -38,26 +39,38 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport }
                 </h3>
                 <button
                     onClick={onImport}
-                    className="flex items-center gap-2 bg-brand-accent text-white px-4 py-2 rounded-lg hover:bg-brand-accent/90 transition-colors shadow-sm"
+                    className="flex items-center gap-2 bg-brand-accent text-white px-4 py-2 rounded-lg hover:bg-brand-accent/90 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
                 >
                     <Download className="w-4 h-4" />
-                    Import to My Day
+                    Import All
                 </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
                 {tasks.map((task) => (
                     <div
                         key={task.id}
-                        className="bg-brand-light dark:bg-brand-dark p-3 rounded-lg border-[3px] border-gray-200 dark:border-gray-700 text-sm"
+                        className="bg-brand-light dark:bg-brand-dark p-4 rounded-lg border-[3px] border-gray-200 dark:border-gray-700 flex items-start justify-between gap-3"
                     >
-                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            {task.title}
-                        </span>
-                        <span className="mx-2 text-gray-300 dark:text-gray-600">|</span>
-                        <span className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                            {task.description}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">
+                                {task.title}
+                            </h4>
+                            <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                {task.description}
+                            </p>
+                        </div>
+
+                        {onImportTask && (
+                            <button
+                                onClick={() => onImportTask(task)}
+                                className="flex-shrink-0 p-2 text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                                title="Import this task"
+                                aria-label={`Import ${task.title}`}
+                            >
+                                <Download className="w-5 h-5" />
+                            </button>
+                        )}
                     </div>
                 ))}
             </div>

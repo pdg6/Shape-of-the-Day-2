@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Clock, Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode } from 'lucide-react';
+import { LayoutDashboard, Clock, Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
@@ -93,12 +93,11 @@ const TeacherDashboard: React.FC = () => {
                 />
             )}
 
-            {/* Sidebar Navigation */}
+            {/* Sidebar Navigation - Desktop Only */}
             <aside className={`
-                fixed md:static inset-y-0 left-0 z-sidebar
+                hidden md:flex md:static inset-y-0 left-0 z-sidebar
                 ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
-                transform transition-all duration-300 ease-in-out flex flex-col h-full border-r-[3px] border-gray-200 dark:border-gray-700 overflow-hidden
-                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                transform transition-all duration-300 ease-in-out flex-col h-full border-r-[3px] border-gray-200 dark:border-gray-700 overflow-hidden
             `}>
                 <div className="p-4 flex justify-end md:hidden flex-shrink-0">
                     <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
@@ -306,9 +305,6 @@ const TeacherDashboard: React.FC = () => {
                 {/* Header */}
                 <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-6 z-dropdown">
                     <div className="flex items-center gap-4">
-                        <button onClick={toggleSidebar} className="md:hidden p-2 text-gray-500">
-                            <Menu />
-                        </button>
                         <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                             {menuItems.find(i => i.id === activeTab)?.label}
                         </h2>
@@ -316,7 +312,7 @@ const TeacherDashboard: React.FC = () => {
                 </header>
 
                 {/* Content Body */}
-                <div className="flex-1 overflow-hidden p-6 relative">
+                <div className="flex-1 overflow-hidden p-6 pb-24 md:pb-6 relative">
                     {renderContent()}
                 </div>
 
@@ -337,7 +333,13 @@ const TeacherDashboard: React.FC = () => {
                     onClose={() => setIsSettingsOpen(false)}
                     title="Settings"
                 >
-                    <SettingsOverlay isOpen={true} onClose={() => setIsSettingsOpen(false)} />
+                    <SettingsOverlay
+                        isOpen={true}
+                        onClose={() => setIsSettingsOpen(false)}
+                        onLogout={logout}
+                        onShowJoinCode={() => setIsJoinCodeOpen(true)}
+                        onShowData={() => setActiveTab('data')}
+                    />
                 </Modal>
 
                 {currentClass && (
@@ -358,6 +360,68 @@ const TeacherDashboard: React.FC = () => {
 
             {/* Development Tools - Remove in production */}
             <DummyDataControls />
+
+            {/* Mobile Bottom Navigation - iOS/Android Style */}
+            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
+                <div className="flex justify-around items-center h-16 px-2">
+                    <button
+                        onClick={() => setActiveTab('classrooms')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'classrooms'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        aria-label="Classrooms"
+                    >
+                        <School className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Classes</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('tasks')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'tasks'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        aria-label="Task Manager"
+                    >
+                        <LayoutDashboard className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Tasks</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('shape')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'shape'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        aria-label="Shape of Day"
+                    >
+                        <Clock className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Shape</span>
+                    </button>
+
+                    <button
+                        onClick={() => setActiveTab('live')}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'live'
+                            ? 'text-brand-accent'
+                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                            }`}
+                        aria-label="Live View"
+                    >
+                        <Activity className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Live</span>
+                    </button>
+
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                        aria-label="Settings & More"
+                    >
+                        <Home className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">More</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     );
 };
