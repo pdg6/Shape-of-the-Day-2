@@ -91,7 +91,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
     };
 
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl shadow-sm border-[3px] border-gray-200 dark:border-gray-700 mb-6 transition-colors">
+        <div className="card-base p-4 mb-6 transition-colors">
             <div className="flex items-center justify-between mb-4 px-7">
                 <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     {new Date().toLocaleString('default', { month: 'long' })} Schedule
@@ -99,13 +99,13 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                 <div className="flex gap-2">
                     <button
                         onClick={() => scroll('left')}
-                        className="p-1 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors"
+                        className="p-3 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => scroll('right')}
-                        className="p-1 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors"
+                        className="p-3 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>
@@ -132,7 +132,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                flex flex-col items-center justify-center min-w-[4.5rem] flex-1 p-3 rounded-xl border-[3px] transition-all duration-200 outline-none
+                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-xl border-[3px] transition-all duration-200 outline-none
                 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
                 ${isSelected
                                     ? 'bg-brand-lightSurface dark:bg-brand-darkSurface border-emerald-500 shadow-sm scale-105 z-10'

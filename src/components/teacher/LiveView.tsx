@@ -3,7 +3,8 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { AlertCircle, HelpCircle, CheckCircle, Activity, Users } from 'lucide-react';
+import { CheckCircle, Activity, Users } from 'lucide-react';
+import { StatusBadge } from '../shared/StatusBadge';
 
 /**
  * LiveView Component
@@ -268,19 +269,6 @@ const StudentBucket: React.FC<{ label: string, count: number, students: LiveStud
     );
 };
 
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-    switch (status) {
-        case 'stuck':
-            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700"><AlertCircle className="w-3 h-3" /> Stuck</span>;
-        case 'question':
-            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700"><HelpCircle className="w-3 h-3" /> Question</span>;
-        case 'in_progress':
-            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-brand-accent/10 text-brand-accent"><Activity className="w-3 h-3" /> Working</span>;
-        case 'done':
-            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700"><CheckCircle className="w-3 h-3" /> Done</span>;
-        default:
-            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">Idle</span>;
-    }
-};
+
 
 export default LiveView;

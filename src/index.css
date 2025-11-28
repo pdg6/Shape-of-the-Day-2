@@ -17,6 +17,23 @@
     --color-status-question: #D97706;
     --color-status-complete: #2563EB;
 
+    --spacing-micro: 0.5rem;
+    --spacing-base: 1rem;
+    --spacing-macro: 1.5rem;
+
+    --color-status-error: #DC2626;
+    --color-status-warning: #D97706;
+    --color-status-success: #059669;
+    --color-status-info: #2563EB;
+
+    --z-index-base: 0;
+    --z-index-dropdown: 10;
+    --z-index-tooltip: 20;
+    --z-index-sidebar: 30;
+    --z-index-modal: 50;
+    --z-index-overlay: 100;
+    --z-index-toast: 200;
+
     --font-sans: Inter, sans-serif;
 
     --animate-fade-in: fadeIn 0.5s ease-out;
@@ -68,60 +85,6 @@
 }
 
 @layer components {
-    .student-tile {
-        @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
-        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
-        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
-        @apply border-gray-200 dark:border-gray-600;
-    }
-
-    .student-tile:hover {
-        @apply border-emerald-400;
-    }
-
-    .student-tile:focus-within,
-    .student-tile:focus {
-        @apply outline-none border-emerald-500;
-    }
-
-    .student-arrow {
-        @apply transition-all duration-200;
-    }
-
-    .group:hover .student-arrow {
-        @apply translate-x-1 text-emerald-500;
-    }
-
-    .teacher-tile {
-        @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
-        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
-        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
-        @apply border-gray-200 dark:border-gray-600;
-    }
-
-    .teacher-tile:hover {
-        @apply border-blue-400;
-    }
-
-    .teacher-tile:focus-within,
-    .teacher-tile:focus {
-        @apply outline-none border-blue-500;
-    }
-
-    .teacher-arrow {
-        @apply transition-all duration-200;
-    }
-
-    .group:hover .teacher-arrow {
-        @apply translate-x-1 text-blue-500;
-    }
-}
-
-@layer utilities {
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-
     .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;

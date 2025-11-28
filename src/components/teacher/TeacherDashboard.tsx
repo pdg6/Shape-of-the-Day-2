@@ -10,6 +10,8 @@ import ConnectionSidebar from './ConnectionSidebar';
 import { ClassFormModal } from './ClassFormModal';
 import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
+import { Modal } from '../shared/Modal';
+import { DummyDataControls } from '../shared/DummyDataControls';
 
 interface MenuItem {
     id: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms';
@@ -86,16 +88,16 @@ const TeacherDashboard: React.FC = () => {
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-20 md:hidden"
+                    className="fixed inset-0 bg-black/50 z-tooltip md:hidden"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar Navigation */}
             <aside className={`
-                fixed md:static inset-y-0 left-0 z-30
+                fixed md:static inset-y-0 left-0 z-sidebar
                 ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
-                transform transition-all duration-300 ease-in-out flex flex-col h-full border-r-[3px] border-transparent overflow-hidden
+                transform transition-all duration-300 ease-in-out flex flex-col h-full border-r-[3px] border-gray-200 dark:border-gray-700 overflow-hidden
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 <div className="p-4 flex justify-end md:hidden flex-shrink-0">
@@ -112,6 +114,7 @@ const TeacherDashboard: React.FC = () => {
                                 className={`
                                     relative flex items-center rounded-xl transition-all duration-300 font-bold border-[3px] overflow-hidden
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
+                                    focus:outline-none focus:ring-4 focus:ring-brand-accent/20
                                     ${activeTab === item.id
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
                                         : 'border-transparent text-gray-500 hover:border-gray-200 dark:hover:border-gray-700'
@@ -119,6 +122,7 @@ const TeacherDashboard: React.FC = () => {
                                     ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
                                 `}
                                 title={isCollapsed ? item.label : undefined}
+                                aria-label={item.label}
                             >
                                 <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'
                                     }`}>
@@ -207,20 +211,34 @@ const TeacherDashboard: React.FC = () => {
                     ))}
 
                     {/* Sidebar Toggle */}
-                    <div className="px-3 pt-2">
-                        <button
-                            onClick={() => {
-                                setIsCollapsed(!isCollapsed);
-                                setIsClassroomsMenuOpen(false);
-                            }}
-                            className="hidden md:flex items-center justify-center w-full h-10 text-brand-accent hover:text-brand-accent/80 transition-colors rounded-lg hover:bg-brand-accent/10"
-                        >
-                            {isCollapsed ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
-                        </button>
-                    </div>
+
                 </nav>
 
                 <div className="p-4 space-y-2 flex-shrink-0">
+                    <button
+                        onClick={() => {
+                            setIsCollapsed(!isCollapsed);
+                            setIsClassroomsMenuOpen(false);
+                        }}
+                        className={`hidden md:flex group relative items-center h-12 rounded-xl transition-colors duration-300 font-bold overflow-hidden ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
+                        title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
+                    >
+                        <div className="flex items-center justify-center w-12 flex-shrink-0 text-brand-accent transition-colors">
+                            {isCollapsed ? <ChevronRight size={24} /> : <Menu size={20} />}
+                        </div>
+                        <span className={`
+                            whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left
+                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0 text-gray-500 group-hover:text-brand-accent'}
+                        `}>
+                            Menu
+                        </span>
+                        {!isCollapsed && (
+                            <div className="pr-3 text-brand-accent">
+                                <ChevronLeft size={20} />
+                            </div>
+                        )}
+                    </button>
+                    <div className={`hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2 mx-1 transition-all duration-300 ${isCollapsed ? 'w-10' : 'w-auto'}`} />
                     <button
                         onClick={() => setIsJoinCodeOpen(true)}
                         className={`group relative flex items-center h-12 rounded-xl transition-colors duration-300 font-bold overflow-hidden ${isCollapsed ? 'w-12 justify-center' : 'w-full'
@@ -286,7 +304,7 @@ const TeacherDashboard: React.FC = () => {
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 relative">
                 {/* Header */}
-                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-6 z-10">
+                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-6 z-dropdown">
                     <div className="flex items-center gap-4">
                         <button onClick={toggleSidebar} className="md:hidden p-2 text-gray-500">
                             <Menu />
@@ -311,17 +329,35 @@ const TeacherDashboard: React.FC = () => {
                 )}
 
                 {/* Global Modals */}
+                {/* Global Modals */}
                 <ClassFormModal />
-                <SettingsOverlay isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
+                <Modal
+                    isOpen={isSettingsOpen}
+                    onClose={() => setIsSettingsOpen(false)}
+                    title="Settings"
+                >
+                    <SettingsOverlay isOpen={true} onClose={() => setIsSettingsOpen(false)} />
+                </Modal>
+
                 {currentClass && (
-                    <JoinCodeOverlay
+                    <Modal
                         isOpen={isJoinCodeOpen}
                         onClose={() => setIsJoinCodeOpen(false)}
-                        classCode={currentClass.joinCode}
-                        classId={currentClass.id}
-                    />
+                        title="Join Code"
+                    >
+                        <JoinCodeOverlay
+                            isOpen={true}
+                            onClose={() => setIsJoinCodeOpen(false)}
+                            classCode={currentClass.joinCode}
+                            classId={currentClass.id}
+                        />
+                    </Modal>
                 )}
             </main>
+
+            {/* Development Tools - Remove in production */}
+            <DummyDataControls />
         </div>
     );
 };

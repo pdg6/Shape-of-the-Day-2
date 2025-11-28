@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
 import { doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
-import { LogOut } from 'lucide-react';
+import { LogOut, Calendar, ListTodo } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
 
 /**
@@ -81,7 +81,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     const syncToTeacher = async (taskId: string, status: TaskStatus, comment: string = '') => {
         if (!auth.currentUser || !classId) return;
 
-        const task = currentTasks.find(t => t.id === taskId);
+        // const task = currentTasks.find(t => t.id === taskId);
         const completedCount = currentTasks.filter(t => t.status === 'done').length;
         const activeTasks = currentTasks.filter(t => t.status === 'in_progress').map(t => t.id);
 
@@ -188,7 +188,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     return (
         <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Header Section */}
-            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-50 backdrop-blur-md bg-opacity-80 dark:bg-opacity-80">
+            <header className="bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-sidebar backdrop-blur-md bg-opacity-80 dark:bg-opacity-80 border-b-[3px] border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
                     {/* Desktop Layout */}
                     <div className="hidden md:flex items-center justify-between w-full">
@@ -267,13 +267,15 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </div>
             </header>
 
-            {/* Main Content Area */}
-            <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
-                {/* Date Selection Calendar */}
-                <MiniCalendar
-                    selectedDate={selectedDate}
-                    onSelectDate={setSelectedDate}
-                />
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 pt-6 pb-24 md:pb-8">
+                {/* Calendar Widget */}
+                <div data-calendar className="mb-6">
+                    <MiniCalendar
+                        selectedDate={selectedDate}
+                        onSelectDate={setSelectedDate}
+                    />
+                </div>
 
                 {/* Task List Section */}
                 <div className="mb-6">
@@ -318,6 +320,37 @@ const StudentView: React.FC<StudentViewProps> = ({
                     onClose={() => setShowNameModal(false)}
                 />
             )}
+
+            {/* Mobile Bottom Navigation - Following iOS/Android patterns */}
+            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
+                <div className="flex justify-around items-center h-16 px-4">
+                    <button
+                        onClick={() => {
+                            // Scroll to tasks section (already at top usually)
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                        aria-label="Tasks"
+                    >
+                        <ListTodo className="w-5 h-5 text-brand-accent" />
+                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Tasks</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            // Scroll to calendar section
+                            const calendarEl = document.querySelector('[data-calendar]');
+                            if (calendarEl) {
+                                calendarEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }}
+                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                        aria-label="Schedule"
+                    >
+                        <Calendar className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                        <span className="text-[10px] font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary">Schedule</span>
+                    </button>
+                </div>
+            </nav>
         </div>
     );
 };

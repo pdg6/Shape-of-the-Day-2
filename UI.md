@@ -16,7 +16,9 @@ Used for all student-facing components (`StudentView`, `StudentNameModal`, `Join
 ```css
 /* Base Tile/Input/Button Style */
 .student-tile {
-  @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
+  @apply w-full px-4 py-2.5 rounded-lg border-[3px] transition-all duration-200;
+  /* Note: Using 3px borders for enhanced visibility in educational environments
+     and improved accessibility across varied display quality (projectors, tablets, etc.) */
   @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
   @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
   @apply border-gray-200 dark:border-gray-600;
@@ -31,7 +33,7 @@ Used for all student-facing components (`StudentView`, `StudentNameModal`, `Join
 .student-tile:focus-within,
 .student-tile:focus {
   @apply outline-none border-emerald-500;
-  @apply ring-emerald-200 dark:ring-emerald-900/50; /* Add ring-2 or ring-4 if needed */
+  @apply ring-2 ring-emerald-200 dark:ring-emerald-900/50;
 }
 
 /* Arrow Animation (requires 'group' on parent) */
@@ -50,7 +52,9 @@ Used for all teacher-facing dashboard tiles (`TaskManager`, `ClassPlanner`, etc.
 ```css
 /* Base Tile/Input/Button Style */
 .teacher-tile {
-  @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
+  @apply w-full px-4 py-2.5 rounded-lg border-[3px] transition-all duration-200;
+  /* Note: Using 3px borders for enhanced visibility in educational environments
+     and improved accessibility across varied display quality (projectors, tablets, etc.) */
   @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
   @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
   @apply border-gray-200 dark:border-gray-600;
@@ -65,7 +69,7 @@ Used for all teacher-facing dashboard tiles (`TaskManager`, `ClassPlanner`, etc.
 .teacher-tile:focus-within,
 .teacher-tile:focus {
   @apply outline-none border-blue-500;
-  @apply ring-blue-200 dark:ring-blue-900/50;
+  @apply ring-2 ring-blue-200 dark:ring-blue-900/50;
 }
 
 /* Arrow Animation (requires 'group' on parent) */

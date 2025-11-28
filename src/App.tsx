@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 import LandingPage from './components/shared/LandingPage';
 import TeacherDashboard from './components/teacher/TeacherDashboard';
@@ -10,6 +11,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useClassStore } from './store/classStore';
 import { Classroom } from './types';
 import { useAuth } from './context/AuthContext';
+import { loadDummyData, getDummyJoinCodes } from './services/dummyDataService';
 
 /**
  * App Component
@@ -63,46 +65,78 @@ function App() {
         }
     }, [user, loading]);
 
+    // Developer Mode: Keyboard shortcut to load dummy data (Ctrl+Shift+D)
+    useEffect(() => {
+        const handleKeyPress = async (event: KeyboardEvent) => {
+            // Check for Ctrl+Shift+D (or Cmd+Shift+D on Mac)
+            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'D') {
+                event.preventDefault();
+
+                if (!user) {
+                    toast.error('Please sign in as a teacher first!');
+                    return;
+                }
+
+                console.log('🚀 Loading dummy data...');
+                toast.loading('Loading dummy data...', { id: 'dummy-data' });
+
+                try {
+                    await loadDummyData(user.uid);
+                    toast.dismiss('dummy-data');
+
+                    // Show join codes for easy access
+                    const joinCodes = getDummyJoinCodes();
+                    const codesMessage = joinCodes
+                        .map((c: { name: string; code: string }) => `${c.name}: ${c.code}`)
+                        .join('\n');
+
+                    toast.success(
+                        `Dummy data loaded!\n\nJoin Codes:\n${codesMessage}`,
+                        {
+                            duration: 8000,
+                            style: {
+                                maxWidth: '500px',
+                                whiteSpace: 'pre-line',
+                            },
+                        }
+                    );
+
+                    // Refresh the page to load new data
+                    window.location.reload();
+                } catch (error) {
+                    toast.dismiss('dummy-data');
+                    console.error('Failed to load dummy data:', error);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [user]);
+
     // Fetch Classrooms for Teacher
     useEffect(() => {
         const fetchClassrooms = async () => {
             if (!user || view !== 'teacher') return;
             try {
+                console.log('Fetching classrooms for teacher:', user.uid);
                 const q = query(collection(db, 'classrooms'), where('teacherId', '==', user.uid));
                 const snapshot = await getDocs(q);
                 const data: Classroom[] = [];
-                snapshot.forEach(doc => data.push({ id: doc.id, ...doc.data() } as Classroom));
+                snapshot.forEach(doc => {
+                    console.log('Found classroom:', doc.id, doc.data());
+                    data.push({ id: doc.id, ...doc.data() } as Classroom);
+                });
 
-                // Add placeholder classrooms if none exist
-                if (data.length === 0) {
-                    const placeholderClassrooms: Classroom[] = [
-                        {
-                            id: 'class-1',
-                            joinCode: 'ABC123',
-                            teacherId: user.uid,
-                            name: 'Computer Science 101',
-                            subject: 'Computer Science',
-                            gradeLevel: 'Grade 10',
-                            color: '#3B82F6',
-                        },
-                        {
-                            id: 'class-2',
-                            joinCode: 'XYZ789',
-                            teacherId: user.uid,
-                            name: 'Web Development',
-                            subject: 'Technology',
-                            gradeLevel: 'Grade 11',
-                            color: '#10B981',
-                        },
-                    ];
-                    setClassrooms(placeholderClassrooms);
-                    setCurrentClassId(placeholderClassrooms[0].id);
-                } else {
-                    setClassrooms(data);
-                    // If no class is selected but we have classes, select the first one
-                    if (data.length > 0 && !currentClassId) {
-                        setCurrentClassId(data[0].id);
-                    }
+                console.log('Total classrooms found:', data.length);
+                setClassrooms(data);
+
+                // If no class is selected but we have classes, select the first one
+                if (data.length > 0 && !currentClassId) {
+                    console.log('Setting current class to:', data[0].id);
+                    setCurrentClassId(data[0].id);
+                } else if (data.length === 0) {
+                    console.warn('No classrooms found for this teacher. Use Ctrl+Shift+D to load dummy data.');
                 }
             } catch (error) {
                 console.error("Error fetching classrooms:", error);

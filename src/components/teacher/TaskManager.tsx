@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Link as LinkIcon, Plus, Check, Upload, Loader, Trash2, AlertCircle, X } from 'lucide-react';
+import { Button } from '../shared/Button';
 import { validateFile, sanitizeTaskData, isValidURL } from '../../utils/validation';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -239,20 +240,21 @@ export default function TaskManager() {
                     {tasks.map((task, index) => (
                         <div
                             key={task.id}
-                            className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-sm border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden transition-colors"
+                            className="card-base overflow-hidden transition-colors"
                             onPaste={(e) => handlePaste(e, task.id)}
                         >
                             {/* Card Header */}
                             <div className="bg-gray-50 dark:bg-gray-800 px-6 py-3 border-b-[3px] border-gray-200 dark:border-gray-700 flex justify-between items-center">
                                 <span className="font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary text-sm uppercase tracking-wider">Task {index + 1}</span>
                                 {tasks.length > 1 && (
-                                    <button
+                                    <Button
+                                        variant="icon"
+                                        size="sm"
                                         onClick={() => removeTask(task.id)}
-                                        className="text-gray-400 hover:text-red-500 transition-colors"
+                                        className="text-gray-400 hover:text-red-500"
                                         title="Remove Task"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                        icon={Trash2}
+                                    />
                                 )}
                             </div>
 
@@ -266,7 +268,7 @@ export default function TaskManager() {
                                             type="text"
                                             value={task.title}
                                             onChange={e => updateTask(task.id, 'title', e.target.value)}
-                                            className="w-full p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg focus:border-brand-accent outline-none font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 transition-colors"
+                                            className="input-base w-full font-medium"
                                             placeholder="e.g. Read Chapter 4"
                                         />
                                     </div>
@@ -280,7 +282,7 @@ export default function TaskManager() {
                                                     type="date"
                                                     value={task.startDate}
                                                     onChange={e => updateTask(task.id, 'startDate', e.target.value)}
-                                                    className="w-full p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none transition-colors text-sm font-medium"
+                                                    className="input-base w-full text-sm font-medium"
                                                 />
                                             </div>
                                             <div className="flex-1">
@@ -289,7 +291,7 @@ export default function TaskManager() {
                                                     type="date"
                                                     value={task.endDate}
                                                     onChange={e => updateTask(task.id, 'endDate', e.target.value)}
-                                                    className="w-full p-2 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent outline-none transition-colors text-sm font-medium"
+                                                    className="input-base w-full text-sm font-medium"
                                                 />
                                             </div>
                                         </div>
@@ -302,7 +304,7 @@ export default function TaskManager() {
                                     <textarea
                                         value={task.description}
                                         onChange={e => updateTask(task.id, 'description', e.target.value)}
-                                        className="w-full p-3 bg-gray-50 dark:bg-gray-900 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg focus:border-brand-accent outline-none h-24 text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 transition-colors resize-none"
+                                        className="input-base w-full h-24 text-sm resize-none"
                                         placeholder="Instructions..."
                                     />
                                 </div>
@@ -368,7 +370,7 @@ export default function TaskManager() {
                                             </div>
 
                                             {/* Add Link Input */}
-                                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-gray-50 dark:bg-gray-900 focus-within:border-brand-accent transition-colors">
+                                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-gray-50 dark:bg-gray-900 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-colors">
                                                 <div className="pl-3 text-gray-400">
                                                     <LinkIcon size={16} />
                                                 </div>
@@ -404,6 +406,7 @@ export default function TaskManager() {
                                                         onClick={() => toggleRoomForTask(task.id, room.id)}
                                                         className={`
                               flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
                               ${isSelected
                                                                 ? 'bg-brand-accent text-white border-brand-accent pr-2 shadow-md'
                                                                 : 'bg-gray-50 dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 hover:border-brand-accent hover:text-brand-accent'}
@@ -422,18 +425,20 @@ export default function TaskManager() {
                     ))}
 
                     {/* Add Task Button */}
-                    <button
+                    <Button
+                        variant="secondary"
                         onClick={addNewTask}
-                        className="w-full py-4 border-[3px] border-gray-300 dark:border-gray-700 rounded-xl text-gray-400 font-bold hover:border-brand-accent hover:text-brand-accent hover:bg-brand-accent/5 transition-all flex items-center justify-center gap-2"
+                        className="w-full py-4 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-brand-accent hover:text-brand-accent"
+                        icon={Plus}
                     >
-                        <Plus size={20} /> Add Another Task
-                    </button>
+                        Add Another Task
+                    </Button>
                 </div>
             </div>
 
             {/* RIGHT: Summary Sidebar */}
             <div className="w-full md:w-80 shrink-0 flex flex-col h-full">
-                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-sm border-[3px] border-gray-200 dark:border-gray-700 flex flex-col h-full overflow-hidden">
+                <div className="card-base flex flex-col h-full overflow-hidden">
                     <div className="p-4 border-b-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
                             <Calendar size={18} className="text-brand-accent" />
@@ -470,21 +475,15 @@ export default function TaskManager() {
                     </div>
 
                     <div className="p-4 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <button
+                        <Button
                             onClick={handleDistributeAll}
                             disabled={isSubmitting}
-                            className="w-full bg-brand-accent text-white py-3 rounded-lg font-bold border-2 border-brand-accent hover:bg-blue-600 hover:shadow-lg hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
+                            loading={isSubmitting}
+                            className="w-full"
+                            icon={Check}
                         >
-                            {isSubmitting ? (
-                                <>
-                                    <Loader size={18} className="animate-spin" /> Distributing...
-                                </>
-                            ) : (
-                                <>
-                                    <Check size={18} /> Distribute All ({tasks.length})
-                                </>
-                            )}
-                        </button>
+                            Distribute All ({tasks.length})
+                        </Button>
                     </div>
                 </div>
             </div>

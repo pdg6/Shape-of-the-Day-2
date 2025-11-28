@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon } from 'lucide-react';
 import { Task, TaskStatus } from '../../types';
+import { StatusBadge } from '../shared/StatusBadge';
 
 /**
  * Configuration for the different task status actions.
@@ -28,33 +29,33 @@ const STATUS_ACTIONS: StatusAction[] = [
         id: 'stuck',
         label: 'Stuck',
         icon: AlertCircle,
-        activeColor: 'text-red-600 dark:text-red-500',
-        hover: 'hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10',
-        borderColor: 'border-red-600 dark:border-red-500'
+        activeColor: 'text-status-stuck',
+        hover: 'hover:text-status-stuck hover:bg-status-stuck/10',
+        borderColor: 'border-status-stuck'
     },
     {
         id: 'question',
         label: 'Question',
         icon: HelpCircle,
-        activeColor: 'text-amber-600 dark:text-amber-500',
-        hover: 'hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10',
-        borderColor: 'border-amber-600 dark:border-amber-500'
+        activeColor: 'text-status-question',
+        hover: 'hover:text-status-question hover:bg-status-question/10',
+        borderColor: 'border-status-question'
     },
     {
         id: 'in_progress',
         label: 'Start',
         icon: Play,
-        activeColor: 'text-emerald-600 dark:text-emerald-500',
-        hover: 'hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/10',
-        borderColor: 'border-emerald-600 dark:border-emerald-500'
+        activeColor: 'text-status-progress',
+        hover: 'hover:text-status-progress hover:bg-status-progress/10',
+        borderColor: 'border-status-progress'
     },
     {
         id: 'done',
         label: 'Complete',
         icon: CheckCircle,
-        activeColor: 'text-blue-600 dark:text-blue-500',
-        hover: 'hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/10',
-        borderColor: 'border-blue-600 dark:border-blue-500'
+        activeColor: 'text-status-complete',
+        hover: 'hover:text-status-complete hover:bg-status-complete/10',
+        borderColor: 'border-status-complete'
     }
 ];
 
@@ -84,10 +85,9 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
 
     const activeAction = STATUS_ACTIONS.find(a => a.id === task.status);
     const borderColor = activeAction ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700';
-    const activeColor = activeAction ? activeAction.activeColor : 'text-gray-500';
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
+        <div className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
             <div
                 className={`bg-brand-darkSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
                 onClick={(e) => e.stopPropagation()}
@@ -99,9 +99,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                             <h3 className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {task.title}
                             </h3>
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${activeColor} border-current`}>
-                                {activeAction?.label}
-                            </span>
+                            <StatusBadge status={task.status} />
                         </div>
                         <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
                             {task.description}
@@ -165,15 +163,7 @@ interface TaskCardProps {
  */
 const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay }) => {
     // Helper to render the small status badge next to the title
-    const getStatusBadge = (status: TaskStatus) => {
-        switch (status) {
-            case 'stuck': return <span className="px-2.5 py-1 text-red-600 dark:text-red-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">Stuck</span>;
-            case 'question': return <span className="px-2.5 py-1 text-amber-600 dark:text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">Question</span>;
-            case 'in_progress': return <span className="px-2.5 py-1 text-emerald-600 dark:text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">Active</span>;
-            case 'done': return <span className="px-2.5 py-1 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">Done</span>;
-            default: return <span className="px-2.5 py-1 text-gray-500 dark:text-gray-400 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">To Do</span>;
-        }
-    };
+    // const getStatusBadge = (status: TaskStatus) => { ... } - Replaced by StatusBadge component
 
     const activeAction = STATUS_ACTIONS.find(a => a.id === task.status);
     // Match parent border color to status color, default to gray
@@ -204,7 +194,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                                 {task.dueDate}
                             </span>
                         )}
-                        {getStatusBadge(task.status)}
+                        <StatusBadge status={task.status} />
                     </div>
                     <p className={`text-sm leading-relaxed ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
                         {task.description}
@@ -231,8 +221,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                                 key={action.id}
                                 onClick={() => handleActionClick(action.id)}
                                 title={action.label}
+                                aria-label={action.label}
                                 className={`
-                  p-2 rounded-lg transition-all duration-200 relative group
+                  p-3 rounded-lg transition-all duration-200 relative group
+                  min-w-[44px] min-h-[44px] flex items-center justify-center
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface
                   ${isActive
                                         ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm ring-1 ring-black/5 dark:ring-white/10`
                                         : `text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-brand-darkSurface hover:text-gray-600 dark:hover:text-gray-300`}
@@ -240,7 +233,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                             >
                                 <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                                 {/* Tooltip */}
-                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-tooltip">
                                     {action.label}
                                 </span>
                             </button>
@@ -303,7 +296,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
     });
 
     return (
-        <div className="space-y-4 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-7xl mx-auto">
             {sortedTasks.map((task) => (
                 <TaskCard
                     key={task.id}

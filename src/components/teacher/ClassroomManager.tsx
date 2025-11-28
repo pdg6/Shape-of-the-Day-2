@@ -3,6 +3,7 @@ import { collection, deleteDoc, doc, query, where, getDocs } from 'firebase/fire
 import { db } from '../../firebase';
 import { Classroom, AnalyticsLog } from '../../types';
 import { Plus, Trash2, Edit2, Calendar as CalendarIcon, Users, BookOpen, X, Check, RefreshCw, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Button } from '../shared/Button';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
 import { useClassStore } from '../../store/classStore';
@@ -193,7 +194,8 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             {/* Add New Card */}
                             <button
                                 onClick={openCreateModal}
-                                className="flex flex-col items-center justify-center h-64 border-[3px] border-gray-300 dark:border-gray-700 rounded-xl hover:border-brand-accent hover:bg-brand-accent/5 transition-all group"
+                                className="flex flex-col items-center justify-center h-64 border-[3px] border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-brand-accent hover:bg-brand-accent/5 transition-all group focus:outline-none focus:ring-4 focus:ring-brand-accent/20"
+                                aria-label="Create New Class"
                             >
                                 <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                     <Plus className="w-8 h-8 text-gray-400 group-hover:text-brand-accent" />
@@ -203,7 +205,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                             {/* Class Cards */}
                             {classrooms.map(cls => (
-                                <div key={cls.id} className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-sm border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                                <div key={cls.id} className="card-base overflow-hidden flex flex-col">
                                     <div className="h-2" style={{ backgroundColor: cls.color || '#3B82F6' }} />
                                     <div className="p-6 flex-1">
                                         <div className="flex justify-between items-start mb-4">
@@ -229,19 +231,28 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
                                     <div className="p-4 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between">
-                                        <button
+                                        <Button
+                                            variant="tertiary"
+                                            size="sm"
                                             onClick={() => { setCurrentClassId(cls.id); setInternalTab('history'); }}
-                                            className="text-sm font-bold text-brand-accent hover:underline"
                                         >
                                             View History
-                                        </button>
+                                        </Button>
                                         <div className="flex gap-2">
-                                            <button onClick={() => openEditModal(cls)} className="p-2 text-gray-500 hover:text-brand-accent hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors">
-                                                <Edit2 className="w-4 h-4" />
-                                            </button>
-                                            <button onClick={() => handleDeleteClass(cls.id)} className="p-2 text-gray-500 hover:text-red-500 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <Button
+                                                variant="icon"
+                                                size="sm"
+                                                onClick={() => openEditModal(cls)}
+                                                className="hover:bg-white dark:hover:bg-gray-700"
+                                                icon={Edit2}
+                                            />
+                                            <Button
+                                                variant="icon"
+                                                size="sm"
+                                                onClick={() => handleDeleteClass(cls.id)}
+                                                className="hover:text-red-500 hover:bg-white dark:hover:bg-gray-700"
+                                                icon={Trash2}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -256,19 +267,25 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                         <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-                                        <ChevronLeft className="w-5 h-5" />
-                                    </button>
+                                    <Button
+                                        variant="icon"
+                                        size="sm"
+                                        onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                                        icon={ChevronLeft}
+                                    />
                                     <span className="font-bold text-lg w-32 text-center">{format(currentMonth, 'MMMM yyyy')}</span>
-                                    <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded">
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
+                                    <Button
+                                        variant="icon"
+                                        size="sm"
+                                        onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                                        icon={ChevronRight}
+                                    />
                                 </div>
                             </div>
                         </div>
 
                         {/* Calendar Grid */}
-                        <div className="flex-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                        <div className="flex-1 card-base overflow-hidden flex flex-col">
                             <div className="grid grid-cols-7 border-b-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                                     <div key={day} className="p-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -286,9 +303,19 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         <div
                                             key={day.toISOString()}
                                             onClick={() => handleDayClick(day)}
+                                            tabIndex={0}
+                                            role="button"
+                                            aria-label={`View details for ${format(day, 'MMMM d, yyyy')}`}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    handleDayClick(day);
+                                                }
+                                            }}
                                             className={`
                                                 border-b border-r border-gray-200 dark:border-gray-700 p-2 relative cursor-pointer transition-colors
                                                 hover:bg-brand-accent/5
+                                                focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent
                                                 ${!isSameMonth(day, currentMonth) ? 'bg-gray-50/50 dark:bg-gray-900/50 text-gray-400' : ''}
                                                 ${isSameDay(day, new Date()) ? 'bg-blue-50 dark:bg-blue-900/10' : ''}
                                             `}
@@ -326,7 +353,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             <>
                                 {/* KPI Tiles */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div className="card-base p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg. Session</span>
                                             <Clock className="w-5 h-5 text-brand-accent" />
@@ -337,7 +364,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div className="card-base p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Completion Rate</span>
                                             <CheckCircle className="w-5 h-5 text-green-500" />
@@ -347,7 +374,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div className="card-base p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stuck Rate</span>
                                             <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -358,7 +385,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div className="card-base p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Students</span>
                                             <Users className="w-5 h-5 text-purple-500" />
@@ -373,7 +400,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 {/* Charts Row */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Task Difficulty */}
-                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                    <div className="card-base p-6">
                                         <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-brand-accent" />
                                             Most Challenging Tasks
@@ -405,7 +432,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
 
                                     {/* Engagement Trend */}
-                                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm flex flex-col">
+                                    <div className="card-base p-6 flex flex-col">
                                         <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <BarChart3 className="w-5 h-5 text-brand-accent" />
                                             Activity (Last 7 Days)
@@ -433,7 +460,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </div>
 
                                 {/* Needs Support */}
-                                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                                <div className="card-base p-6">
                                     <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                         <AlertCircle className="w-5 h-5 text-red-500" />
                                         Students Needing Support
@@ -472,9 +499,12 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </h3>
                                 <p className="text-gray-500">Daily Summary</p>
                             </div>
-                            <button onClick={() => setShowDaySummary(false)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full">
-                                <X className="w-6 h-6" />
-                            </button>
+                            <Button
+                                variant="icon"
+                                onClick={() => setShowDaySummary(false)}
+                                className="rounded-full"
+                                icon={X}
+                            />
                         </div>
 
                         <div className="p-6 overflow-y-auto custom-scrollbar">

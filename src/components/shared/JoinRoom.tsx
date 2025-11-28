@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { Button } from './Button';
 import { signInAnonymously } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { LiveStudent } from '../../types';
 import toast from 'react-hot-toast';
@@ -36,21 +37,17 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
         try {
             let targetClassId = '';
 
-            // --- DEMO WORKFLOW ---
-            // Always accept '123456' and map it to the persistent demo class ID.
-            if (code === '123456') {
-                targetClassId = 'demo-class-123';
-            } else {
-                // Future Real Implementation:
-                // const q = query(collection(db, 'classrooms'), where('code', '==', code));
-                // const snapshot = await getDocs(q);
-                // if (snapshot.empty) throw new Error('Class not found');
-                // targetClassId = snapshot.docs[0].id;
+            // Query Firestore for classroom with matching join code
+            const q = query(collection(db, 'classrooms'), where('joinCode', '==', code));
+            const snapshot = await getDocs(q);
 
-                setError('Invalid Code. Please use "123456" for the demo.');
+            if (snapshot.empty) {
+                setError('Invalid code. No classroom found with this code.');
                 setIsJoining(false);
                 return;
             }
+
+            targetClassId = snapshot.docs[0].id;
 
             // 2. Authenticate Anonymously
             const userCredential = await signInAnonymously(auth);
@@ -107,12 +104,11 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         placeholder="Enter 6-digit code"
                         maxLength={6}
                         className={`
-                            w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-xl border-[3px] outline-none transition-all
-                            bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary
+                            input-base text-center text-2xl font-mono tracking-[0.5em]
                             placeholder:text-sm placeholder:font-sans placeholder:tracking-normal
                             ${error
                                 ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
-                                : 'border-gray-200 dark:border-gray-700 focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10'}
+                                : 'input-focus'}
                         `}
                     />
                 </div>
@@ -126,7 +122,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="What's your name?"
-                        className="w-full px-4 py-3 text-center text-lg rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 outline-none transition-all"
+                        className="input-base text-center text-lg input-focus"
                     />
                 </div>
             </div>
@@ -137,23 +133,17 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                 </p>
             )}
 
-            <button
+            <Button
                 type="submit"
-                disabled={isJoining}
-                className="w-full group relative flex items-center justify-center gap-2 bg-brand-accent hover:bg-brand-accent/90 text-white py-3.5 rounded-xl font-bold text-lg transition-all disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-brand-accent/20 hover:shadow-brand-accent/30 active:scale-[0.98]"
+                loading={isJoining}
+                variant="primary"
+                size="lg"
+                className="w-full shadow-lg shadow-brand-accent/20"
+                icon={ArrowRight}
+                iconPosition="right"
             >
-                {isJoining ? (
-                    <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Joining...</span>
-                    </>
-                ) : (
-                    <>
-                        <span>Join Class</span>
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                    </>
-                )}
-            </button>
+                Join Class
+            </Button>
         </form>
     );
 };
