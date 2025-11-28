@@ -153,6 +153,8 @@ interface TaskCardProps {
     task: Task;
     onUpdateStatus: (taskId: string, status: TaskStatus) => void;
     onOpenOverlay: (task: Task) => void;
+    assignedDate?: string;
+    formatDate: (dateString: string) => string;
 }
 
 /**
@@ -161,7 +163,7 @@ interface TaskCardProps {
  * Displays a single task with its details and status controls.
  * Handles the logic for clicking status buttons and opening the question overlay.
  */
-const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay, assignedDate, formatDate }) => {
     // Helper to render the small status badge next to the title
     // const getStatusBadge = (status: TaskStatus) => { ... } - Replaced by StatusBadge component
 
@@ -189,16 +191,26 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                         <h3 className={`text-lg font-bold ${isDone ? 'text-gray-500 dark:text-gray-500 line-through decoration-2 decoration-gray-300 dark:decoration-gray-600' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                             {task.title}
                         </h3>
-                        {task.dueDate && (
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-md ${isDone ? 'bg-gray-100 text-gray-400 dark:bg-gray-800' : 'bg-brand-light dark:bg-brand-dark text-gray-500 dark:text-gray-400'}`}>
-                                {task.dueDate}
-                            </span>
-                        )}
                         <StatusBadge status={task.status} />
                     </div>
-                    <p className={`text-sm leading-relaxed ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
+                    <p className={`text-sm leading-relaxed mb-2 ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
                         {task.description}
                     </p>
+                    {/* Date Information */}
+                    <div className="flex flex-wrap gap-3 text-xs mb-2">
+                        {assignedDate && (
+                            <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                                <span className="font-medium">Assigned:</span>
+                                <span>{formatDate(assignedDate)}</span>
+                            </div>
+                        )}
+                        {task.dueDate && (
+                            <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                                <span className="font-medium">Due:</span>
+                                <span>{formatDate(task.dueDate)}</span>
+                            </div>
+                        )}
+                    </div>
                     {/* Show comment preview if exists */}
                     {task.comment && (
                         <div className="mt-3 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-brand-light dark:bg-brand-dark p-3 rounded-lg border border-gray-100 dark:border-gray-800 flex items-start gap-2">
@@ -252,6 +264,7 @@ interface CurrentTaskListProps {
     tasks: Task[];
     onUpdateStatus: (taskId: string, status: TaskStatus) => void;
     onUpdateComment: (taskId: string, comment: string) => void;
+    assignedDate?: string; // Optional: The date these tasks were assigned
 }
 
 /**
@@ -260,8 +273,20 @@ interface CurrentTaskListProps {
  * Renders the list of active tasks for the day.
  * It handles sorting (completed tasks go to the bottom) and manages the overlay state.
  */
-const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus, onUpdateComment }) => {
+const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus, onUpdateComment, assignedDate }) => {
     const [overlayTask, setOverlayTask] = useState<Task | null>(null);
+
+    // Helper function to format dates - shows "Today" if it's today, otherwise short date
+    const formatDate = (dateString: string): string => {
+        const today = new Date().toISOString().split('T')[0];
+        const taskDate = dateString.includes('-') ? dateString : new Date(dateString).toISOString().split('T')[0];
+
+        if (taskDate === today) {
+            return 'Today';
+        }
+
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
 
     const handleOpenOverlay = (task: Task) => {
         setOverlayTask(task);
@@ -303,6 +328,8 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
                     task={task}
                     onUpdateStatus={onUpdateStatus}
                     onOpenOverlay={handleOpenOverlay}
+                    assignedDate={assignedDate}
+                    formatDate={formatDate}
                 />
             ))}
 

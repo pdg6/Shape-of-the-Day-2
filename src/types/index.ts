@@ -18,7 +18,7 @@ export interface Task {
     title: string;          // The main display title
     description: string;    // Detailed description
     status: TaskStatus;     // Current status (must be one of the values above)
-    dueDate?: string;       // Optional: When the task is due (e.g., "10:30 AM")
+    dueDate?: string;       // Optional: Date when task is due (e.g., "2023-11-27" or "Nov 27")
     comment?: string;       // Optional: Student's comment or question
     startedAt?: number;     // Timestamp when task was started
     completedAt?: number;   // Timestamp when task was completed

@@ -63,18 +63,19 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     // State for the tasks currently in the student's "My Day" view
     const [currentTasks, setCurrentTasks] = useState<Task[]>([
-        { id: '1', title: 'Morning Check-in', description: 'Say hello to the class!', status: 'todo', dueDate: '9:00 AM' },
-        { id: '2', title: 'Math Worksheet', description: 'Complete pages 10-12', status: 'in_progress', dueDate: '10:30 AM' },
+        { id: '1', title: 'Morning Check-in', description: 'Say hello to the class!', status: 'todo', dueDate: today },
+        { id: '2', title: 'Math Worksheet', description: 'Complete pages 10-12', status: 'in_progress', dueDate: today },
     ]);
 
     // Mock database of tasks available for future dates
     // In a real app, this would come from an API/backend
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const [availableTasks] = useState<Record<string, Task[]>>({
         [today]: [], // Already imported
         // Tomorrow's tasks
-        [new Date(Date.now() + 86400000).toISOString().split('T')[0]]: [
-            { id: '3', title: 'Reading Time', description: 'Read for 20 minutes', status: 'todo', dueDate: '1:00 PM' },
-            { id: '4', title: 'Art Project', description: 'Draw your favorite animal', status: 'todo', dueDate: '2:30 PM' },
+        [tomorrow]: [
+            { id: '3', title: 'Reading Time', description: 'Read for 20 minutes', status: 'todo', dueDate: tomorrow },
+            { id: '4', title: 'Art Project', description: 'Draw your favorite animal', status: 'todo', dueDate: tomorrow },
         ]
     });
 
@@ -357,8 +358,16 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     </div>
 
-                    {/* Conditional Rendering based on date selection */}
-                    {showPreview ? (
+                    {/* Conditional Rendering based on date selection and tab */}
+                    {/* On Schedule tab (mobile), always show read-only DayTaskPreview */}
+                    {mobileTab === 'schedule' ? (
+                        <DayTaskPreview
+                            date={selectedDate}
+                            tasks={isToday ? currentTasks : previewTasks}
+                            onImport={handleImportTasks}
+                            onImportTask={handleImportTask}
+                        />
+                    ) : showPreview ? (
                         <DayTaskPreview
                             date={selectedDate}
                             tasks={previewTasks}
@@ -370,6 +379,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             tasks={currentTasks}
                             onUpdateStatus={handleUpdateStatus}
                             onUpdateComment={handleUpdateComment}
+                            assignedDate={today}
                         />
                     ) : (
                         <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
