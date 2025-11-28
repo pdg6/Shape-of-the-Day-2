@@ -96,7 +96,9 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                                        tabIndex={0}
+                                        role="listitem"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
                                             {student.displayName.charAt(0).toUpperCase()}

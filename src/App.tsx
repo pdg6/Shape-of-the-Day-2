@@ -132,9 +132,10 @@ function App() {
                 setClassrooms(data);
 
                 // If no class is selected but we have classes, select the first one
-                if (data.length > 0 && !currentClassId) {
-                    console.log('Setting current class to:', data[0].id);
-                    setCurrentClassId(data[0].id);
+                const firstClass = data[0];
+                if (data.length > 0 && !currentClassId && firstClass) {
+                    console.log('Setting current class to:', firstClass.id);
+                    setCurrentClassId(firstClass.id);
                 } else if (data.length === 0) {
                     console.warn('No classrooms found for this teacher. Use Ctrl+Shift+D to load dummy data.');
                 }

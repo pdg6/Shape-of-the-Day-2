@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { AnalyticsLog } from '../../types';
-import { BarChart, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { BarChart, Clock, AlertTriangle } from 'lucide-react';
 
 /**
  * ClassPlanner Component (Repurposed as Analytics Dashboard for Stage 3)

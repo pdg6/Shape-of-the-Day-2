@@ -89,7 +89,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
     return (
         <div className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
             <div
-                className={`bg-brand-darkSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
+                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -123,7 +123,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                             value={comment}
                             onChange={(e) => setComment(e.target.value.slice(0, maxChars))}
                             placeholder="I don't understand..."
-                            className="w-full h-32 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-transparent resize-none transition-all outline-none"
+                            className="w-full h-32 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-brand-darkSurface focus:border-transparent resize-none transition-all outline-none"
                             autoFocus
                         />
                         <div className="absolute bottom-2 right-2 text-xs text-gray-400">

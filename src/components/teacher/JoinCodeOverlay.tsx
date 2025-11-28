@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X } from 'lucide-react';
+// X icon removed - unused
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { LiveStudent } from '../../types';
@@ -12,7 +12,7 @@ interface JoinCodeOverlayProps {
     classId: string;
 }
 
-const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, classCode, classId }) => {
+const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, classCode, classId }) => {
     const [liveStudents, setLiveStudents] = useState<LiveStudent[]>([]);
 
     // Listen for real-time updates to the roster
@@ -92,7 +92,9 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-green-500/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default"
+                                        className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-green-500/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        tabIndex={0}
+                                        role="listitem"
                                     >
                                         <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400 font-bold text-xs shrink-0 group-hover:bg-green-500/20 transition-colors">
                                             {student.displayName.charAt(0).toUpperCase()}

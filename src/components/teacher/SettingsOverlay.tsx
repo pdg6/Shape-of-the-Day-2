@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Moon, Sun, LogOut, QrCode, BarChart2 } from 'lucide-react';
+import { Moon, Sun, LogOut, QrCode, BarChart2 } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
 
 interface SettingsOverlayProps {

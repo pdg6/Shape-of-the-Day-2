@@ -49,7 +49,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     isLive = true
 }) => {
     // Get today's date in YYYY-MM-DD format for initial state
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] ?? '';
 
     // State for the currently selected date in the calendar
     const [selectedDate, setSelectedDate] = useState<string>(today);
@@ -69,7 +69,7 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     // Mock database of tasks available for future dates
     // In a real app, this would come from an API/backend
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0] ?? '';
     const [availableTasks] = useState<Record<string, Task[]>>({
         [today]: [], // Already imported
         // Tomorrow's tasks
@@ -238,9 +238,9 @@ const StudentView: React.FC<StudentViewProps> = ({
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
                                 {className}
                             </p>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border-[3px] transition-all duration-300 ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-400'}`} />
-                                <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border-[3px] transition-all duration-300 ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-gray-400'}`} />
+                                <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
                                     {isLive ? 'Live' : 'Offline'}
                                 </span>
                             </div>
@@ -261,9 +261,9 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 Hi, <span className="text-brand-accent">{studentName}</span>
                             </h2>
                             <div className="flex items-center gap-2">
-                                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                                    <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
                                         {isLive ? 'Live' : 'Offline'}
                                     </span>
                                 </div>
@@ -309,9 +309,9 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-[3px] ${isLive ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
-                            <span className={`text-sm font-bold uppercase ${isLive ? 'text-green-700 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                        <div className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                            <span className={`text-sm font-bold uppercase ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {isLive ? 'Live' : 'Offline'}
                             </span>
                         </div>
@@ -407,8 +407,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                 <div className="flex justify-around items-center h-16 px-2">
                     <button
                         onClick={() => setMobileTab('home')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${mobileTab === 'home'
-                            ? 'text-brand-accent'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${mobileTab === 'home'
+                            ? 'text-emerald-500'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                         aria-label="Home"
@@ -418,8 +418,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                     <button
                         onClick={() => setMobileTab('tasks')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${mobileTab === 'tasks'
-                            ? 'text-brand-accent'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${mobileTab === 'tasks'
+                            ? 'text-emerald-500'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                         aria-label="Tasks"
@@ -429,8 +429,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                     <button
                         onClick={() => setMobileTab('schedule')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${mobileTab === 'schedule'
-                            ? 'text-brand-accent'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${mobileTab === 'schedule'
+                            ? 'text-emerald-500'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
                         aria-label="Schedule"

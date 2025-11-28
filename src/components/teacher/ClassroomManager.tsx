@@ -79,23 +79,27 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             if (!studentStats[log.studentId]) {
                 studentStats[log.studentId] = { name: log.studentName, stuckCount: 0, sessions: 0 };
             }
-            studentStats[log.studentId].sessions++;
+            const studentStat = studentStats[log.studentId];
+            if (studentStat) studentStat.sessions++;
 
             log.taskPerformance.forEach(task => {
                 totalTasksAttempted++;
                 totalTasksCompleted++; // In this model, logged performance usually implies completion or end of session
                 if (task.statusWasStuck) {
                     totalStuckEvents++;
-                    studentStats[log.studentId].stuckCount++;
+                    if (studentStat) studentStat.stuckCount++;
                 }
 
                 // Task Difficulty Stats
                 if (!taskStats[task.taskId]) {
                     taskStats[task.taskId] = { title: task.title, attempts: 0, stuckCount: 0, totalTime: 0 };
                 }
-                taskStats[task.taskId].attempts++;
-                if (task.statusWasStuck) taskStats[task.taskId].stuckCount++;
-                taskStats[task.taskId].totalTime += task.timeToComplete_ms;
+                const taskStat = taskStats[task.taskId];
+                if (taskStat) {
+                    taskStat.attempts++;
+                if (task.statusWasStuck) taskStat.stuckCount++;
+                taskStat.totalTime += task.timeToComplete_ms;
+                }
             });
         });
 
@@ -151,7 +155,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
             // If deleted class was selected, select another one
             if (currentClassId === id) {
-                setCurrentClassId(updatedClassrooms.length > 0 ? updatedClassrooms[0].id : null);
+                setCurrentClassId(updatedClassrooms.length > 0 ? updatedClassrooms[0]?.id ?? null : null);
             }
 
             handleSuccess('Class deleted');
@@ -294,7 +298,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 ))}
                             </div>
                             <div className="grid grid-cols-7 flex-1 auto-rows-fr">
-                                {daysInMonth.map((day, idx) => {
+                                {daysInMonth.map((day) => {
                                     const dayLogs = getLogsForDate(day);
                                     const hasActivity = dayLogs.length > 0;
                                     const uniqueStudents = new Set(dayLogs.map(l => l.studentId)).size;

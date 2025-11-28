@@ -51,7 +51,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, 
                 </h3>
                 <button
                     onClick={onImport}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 active:bg-green-50 dark:active:bg-green-900/20"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20"
                 >
                     <Download className="w-4 h-4" />
                     <span className="font-medium hidden sm:inline">Import All</span>
@@ -70,7 +70,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, 
                             case 'question':
                                 return 'border-yellow-300 dark:border-yellow-800';
                             case 'in_progress':
-                                return 'border-green-300 dark:border-green-800';
+                                return 'border-emerald-300 dark:border-emerald-800';
                             case 'done':
                                 return 'border-blue-300 dark:border-blue-800';
                             default: // 'todo'
@@ -89,7 +89,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, 
                             {onImportTask && (
                                 <button
                                     onClick={() => onImportTask(task)}
-                                    className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 active:bg-green-50 dark:active:bg-green-900/20 active:text-green-600 dark:active:text-green-400"
+                                    className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20 active:text-emerald-600 dark:active:text-emerald-400"
                                     title="Import this task"
                                     aria-label={`Import ${task.title}`}
                                 >

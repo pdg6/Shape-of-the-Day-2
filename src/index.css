@@ -89,4 +89,23 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
     }
+
+    .input-base {
+        @apply w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200;
+        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
+        @apply border-gray-200 dark:border-gray-700;
+        @apply placeholder-gray-400 dark:placeholder-gray-500 font-medium;
+    }
+
+    .input-focus {
+        @apply focus:outline-none focus:border-brand-accent;
+        @apply focus:ring-2 focus:ring-brand-accent/20;
+    }
+
+    .card-base {
+        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+        @apply border-[3px] border-gray-200 dark:border-gray-700;
+        @apply rounded-xl transition-colors;
+    }
 }

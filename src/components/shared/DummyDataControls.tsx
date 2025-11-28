@@ -66,56 +66,30 @@ export const DummyDataControls: React.FC = () => {
     }, []);
 
     return (
-        <div style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            padding: '16px',
-            backgroundColor: '#1f2937',
-            borderRadius: '12px',
-            border: '3px solid #3b82f6',
-            color: 'white',
-            minWidth: '250px',
-            zIndex: 9999
-        }}>
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold' }}>
+        <div className="fixed bottom-5 right-5 p-4 bg-gray-800 rounded-xl border-[3px] border-blue-500 text-white min-w-[250px] z-[9999]">
+            <h3 className="m-0 mb-3 text-sm font-bold">
                 🛠️ Dev Tools
             </h3>
 
-            <div style={{ marginBottom: '8px', fontSize: '12px' }}>
+            <div className="mb-2 text-xs">
                 Status: {dataExists === null ? '...' : dataExists ? '✅ Data loaded' : '❌ No data'}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div className="flex flex-col gap-2">
                 <button
                     onClick={handleLoadData}
                     disabled={loading}
-                    style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#10b981',
-                        border: 'none',
-                        borderRadius: '6px',
-                        color: 'white',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                    }}
+                    className={`
+                        px-3 py-2 bg-emerald-500 border-none rounded-md text-white text-xs font-bold cursor-pointer
+                        ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-600'}
+                    `}
                 >
                     {loading ? 'Loading...' : 'Load Dummy Data'}
                 </button>
 
                 <button
                     onClick={showJoinCodes}
-                    style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#3b82f6',
-                        border: 'none',
-                        borderRadius: '6px',
-                        color: 'white',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                    }}
+                    className="px-3 py-2 bg-blue-500 border-none rounded-md text-white text-xs font-bold cursor-pointer hover:bg-blue-600"
                 >
                     Show Join Codes
                 </button>
@@ -123,22 +97,16 @@ export const DummyDataControls: React.FC = () => {
                 <button
                     onClick={handleClearData}
                     disabled={loading}
-                    style={{
-                        padding: '8px 12px',
-                        backgroundColor: '#ef4444',
-                        border: 'none',
-                        borderRadius: '6px',
-                        color: 'white',
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        fontSize: '12px',
-                        fontWeight: 'bold'
-                    }}
+                    className={`
+                        px-3 py-2 bg-red-500 border-none rounded-md text-white text-xs font-bold cursor-pointer
+                        ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'}
+                    `}
                 >
                     {loading ? 'Clearing...' : 'Clear Data'}
                 </button>
             </div>
 
-            <p style={{ fontSize: '10px', marginTop: '8px', opacity: 0.7 }}>
+            <p className="text-[10px] mt-2 opacity-70">
                 DEV ONLY - Remove in production
             </p>
         </div>

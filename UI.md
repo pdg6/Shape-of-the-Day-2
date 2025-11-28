@@ -4,7 +4,7 @@ This document outlines the standard UI patterns, animations, and color themes fo
 
 ## Core Design Principles
 - **Solid Surfaces:** Cards and tiles use solid backgrounds (`bg-brand-lightSurface` / `dark:bg-brand-darkSurface`) to ensure readability.
-- **Interactive Borders:** Interactive elements (inputs, buttons, tiles) use a 2px border that changes color on hover and focus.
+- **Interactive Borders:** Interactive elements (inputs, buttons, tiles) use a 3px border that changes color on hover and focus.
 - **Micro-Animations:** Arrows and icons animate on hover (`translate-x-1`) to encourage interaction.
 
 ## Component Themes

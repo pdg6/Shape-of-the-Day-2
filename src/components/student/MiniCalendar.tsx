@@ -47,7 +47,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
         return {
             day: date.toLocaleDateString('en-US', { weekday: 'short' }), // e.g., "Mon"
             date: date.getDate(), // e.g., 23
-            full: date.toISOString().split('T')[0], // e.g., "2023-10-23"
+            full: date.toISOString().split('T')[0] ?? '', // e.g., "2023-10-23"
             isToday: new Date().toDateString() === date.toDateString()
         };
     };
@@ -100,12 +100,14 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                     <button
                         onClick={() => scroll('left')}
                         className="p-3 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Previous Month"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => scroll('right')}
                         className="p-3 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Next Month"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>

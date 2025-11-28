@@ -26,7 +26,6 @@ const TeacherDashboard: React.FC = () => {
         currentClassId,
         setCurrentClassId,
         isSidebarOpen,
-        toggleSidebar,
         setSidebarOpen,
         setIsClassModalOpen
     } = useClassStore();
@@ -366,7 +365,7 @@ const TeacherDashboard: React.FC = () => {
                 <div className="flex justify-around items-center h-16 px-2">
                     <button
                         onClick={() => setActiveTab('classrooms')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'classrooms'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'classrooms'
                             ? 'text-brand-accent'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
@@ -378,7 +377,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setActiveTab('tasks')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'tasks'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'tasks'
                             ? 'text-brand-accent'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
@@ -390,7 +389,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setActiveTab('shape')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'shape'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'shape'
                             ? 'text-brand-accent'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
@@ -402,7 +401,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setActiveTab('live')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'live'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'live'
                             ? 'text-brand-accent'
                             : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
                             }`}
@@ -414,7 +413,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[44px] min-h-[44px] rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
                         aria-label="Settings & More"
                     >
                         <Home className="w-5 h-5" />

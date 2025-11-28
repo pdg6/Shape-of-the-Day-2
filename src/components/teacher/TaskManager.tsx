@@ -149,8 +149,9 @@ export default function TaskManager() {
     const handlePaste = (e: React.ClipboardEvent, taskId: number) => {
         const items = e.clipboardData.items;
         for (let i = 0; i < items.length; i++) {
-            if (items[i].type.indexOf('image') !== -1) {
-                const blob = items[i].getAsFile();
+            const item = items[i];
+            if (item && item.type.indexOf('image') !== -1) {
+                const blob = item.getAsFile();
                 if (blob) handleFileUpload(taskId, blob);
                 e.preventDefault();
             }
@@ -360,7 +361,7 @@ export default function TaskManager() {
                                             <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-brand-accent transition-all text-center group cursor-pointer">
                                                 <input
                                                     type="file"
-                                                    onChange={(e) => e.target.files && handleFileUpload(task.id, e.target.files[0])}
+                                                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(task.id, file); }}
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                 />
                                                 <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">

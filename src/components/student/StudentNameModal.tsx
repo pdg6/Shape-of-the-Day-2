@@ -68,6 +68,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                     <button
                         onClick={onClose}
                         className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Close"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -89,7 +90,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                             // tracking-[0.5em]: Spreads out letters for style
                             // font-mono: Monospace font for alignment
                             className={`
-                                w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] font-mono rounded-lg border-[3px] focus:outline-none transition-all hover:border-emerald-400 
+                                w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] rounded-lg border-[3px] focus:outline-none transition-all hover:border-emerald-400 
                                 bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
                                 ${error
                                     ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50'

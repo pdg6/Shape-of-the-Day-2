@@ -41,13 +41,14 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
             const q = query(collection(db, 'classrooms'), where('joinCode', '==', code));
             const snapshot = await getDocs(q);
 
-            if (snapshot.empty) {
+            const firstDoc = snapshot.docs[0];
+            if (snapshot.empty || !firstDoc) {
                 setError('Invalid code. No classroom found with this code.');
                 setIsJoining(false);
                 return;
             }
 
-            targetClassId = snapshot.docs[0].id;
+            targetClassId = firstDoc.id;
 
             // 2. Authenticate Anonymously
             const userCredential = await signInAnonymously(auth);

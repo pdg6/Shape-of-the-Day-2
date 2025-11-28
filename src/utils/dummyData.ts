@@ -17,7 +17,7 @@ import { Timestamp } from 'firebase/firestore';
 const getDateString = (daysOffset: number = 0): string => {
     const date = new Date();
     date.setDate(date.getDate() + daysOffset);
-    return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+    return date.toISOString().split('T')[0] ?? ''; // YYYY-MM-DD format
 };
 
 /**
@@ -579,11 +579,11 @@ export const getTasksByDate = (classId: string) => {
     // Distribute tasks by date (this is simplified - in real app would use actual date fields)
     tasks.forEach((task, index) => {
         if (index < 5) {
-            tasksByDate[getDateString(0)].push(task);
+            tasksByDate[getDateString(0)]?.push(task);
         } else if (index < 7) {
-            tasksByDate[getDateString(-1)].push(task);
+            tasksByDate[getDateString(-1)]?.push(task);
         } else {
-            tasksByDate[getDateString(1)].push(task);
+            tasksByDate[getDateString(1)]?.push(task);
         }
     });
 

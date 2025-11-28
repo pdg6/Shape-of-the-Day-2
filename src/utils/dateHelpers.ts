@@ -3,5 +3,5 @@
  * @returns Date string.
  */
 export const toDateString = (date: Date = new Date()): string => {
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split('T')[0] ?? '';
 };

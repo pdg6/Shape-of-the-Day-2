@@ -29,7 +29,7 @@ export const scrubAndSaveSession = async (classId: string, studentId: string) =>
             classroomId: classId,
             studentId: studentId,
             studentName: studentData.displayName,
-            date: now.toISOString().split('T')[0], // YYYY-MM-DD
+            date: now.toISOString().split('T')[0] ?? '', // YYYY-MM-DD
             sessionDuration: sessionDuration,
             taskPerformance: studentData.taskHistory ? studentData.taskHistory.map(task => ({
                 taskId: task.id,
