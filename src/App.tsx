@@ -205,31 +205,33 @@ function App() {
                 />
             )}
 
-            {/* Navigation Bar */}
-            <nav className="flex-shrink-0 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 py-3 flex items-center justify-between transition-colors duration-200 border-b border-gray-200 dark:border-gray-800">
-                {/* Left Section: Logo and Title */}
-                <div className="flex items-center gap-2 font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                    <img
-                        src="/shape of the day logo.png"
-                        alt="Shape of the Day"
-                        className="w-8 h-8"
-                    />
-                    Shape of the Day
-                </div>
+            {/* Navigation Bar - Hidden on landing page */}
+            {view !== 'landing' && (
+                <nav className={`flex-shrink-0 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 py-3 items-center justify-between transition-colors duration-200 border-b border-gray-200 dark:border-gray-800 ${view === 'student' ? 'hidden md:flex' : 'flex'}`}>
+                    {/* Left Section: Logo and Title */}
+                    <div className="flex items-center gap-2 font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <img
+                            src="/shape of the day logo.png"
+                            alt="Shape of the Day"
+                            className="w-8 h-8"
+                        />
+                        Shape of the Day
+                    </div>
 
-                {/* Center Section: Classroom Name */}
-                {view === 'teacher' && currentClass && (
-                    <span className="absolute left-1/2 -translate-x-1/2 font-bold text-xl text-brand-accent">
-                        {currentClass.name}
-                    </span>
-                )}
+                    {/* Center Section: Classroom Name */}
+                    {view === 'teacher' && currentClass && (
+                        <span className="absolute left-1/2 -translate-x-1/2 font-bold text-xl text-brand-accent">
+                            {currentClass.name}
+                        </span>
+                    )}
 
-                {/* Right Section: Date */}
-                <div className="font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                </div>
+                    {/* Right Section: Date */}
+                    <div className="font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                    </div>
 
-            </nav>
+                </nav>
+            )}
 
             {/* Main Content Area */}
             <main className="flex-1 min-h-0 overflow-hidden">

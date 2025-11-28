@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
-import { Button } from './Button';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
@@ -134,17 +132,13 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                 </p>
             )}
 
-            <Button
+            <button
                 type="submit"
-                loading={isJoining}
-                variant="primary"
-                size="lg"
-                className="w-full shadow-lg shadow-brand-accent/20"
-                icon={ArrowRight}
-                iconPosition="right"
+                disabled={isJoining || code.length !== 6 || !name.trim()}
+                className="btn-primary-green text-lg"
             >
-                Join Class
-            </Button>
+                {isJoining ? 'Joining...' : 'Join Class'}
+            </button>
         </form>
     );
 };

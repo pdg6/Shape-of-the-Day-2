@@ -44,7 +44,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, 
     }
 
     return (
-        <div className="mb-6">
+        <div className="mb-6 w-full max-w-3xl mx-auto">
             <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     Tasks for {new Date(date).toLocaleDateString()}

@@ -66,12 +66,12 @@ export const DummyDataControls: React.FC = () => {
     }, []);
 
     return (
-        <div className="fixed bottom-5 right-5 p-4 bg-gray-800 rounded-xl border-[3px] border-blue-500 text-white min-w-[250px] z-[9999]">
-            <h3 className="m-0 mb-3 text-sm font-bold">
+        <div className="fixed bottom-5 right-5 p-4 bg-gray-800 rounded-xl border-[3px] border-blue-500 text-white min-w-[250px] z-toast">
+            <h3 className="text-sm font-bold mb-3">
                 🛠️ Dev Tools
             </h3>
 
-            <div className="mb-2 text-xs">
+            <div className="text-xs mb-2">
                 Status: {dataExists === null ? '...' : dataExists ? '✅ Data loaded' : '❌ No data'}
             </div>
 
@@ -80,7 +80,7 @@ export const DummyDataControls: React.FC = () => {
                     onClick={handleLoadData}
                     disabled={loading}
                     className={`
-                        px-3 py-2 bg-emerald-500 border-none rounded-md text-white text-xs font-bold cursor-pointer
+                        px-3 py-2 bg-emerald-500 rounded-md text-white text-xs font-bold cursor-pointer transition-colors
                         ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-600'}
                     `}
                 >
@@ -89,7 +89,7 @@ export const DummyDataControls: React.FC = () => {
 
                 <button
                     onClick={showJoinCodes}
-                    className="px-3 py-2 bg-blue-500 border-none rounded-md text-white text-xs font-bold cursor-pointer hover:bg-blue-600"
+                    className="px-3 py-2 bg-blue-500 rounded-md text-white text-xs font-bold cursor-pointer transition-colors hover:bg-blue-600"
                 >
                     Show Join Codes
                 </button>
@@ -98,7 +98,7 @@ export const DummyDataControls: React.FC = () => {
                     onClick={handleClearData}
                     disabled={loading}
                     className={`
-                        px-3 py-2 bg-red-500 border-none rounded-md text-white text-xs font-bold cursor-pointer
+                        px-3 py-2 bg-red-500 rounded-md text-white text-xs font-bold cursor-pointer transition-colors
                         ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-600'}
                     `}
                 >

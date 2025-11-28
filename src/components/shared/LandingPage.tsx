@@ -26,7 +26,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
     const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
 
     return (
-        <div className="h-[calc(100vh-64px)] flex flex-col items-center justify-center p-4 overflow-hidden">
+        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
             <div className="text-center mb-6 space-y-2">
                 <img
                     src="/shape of the day logo.png"

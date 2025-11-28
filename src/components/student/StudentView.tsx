@@ -5,7 +5,7 @@ import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { LogOut, Calendar, ListTodo, Home } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
@@ -50,6 +50,25 @@ const StudentView: React.FC<StudentViewProps> = ({
 }) => {
     // Get today's date in YYYY-MM-DD format for initial state
     const today = new Date().toISOString().split('T')[0] ?? '';
+
+    // State for the class name
+    const [currentClassName, setCurrentClassName] = useState<string>(className);
+
+    // Fetch class name on mount
+    React.useEffect(() => {
+        const fetchClassName = async () => {
+            if (!classId) return;
+            try {
+                const classDoc = await getDoc(doc(db, 'classrooms', classId));
+                if (classDoc.exists()) {
+                    setCurrentClassName(classDoc.data().name);
+                }
+            } catch (error) {
+                console.error("Error fetching class name:", error);
+            }
+        };
+        fetchClassName();
+    }, [classId]);
 
     // State for the currently selected date in the calendar
     const [selectedDate, setSelectedDate] = useState<string>(today);
@@ -204,7 +223,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     const showPreview = !isToday && previewTasks.length > 0;
 
     return (
-        <div className="min-h-screen bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
+        <div className="h-screen flex flex-col overflow-hidden bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Header Section - Desktop Only (Mobile uses tab-based content) */}
             <header className="hidden md:block bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-sidebar backdrop-blur-md bg-opacity-80 dark:bg-opacity-80 border-b-[3px] border-gray-200 dark:border-gray-700">
                 <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
@@ -216,7 +235,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 Good Morning,
                                 <button
                                     onClick={() => onEditName(studentName)}
-                                    className="ml-1 text-brand-accent hover:underline decoration-2 underline-offset-4 decoration-brand-accent/30 hover:decoration-brand-accent transition-all"
+                                    className="ml-1 text-emerald-500 hover:underline decoration-2 underline-offset-4 decoration-emerald-500/30 hover:decoration-emerald-500 transition-all"
                                     title="Edit Name"
                                 >
                                     {studentName}
@@ -236,7 +255,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         {/* Class Info & Sign Out */}
                         <div className="flex items-center gap-4">
                             <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
-                                {className}
+                                {currentClassName}
                             </p>
                             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border-[3px] transition-all duration-300 ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
                                 <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-gray-400'}`} />
@@ -258,7 +277,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <div className="flex md:hidden flex-col gap-3 w-full py-2">
                         <div className="flex items-center justify-between">
                             <h2 className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Hi, <span className="text-brand-accent">{studentName}</span>
+                                Hi, <span className="text-emerald-500">{studentName}</span>
                             </h2>
                             <div className="flex items-center gap-2">
                                 <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
@@ -287,37 +306,46 @@ const StudentView: React.FC<StudentViewProps> = ({
 
             {/* Mobile Tab-Specific Content */}
             {mobileTab === 'home' && (
-                <div className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-6 border-b-[3px] border-gray-200 dark:border-gray-700">
-                    <div className="text-center mb-4">
-                        <h1 className="text-2xl font-bold text-brand-accent mb-1">Shape of the Day</h1>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{className}</p>
-                    </div>
-                    <div className="text-center mb-4">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Welcome,</p>
-                        <h2 className="text-xl font-bold text-brand-accent">{studentName}</h2>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-4 border-[3px] border-gray-200 dark:border-gray-700 text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tasks Today</p>
-                            <p className="text-3xl font-bold text-brand-accent">{currentTasks.filter(t => t.status !== 'done').length}</p>
+                <div className="md:hidden flex-1 overflow-y-auto pb-24 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-4 border-b-[3px] border-gray-200 dark:border-gray-700">
+                    {/* Compact Header Info */}
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <h2 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{currentClassName}</h2>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </p>
                         </div>
-                        <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-4 border-[3px] border-gray-200 dark:border-gray-700 text-center">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Date</p>
-                            <p className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        <div className="text-right">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Welcome,</p>
+                            <p className="text-sm font-bold text-emerald-500">{studentName}</p>
+                        </div>
+                    </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 border-[2px] border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center">
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">Tasks Left</p>
+                            <p className="text-xl font-bold text-emerald-500">{currentTasks.filter(t => t.status !== 'done').length}</p>
+                        </div>
+                        <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 border-[2px] border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center">
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">Progress</p>
+                            <p className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                {Math.round((currentTasks.filter(t => t.status === 'done').length / Math.max(currentTasks.length, 1)) * 100)}%
                             </p>
                         </div>
                     </div>
+
+                    {/* Controls */}
                     <div className="flex items-center gap-3">
-                        <div className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
+                        <div className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
                             <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                            <span className={`text-sm font-bold uppercase ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                            <span className={`text-xs font-bold uppercase ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {isLive ? 'Live' : 'Offline'}
                             </span>
                         </div>
                         <button
                             onClick={handleSignOut}
-                            className="px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl border-[3px] border-red-200 dark:border-red-800 transition-colors font-bold text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-w-[100px]"
+                            className="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl border-[3px] border-red-200 dark:border-red-800 transition-colors font-bold text-xs focus:outline-none focus:ring-2 focus:ring-red-500 min-w-[80px]"
                         >
                             Sign Out
                         </button>
@@ -325,16 +353,25 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </div>
             )}
 
-            {mobileTab === 'tasks' && (
-                <div className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-4 border-b-[3px] border-gray-200 dark:border-gray-700 sticky top-0 z-sidebar">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{className}</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
+            {
+                mobileTab === 'tasks' && (
+                    <div className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-4 border-b-[3px] border-gray-200 dark:border-gray-700 z-sidebar">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[50%]">
+                                {currentClassName}
+                            </h2>
+                            <div className="flex items-center gap-3 text-xs">
+                                <span className="font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                                    {currentTasks.filter(t => t.status === 'done').length}/{currentTasks.length}
+                                </span>
+                                <span className="text-gray-500 dark:text-gray-400">
+                                    {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Main Content - Hidden on mobile Home tab */}
             <main className={`flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 pt-6 pb-24 md:pb-8 ${mobileTab === 'home' ? 'hidden md:block' : ''}`}>
@@ -350,7 +387,7 @@ const StudentView: React.FC<StudentViewProps> = ({
 
                 {/* Task List Section */}
                 <div className="mb-6">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className={`flex items-center justify-between mb-4 ${mobileTab === 'tasks' ? 'hidden md:flex' : 'flex'}`}>
                         <h3 className="font-bold text-lg">Your Tasks</h3>
                         <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border-[3px] border-gray-200 dark:border-gray-700">
                             {/* Calculate completion percentage */}
@@ -394,13 +431,15 @@ const StudentView: React.FC<StudentViewProps> = ({
             </main>
 
             {/* Name Entry Modal */}
-            {showNameModal && (
-                <StudentNameModal
-                    onSubmit={handleNameSubmit}
-                    initialName={studentName}
-                    onClose={() => setShowNameModal(false)}
-                />
-            )}
+            {
+                showNameModal && (
+                    <StudentNameModal
+                        onSubmit={handleNameSubmit}
+                        initialName={studentName}
+                        onClose={() => setShowNameModal(false)}
+                    />
+                )
+            }
 
             {/* Mobile Bottom Navigation - 3 Tabs */}
             <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
@@ -440,7 +479,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                 </div>
             </nav>
-        </div>
+        </div >
     );
 };
 

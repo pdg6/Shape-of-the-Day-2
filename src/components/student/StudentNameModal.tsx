@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, GraduationCap, X } from 'lucide-react';
+import { GraduationCap, X } from 'lucide-react';
 
 /**
  * Props for the StudentNameModal component.
@@ -56,7 +56,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
 
     return (
         <div
-            className="fixed inset-0 bg-[#141211] flex items-center justify-center z-[100] p-4 transition-all duration-300 dark"
+            className="fixed inset-0 bg-[#141211] flex items-center justify-center z-overlay p-4 transition-all duration-300 dark"
             onClick={onClose}
         >
             <div
@@ -86,15 +86,10 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                             value={name}
                             onChange={handleChange}
                             placeholder="Your Name"
-                            // Styling:
-                            // tracking-[0.5em]: Spreads out letters for style
-                            // font-mono: Monospace font for alignment
                             className={`
-                                w-full px-4 py-2.5 text-lg text-center tracking-[0.5em] rounded-lg border-[3px] focus:outline-none transition-all hover:border-emerald-400 
-                                bg-brand-lightSurface dark:bg-brand-darkSurface dark:text-brand-textPrimary placeholder:tracking-normal placeholder:font-sans
-                                ${error
-                                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50'
-                                    : 'border-gray-200 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-200 dark:focus:ring-emerald-900/50'}
+                                input-base input-focus text-lg text-center tracking-[0.5em] rounded-lg
+                                placeholder:tracking-normal placeholder:font-sans
+                                ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50' : ''}
                             `}
                             autoFocus
                             enterKeyHint="go"
@@ -108,13 +103,9 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                         type="submit"
                         disabled={!name.trim()}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full pl-4 pr-4 py-2.5 text-lg rounded-lg border-[3px] focus:outline-none transition-all hover:border-emerald-400 
-                        bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary 
-                        border-gray-200 dark:border-gray-600 focus:border-emerald-500 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
-                        relative text-center group"
+                        className="btn-primary-green text-lg"
                     >
                         Join Class
-                        <ArrowRight className="w-6 h-6 absolute right-4 top-1/2 -translate-y-1/2 transition-all group-hover:translate-x-1 group-hover:text-emerald-500" />
                     </button>
                 </form>
             </div>
