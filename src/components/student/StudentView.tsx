@@ -3,11 +3,13 @@ import MiniCalendar from './MiniCalendar';
 import CurrentTaskList from './CurrentTaskList';
 import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
+import StudentMenuModal from './StudentMenuModal';
+import StudentSidebar from './StudentSidebar';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
-import { LogOut, Calendar, ListTodo, Home } from 'lucide-react';
+import { Calendar, ListTodo, Menu } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
 
 /**
@@ -46,7 +48,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     onNameSubmit,
     onSignOut,
     className = "Mrs. Smith's Class",
-    isLive = true
+    isLive: _isLive = true  // Kept for potential future use
 }) => {
     // Get today's date in YYYY-MM-DD format for initial state
     const today = new Date().toISOString().split('T')[0] ?? '';
@@ -77,8 +79,17 @@ const StudentView: React.FC<StudentViewProps> = ({
     // Show it automatically if no studentName is provided
     const [showNameModal, setShowNameModal] = useState<boolean>(!studentName);
 
-    // Mobile tab navigation state
-    const [mobileTab, setMobileTab] = useState<'home' | 'tasks' | 'schedule'>('home');
+    // Mobile tab navigation state (tasks and schedule only, home replaced with menu modal)
+    const [mobileTab, setMobileTab] = useState<'tasks' | 'schedule'>('tasks');
+
+    // Desktop tab navigation state for sidebar
+    const [desktopTab, setDesktopTab] = useState<'tasks' | 'schedule'>('tasks');
+
+    // Menu modal state (mobile)
+    const [showMenuModal, setShowMenuModal] = useState<boolean>(false);
+
+    // Sidebar collapse state (desktop)
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
     // State for the tasks currently in the student's "My Day" view
     const [currentTasks, setCurrentTasks] = useState<Task[]>([
@@ -169,13 +180,23 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     /**
      * Imports tasks from a future date into the current day's view.
+     * Filters out tasks that are already in the current list.
      */
     const handleImportTasks = () => {
         const tasksToImport = availableTasks[selectedDate] || [];
         if (tasksToImport.length === 0) return;
 
-        setCurrentTasks(prev => [...prev, ...tasksToImport]);
-        toast.success(`Imported ${tasksToImport.length} tasks to your day`);
+        // Filter out tasks that already exist in currentTasks
+        const currentTaskIds = new Set(currentTasks.map(t => t.id));
+        const newTasks = tasksToImport.filter(t => !currentTaskIds.has(t.id));
+
+        if (newTasks.length === 0) {
+            toast.error('All tasks are already in your list!');
+            return;
+        }
+
+        setCurrentTasks(prev => [...prev, ...newTasks]);
+        toast.success(`Imported ${newTasks.length} task${newTasks.length !== 1 ? 's' : ''} to your day`);
     };
 
     /**
@@ -222,238 +243,226 @@ const StudentView: React.FC<StudentViewProps> = ({
     const previewTasks = availableTasks[selectedDate] || [];
     const showPreview = !isToday && previewTasks.length > 0;
 
+    // Calculate task stats
+    const tasksCompleted = currentTasks.filter(t => t.status === 'done').length;
+    const tasksLeft = currentTasks.filter(t => t.status !== 'done').length;
+
+    // Set of current task IDs for checking imported state
+    const currentTaskIds = new Set(currentTasks.map(t => t.id));
+
     return (
-        <div className="h-screen flex flex-col overflow-hidden bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
-            {/* Header Section - Desktop Only (Mobile uses tab-based content) */}
-            <header className="hidden md:block bg-brand-lightSurface dark:bg-brand-darkSurface sticky top-0 z-sidebar backdrop-blur-md bg-opacity-80 dark:bg-opacity-80 border-b-[3px] border-gray-200 dark:border-gray-700">
-                <div className="max-w-7xl mx-auto px-4 py-3 md:py-0 md:h-16 flex items-center">
-                    {/* Desktop Layout */}
-                    <div className="hidden md:flex items-center justify-between w-full">
-                        {/* Greeting */}
+        <div className="h-full flex overflow-hidden bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
+            {/* Desktop Sidebar */}
+            <StudentSidebar
+                studentName={studentName}
+                className={currentClassName}
+                tasksCompleted={tasksCompleted}
+                totalTasks={currentTasks.length}
+                onSignOut={handleSignOut}
+                onEditName={() => onEditName(studentName)}
+                activeTab={desktopTab}
+                onTabChange={setDesktopTab}
+                isCollapsed={isSidebarCollapsed}
+                onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            />
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                {/* Mobile Header - Logo, Class Name, Task Count, Date */}
+                <header className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface border-b-[3px] border-gray-200 dark:border-gray-700 px-4 py-3">
+                    <div className="flex items-center justify-between">
+                        {/* Left: Logo and Class Name */}
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+                                <span className="text-white font-bold text-sm">S</span>
+                            </div>
+                            <div>
+                                <h1 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[140px]">
+                                    {currentClassName}
+                                </h1>
+                            </div>
+                        </div>
+
+                        {/* Right: Task Count and Date */}
                         <div className="flex items-center gap-2">
-                            <h2 className="text-lg font-bold whitespace-nowrap text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Good Morning,
-                                <button
-                                    onClick={() => onEditName(studentName)}
-                                    className="ml-1 text-emerald-500 hover:underline decoration-2 underline-offset-4 decoration-emerald-500/30 hover:decoration-emerald-500 transition-all"
-                                    title="Edit Name"
-                                >
-                                    {studentName}
-                                </button>!
-                            </h2>
-                        </div>
-
-                        {/* Progress Summary */}
-                        <div className="flex-1 flex justify-center px-4">
-                            <div className="px-4 py-1.5 bg-brand-light dark:bg-brand-dark rounded-full border-[3px] border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
-                                    You have <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">{currentTasks.filter(t => t.status !== 'done').length} tasks</span> to complete today
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Class Info & Sign Out */}
-                        <div className="flex items-center gap-4">
-                            <p className="text-sm font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-nowrap">
-                                {currentClassName}
-                            </p>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border-[3px] transition-all duration-300 ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                                <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]' : 'bg-gray-400'}`} />
-                                <span className={`text-xs font-bold uppercase tracking-wider ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                                    {isLive ? 'Live' : 'Offline'}
-                                </span>
-                            </div>
-                            <button
-                                onClick={handleSignOut}
-                                className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                                title="Leave Class"
-                            >
-                                <LogOut className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Mobile Layout (Stacked) */}
-                    <div className="flex md:hidden flex-col gap-3 w-full py-2">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Hi, <span className="text-emerald-500">{studentName}</span>
-                            </h2>
-                            <div className="flex items-center gap-2">
-                                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                                    <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                                        {isLive ? 'Live' : 'Offline'}
-                                    </span>
-                                </div>
-                                <button
-                                    onClick={handleSignOut}
-                                    className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                                    title="Leave Class"
-                                >
-                                    <LogOut className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center justify-between bg-brand-light dark:bg-brand-dark p-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
-                            <span className="text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary">Tasks Left</span>
-                            <span className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{currentTasks.filter(t => t.status !== 'done').length}</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Mobile Tab-Specific Content */}
-            {mobileTab === 'home' && (
-                <div className="md:hidden flex-1 overflow-y-auto pb-24 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-4 border-b-[3px] border-gray-200 dark:border-gray-700">
-                    {/* Compact Header Info */}
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <h2 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{currentClassName}</h2>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Welcome,</p>
-                            <p className="text-sm font-bold text-emerald-500">{studentName}</p>
-                        </div>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 border-[2px] border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center">
-                            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">Tasks Left</p>
-                            <p className="text-xl font-bold text-emerald-500">{currentTasks.filter(t => t.status !== 'done').length}</p>
-                        </div>
-                        <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 border-[2px] border-gray-200 dark:border-gray-700 flex flex-col items-center justify-center">
-                            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-0.5">Progress</p>
-                            <p className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {Math.round((currentTasks.filter(t => t.status === 'done').length / Math.max(currentTasks.length, 1)) * 100)}%
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Controls */}
-                    <div className="flex items-center gap-3">
-                        <div className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-[3px] ${isLive ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800' : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'}`}>
-                            <div className={`w-2 h-2 rounded-full ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
-                            <span className={`text-xs font-bold uppercase ${isLive ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                                {isLive ? 'Live' : 'Offline'}
+                            <span className="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
+                                {tasksLeft} Task{tasksLeft !== 1 ? 's' : ''}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </span>
                         </div>
-                        <button
-                            onClick={handleSignOut}
-                            className="px-4 py-2.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl border-[3px] border-red-200 dark:border-red-800 transition-colors font-bold text-xs focus:outline-none focus:ring-2 focus:ring-red-500 min-w-[80px]"
-                        >
-                            Sign Out
-                        </button>
                     </div>
-                </div>
-            )}
+                </header>
 
-            {
-                mobileTab === 'tasks' && (
-                    <div className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-4 border-b-[3px] border-gray-200 dark:border-gray-700 z-sidebar">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[50%]">
-                                {currentClassName}
-                            </h2>
-                            <div className="flex items-center gap-3 text-xs">
-                                <span className="font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
-                                    {currentTasks.filter(t => t.status === 'done').length}/{currentTasks.length}
-                                </span>
-                                <span className="text-gray-500 dark:text-gray-400">
-                                    {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                </span>
+                {/* Desktop Content - Split into Tasks and Schedule based on tab */}
+                <main className="hidden md:flex flex-1 overflow-hidden">
+                    {desktopTab === 'tasks' ? (
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                            <div className="max-w-4xl mx-auto">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl font-bold">Your Tasks</h2>
+                                    <div className="text-sm font-medium px-3 py-1.5 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg text-brand-textDarkSecondary dark:text-brand-textSecondary border-[3px] border-gray-200 dark:border-gray-700">
+                                        {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Complete
+                                    </div>
+                                </div>
+                                {showPreview ? (
+                                    <DayTaskPreview
+                                        date={selectedDate}
+                                        tasks={previewTasks}
+                                        onImport={handleImportTasks}
+                                        onImportTask={handleImportTask}
+                                        importedTaskIds={currentTaskIds}
+                                    />
+                                ) : isToday ? (
+                                    <CurrentTaskList
+                                        tasks={currentTasks}
+                                        onUpdateStatus={handleUpdateStatus}
+                                        onUpdateComment={handleUpdateComment}
+                                        assignedDate={today}
+                                    />
+                                ) : (
+                                    <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
+                                        <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                            {previewTasks.length > 0
+                                                ? "Import these tasks to start working on them."
+                                                : "No tasks scheduled for this day."}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                    </div>
-                )
-            }
-
-            {/* Main Content - Hidden on mobile Home tab */}
-            <main className={`flex-1 overflow-y-auto custom-scrollbar px-4 md:px-8 pt-6 pb-24 md:pb-8 ${mobileTab === 'home' ? 'hidden md:block' : ''}`}>
-                {/* Calendar Widget - Schedule tab or desktop */}
-                {(mobileTab === 'schedule' || window.innerWidth >= 768) && (
-                    <div data-calendar className="mb-6">
-                        <MiniCalendar
-                            selectedDate={selectedDate}
-                            onSelectDate={setSelectedDate}
-                        />
-                    </div>
-                )}
-
-                {/* Task List Section */}
-                <div className="mb-6">
-                    <div className={`flex items-center justify-between mb-4 ${mobileTab === 'tasks' ? 'hidden md:flex' : 'flex'}`}>
-                        <h3 className="font-bold text-lg">Your Tasks</h3>
-                        <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border-[3px] border-gray-200 dark:border-gray-700">
-                            {/* Calculate completion percentage */}
-                            {Math.round((currentTasks.filter(t => t.status === 'done').length / Math.max(currentTasks.length, 1)) * 100)}% Complete
-                        </div>
-                    </div>
-
-                    {/* Conditional Rendering based on date selection and tab */}
-                    {/* On Schedule tab (mobile), always show read-only DayTaskPreview */}
-                    {mobileTab === 'schedule' ? (
-                        <DayTaskPreview
-                            date={selectedDate}
-                            tasks={isToday ? currentTasks : previewTasks}
-                            onImport={handleImportTasks}
-                            onImportTask={handleImportTask}
-                        />
-                    ) : showPreview ? (
-                        <DayTaskPreview
-                            date={selectedDate}
-                            tasks={previewTasks}
-                            onImport={handleImportTasks}
-                            onImportTask={handleImportTask}
-                        />
-                    ) : isToday ? (
-                        <CurrentTaskList
-                            tasks={currentTasks}
-                            onUpdateStatus={handleUpdateStatus}
-                            onUpdateComment={handleUpdateComment}
-                            assignedDate={today}
-                        />
                     ) : (
-                        <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
-                            <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
-                                {previewTasks.length > 0
-                                    ? "Import these tasks to start working on them."
-                                    : "No tasks scheduled for this day."}
-                            </p>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                            <div className="max-w-4xl mx-auto">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl font-bold">Schedule</h2>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                    </span>
+                                </div>
+                                <div className="mb-6">
+                                    <MiniCalendar
+                                        selectedDate={selectedDate}
+                                        onSelectDate={setSelectedDate}
+                                    />
+                                </div>
+                                <div className="mt-6">
+                                    <h3 className="text-lg font-bold mb-4">
+                                        Tasks for {isToday ? 'Today' : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                    </h3>
+                                    <DayTaskPreview
+                                        date={selectedDate}
+                                        tasks={isToday ? currentTasks : previewTasks}
+                                        onImport={handleImportTasks}
+                                        onImportTask={handleImportTask}
+                                        importedTaskIds={currentTaskIds}
+                                        hideImportButtons={isToday}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
-                </div>
-            </main>
+                </main>
+
+                {/* Mobile Content */}
+                <main className="md:hidden flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
+                    {mobileTab === 'tasks' ? (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold">Your Tasks</h2>
+                                <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border-[2px] border-gray-200 dark:border-gray-700">
+                                    {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Complete
+                                </div>
+                            </div>
+                            {showPreview ? (
+                                <DayTaskPreview
+                                    date={selectedDate}
+                                    tasks={previewTasks}
+                                    onImport={handleImportTasks}
+                                    onImportTask={handleImportTask}
+                                    importedTaskIds={currentTaskIds}
+                                />
+                            ) : isToday ? (
+                                <CurrentTaskList
+                                    tasks={currentTasks}
+                                    onUpdateStatus={handleUpdateStatus}
+                                    onUpdateComment={handleUpdateComment}
+                                    assignedDate={today}
+                                />
+                            ) : (
+                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
+                                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                        {previewTasks.length > 0
+                                            ? "Import these tasks to start working on them."
+                                            : "No tasks scheduled for this day."}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold">Schedule</h2>
+                            </div>
+                            <div className="mb-4">
+                                <MiniCalendar
+                                    selectedDate={selectedDate}
+                                    onSelectDate={setSelectedDate}
+                                />
+                            </div>
+                            <div className="mt-4">
+                                <h3 className="text-base font-bold mb-3">
+                                    {isToday ? "Today's Tasks" : `Tasks for ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`}
+                                </h3>
+                                <DayTaskPreview
+                                    date={selectedDate}
+                                    tasks={isToday ? currentTasks : previewTasks}
+                                    onImport={handleImportTasks}
+                                    onImportTask={handleImportTask}
+                                    importedTaskIds={currentTaskIds}
+                                    hideImportButtons={isToday}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </main>
+            </div>
 
             {/* Name Entry Modal */}
-            {
-                showNameModal && (
-                    <StudentNameModal
-                        onSubmit={handleNameSubmit}
-                        initialName={studentName}
-                        onClose={() => setShowNameModal(false)}
-                    />
-                )
-            }
+            {showNameModal && (
+                <StudentNameModal
+                    onSubmit={handleNameSubmit}
+                    initialName={studentName}
+                    onClose={() => setShowNameModal(false)}
+                />
+            )}
 
-            {/* Mobile Bottom Navigation - 3 Tabs */}
+            {/* Mobile Menu Modal */}
+            <StudentMenuModal
+                isOpen={showMenuModal}
+                onClose={() => setShowMenuModal(false)}
+                studentName={studentName}
+                className={currentClassName}
+                tasksCompleted={tasksCompleted}
+                totalTasks={currentTasks.length}
+                onSignOut={handleSignOut}
+                onEditName={() => {
+                    setShowMenuModal(false);
+                    onEditName(studentName);
+                }}
+            />
+
+            {/* Mobile Bottom Navigation - Menu, Tasks, Schedule */}
             <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
                 <div className="flex justify-around items-center h-16 px-2">
                     <button
-                        onClick={() => setMobileTab('home')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${mobileTab === 'home'
-                            ? 'text-emerald-500'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-                            }`}
-                        aria-label="Home"
+                        onClick={() => setShowMenuModal(true)}
+                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        aria-label="Menu"
                     >
-                        <Home className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Home</span>
+                        <Menu className="w-5 h-5" />
+                        <span className="text-[10px] font-bold">Menu</span>
                     </button>
                     <button
                         onClick={() => setMobileTab('tasks')}
@@ -479,7 +488,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                 </div>
             </nav>
-        </div >
+        </div>
     );
 };
 

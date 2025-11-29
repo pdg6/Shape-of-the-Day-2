@@ -85,6 +85,12 @@
 }
 
 @layer components {
+    /* Dynamic viewport height utility for mobile browser compatibility */
+    .h-screen-safe {
+        height: 100vh; /* Fallback */
+        height: 100dvh;
+    }
+
     .scrollbar-hide {
         -ms-overflow-style: none;
         scrollbar-width: none;

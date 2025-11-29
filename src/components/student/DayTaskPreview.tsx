@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download } from 'lucide-react';
+import { Download, Check } from 'lucide-react';
 import { Task } from '../../types';
 
 /**
@@ -7,12 +7,17 @@ import { Task } from '../../types';
  * @property date - The date string (e.g., "2023-10-27") for the previewed tasks.
  * @property tasks - Array of Task objects scheduled for that day.
  * @property onImport - Callback function to import these tasks into the "My Day" view.
+ * @property onImportTask - Callback to import individual task.
+ * @property importedTaskIds - Set of task IDs already in the current list.
+ * @property hideImportButtons - If true, hide all import buttons (e.g., for today's view).
  */
 interface DayTaskPreviewProps {
     date: string;
     tasks: Task[];
     onImport: () => void;
-    onImportTask?: (task: Task) => void; // Import individual task
+    onImportTask?: (task: Task) => void;
+    importedTaskIds?: Set<string>;
+    hideImportButtons?: boolean;
 }
 
 /**
@@ -21,7 +26,17 @@ interface DayTaskPreviewProps {
  * Displays a summary of tasks scheduled for a future date.
  * Allows the student to "import" these tasks into their current daily view.
  */
-const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, onImportTask }) => {
+const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
+    date,
+    tasks,
+    onImport,
+    onImportTask,
+    importedTaskIds = new Set(),
+    hideImportButtons = false
+}) => {
+    // Check if all tasks are already imported
+    const allTasksImported = tasks.length > 0 && tasks.every(t => importedTaskIds.has(t.id));
+    const someTasksImported = tasks.some(t => importedTaskIds.has(t.id));
     // Helper function to format dates - shows "Today" if it's today, otherwise short date
     const formatDate = (dateString: string): string => {
         const today = new Date().toISOString().split('T')[0];
@@ -49,14 +64,28 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, 
                 <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                     Tasks for {new Date(date).toLocaleDateString()}
                 </h3>
-                <button
-                    onClick={onImport}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20"
-                >
-                    <Download className="w-4 h-4" />
-                    <span className="font-medium hidden sm:inline">Import All</span>
-                    <span className="font-medium sm:hidden">All</span>
-                </button>
+                {!hideImportButtons && (
+                    allTasksImported ? (
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-[3px] border-emerald-200 dark:border-emerald-800">
+                            <Check className="w-4 h-4" />
+                            <span className="font-medium hidden sm:inline">All Added</span>
+                            <span className="font-medium sm:hidden">Added</span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={onImport}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20"
+                        >
+                            <Download className="w-4 h-4" />
+                            <span className="font-medium hidden sm:inline">
+                                {someTasksImported ? 'Import Remaining' : 'Import All'}
+                            </span>
+                            <span className="font-medium sm:hidden">
+                                {someTasksImported ? 'Rest' : 'All'}
+                            </span>
+                        </button>
+                    )
+                )}
             </div>
 
             {/* Task Cards */}
@@ -86,15 +115,25 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({ date, tasks, onImport, 
                             className={`relative bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border-[3px] ${borderClass} transition-all duration-200 hover:brightness-95 dark:hover:brightness-110`}
                         >
                             {/* Import Button - Top Right */}
-                            {onImportTask && (
-                                <button
-                                    onClick={() => onImportTask(task)}
-                                    className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20 active:text-emerald-600 dark:active:text-emerald-400"
-                                    title="Import this task"
-                                    aria-label={`Import ${task.title}`}
-                                >
-                                    <Download className="w-5 h-5" />
-                                </button>
+                            {onImportTask && !hideImportButtons && (
+                                importedTaskIds.has(task.id) ? (
+                                    <div
+                                        className="absolute top-3 right-3 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 dark:text-emerald-400 border-[3px] border-emerald-200 dark:border-emerald-800"
+                                        title="Already added"
+                                        aria-label={`${task.title} already added`}
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => onImportTask(task)}
+                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20 active:text-emerald-600 dark:active:text-emerald-400"
+                                        title="Import this task"
+                                        aria-label={`Import ${task.title}`}
+                                    >
+                                        <Download className="w-5 h-5" />
+                                    </button>
+                                )
                             )}
 
                             {/* Task Content */}

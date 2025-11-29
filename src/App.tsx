@@ -194,7 +194,7 @@ function App() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-brand-light dark:bg-brand-dark transition-colors duration-200">
+        <div className="flex flex-col h-screen-safe bg-brand-light dark:bg-brand-dark transition-colors duration-200">
             <Toaster position="top-right" />
 
             {/* Global Name Modal (can be triggered from anywhere) */}
