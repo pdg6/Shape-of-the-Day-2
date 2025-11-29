@@ -321,7 +321,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
     });
 
     return (
-        <div className="flex flex-col gap-4 w-full max-w-3xl mx-auto">
+        <div className="flex flex-col gap-4 w-full">
             {sortedTasks.map((task) => (
                 <TaskCard
                     key={task.id}

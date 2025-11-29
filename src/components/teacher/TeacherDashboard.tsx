@@ -20,7 +20,7 @@ interface MenuItem {
 }
 
 const TeacherDashboard: React.FC = () => {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const {
         classrooms,
         currentClassId,
@@ -96,7 +96,7 @@ const TeacherDashboard: React.FC = () => {
             <aside className={`
                 hidden md:flex md:static inset-y-0 left-0 z-sidebar
                 ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
-                transform transition-all duration-300 ease-in-out flex-col h-full border-r-[3px] border-gray-200 dark:border-gray-700 overflow-hidden
+                transform transition-all duration-300 ease-in-out flex-col h-full overflow-hidden
             `}>
                 <div className="p-4 flex justify-end md:hidden flex-shrink-0">
                     <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
@@ -330,7 +330,7 @@ const TeacherDashboard: React.FC = () => {
                 <Modal
                     isOpen={isSettingsOpen}
                     onClose={() => setIsSettingsOpen(false)}
-                    title="Settings"
+                    title="Menu"
                 >
                     <SettingsOverlay
                         isOpen={true}
@@ -338,6 +338,8 @@ const TeacherDashboard: React.FC = () => {
                         onLogout={logout}
                         onShowJoinCode={() => setIsJoinCodeOpen(true)}
                         onShowData={() => setActiveTab('data')}
+                        teacherName={user?.displayName || user?.email || 'Teacher'}
+                        className={currentClass?.name}
                     />
                 </Modal>
 
@@ -361,13 +363,13 @@ const TeacherDashboard: React.FC = () => {
             <DummyDataControls />
 
             {/* Mobile Bottom Navigation - iOS/Android Style */}
-            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
+            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
                 <div className="flex justify-around items-center h-16 px-2">
                     <button
                         onClick={() => setActiveTab('classrooms')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'classrooms'
-                            ? 'text-brand-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'classrooms'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                             }`}
                         aria-label="Classrooms"
                     >
@@ -377,9 +379,9 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setActiveTab('tasks')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'tasks'
-                            ? 'text-brand-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'tasks'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                             }`}
                         aria-label="Task Manager"
                     >
@@ -389,9 +391,9 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setActiveTab('shape')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'shape'
-                            ? 'text-brand-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'shape'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                             }`}
                         aria-label="Shape of Day"
                     >
@@ -401,9 +403,9 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setActiveTab('live')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent ${activeTab === 'live'
-                            ? 'text-brand-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'live'
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                             }`}
                         aria-label="Live View"
                     >
@@ -413,7 +415,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                        className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none"
                         aria-label="Settings & More"
                     >
                         <Home className="w-5 h-5" />

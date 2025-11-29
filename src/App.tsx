@@ -32,6 +32,7 @@ function App() {
     const [showNameModal, setShowNameModal] = useState(false);
     const [studentName, setStudentName] = useState('');
     const [classId, setClassId] = useState('');
+    const [studentClassName, setStudentClassName] = useState('');
 
 
     // Global Store
@@ -156,6 +157,7 @@ function App() {
         // Reset all application state
         setStudentName('');
         setClassId('');
+        setStudentClassName('');
         setView('landing');
         setShowNameModal(false);
         setCurrentClassId(null);
@@ -218,16 +220,19 @@ function App() {
                         Shape of the Day
                     </div>
 
-                    {/* Center Section: Classroom Name */}
-                    {view === 'teacher' && currentClass && (
-                        <span className="absolute left-1/2 -translate-x-1/2 font-bold text-xl text-brand-accent">
-                            {currentClass.name}
-                        </span>
-                    )}
 
-                    {/* Right Section: Date */}
-                    <div className="font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+
+                    {/* Right Section: Class Name & Date */}
+                    <div className="flex items-center gap-4 font-bold text-xl">
+                        {/* Show Class Name if available (Teacher or Student) */}
+                        {((view === 'teacher' && currentClass) || (view === 'student' && studentClassName)) && (
+                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                {view === 'teacher' ? currentClass?.name : studentClassName}
+                            </span>
+                        )}
+                        <span className="text-gray-500 dark:text-gray-400">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </span>
                     </div>
 
                 </nav>
@@ -250,6 +255,7 @@ function App() {
                         onEditName={() => setShowNameModal(true)}
                         onNameSubmit={handleNameSubmit}
                         onSignOut={handleLogout}
+                        setGlobalClassName={setStudentClassName}
                     />
                 )}
             </main>

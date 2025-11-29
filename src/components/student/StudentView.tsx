@@ -30,6 +30,7 @@ interface StudentViewProps {
     onSignOut: () => void;
     className?: string;
     isLive?: boolean;
+    setGlobalClassName?: (name: string) => void;
 }
 
 /**
@@ -48,7 +49,8 @@ const StudentView: React.FC<StudentViewProps> = ({
     onNameSubmit,
     onSignOut,
     className = "Mrs. Smith's Class",
-    isLive: _isLive = true  // Kept for potential future use
+    isLive: _isLive = true,  // Kept for potential future use
+    setGlobalClassName
 }) => {
     // Get today's date in YYYY-MM-DD format for initial state
     const today = new Date().toISOString().split('T')[0] ?? '';
@@ -63,7 +65,9 @@ const StudentView: React.FC<StudentViewProps> = ({
             try {
                 const classDoc = await getDoc(doc(db, 'classrooms', classId));
                 if (classDoc.exists()) {
-                    setCurrentClassName(classDoc.data().name);
+                    const name = classDoc.data().name;
+                    setCurrentClassName(name);
+                    if (setGlobalClassName) setGlobalClassName(name);
                 }
             } catch (error) {
                 console.error("Error fetching class name:", error);
@@ -264,34 +268,35 @@ const StudentView: React.FC<StudentViewProps> = ({
                 onTabChange={setDesktopTab}
                 isCollapsed={isSidebarCollapsed}
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                onOpenSettings={() => setShowMenuModal(true)}
             />
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Mobile Header - Logo, Class Name, Task Count, Date */}
-                <header className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface border-b-[3px] border-gray-200 dark:border-gray-700 px-4 py-3">
-                    <div className="flex items-center justify-between">
-                        {/* Left: Logo and Class Name */}
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                                <span className="text-white font-bold text-sm">S</span>
-                            </div>
-                            <div>
-                                <h1 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[140px]">
-                                    {currentClassName}
-                                </h1>
-                            </div>
+                <header className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-3">
+                    <div className="max-w-3xl mx-auto flex items-center gap-3 overflow-x-auto no-scrollbar">
+
+
+                        {/* 2. Tasks & Progress */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-base font-bold text-emerald-600 dark:text-emerald-500">
+                                {tasksLeft} Tasks
+                            </span>
+                            <span className="text-base text-gray-500 dark:text-gray-400">
+                                {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Done
+                            </span>
                         </div>
 
-                        {/* Right: Task Count and Date */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">
-                                {tasksLeft} Task{tasksLeft !== 1 ? 's' : ''}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </span>
-                        </div>
+                        {/* 3. Class Name (Full) */}
+                        <h1 className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap flex-shrink-0 ml-auto">
+                            {currentClassName}
+                        </h1>
+
+                        {/* 4. Date (Short) */}
+                        <span className="text-base text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0">
+                            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
                     </div>
                 </header>
 
@@ -299,10 +304,12 @@ const StudentView: React.FC<StudentViewProps> = ({
                 <main className="hidden md:flex flex-1 overflow-hidden">
                     {desktopTab === 'tasks' ? (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                            <div className="max-w-4xl mx-auto">
+                            <div className="max-w-5xl mx-auto">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-bold">Your Tasks</h2>
-                                    <div className="text-sm font-medium px-3 py-1.5 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg text-brand-textDarkSecondary dark:text-brand-textSecondary border-[3px] border-gray-200 dark:border-gray-700">
+                                    <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-500">
+                                        {tasksLeft} Tasks
+                                    </h2>
+                                    <div className="text-xl font-bold text-gray-500 dark:text-gray-400">
                                         {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Complete
                                     </div>
                                 </div>
@@ -334,7 +341,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     ) : (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                            <div className="max-w-4xl mx-auto">
+                            <div className="max-w-5xl mx-auto">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-xl font-bold">Schedule</h2>
                                     <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -369,12 +376,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 <main className="md:hidden flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
                     {mobileTab === 'tasks' ? (
                         <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-bold">Your Tasks</h2>
-                                <div className="text-xs font-medium px-2 py-1 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-md text-brand-textDarkSecondary dark:text-brand-textSecondary border-[2px] border-gray-200 dark:border-gray-700">
-                                    {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Complete
-                                </div>
-                            </div>
+
                             {showPreview ? (
                                 <DayTaskPreview
                                     date={selectedDate}
@@ -402,9 +404,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     ) : (
                         <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-bold">Schedule</h2>
-                            </div>
+
                             <div className="mb-4">
                                 <MiniCalendar
                                     selectedDate={selectedDate}
@@ -454,11 +454,16 @@ const StudentView: React.FC<StudentViewProps> = ({
             />
 
             {/* Mobile Bottom Navigation - Menu, Tasks, Schedule */}
-            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface border-t-[3px] border-gray-200 dark:border-gray-700 z-sidebar safe-area-pb">
+            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
                 <div className="flex justify-around items-center h-16 px-2">
+                    <img
+                        src="/shape of the day logo.png"
+                        alt="Logo"
+                        className="w-8 h-8 object-contain"
+                    />
                     <button
                         onClick={() => setShowMenuModal(true)}
-                        className="flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none"
                         aria-label="Menu"
                     >
                         <Menu className="w-5 h-5" />
@@ -466,9 +471,9 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                     <button
                         onClick={() => setMobileTab('tasks')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${mobileTab === 'tasks'
-                            ? 'text-emerald-500'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${mobileTab === 'tasks'
+                            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                             }`}
                         aria-label="Tasks"
                     >
@@ -477,9 +482,9 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
                     <button
                         onClick={() => setMobileTab('schedule')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 min-w-[48px] min-h-[48px] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 ${mobileTab === 'schedule'
-                            ? 'text-emerald-500'
-                            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${mobileTab === 'schedule'
+                            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                             }`}
                         aria-label="Schedule"
                     >

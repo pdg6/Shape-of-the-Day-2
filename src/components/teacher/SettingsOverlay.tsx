@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, LogOut, QrCode, BarChart2 } from 'lucide-react';
+import { Moon, Sun, LogOut, QrCode, BarChart2, User, BookOpen } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
 
 interface SettingsOverlayProps {
@@ -8,125 +8,151 @@ interface SettingsOverlayProps {
     onLogout?: () => void;
     onShowJoinCode?: () => void;
     onShowData?: () => void;
+    teacherName?: string;
+    className?: string;
 }
 
-const SettingsOverlay: React.FC<SettingsOverlayProps> = ({ isOpen, onClose, onLogout, onShowJoinCode, onShowData }) => {
+const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
+    isOpen,
+    onClose,
+    onLogout,
+    onShowJoinCode,
+    onShowData,
+    teacherName = 'Teacher',
+    className = ''
+}) => {
     const { darkMode, toggleDarkMode } = useClassStore();
 
     if (!isOpen) return null;
 
     return (
-        <div className="space-y-6">
-            {/* Appearance Section */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Appearance
-                </h3>
-
-                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-orange-500/10 text-orange-500'}`}>
-                            {darkMode ? <Moon size={20} /> : <Sun size={20} />}
-                        </div>
-                        <div>
-                            <p className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Theme
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {darkMode ? 'Dark Mode' : 'Light Mode'}
-                            </p>
-                        </div>
+        <div className="space-y-3">
+            {/* Teacher Name */}
+            <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                        <User size={20} />
                     </div>
-
-                    <button
-                        onClick={toggleDarkMode}
-                        className={`
-                                    relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                                    ${darkMode ? 'bg-brand-accent' : 'bg-gray-200'}
-                                `}
-                    >
-                        <span
-                            className={`
-                                        inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ease-in-out
-                                        ${darkMode ? 'translate-x-6' : 'translate-x-1'}
-                                    `}
-                        />
-                    </button>
+                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Teacher
+                    </span>
                 </div>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                    {teacherName}
+                </span>
             </div>
 
-            {/* Quick Actions - Mobile Friendly */}
-            <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Quick Actions
-                </h3>
+            {/* Class Name */}
+            {className && (
+                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+                            <BookOpen size={20} />
+                        </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Class
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {className}
+                    </span>
+                </div>
+            )}
 
-                {onShowData && (
-                    <button
-                        onClick={() => {
-                            onShowData();
-                            onClose();
-                        }}
-                        className="w-full bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-4 flex items-center gap-3 transition-colors border-[3px] border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                    >
+            {/* Dark/Light Mode Toggle - Near top */}
+            <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
+                        {darkMode ? <Moon size={20} /> : <Sun size={20} />}
+                    </div>
+                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Theme
+                    </span>
+                </div>
+                <button
+                    onClick={toggleDarkMode}
+                    className={`
+                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 dark:focus:ring-offset-gray-900
+                        ${darkMode ? 'bg-brand-accent' : 'bg-gray-300 border border-gray-400'}
+                    `}
+                >
+                    <span
+                        className={`
+                            inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
+                            ${darkMode ? 'translate-x-6' : 'translate-x-1'}
+                        `}
+                    />
+                </button>
+            </div>
+
+            {/* Data & Analytics */}
+            {onShowData && (
+                <button
+                    onClick={() => {
+                        onShowData();
+                        onClose();
+                    }}
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/50"
+                >
+                    <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
                             <BarChart2 size={20} />
                         </div>
-                        <div className="text-left flex-1">
-                            <p className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Data & Analytics
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                View classroom insights
-                            </p>
-                        </div>
-                    </button>
-                )}
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Data & Analytics
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        View insights
+                    </span>
+                </button>
+            )}
 
-                {onShowJoinCode && (
-                    <button
-                        onClick={() => {
-                            onShowJoinCode();
-                            onClose();
-                        }}
-                        className="w-full bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-4 flex items-center gap-3 transition-colors border-[3px] border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                    >
+            {/* Join Code */}
+            {onShowJoinCode && (
+                <button
+                    onClick={() => {
+                        onShowJoinCode();
+                        onClose();
+                    }}
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/50"
+                >
+                    <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
                             <QrCode size={20} />
                         </div>
-                        <div className="text-left flex-1">
-                            <p className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Join Code
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Show classroom join code
-                            </p>
-                        </div>
-                    </button>
-                )}
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Join Code
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Show code
+                    </span>
+                </button>
+            )}
 
-                {onLogout && (
-                    <button
-                        onClick={() => {
-                            onLogout();
-                            onClose();
-                        }}
-                        className="w-full bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl p-4 flex items-center gap-3 transition-colors border-[3px] border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                    >
+            {/* Sign Out */}
+            {onLogout && (
+                <button
+                    onClick={() => {
+                        onLogout();
+                        onClose();
+                    }}
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/50"
+                >
+                    <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
                             <LogOut size={20} />
                         </div>
-                        <div className="text-left flex-1">
-                            <p className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Sign Out
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                                Leave teacher dashboard
-                            </p>
-                        </div>
-                    </button>
-                )}
-            </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Sign Out
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Leave dashboard
+                    </span>
+                </button>
+            )}
         </div>
     );
 };

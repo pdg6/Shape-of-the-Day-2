@@ -24,15 +24,33 @@ Used for all student-facing components (`StudentView`, `StudentNameModal`, `Join
   @apply border-gray-200 dark:border-gray-600;
 }
 
-/* Hover State */
+/* Hover State - Lighter Grey */
 .student-tile:hover {
-  @apply border-emerald-400;
+  @apply border-gray-100 dark:border-gray-500;
 }
 
 /* Focus State */
 .student-tile:focus-within,
 .student-tile:focus {
   @apply outline-none border-emerald-500;
+  @apply ring-2 ring-emerald-200 dark:ring-emerald-900/50;
+}
+
+/* Ghost Button Style (Footer/Nav) */
+.student-ghost {
+  @apply border-[3px] transition-all duration-200;
+  @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+  @apply border-transparent;
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+.student-ghost:hover {
+  @apply border-gray-200 dark:border-gray-700;
+}
+
+.student-ghost:focus,
+.student-ghost.active {
+  @apply border-emerald-500 text-emerald-600 dark:text-emerald-500;
   @apply ring-2 ring-emerald-200 dark:ring-emerald-900/50;
 }
 
@@ -51,31 +69,6 @@ Used for all teacher-facing dashboard tiles (`TaskManager`, `ClassPlanner`, etc.
 **Standard Classes:**
 ```css
 /* Base Tile/Input/Button Style */
-.teacher-tile {
-  @apply w-full px-4 py-2.5 rounded-lg border-[3px] transition-all duration-200;
-  /* Note: Using 3px borders for enhanced visibility in educational environments
-     and improved accessibility across varied display quality (projectors, tablets, etc.) */
-  @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
-  @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
-  @apply border-gray-200 dark:border-gray-600;
-}
-
-/* Hover State */
-.teacher-tile:hover {
-  @apply border-blue-400;
-}
-
-/* Focus State */
-.teacher-tile:focus-within,
-.teacher-tile:focus {
-  @apply outline-none border-blue-500;
-  @apply ring-2 ring-blue-200 dark:ring-blue-900/50;
-}
-
-/* Arrow Animation (requires 'group' on parent) */
-.teacher-arrow {
-  @apply transition-all duration-200;
-}
 .group:hover .teacher-arrow {
   @apply translate-x-1 text-blue-500;
 }

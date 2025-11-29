@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle } from 'lucide-react';
+import { Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
+import { Modal } from '../shared/Modal';
 
 interface StudentMenuModalProps {
     isOpen: boolean;
@@ -19,9 +20,9 @@ interface StudentMenuModalProps {
  * Displays in logical order:
  * 1. Student Name (personalization)
  * 2. Class Name (context)
- * 3. Current Date (temporal context)
- * 4. Tasks Progress (status)
- * 5. Dark/Light Mode Toggle (preference)
+ * 3. Dark/Light Mode Toggle (preference)
+ * 4. Date (temporal context)
+ * 5. Tasks Progress (status)
  * 6. Sign Out Button (exit action - at bottom)
  */
 const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
@@ -36,149 +37,147 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
 }) => {
     const { darkMode, toggleDarkMode } = useClassStore();
 
-    if (!isOpen) return null;
-
     const tasksLeft = totalTasks - tasksCompleted;
     const progressPercent = totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0;
 
     const currentDate = new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
     });
 
     return (
-        <div
-            className="fixed inset-0 z-overlay bg-black/60 backdrop-blur-sm flex items-end justify-center md:hidden animate-in fade-in duration-200"
-            onClick={onClose}
-        >
-            <div
-                className="w-full max-w-lg bg-brand-lightSurface dark:bg-brand-darkSurface rounded-t-2xl shadow-2xl animate-in slide-in-from-bottom duration-300 border-t-[3px] border-x-[3px] border-gray-200 dark:border-gray-700"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        Menu
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                        aria-label="Close menu"
-                    >
-                        <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                    </button>
+        <Modal isOpen={isOpen} onClose={onClose} title="Menu">
+            <div className="space-y-3">
+                {/* Student Name */}
+                <button
+                    onClick={() => {
+                        onEditName();
+                        onClose();
+                    }}
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                            <User size={20} />
+                        </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Student
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {studentName}
+                        </span>
+                        <span className="text-xs text-emerald-500 font-medium">Edit</span>
+                    </div>
+                </button>
+
+                {/* Class Name */}
+                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                            <BookOpen size={20} />
+                        </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Class
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {className}
+                    </span>
                 </div>
 
-                {/* Content */}
-                <div className="p-4 space-y-4">
-                    {/* Student Name */}
-                    <button
-                        onClick={onEditName}
-                        className="w-full flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border-[2px] border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
-                            <User className="w-5 h-5 text-white" />
+                {/* Dark/Light Mode Toggle - Near top */}
+                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
+                            {darkMode ? <Moon size={20} /> : <Sun size={20} />}
                         </div>
-                        <div className="flex-1 text-left">
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Student</p>
-                            <p className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {studentName}
-                            </p>
-                        </div>
-                        <span className="text-xs text-emerald-500 font-medium">Edit</span>
-                    </button>
-
-                    {/* Class Name */}
-                    <div className="flex items-center gap-3 p-3 bg-brand-light dark:bg-brand-dark rounded-xl border-[2px] border-gray-200 dark:border-gray-700">
-                        <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                            <BookOpen className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Class</p>
-                            <p className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {className}
-                            </p>
-                        </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Theme
+                        </span>
                     </div>
-
-                    {/* Current Date */}
-                    <div className="flex items-center gap-3 p-3 bg-brand-light dark:bg-brand-dark rounded-xl border-[2px] border-gray-200 dark:border-gray-700">
-                        <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Today</p>
-                            <p className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {currentDate}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Tasks Progress */}
-                    <div className="p-3 bg-brand-light dark:bg-brand-dark rounded-xl border-[2px] border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
-                                <CheckCircle className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Progress</p>
-                                <p className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                    {tasksLeft} task{tasksLeft !== 1 ? 's' : ''} left
-                                </p>
-                            </div>
-                            <span className="text-lg font-bold text-emerald-500">{progressPercent}%</span>
-                        </div>
-                        {/* Progress Bar */}
-                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                                style={{ width: `${progressPercent}%` }}
-                            />
-                        </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-                            {tasksCompleted} of {totalTasks} completed
-                        </p>
-                    </div>
-
-                    {/* Dark/Light Mode Toggle */}
                     <button
                         onClick={toggleDarkMode}
-                        className="w-full flex items-center gap-3 p-3 bg-brand-light dark:bg-brand-dark rounded-xl border-[2px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
+                        className={`
+                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
+                            ${darkMode ? 'bg-emerald-500' : 'bg-gray-300 border border-gray-400'}
+                        `}
                     >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${darkMode ? 'bg-indigo-500' : 'bg-amber-500'}`}>
-                            {darkMode ? (
-                                <Moon className="w-5 h-5 text-white" />
-                            ) : (
-                                <Sun className="w-5 h-5 text-white" />
-                            )}
-                        </div>
-                        <div className="flex-1 text-left">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Appearance</p>
-                            <p className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {darkMode ? 'Dark Mode' : 'Light Mode'}
-                            </p>
-                        </div>
-                        <div className={`w-12 h-7 rounded-full p-1 transition-colors ${darkMode ? 'bg-indigo-500' : 'bg-gray-300'}`}>
-                            <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
-                        </div>
-                    </button>
-
-                    {/* Sign Out Button */}
-                    <button
-                        onClick={onSignOut}
-                        className="w-full flex items-center justify-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl border-[2px] border-red-200 dark:border-red-800 transition-colors font-bold"
-                    >
-                        <LogOut className="w-5 h-5" />
-                        Sign Out
+                        <span
+                            className={`
+                                inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
+                                ${darkMode ? 'translate-x-6' : 'translate-x-1'}
+                            `}
+                        />
                     </button>
                 </div>
 
-                {/* Safe area padding for iOS */}
-                <div className="h-6 safe-area-pb" />
+                {/* Date */}
+                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
+                            <Calendar size={20} />
+                        </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Date
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentDate}
+                    </span>
+                </div>
+
+                {/* Tasks Progress */}
+                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                                <CheckCircle size={20} />
+                            </div>
+                            <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                Progress
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {tasksLeft} left
+                            </span>
+                            <span className="text-sm font-bold text-emerald-500">{progressPercent}%</span>
+                        </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Sign Out Button */}
+                <button
+                    onClick={() => {
+                        onSignOut();
+                        onClose();
+                    }}
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
+                            <LogOut size={20} />
+                        </div>
+                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Sign Out
+                        </span>
+                    </div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Leave class
+                    </span>
+                </button>
             </div>
-        </div>
+        </Modal>
     );
 };
 

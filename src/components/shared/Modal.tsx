@@ -86,7 +86,7 @@ export const Modal: React.FC<ModalProps> = ({
                 className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl animate-in zoom-in-95 duration-200`}
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-6 border-b-[3px] border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-6">
                     <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                         {title}
                     </h3>
