@@ -51,38 +51,57 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             bg-brand-lightSurface dark:bg-brand-darkSurface
             transition-all duration-300 ease-in-out
         `}>
-
+            {/* Logo/Branding - Same height as header (h-16) */}
+            <div className="h-16 flex-shrink-0 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
+                <div className={`flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
+                    <img
+                        src="/shape of the day logo.png"
+                        alt="Shape of the Day"
+                        className="w-8 h-8 flex-shrink-0"
+                    />
+                    <span className={`
+                        font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap
+                        transition-all duration-300 ease-in-out
+                        ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'opacity-100'}
+                    `}>
+                        Shape of the Day
+                    </span>
+                </div>
+            </div>
 
             {/* Navigation */}
-            <nav className="flex-shrink-0 p-4 space-y-2">
-                {navItems.map((item) => (
-                    <button
-                        key={item.id}
-                        onClick={() => onTabChange(item.id)}
-                        className={`
-                            relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px]
-                            bg-brand-lightSurface dark:bg-brand-darkSurface
-                            focus:outline-none
-                            ${activeTab === item.id
-                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }
-                            ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
-                        `}
-                        title={isCollapsed ? item.label : undefined}
-                        aria-label={item.label}
-                    >
-                        <div className="flex items-center justify-center w-12 flex-shrink-0">
-                            <item.icon className="w-5 h-5" />
-                        </div>
-                        <span className={`
-                            whitespace-nowrap transition-all duration-200
-                            ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
-                        `}>
-                            {item.label}
-                        </span>
-                    </button>
-                ))}
+            <nav id="student-sidebar-nav" aria-label="Student navigation" className="flex-shrink-0 p-4">
+                <ul className="space-y-2 list-none m-0 p-0">
+                    {navItems.map((item) => (
+                        <li key={item.id} className="flex">
+                            <button
+                                onClick={() => onTabChange(item.id)}
+                                className={`
+                                    flex-1 relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px]
+                                    bg-brand-lightSurface dark:bg-brand-darkSurface
+                                    focus:outline-none
+                                    ${activeTab === item.id
+                                        ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                                        : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                    }
+                                    ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
+                                `}
+                                title={isCollapsed ? item.label : undefined}
+                                aria-label={item.label}
+                            >
+                                <div className="flex items-center justify-center w-12 flex-shrink-0">
+                                    <item.icon className="w-5 h-5" />
+                                </div>
+                                <span className={`
+                                    whitespace-nowrap transition-all duration-200
+                                    ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
+                                `}>
+                                    {item.label}
+                                </span>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
             </nav>
 
             {/* Info Cards - Removed as requested */}
@@ -95,6 +114,9 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 {/* Collapse Toggle */}
                 <button
                     onClick={onToggleCollapse}
+                    aria-expanded={!isCollapsed}
+                    aria-controls="student-sidebar-nav"
+                    aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                     className={`
                         group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}

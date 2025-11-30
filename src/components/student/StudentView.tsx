@@ -30,7 +30,6 @@ interface StudentViewProps {
     onSignOut: () => void;
     className?: string;
     isLive?: boolean;
-    setGlobalClassName?: (name: string) => void;
 }
 
 /**
@@ -49,8 +48,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     onNameSubmit,
     onSignOut,
     className = "Mrs. Smith's Class",
-    isLive: _isLive = true,  // Kept for potential future use
-    setGlobalClassName
+    isLive: _isLive = true  // Kept for potential future use
 }) => {
     // Get today's date in YYYY-MM-DD format for initial state
     const today = new Date().toISOString().split('T')[0] ?? '';
@@ -67,7 +65,6 @@ const StudentView: React.FC<StudentViewProps> = ({
                 if (classDoc.exists()) {
                     const name = classDoc.data().name;
                     setCurrentClassName(name);
-                    if (setGlobalClassName) setGlobalClassName(name);
                 }
             } catch (error) {
                 console.error("Error fetching class name:", error);
@@ -306,10 +303,10 @@ const StudentView: React.FC<StudentViewProps> = ({
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="max-w-4xl mx-auto">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-500">
+                                    <h2 className="text-fluid-xl font-bold text-emerald-600 dark:text-emerald-500">
                                         {tasksLeft} Tasks
                                     </h2>
-                                    <div className="text-xl font-bold text-gray-500 dark:text-gray-400">
+                                    <div className="text-fluid-xl font-bold text-gray-500 dark:text-gray-400">
                                         {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Complete
                                     </div>
                                 </div>
@@ -343,7 +340,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="max-w-4xl mx-auto">
                                 <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-xl font-bold">Schedule</h2>
+                                    <h2 className="text-fluid-xl font-bold">Schedule</h2>
                                     <span className="text-sm text-gray-500 dark:text-gray-400">
                                         {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                                     </span>
@@ -355,7 +352,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     />
                                 </div>
                                 <div className="mt-6">
-                                    <h3 className="text-lg font-bold mb-4">
+                                    <h3 className="text-fluid-lg font-bold mb-4">
                                         Tasks for {isToday ? 'Today' : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                     </h3>
                                     <DayTaskPreview
@@ -454,44 +451,52 @@ const StudentView: React.FC<StudentViewProps> = ({
             />
 
             {/* Mobile Bottom Navigation - Menu, Tasks, Schedule */}
-            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
-                <div className="flex justify-around items-center h-16 px-2">
-                    <img
-                        src="/shape of the day logo.png"
-                        alt="Logo"
-                        className="w-8 h-8 object-contain"
-                    />
-                    <button
-                        onClick={() => setShowMenuModal(true)}
-                        className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none"
-                        aria-label="Menu"
-                    >
-                        <Menu className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Menu</span>
-                    </button>
-                    <button
-                        onClick={() => setMobileTab('tasks')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${mobileTab === 'tasks'
-                            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
-                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}
-                        aria-label="Tasks"
-                    >
-                        <ListTodo className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Tasks</span>
-                    </button>
-                    <button
-                        onClick={() => setMobileTab('schedule')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${mobileTab === 'schedule'
-                            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
-                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}
-                        aria-label="Schedule"
-                    >
-                        <Calendar className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Schedule</span>
-                    </button>
-                </div>
+            <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
+                <ul className="flex justify-around items-center h-16 px-2 list-none m-0 p-0">
+                    <li aria-hidden="true">
+                        <img
+                            src="/shape of the day logo.png"
+                            alt=""
+                            className="w-8 h-8 aspect-square object-contain"
+                        />
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setShowMenuModal(true)}
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark"
+                            aria-label="Menu"
+                        >
+                            <Menu className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Menu</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setMobileTab('tasks')}
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${mobileTab === 'tasks'
+                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Tasks"
+                        >
+                            <ListTodo className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Tasks</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setMobileTab('schedule')}
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${mobileTab === 'schedule'
+                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Schedule"
+                        >
+                            <Calendar className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Schedule</span>
+                        </button>
+                    </li>
+                </ul>
             </nav>
         </div>
     );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon } from 'lucide-react';
 import { Task, TaskStatus } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
@@ -70,13 +70,38 @@ interface QuestionOverlayProps {
 
 /**
  * QuestionOverlay Component
- * 
+ *
  * A modal overlay that appears when a student marks a task as "Stuck" or "Question".
  * It allows them to type a specific question or comment for the teacher.
  */
 const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpdateComment }) => {
     const [comment, setComment] = useState(task.comment || '');
     const maxChars = 200;
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
+
+    // Focus management: store previous focus and focus close button on mount
+    useEffect(() => {
+        previousFocusRef.current = document.activeElement as HTMLElement;
+        // Focus is set to textarea via autoFocus, but we keep close button ref for focus trap
+        return () => {
+            // Restore focus when overlay closes
+            previousFocusRef.current?.focus();
+        };
+    }, []);
+
+    // Handle Escape key to close overlay
+    const handleKeyDown = useCallback((event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            onClose();
+        }
+    }, [onClose]);
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
 
     // Sync comment changes to the parent component
     useEffect(() => {
@@ -87,8 +112,15 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
     const borderColor = activeAction ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700';
 
     return (
-        <div className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300">
+        <div
+            className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300"
+            onClick={onClose}
+        >
             <div
+                ref={overlayRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="question-overlay-title"
                 className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -96,9 +128,9 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                 <div className="flex items-start justify-between p-4 border-b border-gray-100 dark:border-gray-800">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            <h2 id="question-overlay-title" className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {task.title}
-                            </h3>
+                            </h2>
                             <StatusBadge status={task.status} />
                         </div>
                         <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
@@ -106,8 +138,10 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                         </p>
                     </div>
                     <button
+                        ref={closeButtonRef}
                         onClick={onClose}
                         className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        aria-label="Close"
                     >
                         <X className="w-5 h-5" />
                     </button>

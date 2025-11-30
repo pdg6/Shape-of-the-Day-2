@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ChevronRight } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
@@ -14,6 +14,37 @@ interface ConnectionSidebarProps {
 const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classId }) => {
     const { isSidebarOpen, setSidebarOpen, setActiveStudentCount } = useClassStore();
     const [liveStudents, setLiveStudents] = useState<LiveStudent[]>([]);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
+
+    // Focus management: focus close button when sidebar opens, restore focus when closed
+    useEffect(() => {
+        if (isSidebarOpen) {
+            // Store the previously focused element
+            previousFocusRef.current = document.activeElement as HTMLElement;
+            // Focus the close button after animation
+            const timer = setTimeout(() => {
+                closeButtonRef.current?.focus();
+            }, 300);
+            return () => clearTimeout(timer);
+        } else if (previousFocusRef.current) {
+            // Restore focus when sidebar closes
+            previousFocusRef.current.focus();
+            previousFocusRef.current = null;
+        }
+    }, [isSidebarOpen]);
+
+    // Handle Escape key to close sidebar
+    const handleKeyDown = useCallback((event: KeyboardEvent) => {
+        if (event.key === 'Escape' && isSidebarOpen) {
+            setSidebarOpen(false);
+        }
+    }, [isSidebarOpen, setSidebarOpen]);
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
 
     // Listen for real-time updates to the roster
     useEffect(() => {
@@ -40,9 +71,12 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
     const joinUrl = `${window.location.origin}/join/${classCode}`;
 
     return (
-        <div
+        <aside
+            role="complementary"
+            aria-label="Class connection panel"
+            aria-hidden={!isSidebarOpen}
             className={`
-                fixed right-0 top-[64px] h-[calc(100vh-64px)] w-80 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-2xl transition-transform duration-300 ease-in-out z-50
+                fixed right-0 top-[64px] h-[calc(100dvh-64px)] w-80 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-2xl transition-transform duration-300 ease-in-out z-sidebar
                 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
             `}
         >
@@ -68,7 +102,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                             </span>
                         </div>
 
-                        <div className="w-48 h-48 bg-white p-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm mt-2">
+                        <div className="w-48 aspect-square bg-white p-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm mt-2">
                             <QRCodeSVG
                                 value={joinUrl}
                                 style={{ width: '100%', height: '100%' }}
@@ -126,15 +160,17 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                 {/* Footer with Close Button */}
                 <div className="p-4 bg-brand-lightSurface dark:bg-brand-darkSurface">
                     <button
+                        ref={closeButtonRef}
                         onClick={() => setSidebarOpen(false)}
                         className="w-full flex items-center justify-center gap-2 p-3 text-gray-500 hover:text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-all font-medium"
                         title="Close Sidebar"
+                        aria-label="Close connection panel"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>
                 </div>
             </div>
-        </div>
+        </aside>
     );
 };
 

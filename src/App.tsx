@@ -32,7 +32,6 @@ function App() {
     const [showNameModal, setShowNameModal] = useState(false);
     const [studentName, setStudentName] = useState('');
     const [classId, setClassId] = useState('');
-    const [studentClassName, setStudentClassName] = useState('');
 
 
     // Global Store
@@ -40,7 +39,6 @@ function App() {
         darkMode,
         currentClassId,
         setCurrentClassId,
-        classrooms,
         setClassrooms
     } = useClassStore();
 
@@ -157,7 +155,6 @@ function App() {
         // Reset all application state
         setStudentName('');
         setClassId('');
-        setStudentClassName('');
         setView('landing');
         setShowNameModal(false);
         setCurrentClassId(null);
@@ -184,7 +181,7 @@ function App() {
         // In real app, we'd save this to session/local storage or context
     };
 
-    const currentClass = classrooms.find(c => c.id === currentClassId);
+    // currentClass is used by TeacherDashboard via the store
 
     // Show loading spinner while checking auth status
     if (loading) {
@@ -197,6 +194,11 @@ function App() {
 
     return (
         <div className="flex flex-col h-screen-safe bg-brand-light dark:bg-brand-dark transition-colors duration-200">
+            {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
+            <a href="#main-content" className="skip-link">
+                Skip to main content
+            </a>
+
             <Toaster position="top-right" />
 
             {/* Global Name Modal (can be triggered from anywhere) */}
@@ -207,39 +209,8 @@ function App() {
                 />
             )}
 
-            {/* Navigation Bar - Hidden on landing page */}
-            {view !== 'landing' && (
-                <nav className={`flex-shrink-0 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 py-3 items-center justify-between transition-colors duration-200 border-b border-gray-200 dark:border-gray-800 ${view === 'student' ? 'hidden md:flex' : 'flex'}`}>
-                    {/* Left Section: Logo and Title */}
-                    <div className="flex items-center gap-2 font-bold text-xl text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        <img
-                            src="/shape of the day logo.png"
-                            alt="Shape of the Day"
-                            className="w-8 h-8"
-                        />
-                        Shape of the Day
-                    </div>
-
-
-
-                    {/* Right Section: Class Name & Date */}
-                    <div className="flex items-center gap-4 font-bold text-xl">
-                        {/* Show Class Name if available (Teacher or Student) */}
-                        {((view === 'teacher' && currentClass) || (view === 'student' && studentClassName)) && (
-                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {view === 'teacher' ? currentClass?.name : studentClassName}
-                            </span>
-                        )}
-                        <span className="text-gray-500 dark:text-gray-400">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                        </span>
-                    </div>
-
-                </nav>
-            )}
-
-            {/* Main Content Area */}
-            <main className="flex-1 min-h-0 overflow-hidden">
+            {/* Main Content Area - Each view manages its own header */}
+            <main id="main-content" className="flex-1 min-h-0 overflow-hidden">
                 {view === 'landing' && (
                     <LandingPage
                         onLogin={login}
@@ -255,7 +226,6 @@ function App() {
                         onEditName={() => setShowNameModal(true)}
                         onNameSubmit={handleNameSubmit}
                         onSignOut={handleLogout}
-                        setGlobalClassName={setStudentClassName}
                     />
                 )}
             </main>

@@ -98,15 +98,34 @@ const TeacherDashboard: React.FC = () => {
                 ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
                 transform transition-all duration-300 ease-in-out flex-col h-full overflow-hidden
             `}>
+                {/* Logo/Branding - Same height as header (h-16) */}
+                <div className="h-16 flex-shrink-0 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
+                    <div className={`flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
+                        <img
+                            src="/shape of the day logo.png"
+                            alt="Shape of the Day"
+                            className="w-8 h-8 flex-shrink-0 aspect-square object-contain"
+                        />
+                        <span className={`
+                            font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap
+                            transition-all duration-300 ease-in-out
+                            ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'opacity-100'}
+                        `}>
+                            Shape of the Day
+                        </span>
+                    </div>
+                </div>
+
                 <div className="p-4 flex justify-end md:hidden flex-shrink-0">
                     <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
                         <X />
                     </button>
                 </div>
 
-                <nav className="flex-1 min-h-0 p-4 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden">
+                <nav id="teacher-sidebar-nav" aria-label="Main navigation" className="flex-1 min-h-0 p-4 overflow-y-auto custom-scrollbar overflow-x-hidden">
+                    <ul className="space-y-2 list-none m-0 p-0">
                     {menuItems.map(item => (
-                        <div key={item.id}>
+                        <li key={item.id}>
                             <button
                                 onClick={() => handleTabChange(item.id)}
                                 className={`
@@ -121,6 +140,17 @@ const TeacherDashboard: React.FC = () => {
                                 `}
                                 title={isCollapsed ? item.label : undefined}
                                 aria-label={item.label}
+                                aria-expanded={
+                                    item.id === 'classrooms' ? (isClassroomsMenuOpen && !isCollapsed) :
+                                    (item.id === 'live' || item.id === 'data') ? (activeTab === item.id && !isCollapsed) :
+                                    undefined
+                                }
+                                aria-controls={
+                                    item.id === 'classrooms' ? 'submenu-classrooms' :
+                                    item.id === 'live' ? 'submenu-live' :
+                                    item.id === 'data' ? 'submenu-data' :
+                                    undefined
+                                }
                             >
                                 <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'
                                     }`}>
@@ -137,76 +167,97 @@ const TeacherDashboard: React.FC = () => {
                             </button>
 
                             {/* Sub-menu for Live View */}
-                            <div className={`
-                                overflow-hidden transition-all duration-300 ease-in-out
-                                ${!isCollapsed && item.id === 'live' && activeTab === 'live' ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'}
-                            `}>
-                                <div className="ml-9 space-y-1">
-                                    <button
-                                        onClick={() => setLiveViewSubTab('tasks')}
-                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'tasks' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
-                                    >
-                                        By Task
-                                    </button>
-                                    <button
-                                        onClick={() => setLiveViewSubTab('students')}
-                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'students' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
-                                    >
-                                        By Student
-                                    </button>
-                                </div>
+                            <div
+                                id="submenu-live"
+                                className={`
+                                    grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
+                                    ${!isCollapsed && item.id === 'live' && activeTab === 'live' ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
+                                `}
+                            >
+                                <ul className="min-h-0 overflow-hidden ml-9 space-y-1 list-none m-0 p-0">
+                                    <li>
+                                        <button
+                                            onClick={() => setLiveViewSubTab('tasks')}
+                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'tasks' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            By Task
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => setLiveViewSubTab('students')}
+                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'students' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            By Student
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
 
                             {/* Sub-menu for Data (Classrooms) */}
-                            <div className={`
-                                overflow-hidden transition-all duration-300 ease-in-out
-                                ${!isCollapsed && item.id === 'data' && activeTab === 'data' ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'}
-                            `}>
-                                <div className="ml-9 space-y-1">
-                                    <button
-                                        onClick={() => setClassroomSubTab('history')}
-                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'history' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
-                                    >
-                                        History
-                                    </button>
-                                    <button
-                                        onClick={() => setClassroomSubTab('analytics')}
-                                        className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'analytics' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
-                                    >
-                                        Analytics
-                                    </button>
-                                </div>
+                            <div
+                                id="submenu-data"
+                                className={`
+                                    grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
+                                    ${!isCollapsed && item.id === 'data' && activeTab === 'data' ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
+                                `}
+                            >
+                                <ul className="min-h-0 overflow-hidden ml-9 space-y-1 list-none m-0 p-0">
+                                    <li>
+                                        <button
+                                            onClick={() => setClassroomSubTab('history')}
+                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'history' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            History
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button
+                                            onClick={() => setClassroomSubTab('analytics')}
+                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'analytics' ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400 hover:text-gray-600'}`}
+                                        >
+                                            Analytics
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
 
                             {/* Sub-menu for Classrooms Selector */}
-                            <div className={`
-                                overflow-hidden transition-all duration-300 ease-in-out
-                                ${!isCollapsed && item.id === 'classrooms' && isClassroomsMenuOpen ? 'max-h-96 opacity-100 mt-2' : 'max-h-0 opacity-0'}
-                            `}>
-                                <div className="ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 space-y-1">
+                            <div
+                                id="submenu-classrooms"
+                                className={`
+                                    grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
+                                    ${!isCollapsed && item.id === 'classrooms' && isClassroomsMenuOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
+                                `}
+                            >
+                                <ul className="min-h-0 overflow-hidden ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 space-y-1 list-none m-0 p-0">
                                     {classrooms.map(cls => (
-                                        <button
-                                            key={cls.id}
-                                            onClick={() => handleClassSelect(cls.id)}
-                                            className={`
-                                                w-full text-left p-2 text-sm rounded-lg font-medium transition-colors
-                                                ${currentClassId === cls.id ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}
-                                            `}
-                                        >
-                                            <span className="truncate">{cls.name}</span>
-                                        </button>
+                                        <li key={cls.id}>
+                                            <button
+                                                onClick={() => handleClassSelect(cls.id)}
+                                                className={`
+                                                    w-full text-left p-2 text-sm rounded-lg font-medium transition-colors
+                                                    ${currentClassId === cls.id ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}
+                                                `}
+                                            >
+                                                <span className="truncate">{cls.name}</span>
+                                            </button>
+                                        </li>
                                     ))}
-                                    <button
-                                        onClick={() => setIsClassModalOpen(true)}
-                                        className="w-full text-left p-2 text-sm rounded-lg font-bold text-brand-accent hover:bg-brand-accent/10 transition-colors flex items-center gap-2 mt-2"
-                                    >
-                                        <Plus size={14} />
-                                        Add Class
-                                    </button>
-                                </div>
+                                    <li>
+                                        <button
+                                            onClick={() => setIsClassModalOpen(true)}
+                                            className="w-full text-left p-2 text-sm rounded-lg font-bold text-brand-accent hover:bg-brand-accent/10 transition-colors flex items-center gap-2 mt-2"
+                                        >
+                                            <Plus size={14} />
+                                            Add Class
+                                        </button>
+                                    </li>
+                                </ul>
                             </div>
-                        </div>
+                        </li>
                     ))}
+                    </ul>
 
                     {/* Sidebar Toggle */}
 
@@ -218,6 +269,9 @@ const TeacherDashboard: React.FC = () => {
                             setIsCollapsed(!isCollapsed);
                             setIsClassroomsMenuOpen(false);
                         }}
+                        aria-expanded={!isCollapsed}
+                        aria-controls="teacher-sidebar-nav"
+                        aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                         className={`hidden md:flex group relative items-center h-12 rounded-xl transition-colors duration-300 font-bold overflow-hidden ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
@@ -302,11 +356,21 @@ const TeacherDashboard: React.FC = () => {
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 relative">
                 {/* Header */}
-                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-6 z-dropdown">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            {menuItems.find(i => i.id === activeTab)?.label}
-                        </h2>
+                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-6 z-dropdown border-b border-gray-200 dark:border-gray-800">
+                    {/* Left: Current Section */}
+                    <h2 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        {menuItems.find(i => i.id === activeTab)?.label}
+                    </h2>
+                    {/* Right: Class Name + Date */}
+                    <div className="flex items-center gap-4 text-sm font-medium">
+                        {currentClass && (
+                            <span className="hidden md:inline text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                {currentClass.name}
+                            </span>
+                        )}
+                        <span className="text-gray-500 dark:text-gray-400">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
                     </div>
                 </header>
 
@@ -363,65 +427,75 @@ const TeacherDashboard: React.FC = () => {
             <DummyDataControls />
 
             {/* Mobile Bottom Navigation - iOS/Android Style */}
-            <nav className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
-                <div className="flex justify-around items-center h-16 px-2">
-                    <button
-                        onClick={() => setActiveTab('classrooms')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'classrooms'
-                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
-                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}
-                        aria-label="Classrooms"
-                    >
-                        <School className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Classes</span>
-                    </button>
+            <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
+                <ul className="flex justify-around items-center h-16 px-2 list-none m-0 p-0">
+                    <li>
+                        <button
+                            onClick={() => setActiveTab('classrooms')}
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${activeTab === 'classrooms'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Classrooms"
+                        >
+                            <School className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Classes</span>
+                        </button>
+                    </li>
 
-                    <button
-                        onClick={() => setActiveTab('tasks')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'tasks'
-                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
-                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}
-                        aria-label="Task Manager"
-                    >
-                        <LayoutDashboard className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Tasks</span>
-                    </button>
+                    <li>
+                        <button
+                            onClick={() => setActiveTab('tasks')}
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${activeTab === 'tasks'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Task Manager"
+                        >
+                            <LayoutDashboard className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Tasks</span>
+                        </button>
+                    </li>
 
-                    <button
-                        onClick={() => setActiveTab('shape')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'shape'
-                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
-                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}
-                        aria-label="Shape of Day"
-                    >
-                        <Clock className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Shape</span>
-                    </button>
+                    <li>
+                        <button
+                            onClick={() => setActiveTab('shape')}
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${activeTab === 'shape'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Shape of Day"
+                        >
+                            <Clock className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Shape</span>
+                        </button>
+                    </li>
 
-                    <button
-                        onClick={() => setActiveTab('live')}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none ${activeTab === 'live'
-                            ? 'border-blue-500 text-blue-600 dark:text-blue-500'
-                            : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
-                            }`}
-                        aria-label="Live View"
-                    >
-                        <Activity className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">Live</span>
-                    </button>
+                    <li>
+                        <button
+                            onClick={() => setActiveTab('live')}
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${activeTab === 'live'
+                                ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Live View"
+                        >
+                            <Activity className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Live</span>
+                        </button>
+                    </li>
 
-                    <button
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none"
-                        aria-label="Settings & More"
-                    >
-                        <Home className="w-5 h-5" />
-                        <span className="text-[10px] font-bold">More</span>
-                    </button>
-                </div>
+                    <li>
+                        <button
+                            onClick={() => setIsSettingsOpen(true)}
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark"
+                            aria-label="Settings & More"
+                        >
+                            <Home className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">More</span>
+                        </button>
+                    </li>
+                </ul>
             </nav>
         </div>
     );

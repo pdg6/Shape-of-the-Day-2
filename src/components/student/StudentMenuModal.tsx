@@ -100,6 +100,9 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                     </div>
                     <button
                         onClick={toggleDarkMode}
+                        role="switch"
+                        aria-checked={darkMode}
+                        aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                         className={`
                             relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
                             ${darkMode ? 'bg-emerald-500' : 'bg-gray-300 border border-gray-400'}
