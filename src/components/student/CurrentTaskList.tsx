@@ -154,21 +154,52 @@ interface TaskCardProps {
     onUpdateStatus: (taskId: string, status: TaskStatus) => void;
     onOpenOverlay: (task: Task) => void;
     assignedDate?: string;
-    formatDate: (dateString: string) => string;
+    formatDateRange: (assigned?: string, due?: string) => string;
 }
 
 /**
- * TaskCard Component
- * 
- * Displays a single task with its details and status controls.
- * Handles the logic for clicking status buttons and opening the question overlay.
+ * Get the display label for a status
  */
-const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay, assignedDate, formatDate }) => {
-    // Helper to render the small status badge next to the title
-    // const getStatusBadge = (status: TaskStatus) => { ... } - Replaced by StatusBadge component
+const getStatusLabel = (status: TaskStatus): string => {
+    switch (status) {
+        case 'todo': return 'To Do';
+        case 'in_progress': return 'In Progress';
+        case 'stuck': return 'Stuck';
+        case 'question': return 'Question';
+        case 'done': return 'Complete';
+        default: return 'To Do';
+    }
+};
+
+/**
+ * TaskCard Component
+ *
+ * Displays a single task with its details and status controls.
+ * New layout: Left column (title, dates, status buttons), Right column (description).
+ * Floating status button in top right that expands to show reset option.
+ */
+const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay, assignedDate, formatDateRange }) => {
+    const [isStatusExpanded, setIsStatusExpanded] = useState(false);
+    const statusButtonRef = React.useRef<HTMLDivElement>(null);
+
+    // Handle click outside to collapse the status button
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (statusButtonRef.current && !statusButtonRef.current.contains(event.target as Node)) {
+                setIsStatusExpanded(false);
+            }
+        };
+
+        if (isStatusExpanded) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isStatusExpanded]);
 
     const activeAction = STATUS_ACTIONS.find(a => a.id === task.status);
-    // Match parent border color to status color, default to gray
     const cardBorderClass = activeAction && task.status !== 'todo' ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700';
 
     const isDone = task.status === 'done';
@@ -176,81 +207,120 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
     const handleActionClick = (actionId: TaskStatus) => {
         onUpdateStatus(task.id, actionId);
 
-        // Open overlay for Question or Stuck statuses
         if (actionId === 'question' || actionId === 'stuck') {
-            // We pass the task with the NEW status conceptually
             onOpenOverlay({ ...task, status: actionId });
         }
     };
 
+    const handleReset = () => {
+        onUpdateStatus(task.id, 'todo');
+        setIsStatusExpanded(false);
+    };
+
+    const handleStatusButtonClick = () => {
+        if (task.status !== 'todo') {
+            setIsStatusExpanded(!isStatusExpanded);
+        }
+    };
+
+    // Filter out the reset action from the main buttons (it's now in the floating button)
+    const mainStatusActions = STATUS_ACTIONS.filter(a => a.id !== 'todo');
+
     return (
-        <div className={`bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-2xl hover:shadow-lg dark:hover:shadow-black/30 transition-all duration-300 border-[3px] ${cardBorderClass} w-full max-w-full hover:scale-[1.005]`}>
-            <div className="flex items-start justify-between gap-4">
-                <div className={`flex-1 transition-opacity duration-300 ${isDone ? 'opacity-60' : ''}`}>
-                    <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h3 className={`text-lg font-bold ${isDone ? 'text-gray-500 dark:text-gray-500 line-through decoration-2 decoration-gray-300 dark:decoration-gray-600' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
-                            {task.title}
-                        </h3>
-                        <StatusBadge status={task.status} />
+        <div className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-2xl hover:shadow-lg dark:hover:shadow-black/30 transition-all duration-300 border-[3px] ${cardBorderClass} w-full max-w-full min-h-[160px]`}>
+            {/* Main Content - Two Column Layout */}
+            <div className="flex gap-6">
+                {/* Left Column - Title, Dates, Status Buttons */}
+                <div className={`flex flex-col gap-3 w-48 shrink-0 transition-opacity duration-300 ${isDone ? 'opacity-60' : ''}`}>
+                    {/* Title */}
+                    <h3 className={`text-lg font-bold pr-2 ${isDone ? 'text-gray-500 dark:text-gray-500 line-through decoration-2 decoration-gray-300 dark:decoration-gray-600' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                        {task.title}
+                    </h3>
+
+                    {/* Date Information */}
+                    {(assignedDate || task.dueDate) && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            {formatDateRange(assignedDate, task.dueDate)}
+                        </div>
+                    )}
+
+                    {/* Status Action Buttons */}
+                    <div className="flex items-center gap-1 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border border-gray-100 dark:border-gray-800 mt-auto">
+                        {mainStatusActions.map((action) => {
+                            const Icon = action.icon;
+                            const isActive = task.status === action.id;
+
+                            return (
+                                <button
+                                    key={action.id}
+                                    onClick={() => handleActionClick(action.id)}
+                                    title={action.label}
+                                    aria-label={action.label}
+                                    className={`
+                                        p-2.5 rounded-lg transition-all duration-200 relative group
+                                        min-w-[40px] min-h-[40px] flex items-center justify-center
+                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface
+                                        ${isActive
+                                            ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm ring-1 ring-black/5 dark:ring-white/10`
+                                            : `text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-brand-darkSurface hover:text-gray-600 dark:hover:text-gray-300`}
+                                    `}
+                                >
+                                    <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                                    {/* Tooltip */}
+                                    <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-tooltip">
+                                        {action.label}
+                                    </span>
+                                </button>
+                            );
+                        })}
                     </div>
-                    <p className={`text-sm leading-relaxed mb-2 ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
+                </div>
+
+                {/* Right Column - Description with floating status button */}
+                <div className={`flex-1 transition-opacity duration-300 ${isDone ? 'opacity-60' : ''}`}>
+                    {/* Floating Status Button - floats right so text wraps around it */}
+                    <div
+                        ref={statusButtonRef}
+                        className="float-right ml-3 mb-2 z-10"
+                    >
+                        <div className={`flex items-center overflow-hidden rounded-full border-2 transition-all duration-300 ease-out ${
+                            activeAction ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700'
+                        } ${isStatusExpanded ? 'shadow-lg scale-105' : 'shadow-md hover:shadow-lg hover:scale-[1.02]'}`}>
+                            {/* Reset Button - Slides in from left */}
+                            <button
+                                onClick={handleReset}
+                                className={`flex items-center gap-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all duration-300 ease-out overflow-hidden ${
+                                    isStatusExpanded ? 'w-[72px] px-3 py-2 opacity-100' : 'w-0 px-0 py-2 opacity-0'
+                                }`}
+                            >
+                                <RotateCcw className={`w-4 h-4 shrink-0 transition-transform duration-300 ${isStatusExpanded ? 'rotate-0' : '-rotate-180'}`} />
+                                <span className="whitespace-nowrap">Reset</span>
+                            </button>
+
+                            {/* Current Status Button */}
+                            <button
+                                onClick={handleStatusButtonClick}
+                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                                    activeAction ? `${activeAction.activeColor} bg-white dark:bg-brand-darkSurface` : 'text-gray-500 bg-white dark:bg-brand-darkSurface'
+                                } ${task.status !== 'todo' ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
+                            >
+                                {activeAction && <activeAction.icon className={`w-4 h-4 transition-transform duration-200 ${isStatusExpanded ? 'rotate-0' : ''}`} />}
+                                <span className="whitespace-nowrap">{getStatusLabel(task.status)}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <p className={`text-sm leading-relaxed ${isDone ? 'text-gray-400 dark:text-gray-600' : 'text-brand-textDarkSecondary dark:text-brand-textSecondary'}`}>
                         {task.description}
                     </p>
-                    {/* Date Information */}
-                    <div className="flex flex-wrap gap-3 text-xs mb-2">
-                        {assignedDate && (
-                            <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-                                <span className="font-medium">Assigned:</span>
-                                <span>{formatDate(assignedDate)}</span>
-                            </div>
-                        )}
-                        {task.dueDate && (
-                            <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-                                <span className="font-medium">Due:</span>
-                                <span>{formatDate(task.dueDate)}</span>
-                            </div>
-                        )}
-                    </div>
+
                     {/* Show comment preview if exists */}
                     {task.comment && (
-                        <div className="mt-3 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-brand-light dark:bg-brand-dark p-3 rounded-lg border border-gray-100 dark:border-gray-800 flex items-start gap-2">
+                        <div className="mt-3 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-brand-light dark:bg-brand-dark p-3 rounded-lg border border-gray-100 dark:border-gray-800 flex items-start gap-2 clear-right">
                             <span className="text-brand-accent font-bold">Note:</span>
                             "{task.comment}"
                         </div>
                     )}
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border border-gray-100 dark:border-gray-800">
-                    {STATUS_ACTIONS.map((action) => {
-                        const Icon = action.icon;
-                        const isActive = task.status === action.id;
-
-                        // Don't show reset button if already in todo state, but show others
-                        if (action.id === 'todo' && task.status === 'todo') return null;
-
-                        return (
-                            <button
-                                key={action.id}
-                                onClick={() => handleActionClick(action.id)}
-                                title={action.label}
-                                aria-label={action.label}
-                                className={`
-                  p-3 rounded-lg transition-all duration-200 relative group
-                  min-w-[44px] min-h-[44px] flex items-center justify-center
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface
-                  ${isActive
-                                        ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm ring-1 ring-black/5 dark:ring-white/10`
-                                        : `text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-brand-darkSurface hover:text-gray-600 dark:hover:text-gray-300`}
-                `}
-                            >
-                                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
-                                {/* Tooltip */}
-                                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-tooltip">
-                                    {action.label}
-                                </span>
-                            </button>
-                        );
-                    })}
                 </div>
             </div>
         </div>
@@ -276,16 +346,64 @@ interface CurrentTaskListProps {
 const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus, onUpdateComment, assignedDate }) => {
     const [overlayTask, setOverlayTask] = useState<Task | null>(null);
 
-    // Helper function to format dates - shows "Today" if it's today, otherwise short date
-    const formatDate = (dateString: string): string => {
-        const today = new Date().toISOString().split('T')[0];
-        const taskDate = dateString.includes('-') ? dateString : new Date(dateString).toISOString().split('T')[0];
+    // Helper function to format a single date
+    const formatSingleDate = (dateString: string): string => {
+        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
 
-        if (taskDate === today) {
-            return 'Today';
+    // Helper to check if a date is today
+    const isToday = (dateString: string): boolean => {
+        const today = new Date().toISOString().split('T')[0];
+        const checkDate = dateString.includes('-') ? dateString : new Date(dateString).toISOString().split('T')[0];
+        return checkDate === today;
+    };
+
+    // Helper to check if two dates are the same
+    const isSameDay = (date1: string, date2: string): boolean => {
+        const d1 = date1.includes('-') ? date1 : new Date(date1).toISOString().split('T')[0];
+        const d2 = date2.includes('-') ? date2 : new Date(date2).toISOString().split('T')[0];
+        return d1 === d2;
+    };
+
+    // Format date range for display
+    const formatDateRange = (assigned?: string, due?: string): string => {
+        // No dates at all
+        if (!assigned && !due) return '';
+
+        // Only due date
+        if (!assigned && due) {
+            return isToday(due) ? 'Due Today' : formatSingleDate(due);
         }
 
-        return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        // Only assigned date
+        if (assigned && !due) {
+            return isToday(assigned) ? 'Today' : formatSingleDate(assigned);
+        }
+
+        // Both dates exist
+        if (assigned && due) {
+            const assignedIsToday = isToday(assigned);
+            const dueIsToday = isToday(due);
+            const sameDay = isSameDay(assigned, due);
+
+            // Same day task
+            if (sameDay) {
+                return assignedIsToday ? 'Due Today' : formatSingleDate(due);
+            }
+
+            // Multi-day task
+            const assignedDate = new Date(assigned);
+            const dueDate = new Date(due);
+            const sameMonth = assignedDate.getMonth() === dueDate.getMonth() &&
+                              assignedDate.getFullYear() === dueDate.getFullYear();
+
+            const assignedStr = assignedIsToday ? 'Today' : formatSingleDate(assigned);
+            const dueStr = dueIsToday ? 'Today' : (sameMonth ? dueDate.getDate().toString() : formatSingleDate(due));
+
+            return `${assignedStr} - ${dueStr}`;
+        }
+
+        return '';
     };
 
     const handleOpenOverlay = (task: Task) => {
@@ -329,7 +447,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
                     onUpdateStatus={onUpdateStatus}
                     onOpenOverlay={handleOpenOverlay}
                     assignedDate={assignedDate}
-                    formatDate={formatDate}
+                    formatDateRange={formatDateRange}
                 />
             ))}
 

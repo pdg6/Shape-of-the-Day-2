@@ -304,7 +304,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 <main className="hidden md:flex flex-1 overflow-hidden">
                     {desktopTab === 'tasks' ? (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                            <div className="max-w-5xl mx-auto">
+                            <div className="max-w-4xl mx-auto">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-xl font-bold text-emerald-600 dark:text-emerald-500">
                                         {tasksLeft} Tasks
@@ -341,7 +341,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     ) : (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                            <div className="max-w-5xl mx-auto">
+                            <div className="max-w-4xl mx-auto">
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-xl font-bold">Schedule</h2>
                                     <span className="text-sm text-gray-500 dark:text-gray-400">
