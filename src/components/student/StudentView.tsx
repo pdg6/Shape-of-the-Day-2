@@ -269,47 +269,56 @@ const StudentView: React.FC<StudentViewProps> = ({
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-                {/* Mobile Header - Logo, Class Name, Task Count, Date */}
-                <header className="md:hidden bg-brand-lightSurface dark:bg-brand-darkSurface px-4 py-3">
-                    <div className="max-w-3xl mx-auto flex items-center gap-3 overflow-x-auto no-scrollbar">
-
-
-                        {/* 2. Tasks & Progress */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="text-base font-bold text-emerald-600 dark:text-emerald-500">
-                                {tasksLeft} Tasks
-                            </span>
-                            <span className="text-base text-gray-500 dark:text-gray-400">
-                                {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Done
-                            </span>
-                        </div>
-
-                        {/* 3. Class Name (Full) */}
-                        <h1 className="text-base font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap flex-shrink-0 ml-auto">
-                            {currentClassName}
-                        </h1>
-
-                        {/* 4. Date (Short) */}
-                        <span className="text-base text-gray-500 dark:text-gray-400 whitespace-nowrap flex-shrink-0">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+                {/* Mobile Header - Class Name (left), Tasks & Progress + Date (right) */}
+                <header className="md:hidden h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
+                    {/* Left: Class Name */}
+                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                        {currentClassName}
+                    </h1>
+                    {/* Right: Tasks & Progress (emerald) + Date (gray) */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-fluid-sm font-semibold text-emerald-600 dark:text-emerald-500">
+                            {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
+                        </span>
+                        <span className="text-fluid-xs font-medium text-gray-500 dark:text-gray-400">
                             {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </span>
                     </div>
                 </header>
+                {/* Mobile header fade gradient */}
+                <div
+                    className="md:hidden absolute left-0 right-0 top-16 h-8 pointer-events-none z-dropdown bg-gradient-to-b from-brand-lightSurface dark:from-brand-darkSurface to-transparent"
+                    aria-hidden="true"
+                />
+
+                {/* Desktop Header - Class Name (left), Tasks & Progress + Date (right) */}
+                <header className="hidden md:flex h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-center justify-between border-b border-gray-200 dark:border-gray-800">
+                    {/* Left: Class Name */}
+                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                        {currentClassName}
+                    </h1>
+                    {/* Right: Tasks & Progress (emerald) + Date (gray) */}
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-fluid-lg font-semibold text-emerald-600 dark:text-emerald-500">
+                            {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
+                        </span>
+                        <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                    </div>
+                </header>
+                {/* Desktop header fade gradient */}
+                <div
+                    className="hidden md:block absolute left-0 right-0 top-16 h-8 pointer-events-none z-dropdown bg-gradient-to-b from-brand-lightSurface dark:from-brand-darkSurface to-transparent"
+                    aria-hidden="true"
+                />
 
                 {/* Desktop Content - Split into Tasks and Schedule based on tab */}
                 <main className="hidden md:flex flex-1 overflow-hidden">
                     {desktopTab === 'tasks' ? (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="max-w-4xl mx-auto">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-fluid-xl font-bold text-emerald-600 dark:text-emerald-500">
-                                        {tasksLeft} Tasks
-                                    </h2>
-                                    <div className="text-fluid-xl font-bold text-gray-500 dark:text-gray-400">
-                                        {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}% Complete
-                                    </div>
-                                </div>
                                 {showPreview ? (
                                     <DayTaskPreview
                                         date={selectedDate}
@@ -339,12 +348,6 @@ const StudentView: React.FC<StudentViewProps> = ({
                     ) : (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="max-w-4xl mx-auto">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h2 className="text-fluid-xl font-bold">Schedule</h2>
-                                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                                        {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                                    </span>
-                                </div>
                                 <div className="mb-6">
                                     <MiniCalendar
                                         selectedDate={selectedDate}
@@ -352,7 +355,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     />
                                 </div>
                                 <div className="mt-6">
-                                    <h3 className="text-fluid-lg font-bold mb-4">
+                                    <h3 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                         Tasks for {isToday ? 'Today' : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                     </h3>
                                     <DayTaskPreview
@@ -409,7 +412,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 />
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-base font-bold mb-3">
+                                <h3 className="text-fluid-lg font-bold mb-3 text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                     {isToday ? "Today's Tasks" : `Tasks for ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`}
                                 </h3>
                                 <DayTaskPreview
@@ -450,6 +453,12 @@ const StudentView: React.FC<StudentViewProps> = ({
                 }}
             />
 
+            {/* Mobile footer fade gradient - content fades as it scrolls under */}
+            <div
+                className="md:hidden fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px)+0.5rem)] left-0 right-0 h-8 pointer-events-none z-sidebar bg-gradient-to-t from-brand-lightSurface dark:from-brand-darkSurface to-transparent"
+                aria-hidden="true"
+            />
+
             {/* Mobile Bottom Navigation - Menu, Tasks, Schedule */}
             <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
                 <ul className="flex justify-around items-center h-16 px-2 list-none m-0 p-0">
@@ -463,37 +472,37 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setShowMenuModal(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark"
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
                             aria-label="Menu"
                         >
-                            <Menu className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Menu</span>
+                            <Menu className="w-6 h-6" />
+                            <span className="text-fluid-xs font-bold">Menu</span>
                         </button>
                     </li>
                     <li>
                         <button
                             onClick={() => setMobileTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${mobileTab === 'tasks'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50 ${mobileTab === 'tasks'
                                 ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Tasks"
                         >
-                            <ListTodo className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Tasks</span>
+                            <ListTodo className="w-6 h-6" />
+                            <span className="text-fluid-xs font-bold">Tasks</span>
                         </button>
                     </li>
                     <li>
                         <button
                             onClick={() => setMobileTab('schedule')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-14 rounded-lg border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-brand-dark ${mobileTab === 'schedule'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50 ${mobileTab === 'schedule'
                                 ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Schedule"
                         >
-                            <Calendar className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Schedule</span>
+                            <Calendar className="w-6 h-6" />
+                            <span className="text-fluid-xs font-bold">Schedule</span>
                         </button>
                     </li>
                 </ul>

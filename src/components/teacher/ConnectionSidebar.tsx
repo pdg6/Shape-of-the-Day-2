@@ -88,7 +88,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
 
                         {/* Join URL */}
                         <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-[3px] border-brand-accent/20 bg-brand-accent/5">
-                            <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Join at</span>
+                            <span className="text-fluid-xs text-brand-accent uppercase tracking-wider font-semibold mb-1">Join at</span>
                             <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 shape-of-the-day.com
                             </span>
@@ -96,7 +96,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
 
                         {/* Class Code */}
                         <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-[3px] border-brand-accent/20 bg-brand-accent/5">
-                            <span className="text-[10px] text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
+                            <span className="text-fluid-xs text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
                             <span className="text-xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
                             </span>
@@ -115,15 +115,15 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                     {/* Live Roster Section */}
                     <div className="flex-1 overflow-y-auto bg-brand-lightSurface dark:bg-brand-darkSurface">
                         <div className="p-4 space-y-2">
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-brand-lightSurface dark:bg-brand-darkSurface py-2 z-10">
+                            <h3 className="text-fluid-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-brand-lightSurface dark:bg-brand-darkSurface py-2 z-10">
                                 <span>Live Students</span>
-                                <span className="bg-brand-accent/10 text-brand-accent px-2 py-0.5 rounded-full text-[10px] font-bold">
+                                <span className="bg-brand-accent/10 text-brand-accent px-2 py-0.5 rounded-full text-fluid-xs font-bold">
                                     {liveStudents.length}
                                 </span>
                             </h3>
 
                             {liveStudents.length === 0 ? (
-                                <div className="text-center py-8 text-gray-400 text-sm italic">
+                                <div className="text-center py-8 text-gray-400 text-fluid-sm italic">
                                     Waiting for students...
                                 </div>
                             ) : (
@@ -134,14 +134,14 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                         tabIndex={0}
                                         role="listitem"
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
+                                        <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-fluid-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
                                             {student.displayName.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                            <p className="text-fluid-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
                                                 {student.displayName}
                                             </p>
-                                            <p className="text-[10px] text-gray-500 truncate">
+                                            <p className="text-fluid-xs text-gray-500 truncate">
                                                 {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
                                             </p>
                                         </div>
