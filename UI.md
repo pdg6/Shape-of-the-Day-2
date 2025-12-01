@@ -12,6 +12,127 @@ This document outlines the standard UI patterns, animations, color themes, and r
 - **Mobile-First Responsive:** All layouts adapt gracefully from mobile to desktop using fluid utilities.
 - **Accessibility-First:** Skip links, ARIA attributes, and keyboard navigation are built-in.
 - **Theme-Aware Colors:** Components adapt accent colors based on user role and classroom settings.
+- **60-30-10 Color Rule:** Balanced color distribution for visual hierarchy and harmony.
+
+---
+
+## 60-30-10 Color Rule
+
+The 60-30-10 rule is a classic design principle for creating balanced, visually appealing color schemes. It ensures a dominant color anchors the design while secondary and accent colors add interest without overwhelming.
+
+### Distribution
+
+| Percentage | Role | Application | Colors Used |
+|------------|------|-------------|-------------|
+| **60%** | Dominant | Backgrounds, large surfaces | `brand-lightSurface` / `brand-darkSurface`, `brand-light` / `brand-dark` |
+| **30%** | Secondary | Cards, containers, borders, text | `gray-200` / `gray-700`, `brand-textDarkPrimary` / `brand-textPrimary` |
+| **10%** | Accent | Interactive elements, highlights, CTAs | `brand-accent` (dynamic), status colors |
+
+### Visual Breakdown
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                                                             │
+│   60% DOMINANT - Background surfaces                        │
+│   bg-brand-lightSurface / dark:bg-brand-darkSurface         │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │                                                     │   │
+│   │   30% SECONDARY - Cards, borders, text              │   │
+│   │   border-gray-200 / dark:border-gray-700            │   │
+│   │   text-brand-textDarkPrimary / dark:text-brand-     │   │
+│   │   textPrimary                                       │   │
+│   │                                                     │   │
+│   │   ┌─────────────────────────────────────────────┐   │   │
+│   │   │  10% ACCENT                                 │   │   │
+│   │   │  border-brand-accent text-brand-accent      │   │   │
+│   │   │  Buttons, active states, focus rings        │   │   │
+│   │   └─────────────────────────────────────────────┘   │   │
+│   │                                                     │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Implementation Guidelines
+
+#### 60% Dominant (Backgrounds)
+```jsx
+// Page backgrounds
+className="bg-brand-light dark:bg-brand-dark"
+
+// Content area surfaces
+className="bg-brand-lightSurface dark:bg-brand-darkSurface"
+```
+
+#### 30% Secondary (Structure & Text)
+```jsx
+// Card borders (inactive state)
+className="border-[3px] border-gray-200 dark:border-gray-700"
+
+// Primary text
+className="text-brand-textDarkPrimary dark:text-brand-textPrimary"
+
+// Secondary text
+className="text-gray-500 dark:text-gray-400"
+
+// Dividers and separators
+className="border-b border-gray-200 dark:border-gray-800"
+```
+
+#### 10% Accent (Highlights & CTAs)
+```jsx
+// Active/focused states
+className="border-brand-accent text-brand-accent"
+
+// Focus rings
+className="focus:ring-2 focus:ring-brand-accent/20"
+
+// Primary buttons
+className="bg-brand-accent text-white"
+
+// Status indicators (stuck, question, etc.)
+className="bg-red-500"  // Semantic, not theme-based
+```
+
+### Do's and Don'ts
+
+**✅ Do:**
+- Use accent color sparingly for maximum impact
+- Reserve accent for interactive elements and important CTAs
+- Let the dominant background breathe with whitespace
+- Use secondary colors for structural elements
+
+**❌ Don't:**
+- Fill large areas with accent color
+- Use accent for non-interactive decorative elements
+- Overuse accent in a single view
+- Mix multiple accent colors (use the single `brand-accent`)
+
+### Example: Student Task Card
+
+```jsx
+{/* 60% - Card background (dominant) */}
+<div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl p-4
+                {/* 30% - Border (secondary) */}
+                border-[3px] border-gray-200 dark:border-gray-700">
+  
+  {/* 30% - Text (secondary) */}
+  <h3 className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">
+    Task Title
+  </h3>
+  <p className="text-gray-500 dark:text-gray-400 text-sm">
+    Task description
+  </p>
+  
+  {/* 10% - Interactive accent */}
+  <button className="mt-3 px-4 py-2 rounded-lg
+                     border-[3px] border-brand-accent text-brand-accent
+                     hover:bg-brand-accent/10">
+    Mark Complete
+  </button>
+</div>
+```
 
 ---
 
