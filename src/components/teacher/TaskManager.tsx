@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Link as LinkIcon, Plus, Check, Upload, Loader, Trash2, AlertCircle, X } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Check, Upload, Loader, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../shared/Button';
-import { validateFile, sanitizeTaskData, isValidURL } from '../../utils/validation';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
-import { collection, addDoc, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom } from '../../types';
 
-interface TaskDraft {
-    id: number;
+// --- Types ---
+
+interface Task {
+    id: string;
     title: string;
     description: string;
     linkURL: string;
@@ -17,29 +18,50 @@ interface TaskDraft {
     startDate: string;
     endDate: string;
     selectedRoomIds: string[];
-    isUploading: false;
+    presentationOrder: number;
+    createdAt: any;
 }
 
+interface TaskFormData {
+    title: string;
+    description: string;
+    linkURL: string;
+    startDate: string;
+    endDate: string;
+    selectedRoomIds: string[];
+}
+
+const INITIAL_FORM_STATE: TaskFormData = {
+    title: '',
+    description: '',
+    linkURL: '',
+    startDate: toDateString(),
+    endDate: toDateString(),
+    selectedRoomIds: []
+};
+
 export default function TaskManager() {
+    // --- State ---
     const [rooms, setRooms] = useState<Classroom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
 
-    // State for the list of tasks being created
-    const [tasks, setTasks] = useState<TaskDraft[]>([{
-        id: Date.now(),
-        title: '',
-        description: '',
-        linkURL: '',
-        imageURL: '',
-        startDate: toDateString(),
-        endDate: toDateString(),
-        selectedRoomIds: [],
-        isUploading: false
-    }]);
+    // Task Data
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loadingTasks, setLoadingTasks] = useState(true);
 
+    // UI State
+    const [selectedDate, setSelectedDate] = useState<string>(toDateString());
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+    const [formData, setFormData] = useState<TaskFormData>(INITIAL_FORM_STATE);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isUploading, setIsUploading] = useState(false); // Simple upload state for now
 
-    // Fetch classrooms on mount
+    // Calendar State
+    const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
+
+    // --- Effects ---
+
+    // Fetch Classrooms
     useEffect(() => {
         const fetchClassrooms = async () => {
             if (!auth.currentUser) return;
@@ -53,458 +75,530 @@ export default function TaskManager() {
                 setRooms(roomData);
             } catch (error) {
                 console.error("Failed to fetch classrooms:", error);
-                // Fallback for demo if no classes found
-                if (auth.currentUser.email === 'demo@teacher.com' || true) { // Always show demo class for now
-                    setRooms([{
-                        id: 'demo-class-123',
-                        name: 'Period 1 - Demo',
-                        teacherId: auth.currentUser.uid,
-                        joinCode: '123456',
-                        subject: 'Demo',
-                        gradeLevel: '10',
-                        color: '#3B82F6',
-                        presentationSettings: { defaultView: 'grid', showTimeEstimates: true, allowStudentSorting: false }
-                    }]);
-                }
             } finally {
                 setLoadingRooms(false);
             }
         };
-
         fetchClassrooms();
     }, []);
 
-    // --- Task Management ---
+    // Fetch Tasks (Real-time)
+    useEffect(() => {
+        if (!auth.currentUser) return;
 
-    const addNewTask = () => {
-        setTasks(prev => [...prev, {
-            id: Date.now(),
-            title: '',
-            description: '',
-            linkURL: '',
-            imageURL: '',
-            startDate: toDateString(),
-            endDate: toDateString(),
-            selectedRoomIds: [],
-            isUploading: false
-        }]);
+        // In a real app, we might filter by teacherId or rely on security rules
+        // For now, let's assume we fetch all tasks created by this teacher
+        // We need a 'teacherId' field on tasks or a subcollection structure.
+        // Assuming 'tasks' collection exists.
+
+        const q = query(
+            collection(db, 'tasks'),
+            where('teacherId', '==', auth.currentUser.uid)
+            // We could order by presentationOrder here, but we do client-side filtering anyway
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const taskData: Task[] = [];
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                taskData.push({
+                    id: doc.id,
+                    ...data,
+                    selectedRoomIds: data.selectedRoomIds || [] // Ensure array exists
+                } as Task);
+            });
+            // Sort by presentationOrder
+            taskData.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+            setTasks(taskData);
+            setLoadingTasks(false);
+        }, (error) => {
+            console.error("Error fetching tasks:", error);
+            setLoadingTasks(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+
+    // --- Helpers ---
+
+    const getWeekDays = (baseDate: Date) => {
+        const days = [];
+        // Start from Monday of the current week
+        const day = baseDate.getDay();
+        const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        const monday = new Date(baseDate);
+        monday.setDate(diff);
+
+        for (let i = 0; i < 5; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            days.push(d);
+        }
+        return days;
     };
 
-    const removeTask = (taskId: number) => {
-        if (tasks.length === 1) return; // Prevent removing the last card
-        setTasks(prev => prev.filter(t => t.id !== taskId));
+    const weekDays = useMemo(() => getWeekDays(calendarBaseDate), [calendarBaseDate]);
+
+    const filteredTasks = useMemo(() => {
+        return tasks.filter(task => {
+            return selectedDate >= task.startDate && selectedDate <= task.endDate;
+        });
+    }, [tasks, selectedDate]);
+
+    const resetForm = () => {
+        setFormData(INITIAL_FORM_STATE);
+        setEditingTaskId(null);
+        setIsUploading(false);
     };
 
-    const updateTask = (taskId: number, field: keyof TaskDraft, value: any) => {
-        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, [field]: value } : t));
+    // --- Handlers ---
+
+    const handleInputChange = (field: keyof TaskFormData, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const toggleRoomForTask = (taskId: number, roomId: string) => {
-        setTasks(prev => prev.map(t => {
-            if (t.id !== taskId) return t;
-            const currentRooms = t.selectedRoomIds;
-            const newRooms = currentRooms.includes(roomId)
-                ? currentRooms.filter(id => id !== roomId)
-                : [...currentRooms, roomId];
-            return { ...t, selectedRoomIds: newRooms };
-        }));
+    const handleRoomToggle = (roomId: string) => {
+        setFormData(prev => {
+            const current = prev.selectedRoomIds;
+            const updated = current.includes(roomId)
+                ? current.filter(id => id !== roomId)
+                : [...current, roomId];
+            return { ...prev, selectedRoomIds: updated };
+        });
     };
 
-    // --- File Upload Logic ---
-
-    const convertFileToDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-
-    const handleFileUpload = async (taskId: number, file: File) => {
-        if (!file) return;
-
-        // Validate file before upload
-        const validation = validateFile(file);
-        if (!validation.valid) {
-            handleError(new Error(validation.errors[0]), validation.errors.join(', '));
+    const handleSave = async () => {
+        if (!auth.currentUser) return;
+        if (!formData.title.trim()) {
+            handleError("Please enter a task title.");
             return;
         }
-
-        updateTask(taskId, 'isUploading', true);
-
-        try {
-            const dataUrl = await convertFileToDataUrl(file);
-            if (file.type.startsWith('image/')) {
-                updateTask(taskId, 'imageURL', dataUrl);
-            } else {
-                updateTask(taskId, 'linkURL', dataUrl);
-            }
-            handleSuccess('Attachment added successfully!');
-        } catch (error) {
-            handleError(error, 'Unable to read file. Please try again.');
-        } finally {
-            updateTask(taskId, 'isUploading', false);
-        }
-    };
-
-    const handlePaste = (e: React.ClipboardEvent, taskId: number) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            if (item && item.type.indexOf('image') !== -1) {
-                const blob = item.getAsFile();
-                if (blob) handleFileUpload(taskId, blob);
-                e.preventDefault();
-            }
-        }
-    };
-
-    // --- Submission Logic ---
-
-    const handleDistributeAll = async () => {
-        if (!auth.currentUser) {
-            handleError(new Error("Not authenticated"));
+        if (formData.selectedRoomIds.length === 0) {
+            handleError("Please assign at least one class.");
             return;
-        }
-
-        // Validation
-        const invalidTasks = tasks.filter(t => !t.title.trim() || t.selectedRoomIds.length === 0);
-        if (invalidTasks.length > 0) {
-            handleError(new Error('Validation failed'), 'Please ensure all tasks have a title and at least one assigned class.');
-            return;
-        }
-
-        // Validate URLs
-        for (const task of tasks) {
-            if (task.linkURL && !isValidURL(task.linkURL)) {
-                handleError(new Error('Invalid URL'), `Invalid link URL in task: ${task.title || 'Untitled'}`);
-                return;
-            }
-            if (task.imageURL && !isValidURL(task.imageURL)) {
-                handleError(new Error('Invalid URL'), `Invalid image URL in task: ${task.title || 'Untitled'}`);
-                return;
-            }
         }
 
         setIsSubmitting(true);
         try {
-            const batchPromises = tasks.flatMap(task => {
-                const sanitizedTask = sanitizeTaskData(task);
+            const taskData = {
+                ...formData,
+                teacherId: auth.currentUser.uid,
+                updatedAt: serverTimestamp()
+            };
 
-                // Create a task document for each assigned room (or one shared task if preferred, but separate allows per-class customization later)
-                // For this implementation, we'll create separate tasks to keep it simple and robust.
-                return task.selectedRoomIds.map(roomId => {
-                    return addDoc(collection(db, 'tasks'), {
-                        teacherId: auth.currentUser!.uid,
-                        classroomId: roomId, // Explicitly link to classroom
-                        title: sanitizedTask.title,
-                        description: sanitizedTask.description,
-                        linkURL: sanitizedTask.linkURL,
-                        imageURL: sanitizedTask.imageURL,
-                        startDate: task.startDate,
-                        endDate: task.endDate,
-                        type: 'assignment', // Default type
-                        createdAt: serverTimestamp(),
-                        status: 'published'
-                    });
+            if (editingTaskId) {
+                // Update
+                await updateDoc(doc(db, 'tasks', editingTaskId), taskData);
+                handleSuccess("Task updated successfully!");
+            } else {
+                // Create
+                // Find max order for new task
+                const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
+
+                await addDoc(collection(db, 'tasks'), {
+                    ...taskData,
+                    presentationOrder: maxOrder + 1,
+                    createdAt: serverTimestamp(),
+                    imageURL: '' // TODO: Handle actual file upload
                 });
-            });
-
-            await Promise.all(batchPromises);
-
-            setTasks([{
-                id: Date.now(),
-                title: '',
-                description: '',
-                linkURL: '',
-                imageURL: '',
-                startDate: toDateString(),
-                endDate: toDateString(),
-                selectedRoomIds: [],
-                isUploading: false
-            }]);
-
-            handleSuccess('All tasks distributed successfully!');
+                handleSuccess("Task created successfully!");
+            }
+            resetForm();
         } catch (error) {
-            handleError(error, 'Failed to distribute tasks. Please try again.');
+            console.error("Error saving task:", error);
+            handleError("Failed to save task.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleDelete = async () => {
+        if (!editingTaskId) return;
+        if (!window.confirm("Are you sure you want to delete this task?")) return;
+
+        setIsSubmitting(true);
+        try {
+            await deleteDoc(doc(db, 'tasks', editingTaskId));
+            handleSuccess("Task deleted.");
+            resetForm();
+        } catch (error) {
+            console.error("Error deleting task:", error);
+            handleError("Failed to delete task.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleEditClick = (task: Task) => {
+        setEditingTaskId(task.id);
+        setFormData({
+            title: task.title,
+            description: task.description,
+            linkURL: task.linkURL,
+            startDate: task.startDate,
+            endDate: task.endDate,
+            selectedRoomIds: task.selectedRoomIds
+        });
+    };
+
+    const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
+        const currentIndex = filteredTasks.findIndex(t => t.id === taskId);
+        if (currentIndex === -1) return;
+
+        const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+        if (targetIndex < 0 || targetIndex >= filteredTasks.length) return;
+
+        const currentTask = filteredTasks[currentIndex];
+        const targetTask = filteredTasks[targetIndex];
+
+        if (!currentTask || !targetTask) return;
+
+        // Swap orders
+        // Note: This is a simplified reorder. In a real app with shared lists, 
+        // we might need a more robust ranking system (e.g. Lexorank).
+        // Here we just swap the 'presentationOrder' values.
+
+        try {
+            const currentOrder = currentTask.presentationOrder || 0;
+            const targetOrder = targetTask.presentationOrder || 0;
+
+            await updateDoc(doc(db, 'tasks', currentTask.id), { presentationOrder: targetOrder });
+            await updateDoc(doc(db, 'tasks', targetTask.id), { presentationOrder: currentOrder });
+        } catch (error) {
+            console.error("Failed to reorder:", error);
+        }
+    };
+
+    const handleWeekNav = (direction: 'prev' | 'next') => {
+        const newDate = new Date(calendarBaseDate);
+        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
+        setCalendarBaseDate(newDate);
+    };
+
+    // --- Render ---
+
     return (
-        <div className="h-full flex flex-col md:flex-row gap-6 overflow-hidden animate-in fade-in duration-500">
+        <div className="flex-1 h-full overflow-y-auto lg:overflow-hidden">
+            <div className="min-h-full lg:h-full grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-            {/* LEFT: Task Builder Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+                {/* LEFT PANEL: Task Editor */}
+                <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar p-4 lg:pl-6 lg:py-6 lg:pr-0">
+                    <div className="card-base p-6 space-y-6">
+                        <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-4">
+                            <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                {editingTaskId ? 'Edit Task' : 'Create New Task'}
+                            </h2>
+                            {/* Mobile/Header New Task Button (optional, keeping for flexibility) */}
+                            {editingTaskId && (
+                                <Button variant="tertiary" size="sm" onClick={resetForm} icon={Plus} className="lg:hidden">
+                                    New Task
+                                </Button>
+                            )}
+                        </div>
 
-                <div className="flex-1 overflow-y-auto pr-2 space-y-6 pb-20 custom-scrollbar">
-                    {tasks.map((task, index) => (
-                        <div
-                            key={task.id}
-                            className="card-base overflow-hidden transition-colors"
-                            onPaste={(e) => handlePaste(e, task.id)}
-                        >
-                            {/* Card Header */}
-                            <div className="bg-gray-50 dark:bg-gray-800 px-6 py-3 border-b-[3px] border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                                <span className="font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary text-sm uppercase tracking-wider">Task {index + 1}</span>
-                                {tasks.length > 1 && (
-                                    <Button
-                                        variant="icon"
-                                        size="sm"
-                                        onClick={() => removeTask(task.id)}
-                                        className="text-gray-400 hover:text-red-500"
-                                        title="Remove Task"
-                                        icon={Trash2}
-                                    />
+                        {/* Title */}
+                        <div>
+                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Title</label>
+                            <input
+                                type="text"
+                                value={formData.title}
+                                onChange={e => handleInputChange('title', e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                placeholder="e.g. Read Chapter 4"
+                            />
+                        </div>
+
+                        {/* Dates */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Start Date</label>
+                                <input
+                                    type="date"
+                                    value={formData.startDate}
+                                    onChange={e => handleInputChange('startDate', e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Due Date</label>
+                                <input
+                                    type="date"
+                                    value={formData.endDate}
+                                    onChange={e => handleInputChange('endDate', e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
+                            <textarea
+                                value={formData.description}
+                                onChange={e => handleInputChange('description', e.target.value)}
+                                className="w-full h-32 px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                placeholder="Instructions..."
+                            />
+                        </div>
+
+                        {/* Attachments & Link */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* File Upload Stub */}
+                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-all text-center group cursor-pointer">
+                                <input
+                                    type="file"
+                                    disabled // Disabled for UI demo
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10"
+                                />
+                                <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
+                                    <Upload size={20} />
+                                    <span className="text-xs font-bold">Upload File (Stub)</span>
+                                </div>
+                            </div>
+
+                            {/* Link Input */}
+                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
+                                <div className="pl-3 text-gray-400">
+                                    <LinkIcon size={16} />
+                                </div>
+                                <input
+                                    type="url"
+                                    value={formData.linkURL}
+                                    onChange={e => handleInputChange('linkURL', e.target.value)}
+                                    className="w-full p-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
+                                    placeholder="Paste URL..."
+                                />
+                            </div>
+                        </div>
+
+                        {/* Class Assignment & Actions */}
+                        <div className="pt-4 border-t-[3px] border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+                            {/* Class Selector */}
+                            <div className="flex-1">
+                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Assign to Classes</label>
+                                {loadingRooms ? (
+                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {rooms.map(room => {
+                                            const isSelected = formData.selectedRoomIds.includes(room.id);
+                                            return (
+                                                <button
+                                                    key={room.id}
+                                                    onClick={() => handleRoomToggle(room.id)}
+                                                    style={{
+                                                        borderColor: isSelected ? (room.color || '') : '',
+                                                        color: isSelected ? (room.color || '') : ''
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!isSelected && room.color) {
+                                                            e.currentTarget.style.borderColor = room.color;
+                                                            e.currentTarget.style.color = room.color;
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!isSelected) {
+                                                            e.currentTarget.style.borderColor = '';
+                                                            e.currentTarget.style.color = '';
+                                                        }
+                                                    }}
+                                                    className={`
+                                                        flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
+                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
+                                                        ${isSelected
+                                                            ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
+                                                            : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
+                                                    `}
+                                                >
+                                                    {isSelected && <Check size={12} />}
+                                                    {room.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 )}
                             </div>
 
-                            <div className="p-6 space-y-6">
-                                {/* Row 1: Title & Schedule */}
-                                <div className="flex flex-col md:flex-row gap-6">
-                                    {/* Title */}
-                                    <div className="flex-[2]">
-                                        <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Title</label>
-                                        <input
-                                            type="text"
-                                            value={task.title}
-                                            onChange={e => updateTask(task.id, 'title', e.target.value)}
-                                            className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                            placeholder="e.g. Read Chapter 4"
-                                        />
-                                    </div>
+                            {/* Action Buttons */}
+                            <div className="flex items-center gap-3 w-full md:w-auto">
+                                {editingTaskId ? (
+                                    <>
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleDelete}
+                                            disabled={isSubmitting}
+                                            className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 focus:ring-red-500/20"
+                                        >
+                                            Delete
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleSave}
+                                            disabled={isSubmitting}
+                                            className="flex-1 md:flex-none"
+                                        >
+                                            {isSubmitting ? 'Updating...' : 'Update Task'}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button
+                                        variant="primary"
+                                        onClick={handleSave}
+                                        disabled={isSubmitting}
+                                        className="w-full md:w-auto"
+                                    >
+                                        {isSubmitting ? 'Creating...' : 'Create Task'}
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                    {/* Schedule */}
-                                    <div className="flex-1">
-                                        <div className="flex gap-2">
-                                            <div className="flex-1">
-                                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Assign</label>
-                                                <input
-                                                    type="date"
-                                                    value={task.startDate}
-                                                    onChange={e => updateTask(task.id, 'startDate', e.target.value)}
-                                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                                />
-                                            </div>
-                                            <div className="flex-1">
-                                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Due</label>
-                                                <input
-                                                    type="date"
-                                                    value={task.endDate}
-                                                    onChange={e => updateTask(task.id, 'endDate', e.target.value)}
-                                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                                />
+                {/* RIGHT PANEL: Calendar & List */}
+                <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden p-4 lg:pr-6 lg:py-6 lg:pl-0">
+                    <div className="card-base h-auto lg:h-full flex flex-col overflow-hidden">
+
+                        {/* Calendar Header */}
+                        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
+                                    <CalendarIcon size={18} className="text-brand-accent" />
+                                    {calendarBaseDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                </h3>
+                                <div className="flex gap-1">
+                                    <button onClick={() => handleWeekNav('prev')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                                        <ChevronLeft size={20} />
+                                    </button>
+                                    <button onClick={() => handleWeekNav('next')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                                        <ChevronRight size={20} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Week Strip (Desktop: 5 days, Mobile: 1 day logic handled by CSS/Container queries if needed, but here we stick to 5 for simplicity as requested "5 days per week on widescreen") */}
+                            <div className="grid grid-cols-5 gap-1">
+                                {weekDays.map(date => {
+                                    const dateStr = toDateString(date);
+                                    const isSelected = selectedDate === dateStr;
+                                    const isToday = dateStr === toDateString(new Date());
+
+                                    return (
+                                        <button
+                                            key={dateStr}
+                                            onClick={() => setSelectedDate(dateStr)}
+                                            className={`
+                                                flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                                                ${isSelected
+                                                    ? 'bg-brand-accent/10 dark:bg-brand-accent/20'
+                                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800'}
+                                            `}
+                                        >
+                                            <span className={`text-xs font-medium ${isToday ? 'text-brand-accent' : 'text-gray-500'}`}>
+                                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                                            </span>
+                                            <span className={`
+                                                text-sm font-bold mt-1 px-2 py-0.5 rounded-full border-b-2
+                                                ${isSelected
+                                                    ? 'text-brand-accent border-brand-accent'
+                                                    : 'text-brand-textDarkPrimary dark:text-brand-textPrimary border-transparent'}
+                                            `}>
+                                                {date.getDate()}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Task List */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
+                            <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">
+                                Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </h4>
+
+                            {filteredTasks.length === 0 ? (
+                                <div className="text-center py-8 text-gray-400 italic text-sm">
+                                    No tasks scheduled.
+                                </div>
+                            ) : (
+                                filteredTasks.map((task, index) => (
+                                    <div
+                                        key={task.id}
+                                        onClick={() => handleEditClick(task)}
+                                        className={`
+                                            group relative p-3 rounded-xl border-[3px] transition-all cursor-pointer
+                                            ${editingTaskId === task.id
+                                                ? 'border-brand-accent bg-brand-accent/5'
+                                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
+                                        `}
+                                    >
+                                        <div className="flex justify-between items-start gap-2">
+                                            <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-2">
+                                                {task.title}
+                                            </h5>
+
+                                            {/* Reorder Controls */}
+                                            <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                                <button
+                                                    onClick={() => handleReorder(task.id, 'up')}
+                                                    disabled={index === 0}
+                                                    className="p-0.5 hover:text-brand-accent disabled:opacity-30"
+                                                >
+                                                    <ArrowUp size={12} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleReorder(task.id, 'down')}
+                                                    disabled={index === filteredTasks.length - 1}
+                                                    className="p-0.5 hover:text-brand-accent disabled:opacity-30"
+                                                >
+                                                    <ArrowDown size={12} />
+                                                </button>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {/* Row 2: Description */}
-                                <div>
-                                    <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
-                                    <textarea
-                                        value={task.description}
-                                        onChange={e => updateTask(task.id, 'description', e.target.value)}
-                                        className="w-full h-24 px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                        placeholder="Instructions..."
-                                    />
-                                </div>
-
-                                {/* Row 3: Attachments */}
-                                <div>
-                                    <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Attachments</label>
-
-                                    <div className="space-y-3">
-                                        {/* Active Attachments List */}
-                                        {(task.imageURL || task.linkURL) && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                                {task.imageURL && (
-                                                    <div className="flex items-center gap-3 p-2 bg-brand-accent/5 border border-brand-accent/20 rounded-lg group relative">
-                                                        <div className="w-10 h-10 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden shrink-0 border border-gray-200 dark:border-gray-600">
-                                                            <img src={task.imageURL} alt="Attachment" className="w-full h-full object-cover" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">Image Attachment</p>
-                                                            <p className="text-[10px] text-gray-500 truncate">Image</p>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => updateTask(task.id, 'imageURL', '')}
-                                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded transition-colors"
-                                                        >
-                                                            <X size={14} />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                                {task.linkURL && (
-                                                    <div className="flex items-center gap-3 p-2 bg-brand-accent/5 border border-brand-accent/20 rounded-lg group relative">
-                                                        <div className="w-10 h-10 rounded bg-brand-accent/10 flex items-center justify-center shrink-0 border border-brand-accent/20">
-                                                            <LinkIcon size={18} className="text-brand-accent" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">{task.linkURL}</p>
-                                                            <p className="text-[10px] text-gray-500 truncate">Link</p>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => updateTask(task.id, 'linkURL', '')}
-                                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded transition-colors"
-                                                        >
-                                                            <X size={14} />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Upload / Add Area */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {/* File Upload */}
-                                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-all text-center group cursor-pointer">
-                                                <input
-                                                    type="file"
-                                                    onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(task.id, file); }}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
-                                                    {task.isUploading ? <Loader size={20} className="animate-spin" /> : <Upload size={20} />}
-                                                    <span className="text-xs font-bold">{task.isUploading ? 'Uploading...' : 'Upload File / Image'}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Add Link Input */}
-                                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
-                                                <div className="pl-3 text-gray-400">
-                                                    <LinkIcon size={16} />
-                                                </div>
-                                                <input
-                                                    type="url"
-                                                    value={task.linkURL}
-                                                    onChange={e => updateTask(task.id, 'linkURL', e.target.value)}
-                                                    className="w-full p-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
-                                                    placeholder="Paste URL here..."
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Class Assignment Dropdown */}
-                                <div className="pt-4 border-t-[3px] border-gray-200 dark:border-gray-700">
-                                    <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Assign to Classes</label>
-
-                                    {loadingRooms ? (
-                                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                                            <Loader className="w-4 h-4 animate-spin" /> Loading classes...
-                                        </div>
-                                    ) : rooms.length === 0 ? (
-                                        <p className="text-sm text-red-500 italic">No classes available.</p>
-                                    ) : (
-                                        <div className="flex flex-wrap gap-2">
-                                            {rooms.map(room => {
-                                                const isSelected = task.selectedRoomIds.includes(room.id);
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            {task.selectedRoomIds?.map(roomId => {
+                                                const room = rooms.find(r => r.id === roomId);
+                                                if (!room) return null;
                                                 return (
-                                                    <button
-                                                        key={room.id}
-                                                        onClick={() => toggleRoomForTask(task.id, room.id)}
+                                                    <span
+                                                        key={roomId}
+                                                        className="text-[10px] px-1.5 py-0.5 rounded-md font-medium border"
                                                         style={{
-                                                            borderColor: isSelected ? (room.color || '') : '',
-                                                            color: isSelected ? (room.color || '') : ''
+                                                            borderColor: room.color,
+                                                            color: room.color,
+                                                            backgroundColor: `${room.color}15` // 10% opacity hex
                                                         }}
-                                                        onMouseEnter={(e) => {
-                                                            if (!isSelected && room.color) {
-                                                                e.currentTarget.style.borderColor = room.color;
-                                                                e.currentTarget.style.color = room.color;
-                                                            }
-                                                        }}
-                                                        onMouseLeave={(e) => {
-                                                            if (!isSelected) {
-                                                                e.currentTarget.style.borderColor = '';
-                                                                e.currentTarget.style.color = '';
-                                                            }
-                                                        }}
-                                                        className={`
-                              flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
-                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
-                              ${isSelected
-                                                                ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
-                                                                : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
-                            `}
                                                     >
-                                                        {isSelected && <Check size={12} />}
                                                         {room.name}
-                                                    </button>
+                                                    </span>
                                                 );
                                             })}
                                         </div>
-                                    )}
-                                </div>
-                            </div>
+                                    </div>
+                                ))
+                            )}
                         </div>
-                    ))}
 
-                    {/* Add Task Button */}
-                    <Button
-                        variant="secondary"
-                        onClick={addNewTask}
-                        className="w-full py-4 border-dashed border-gray-300 dark:border-gray-700 text-gray-400 hover:border-brand-accent hover:text-brand-accent"
-                        icon={Plus}
-                    >
-                        Add Another Task
-                    </Button>
-                </div>
-            </div>
-
-            {/* RIGHT: Summary Sidebar */}
-            <div className="w-full md:w-80 shrink-0 flex flex-col h-full">
-                <div className="card-base flex flex-col h-full overflow-hidden">
-                    <div className="p-4 border-b-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
-                            <Calendar size={18} className="text-brand-accent" />
-                            Summary
-                        </h3>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
-                        {tasks.map((task, i) => (
-                            <div key={task.id} className="text-sm border-b border-gray-200 dark:border-gray-700 last:border-0 pb-3 last:pb-0">
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate w-3/4 block">
-                                        {task.title || <span className="text-gray-400 italic">Untitled Task</span>}
-                                    </span>
-                                    <span className="text-xs font-mono text-gray-400">#{i + 1}</span>
-                                </div>
-                                <div className="flex flex-wrap gap-1">
-                                    {task.selectedRoomIds.length === 0 && (
-                                        <span className="text-[10px] text-red-500 flex items-center gap-1">
-                                            <AlertCircle size={10} /> No classes
-                                        </span>
-                                    )}
-                                    {task.selectedRoomIds.map(rid => {
-                                        const r = rooms.find(room => room.id === rid);
-                                        return r ? (
-                                            <span key={rid} className="text-[10px] bg-gray-100 dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">
-                                                {r.name}
-                                            </span>
-                                        ) : null;
-                                    })}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="p-4 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <Button
-                            onClick={handleDistributeAll}
-                            disabled={isSubmitting}
-                            loading={isSubmitting}
-                            className="w-full"
-                            icon={Check}
-                        >
-                            Distribute All ({tasks.length})
-                        </Button>
+                        {/* Footer with Create New Task Button */}
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end">
+                            <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={resetForm}
+                                icon={Plus}
+                                disabled={!editingTaskId} // Optional: disable if already in create mode, or just let it reset
+                                className={!editingTaskId ? 'opacity-50 cursor-not-allowed' : ''}
+                            >
+                                Create New Task
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
-
-        </div >
+        </div>
     );
 }
