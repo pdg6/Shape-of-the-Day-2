@@ -309,9 +309,9 @@ export default function TaskManager() {
 
                 {/* LEFT PANEL: Task Editor */}
                 <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
-                    <div className="card-base p-6 space-y-6 flex-1 flex flex-col">
-                        <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-4">
-                            <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                    <div className="card-base p-4 space-y-4 flex-1 flex flex-col">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {editingTaskId ? 'Edit Task' : 'Create New Task'}
                             </h2>
                             {/* Mobile/Header New Task Button (optional, keeping for flexibility) */}
@@ -329,20 +329,20 @@ export default function TaskManager() {
                                 type="text"
                                 value={formData.title}
                                 onChange={e => handleInputChange('title', e.target.value)}
-                                className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 placeholder="e.g. Read Chapter 4"
                             />
                         </div>
 
                         {/* Dates */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Start Date</label>
                                 <input
                                     type="date"
                                     value={formData.startDate}
                                     onChange={e => handleInputChange('startDate', e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 />
                             </div>
                             <div>
@@ -351,7 +351,7 @@ export default function TaskManager() {
                                     type="date"
                                     value={formData.endDate}
                                     onChange={e => handleInputChange('endDate', e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 />
                             </div>
                         </div>
@@ -362,125 +362,117 @@ export default function TaskManager() {
                             <textarea
                                 value={formData.description}
                                 onChange={e => handleInputChange('description', e.target.value)}
-                                className="w-full h-32 px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                className="w-full h-20 px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 placeholder="Instructions..."
                             />
                         </div>
 
                         {/* Attachments & Link */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                             {/* File Upload Stub */}
-                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-all text-center group cursor-pointer">
+                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 transition-all text-center group cursor-pointer">
                                 <input
                                     type="file"
                                     disabled // Disabled for UI demo
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10"
                                 />
-                                <div className="flex flex-col items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
-                                    <Upload size={20} />
-                                    <span className="text-xs font-bold">Upload File (Stub)</span>
+                                <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
+                                    <Upload size={16} />
+                                    <span className="text-xs font-bold">Upload File</span>
                                 </div>
                             </div>
 
                             {/* Link Input */}
-                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
+                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
                                 <div className="pl-3 text-gray-400">
-                                    <LinkIcon size={16} />
+                                    <LinkIcon size={14} />
                                 </div>
                                 <input
                                     type="url"
                                     value={formData.linkURL}
                                     onChange={e => handleInputChange('linkURL', e.target.value)}
-                                    className="w-full p-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
+                                    className="w-full py-2 px-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
                                     placeholder="Paste URL..."
                                 />
                             </div>
                         </div>
 
-                        {/* Spacer to push footer to bottom */}
-                        <div className="flex-1" />
+                        {/* Class Assignment */}
+                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Assign to Classes</label>
+                            {loadingRooms ? (
+                                <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                            ) : (
+                                <div className="flex flex-wrap gap-2">
+                                    {rooms.map(room => {
+                                        const isSelected = formData.selectedRoomIds.includes(room.id);
+                                        return (
+                                            <button
+                                                key={room.id}
+                                                onClick={() => handleRoomToggle(room.id)}
+                                                style={{
+                                                    borderColor: isSelected ? (room.color || '') : '',
+                                                    color: isSelected ? (room.color || '') : ''
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (!isSelected && room.color) {
+                                                        e.currentTarget.style.borderColor = room.color;
+                                                        e.currentTarget.style.color = room.color;
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (!isSelected) {
+                                                        e.currentTarget.style.borderColor = '';
+                                                        e.currentTarget.style.color = '';
+                                                    }
+                                                }}
+                                                className={`
+                                                    flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
+                                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
+                                                    ${isSelected
+                                                        ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
+                                                        : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
+                                                `}
+                                            >
+                                                {isSelected && <Check size={12} />}
+                                                {room.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
 
-                        {/* Class Assignment & Actions */}
-                        <div className="pt-4 border-t-[3px] border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-auto">
-
-                            {/* Class Selector */}
-                            <div className="flex-1">
-                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Assign to Classes</label>
-                                {loadingRooms ? (
-                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {rooms.map(room => {
-                                            const isSelected = formData.selectedRoomIds.includes(room.id);
-                                            return (
-                                                <button
-                                                    key={room.id}
-                                                    onClick={() => handleRoomToggle(room.id)}
-                                                    style={{
-                                                        borderColor: isSelected ? (room.color || '') : '',
-                                                        color: isSelected ? (room.color || '') : ''
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (!isSelected && room.color) {
-                                                            e.currentTarget.style.borderColor = room.color;
-                                                            e.currentTarget.style.color = room.color;
-                                                        }
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (!isSelected) {
-                                                            e.currentTarget.style.borderColor = '';
-                                                            e.currentTarget.style.color = '';
-                                                        }
-                                                    }}
-                                                    className={`
-                                                        flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
-                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
-                                                        ${isSelected
-                                                            ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
-                                                            : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
-                                                    `}
-                                                >
-                                                    {isSelected && <Check size={12} />}
-                                                    {room.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div className="flex items-center gap-3 w-full md:w-auto">
-                                {editingTaskId ? (
-                                    <>
-                                        <Button
-                                            variant="primary"
-                                            onClick={handleDelete}
-                                            disabled={isSubmitting}
-                                            className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 focus:ring-red-500/20"
-                                        >
-                                            Delete
-                                        </Button>
-                                        <Button
-                                            variant="primary"
-                                            onClick={handleSave}
-                                            disabled={isSubmitting}
-                                            className="flex-1 md:flex-none"
-                                        >
-                                            {isSubmitting ? 'Updating...' : 'Update Task'}
-                                        </Button>
-                                    </>
-                                ) : (
+                        {/* Action Buttons Footer */}
+                        <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
+                            {editingTaskId ? (
+                                <>
+                                    <button
+                                        onClick={handleDelete}
+                                        disabled={isSubmitting}
+                                        className="group flex items-center justify-center gap-2 h-12 px-6 rounded-xl font-bold transition-all duration-200 border-[3px] border-transparent hover:border-red-500 text-red-500 hover:bg-red-500/5 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
+                                    >
+                                        Delete
+                                    </button>
                                     <Button
                                         variant="primary"
                                         onClick={handleSave}
                                         disabled={isSubmitting}
-                                        className="w-full md:w-auto"
+                                        className="flex-1"
                                     >
-                                        {isSubmitting ? 'Creating...' : 'Create Task'}
+                                        {isSubmitting ? 'Updating...' : 'Update Task'}
                                     </Button>
-                                )}
-                            </div>
+                                </>
+                            ) : (
+                                <Button
+                                    variant="primary"
+                                    onClick={handleSave}
+                                    disabled={isSubmitting}
+                                    className="flex-1"
+                                >
+                                    {isSubmitting ? 'Creating...' : 'Create Task'}
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
