@@ -11,6 +11,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useClassStore } from './store/classStore';
 import { Classroom } from './types';
 import { useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { loadDummyData, getDummyJoinCodes } from './services/dummyDataService';
 
 /**
@@ -130,13 +131,16 @@ function App() {
                 console.log('Total classrooms found:', data.length);
                 setClassrooms(data);
 
-                // If no class is selected but we have classes, select the first one
+                // Validate persisted class still exists, or select first class
                 const firstClass = data[0];
-                if (data.length > 0 && !currentClassId && firstClass) {
+                const persistedClassExists = currentClassId && data.some(c => c.id === currentClassId);
+
+                if (data.length > 0 && !persistedClassExists && firstClass) {
                     console.log('Setting current class to:', firstClass.id);
                     setCurrentClassId(firstClass.id);
                 } else if (data.length === 0) {
                     console.warn('No classrooms found for this teacher. Use Ctrl+Shift+D to load dummy data.');
+                    setCurrentClassId(null);
                 }
             } catch (error) {
                 console.error("Error fetching classrooms:", error);
@@ -193,43 +197,45 @@ function App() {
     }
 
     return (
-        <div className="flex flex-col h-screen-safe bg-brand-lightSurface dark:bg-brand-darkSurface transition-colors duration-200">
-            {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
-            <a href="#main-content" className="skip-link">
-                Skip to main content
-            </a>
+        <ThemeProvider>
+            <div className="flex flex-col h-screen-safe bg-brand-lightSurface dark:bg-brand-darkSurface transition-colors duration-200">
+                {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
+                <a href="#main-content" className="skip-link">
+                    Skip to main content
+                </a>
 
-            <Toaster position="top-right" />
+                <Toaster position="top-right" />
 
-            {/* Global Name Modal (can be triggered from anywhere) */}
-            {showNameModal && (
-                <StudentNameModal
-                    onSubmit={handleNameSubmit}
-                    onClose={() => setShowNameModal(false)}
-                />
-            )}
-
-            {/* Main Content Area - Each view manages its own header */}
-            <main id="main-content" className="flex-1 min-h-0 overflow-hidden">
-                {view === 'landing' && (
-                    <LandingPage
-                        onLogin={login}
-                        onJoin={handleJoinRoom}
+                {/* Global Name Modal (can be triggered from anywhere) */}
+                {showNameModal && (
+                    <StudentNameModal
+                        onSubmit={handleNameSubmit}
+                        onClose={() => setShowNameModal(false)}
                     />
                 )}
 
-                {view === 'teacher' && <TeacherDashboard />}
-                {view === 'student' && (
-                    <StudentView
-                        studentName={studentName}
-                        classId={classId}
-                        onEditName={() => setShowNameModal(true)}
-                        onNameSubmit={handleNameSubmit}
-                        onSignOut={handleLogout}
-                    />
-                )}
-            </main>
-        </div>
+                {/* Main Content Area - Each view manages its own header */}
+                <main id="main-content" className="flex-1 min-h-0 overflow-hidden">
+                    {view === 'landing' && (
+                        <LandingPage
+                            onLogin={login}
+                            onJoin={handleJoinRoom}
+                        />
+                    )}
+
+                    {view === 'teacher' && <TeacherDashboard />}
+                    {view === 'student' && (
+                        <StudentView
+                            studentName={studentName}
+                            classId={classId}
+                            onEditName={() => setShowNameModal(true)}
+                            onNameSubmit={handleNameSubmit}
+                            onSignOut={handleLogout}
+                        />
+                    )}
+                </main>
+            </div>
+        </ThemeProvider>
     );
 }
 

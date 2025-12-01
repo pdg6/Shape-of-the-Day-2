@@ -269,7 +269,7 @@ export default function TaskManager() {
                                             type="text"
                                             value={task.title}
                                             onChange={e => updateTask(task.id, 'title', e.target.value)}
-                                            className="input-base w-full font-medium"
+                                            className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                             placeholder="e.g. Read Chapter 4"
                                         />
                                     </div>
@@ -283,7 +283,7 @@ export default function TaskManager() {
                                                     type="date"
                                                     value={task.startDate}
                                                     onChange={e => updateTask(task.id, 'startDate', e.target.value)}
-                                                    className="input-base w-full text-sm font-medium"
+                                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                                 />
                                             </div>
                                             <div className="flex-1">
@@ -292,7 +292,7 @@ export default function TaskManager() {
                                                     type="date"
                                                     value={task.endDate}
                                                     onChange={e => updateTask(task.id, 'endDate', e.target.value)}
-                                                    className="input-base w-full text-sm font-medium"
+                                                    className="w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                                 />
                                             </div>
                                         </div>
@@ -305,7 +305,7 @@ export default function TaskManager() {
                                     <textarea
                                         value={task.description}
                                         onChange={e => updateTask(task.id, 'description', e.target.value)}
-                                        className="input-base w-full h-24 text-sm resize-none"
+                                        className="w-full h-24 px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                         placeholder="Instructions..."
                                     />
                                 </div>
@@ -336,9 +336,9 @@ export default function TaskManager() {
                                                     </div>
                                                 )}
                                                 {task.linkURL && (
-                                                    <div className="flex items-center gap-3 p-2 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-lg group relative">
-                                                        <div className="w-10 h-10 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
-                                                            <LinkIcon size={18} className="text-blue-500" />
+                                                    <div className="flex items-center gap-3 p-2 bg-brand-accent/5 border border-brand-accent/20 rounded-lg group relative">
+                                                        <div className="w-10 h-10 rounded bg-brand-accent/10 flex items-center justify-center shrink-0 border border-brand-accent/20">
+                                                            <LinkIcon size={18} className="text-brand-accent" />
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">{task.linkURL}</p>
@@ -358,7 +358,7 @@ export default function TaskManager() {
                                         {/* Upload / Add Area */}
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* File Upload */}
-                                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-brand-accent transition-all text-center group cursor-pointer">
+                                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-all text-center group cursor-pointer">
                                                 <input
                                                     type="file"
                                                     onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileUpload(task.id, file); }}
@@ -371,7 +371,7 @@ export default function TaskManager() {
                                             </div>
 
                                             {/* Add Link Input */}
-                                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-gray-50 dark:bg-gray-900 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-colors">
+                                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-1 flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
                                                 <div className="pl-3 text-gray-400">
                                                     <LinkIcon size={16} />
                                                 </div>
@@ -405,12 +405,28 @@ export default function TaskManager() {
                                                     <button
                                                         key={room.id}
                                                         onClick={() => toggleRoomForTask(task.id, room.id)}
+                                                        style={{
+                                                            borderColor: isSelected ? (room.color || '') : '',
+                                                            color: isSelected ? (room.color || '') : ''
+                                                        }}
+                                                        onMouseEnter={(e) => {
+                                                            if (!isSelected && room.color) {
+                                                                e.currentTarget.style.borderColor = room.color;
+                                                                e.currentTarget.style.color = room.color;
+                                                            }
+                                                        }}
+                                                        onMouseLeave={(e) => {
+                                                            if (!isSelected) {
+                                                                e.currentTarget.style.borderColor = '';
+                                                                e.currentTarget.style.color = '';
+                                                            }
+                                                        }}
                                                         className={`
                               flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
                               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
                               ${isSelected
-                                                                ? 'bg-brand-accent text-white border-brand-accent pr-2 shadow-md'
-                                                                : 'bg-gray-50 dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 hover:border-brand-accent hover:text-brand-accent'}
+                                                                ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
+                                                                : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
                             `}
                                                     >
                                                         {isSelected && <Check size={12} />}
@@ -489,6 +505,6 @@ export default function TaskManager() {
                 </div>
             </div>
 
-        </div>
+        </div >
     );
 }

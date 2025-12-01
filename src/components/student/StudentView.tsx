@@ -269,16 +269,16 @@ const StudentView: React.FC<StudentViewProps> = ({
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+            <div className="flex-1 grid grid-rows-[64px_1fr] row-gap-1 min-w-0 overflow-hidden relative">
                 {/* Mobile Header - Class Name (left), Tasks & Progress + Date (right) */}
-                <header className="md:hidden h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 flex items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
+                <header className="md:hidden row-start-1 h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 flex items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-3 pointer-events-none">
                     {/* Left: Class Name */}
-                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate pointer-events-auto">
                         {currentClassName}
                     </h1>
-                    {/* Right: Tasks & Progress (emerald) + Date (gray) */}
-                    <div className="flex items-baseline gap-2 flex-shrink-0">
-                        <span className="text-fluid-sm font-semibold text-emerald-600 dark:text-emerald-500">
+                    {/* Right: Tasks & Progress (accent) + Date (gray) */}
+                    <div className="flex items-baseline gap-2 flex-shrink-0 pointer-events-auto">
+                        <span className="text-fluid-sm font-semibold text-brand-accent">
                             {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
                         </span>
                         <span className="text-fluid-xs font-medium text-gray-500 dark:text-gray-400">
@@ -293,14 +293,14 @@ const StudentView: React.FC<StudentViewProps> = ({
                 />
 
                 {/* Desktop Header - Class Name (left), Tasks & Progress + Date (right) */}
-                <header className="hidden md:flex h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
+                <header className="hidden md:flex row-start-1 h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-4 pointer-events-none">
                     {/* Left: Class Name */}
-                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate pointer-events-auto">
                         {currentClassName}
                     </h1>
-                    {/* Right: Tasks & Progress (emerald) + Date (gray) */}
-                    <div className="flex items-baseline gap-3 flex-shrink-0">
-                        <span className="text-fluid-lg font-semibold text-emerald-600 dark:text-emerald-500">
+                    {/* Right: Tasks & Progress (accent) + Date (gray) */}
+                    <div className="flex items-baseline gap-3 flex-shrink-0 pointer-events-auto">
+                        <span className="text-fluid-lg font-semibold text-brand-accent">
                             {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
                         </span>
                         <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">
@@ -315,7 +315,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 />
 
                 {/* Desktop Content - Split into Tasks and Schedule based on tab */}
-                <main className="hidden md:flex flex-1 overflow-hidden">
+                <main className="hidden md:flex row-start-2 flex-1 overflow-hidden">
                     {desktopTab === 'tasks' ? (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
                             <div className="max-w-4xl mx-auto">
@@ -373,7 +373,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </main>
 
                 {/* Mobile Content */}
-                <main className="md:hidden flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
+                <main className="md:hidden row-start-2 flex-1 overflow-y-auto custom-scrollbar px-4 pb-24">
                     {mobileTab === 'tasks' ? (
                         <div>
 
@@ -472,7 +472,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setShowMenuModal(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Menu"
                         >
                             <Menu className="w-6 h-6" />
@@ -482,8 +482,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setMobileTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50 ${mobileTab === 'tasks'
-                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
+                                ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Tasks"
@@ -495,8 +495,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setMobileTab('schedule')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50 ${mobileTab === 'schedule'
-                                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
+                                ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Schedule"

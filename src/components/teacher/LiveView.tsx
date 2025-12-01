@@ -207,8 +207,8 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                 } else if (activeStudents.length > 0) {
                     borderColor = 'border-brand-accent'; // In Progress
                 } else if (studentsCompleted.length === students.length && students.length > 0) {
-                    borderColor = 'border-blue-200 dark:border-blue-800';
-                    bgColor = 'bg-blue-50/50 dark:bg-blue-900/20';
+                    borderColor = 'border-brand-accent/50';
+                    bgColor = 'bg-brand-accent/5';
                     opacity = 'opacity-60 grayscale'; // Greyed out effect
                 }
 
@@ -219,7 +219,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                 {task.title}
                             </h3>
                             {studentsCompleted.length === students.length && students.length > 0 && (
-                                <CheckCircle className="w-6 h-6 text-blue-500" />
+                                <CheckCircle className="w-6 h-6 text-brand-accent" />
                             )}
                         </div>
 
@@ -231,7 +231,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                                    className="h-full bg-brand-accent rounded-full transition-all duration-500"
                                     style={{ width: `${(studentsCompleted.length / (students.length || 1)) * 100}%` }}
                                 />
                             </div>
@@ -242,7 +242,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             <StudentBucket label="Stuck" count={stuckStudents.length} students={stuckStudents} color="text-red-600 bg-red-100" />
                             <StudentBucket label="Question" count={questionStudents.length} students={questionStudents} color="text-amber-600 bg-amber-100" />
                             <StudentBucket label="Working" count={inProgressStudents.length} students={inProgressStudents} color="text-brand-accent bg-brand-accent/10" />
-                            <StudentBucket label="Done" count={studentsCompleted.length} students={studentsCompleted} color="text-blue-600 bg-blue-100" />
+                            <StudentBucket label="Done" count={studentsCompleted.length} students={studentsCompleted} color="text-brand-accent bg-brand-accent/20" />
                         </div>
                     </div>
                 );

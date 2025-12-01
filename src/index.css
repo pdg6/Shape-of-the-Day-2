@@ -1,89 +1,49 @@
 @import "tailwindcss";
-@variant dark (&:where(.dark, .dark *));
 
 @theme {
+    /* Brand Colors */
     --color-brand-dark: #10100eff;
     --color-brand-darkSurface: #10100eff;
-    --color-brand-darkBg: #141211;
     --color-brand-light: #E5E5E5;
     --color-brand-lightSurface: #FFFFFF;
-    --color-brand-bg: #F5F5F5;
     --color-brand-accent: #2563EB;
+
+    /* Text Colors */
     --color-brand-textPrimary: #F2EFEA;
+    /* Light text on dark */
     --color-brand-textSecondary: #A8A29D;
     --color-brand-textDarkPrimary: #141211;
+    /* Dark text on light */
     --color-brand-textDarkSecondary: #57534E;
 
+    /* Status Colors */
     --color-status-progress: #059669;
+    /* Emerald */
     --color-status-stuck: #DC2626;
+    /* Red */
     --color-status-question: #D97706;
+    /* Amber */
     --color-status-complete: #2563EB;
-
-    --spacing-micro: 0.5rem;
-    --spacing-base: 1rem;
-    --spacing-macro: 1.5rem;
-
-    --color-status-error: #DC2626;
-    --color-status-warning: #D97706;
-    --color-status-success: #059669;
-    --color-status-info: #2563EB;
-
-    --z-index-base: 0;
-    --z-index-dropdown: 10;
-    --z-index-tooltip: 20;
-    --z-index-sidebar: 30;
-    --z-index-modal: 50;
-    --z-index-overlay: 100;
-    --z-index-toast: 200;
-
-    --font-sans: Inter, sans-serif;
-
-    --animate-fade-in: fadeIn 0.5s ease-out;
-    --animate-slide-up: slideUp 0.5s ease-out;
-
-    @keyframes fadeIn {
-        0% {
-            opacity: 0;
-        }
-
-        100% {
-            opacity: 1;
-        }
-    }
-
-    @keyframes slideUp {
-        0% {
-            transform: translateY(20px);
-            opacity: 0;
-        }
-
-        100% {
-            transform: translateY(0);
-            opacity: 1;
-        }
-    }
+    /* Blue */
 }
 
-@layer base {
+/* Global Styles */
+* {
 
-    /* Apply scrollbar hiding to ALL elements */
-    * {
-
-        /* Hide scrollbar for Chrome, Safari and Opera */
-        &::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* Hide scrollbar for IE, Edge and Firefox */
-        -ms-overflow-style: none;
-        /* IE and Edge */
-        scrollbar-width: none;
-        /* Firefox */
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    &::-webkit-scrollbar {
+        display: none;
     }
 
-    body {
-        @apply bg-[#141211] text-[#F2EFEA] antialiased;
-    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+body {
+    @apply bg-[#141211] text-[#F2EFEA] antialiased;
 }
 
 @layer components {
@@ -247,5 +207,27 @@
     .img-portrait {
         aspect-ratio: 3 / 4;
         object-fit: cover;
+    }
+
+    /* Header fade - gradient fade over bottom 16px (72-88px) */
+    .header-fade {
+        background: var(--color-brand-lightSurface);
+        -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 16px), transparent 100%);
+        mask-image: linear-gradient(to bottom, black calc(100% - 16px), transparent 100%);
+    }
+
+    .dark .header-fade {
+        background: var(--color-brand-darkSurface);
+    }
+
+    /* Footer fade - masks entire element, fading top 12px */
+    .footer-fade {
+        background: var(--color-brand-lightSurface);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12px);
+        mask-image: linear-gradient(to bottom, transparent 0%, black 12px);
+    }
+
+    .dark .footer-fade {
+        background: var(--color-brand-darkSurface);
     }
 }

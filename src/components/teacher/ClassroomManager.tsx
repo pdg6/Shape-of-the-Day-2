@@ -178,16 +178,54 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
     const totalTasks = classrooms.reduce((acc, cls) => acc + (cls.contentLibrary?.length || 0), 0);
 
     return (
-        <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500">
+        <div className={`flex flex-col space-y-6 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
             {/* Content Area */}
-            <div className="flex-1 overflow-hidden">
+            <div className={`${internalTab === 'history' ? 'flex-1 overflow-hidden' : ''}`}>
                 {internalTab === 'classes' && (
-                    <div className="h-full overflow-y-auto pr-2">
-
-
+                    <div className="">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
-                            {/* Add New Card */}
-                            {/* Summary / Create Card */}
+                            {classrooms.map(cls => (
+                                <ClassCard
+                                    key={cls.id}
+                                    classroom={cls}
+                                    isSelected={cls.id === currentClassId}
+                                    onEdit={openEditModal}
+                                    onSelect={(id) => {
+                                        setCurrentClassId(id);
+                                        // Do not navigate away from classrooms tab
+                                    }}
+                                    onViewHistory={(id) => {
+                                        setCurrentClassId(id);
+                                        setInternalTab('history');
+                                    }}
+                                    onViewStudents={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('live', 'students');
+                                    }}
+                                    onViewTasks={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('live', 'tasks');
+                                    }}
+                                    onManageTasks={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('tasks');
+                                    }}
+                                    onViewShape={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('shape');
+                                    }}
+                                    onViewCalendar={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('data', 'history');
+                                    }}
+                                    onViewData={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('data', 'analytics');
+                                    }}
+                                />
+                            ))}
+
+                            {/* Summary / Create Card - Moved to end */}
                             <div className="flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden">
                                 {/* Header */}
                                 <div className="h-24 p-6 flex items-start justify-between bg-gray-50/50 dark:bg-gray-900/20">
@@ -199,7 +237,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                             Classroom Manager
                                         </p>
                                     </div>
-                                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
                                         <BookOpen className="w-5 h-5" />
                                     </div>
                                 </div>
@@ -239,54 +277,13 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 <div className="p-4 border-t-[3px] border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
                                     <button
                                         onClick={openCreateModal}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-[3px] border-brand-accent bg-brand-accent text-white font-bold hover:bg-brand-accent/90 hover:border-brand-accent/90 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 shadow-lg shadow-brand-accent/20"
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
                                     >
                                         <Plus className="w-5 h-5" />
                                         <span>Create New Class</span>
                                     </button>
                                 </div>
                             </div>
-
-                            {/* Class Cards */}
-                            {classrooms.map(cls => (
-                                <ClassCard
-                                    key={cls.id}
-                                    classroom={cls}
-                                    onEdit={openEditModal}
-                                    onSelect={(id) => {
-                                        setCurrentClassId(id);
-                                        // Do not navigate away from classrooms tab
-                                    }}
-                                    onViewHistory={(id) => {
-                                        setCurrentClassId(id);
-                                        setInternalTab('history');
-                                    }}
-                                    onViewStudents={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('live', 'students');
-                                    }}
-                                    onViewTasks={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('live', 'tasks');
-                                    }}
-                                    onManageTasks={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('tasks');
-                                    }}
-                                    onViewShape={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('shape');
-                                    }}
-                                    onViewCalendar={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('data', 'history');
-                                    }}
-                                    onViewData={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('data', 'analytics');
-                                    }}
-                                />
-                            ))}
                         </div>
                     </div>
                 )}
@@ -347,7 +344,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                 hover:bg-brand-accent/5
                                                 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent
                                                 ${!isSameMonth(day, currentMonth) ? 'bg-gray-50/50 dark:bg-gray-900/50 text-gray-400' : ''}
-                                                ${isSameDay(day, new Date()) ? 'bg-blue-50 dark:bg-blue-900/10' : ''}
+                                                ${isSameDay(day, new Date()) ? 'bg-brand-accent/10' : ''}
                                             `}
                                         >
                                             <span className={`text-sm font-medium ${isSameDay(day, new Date()) ? 'text-brand-accent' : ''}`}>
@@ -373,7 +370,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 )}
 
                 {internalTab === 'analytics' && (
-                    <div className="h-full overflow-y-auto pr-2 space-y-6">
+                    <div className="space-y-6">
                         {!analyticsData ? (
                             <div className="flex flex-col items-center justify-center h-full text-gray-400">
                                 <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
@@ -547,9 +544,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 <div className="space-y-6">
                                     {/* Stats Cards */}
                                     <div className="grid grid-cols-3 gap-4">
-                                        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border-[3px] border-blue-100 dark:border-blue-800">
-                                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">Students Present</span>
-                                            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                                        <div className="p-4 bg-brand-accent/10 rounded-xl border-[3px] border-brand-accent/20">
+                                            <span className="text-xs font-bold text-brand-accent uppercase">Students Present</span>
+                                            <p className="text-2xl font-bold text-brand-accent">
                                                 {new Set(getLogsForDate(selectedDate).map(l => l.studentId)).size}
                                             </p>
                                         </div>

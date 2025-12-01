@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { Classroom } from '../types';
 
+const CURRENT_CLASS_KEY = 'currentClassId';
+
 interface ClassState {
     currentClassId: string | null;
     classrooms: Classroom[];
@@ -21,7 +23,7 @@ interface ClassState {
 }
 
 export const useClassStore = create<ClassState>((set) => ({
-    currentClassId: null,
+    currentClassId: typeof window !== 'undefined' ? localStorage.getItem(CURRENT_CLASS_KEY) : null,
     classrooms: [],
     isSidebarOpen: false, // Default closed to show QR icon
     activeStudentCount: 0,
@@ -30,7 +32,17 @@ export const useClassStore = create<ClassState>((set) => ({
     isClassModalOpen: false,
     editingClass: null,
 
-    setCurrentClassId: (id) => set({ currentClassId: id }),
+    setCurrentClassId: (id) => {
+        // Persist to localStorage
+        if (typeof window !== 'undefined') {
+            if (id) {
+                localStorage.setItem(CURRENT_CLASS_KEY, id);
+            } else {
+                localStorage.removeItem(CURRENT_CLASS_KEY);
+            }
+        }
+        set({ currentClassId: id });
+    },
     setClassrooms: (classrooms) => set({ classrooms }),
     toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
     setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
