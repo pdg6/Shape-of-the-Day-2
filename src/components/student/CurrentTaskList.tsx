@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon } from 'lucide-react';
 import { Task, TaskStatus } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
+import { sanitizeComment, filterProfanity, escapeHtml } from '../../utils/security';
 
 /**
  * Configuration for the different task status actions.
@@ -81,6 +82,16 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
     const closeButtonRef = useRef<HTMLButtonElement>(null);
     const previousFocusRef = useRef<HTMLElement | null>(null);
 
+    /**
+     * Handles comment input with sanitization and profanity filtering.
+     */
+    const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const raw = e.target.value.slice(0, maxChars);
+        // Filter profanity as user types (for immediate feedback)
+        const filtered = filterProfanity(raw);
+        setComment(filtered);
+    };
+
     // Focus management: store previous focus and focus close button on mount
     useEffect(() => {
         previousFocusRef.current = document.activeElement as HTMLElement;
@@ -103,9 +114,11 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
-    // Sync comment changes to the parent component
+    // Sync comment changes to the parent component with sanitization
     useEffect(() => {
-        onUpdateComment(task.id, comment);
+        // Sanitize (escape HTML) before saving to Firestore
+        const sanitized = sanitizeComment(comment, maxChars);
+        onUpdateComment(task.id, sanitized);
     }, [comment, task.id, onUpdateComment]);
 
     const activeAction = STATUS_ACTIONS.find(a => a.id === task.status);
@@ -155,8 +168,11 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                     <div className="relative">
                         <textarea
                             value={comment}
-                            onChange={(e) => setComment(e.target.value.slice(0, maxChars))}
+                            onChange={handleCommentChange}
                             placeholder="I don't understand..."
+                            maxLength={maxChars}
+                            autoComplete="off"
+                            spellCheck={true}
                             className="w-full h-32 p-3 rounded-xl bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-brand-accent resize-none transition-all outline-none"
                             autoFocus
                         />
@@ -279,7 +295,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                     )}
 
                     {/* Status Action Buttons */}
-                    <div className="flex items-center gap-1 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border border-gray-100 dark:border-gray-800 mt-auto">
+                    <div className="flex items-center gap-1 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 mt-auto">
                         {mainStatusActions.map((action) => {
                             const Icon = action.icon;
                             const isActive = task.status === action.id;

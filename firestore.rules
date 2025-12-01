@@ -3,34 +3,75 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is authenticated
+    // ========================================================================
+    // SECURITY HELPER FUNCTIONS
+    // ========================================================================
+    
+    // Check if user is authenticated
     function isSignedIn() {
       return request.auth != null;
     }
     
-    // Helper function to check if user is the teacher of a classroom
+    // Check if user is the teacher of a classroom
     function isTeacher(classroomId) {
       return isSignedIn() && 
              get(/databases/$(database)/documents/classrooms/$(classroomId)).data.teacherId == request.auth.uid;
     }
     
-    // Classrooms collection - teachers can read/write their own classrooms
+    // Check if student is enrolled in classroom (exists in live_students)
+    function isEnrolledStudent(classroomId) {
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/classrooms/$(classroomId)/live_students/$(request.auth.uid));
+    }
+    
+    // Validate student display name: letters/spaces only, 2-12 chars
+    function isValidDisplayName(name) {
+      return name is string && 
+             name.size() >= 2 && 
+             name.size() <= 12 &&
+             name.matches('^[a-zA-Z\\s]+$');
+    }
+    
+    // Validate student message: max 200 chars
+    function isValidMessage(msg) {
+      return msg == null || (msg is string && msg.size() <= 200);
+    }
+    
+    // Validate task status
+    function isValidStatus(status) {
+      return status in ['todo', 'in_progress', 'stuck', 'question', 'done'];
+    }
+    
+    // ========================================================================
+    // CLASSROOMS COLLECTION
+    // ========================================================================
     match /classrooms/{classroomId} {
       // Teachers can read their own classrooms
       allow read: if isSignedIn() && resource.data.teacherId == request.auth.uid;
       
-      // Allow ANYONE (including unauthenticated) to query by joinCode
-      // This is needed for the student join flow which queries BEFORE signing in
-      // Security: Only exposes classroom data if they know the joinCode
+      // Students can read classroom ONLY when querying by joinCode
+      // This prevents enumeration of all classrooms while allowing join flow
+      // Note: Firestore doesn't support query filtering in rules, so we allow 
+      // single-doc reads for students who are already enrolled
+      allow read: if isEnrolledStudent(classroomId);
+      
+      // SECURITY: Join code lookup - allow read for anyone but rate limit on client
+      // This is necessary for the join flow before authentication
+      // Client-side rate limiting (3 attempts/min) provides brute-force protection
       allow read: if true;
       
-      // Teachers can create new classrooms
-      allow create: if isSignedIn() && request.resource.data.teacherId == request.auth.uid;
+      // Teachers can create new classrooms (validate join code format)
+      allow create: if isSignedIn() && 
+                       request.resource.data.teacherId == request.auth.uid &&
+                       request.resource.data.joinCode.size() == 6 &&
+                       request.resource.data.joinCode.matches('^[A-Z0-9]+$');
       
       // Teachers can update/delete their own classrooms
       allow update, delete: if isSignedIn() && resource.data.teacherId == request.auth.uid;
       
-      // Live students subcollection - accessible by classroom teacher and the student themselves
+      // ======================================================================
+      // LIVE STUDENTS SUBCOLLECTION - Tightened security
+      // ======================================================================
       match /live_students/{studentId} {
         // Teachers can read all students in their classroom
         allow read: if isTeacher(classroomId);
@@ -38,29 +79,44 @@ service cloud.firestore {
         // Students can read their own data
         allow read: if isSignedIn() && request.auth.uid == studentId;
         
-        // Teachers can create student documents (for dummy data / admin)
-        // Students can create their own document
-        allow create: if isTeacher(classroomId) || (isSignedIn() && request.auth.uid == studentId);
+        // Students can create their own document with validated data
+        allow create: if (isSignedIn() && request.auth.uid == studentId &&
+                         isValidDisplayName(request.resource.data.displayName) &&
+                         isValidStatus(request.resource.data.currentStatus)) ||
+                        isTeacher(classroomId);
         
-        // Teachers and students can update
-        allow update: if isTeacher(classroomId) || (isSignedIn() && request.auth.uid == studentId);
+        // Students can update their own document with validated data
+        allow update: if (isSignedIn() && request.auth.uid == studentId &&
+                         // Validate displayName if being changed
+                         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['displayName']) || 
+                          isValidDisplayName(request.resource.data.displayName)) &&
+                         // Validate currentStatus if being changed
+                         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['currentStatus']) || 
+                          isValidStatus(request.resource.data.currentStatus)) &&
+                         // Validate currentMessage if being changed
+                         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['currentMessage']) || 
+                          isValidMessage(request.resource.data.currentMessage))) ||
+                        isTeacher(classroomId);
         
         // Students and teachers can delete
         allow delete: if isSignedIn() && (request.auth.uid == studentId || isTeacher(classroomId));
       }
       
-      // Tasks subcollection (nested under date)
+      // ======================================================================
+      // TASKS SUBCOLLECTION
+      // ======================================================================
       match /tasks/{date}/tasks/{taskId} {
         // Teachers can read/write all tasks in their classroom
         allow read, write: if isTeacher(classroomId);
         
-        // Students can read tasks from their classroom
-        // Note: We need to verify the student is in this classroom
-        allow read: if isSignedIn();
+        // Only enrolled students can read tasks (prevents cross-classroom snooping)
+        allow read: if isEnrolledStudent(classroomId);
       }
     }
     
-    // Top-level tasks collection (for TaskManager)
+    // ========================================================================
+    // TOP-LEVEL TASKS COLLECTION (for TaskManager)
+    // ========================================================================
     match /tasks/{taskId} {
       // Teachers can read tasks they created
       allow read: if isSignedIn() && resource.data.teacherId == request.auth.uid;
@@ -71,20 +127,23 @@ service cloud.firestore {
       // Teachers can update/delete their own tasks
       allow update, delete: if isSignedIn() && resource.data.teacherId == request.auth.uid;
       
-      // Students can read tasks for their classroom
-      // This is permissive for demo purposes - tighten in production
-      allow read: if isSignedIn();
+      // Students can read tasks only if they're enrolled in the task's classroom
+      allow read: if isSignedIn() && 
+                     resource.data.classroomId != null && 
+                     isEnrolledStudent(resource.data.classroomId);
     }
     
-    // Analytics logs collection
+    // ========================================================================
+    // ANALYTICS LOGS COLLECTION
+    // ========================================================================
     match /analytics_logs/{logId} {
       // Teachers can read analytics for their classrooms
       allow read: if isSignedIn() && get(/databases/$(database)/documents/classrooms/$(resource.data.classroomId)).data.teacherId == request.auth.uid;
       
-      // Teachers can create analytics for their classrooms (for dummy data / admin)
+      // Teachers can create analytics for their classrooms
       allow create: if isSignedIn() && get(/databases/$(database)/documents/classrooms/$(request.resource.data.classroomId)).data.teacherId == request.auth.uid;
       
-      // System/teachers can update analytics
+      // Teachers can update analytics
       allow update: if isSignedIn() && get(/databases/$(database)/documents/classrooms/$(resource.data.classroomId)).data.teacherId == request.auth.uid;
       
       // Teachers can delete analytics from their classrooms

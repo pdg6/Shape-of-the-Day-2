@@ -79,7 +79,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                                 className={`
                                     flex-1 relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px]
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
-                                    focus:outline-none
+                                    focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
                                         ? 'border-brand-accent text-brand-accent'
                                         : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
@@ -119,6 +119,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                     className={`
                         group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                     `}
                     title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
@@ -142,6 +143,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     onClick={onOpenSettings}
                     className={`
                         group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                     `}
                     title={isCollapsed ? 'Settings' : undefined}
@@ -163,6 +165,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     onClick={onSignOut}
                     className={`
                         group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
+                        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                     `}
                     title={isCollapsed ? 'Sign Out' : undefined}

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { signInAnonymously } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { LiveStudent } from '../../types';
 import toast from 'react-hot-toast';
+import { sanitizeName, sanitizeCode, validateName, createRateLimiter } from '../../utils/security';
 
 interface JoinRoomProps {
     onJoin: (code: string, name: string, classId: string) => void;
@@ -11,21 +12,37 @@ interface JoinRoomProps {
 }
 
 const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
-    const [code, setCode] = useState(initialCode);
+    const [code, setCode] = useState(sanitizeCode(initialCode));
     const [name, setName] = useState('');
     const [error, setError] = useState('');
     const [isJoining, setIsJoining] = useState(false);
+    
+    // Rate limiter: Max 3 join attempts per minute to prevent brute-force
+    const rateLimiterRef = useRef(createRateLimiter(3, 60000));
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 1. Validation
-        if (code.length !== 6) {
+        // 0. Rate limiting check
+        const rateCheck = rateLimiterRef.current.check();
+        if (!rateCheck.allowed) {
+            setError(`Too many attempts. Try again in ${rateCheck.retryAfter} seconds.`);
+            return;
+        }
+
+        // 1. Sanitize inputs
+        const sanitizedCode = sanitizeCode(code);
+        const sanitizedName = sanitizeName(name);
+        
+        // 2. Validation
+        if (sanitizedCode.length !== 6) {
             setError('Please enter a valid 6-character code');
             return;
         }
-        if (!name.trim()) {
-            setError('Please enter your name');
+        
+        const nameValidation = validateName(sanitizedName);
+        if (!nameValidation.valid) {
+            setError(nameValidation.error);
             return;
         }
 
@@ -55,7 +72,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
             // 3. Create the Live Student Document in the target class
             const newStudentData: LiveStudent = {
                 uid: uid,
-                displayName: name,
+                displayName: sanitizedName,
                 joinedAt: serverTimestamp() as any,
                 currentStatus: 'todo',
                 taskHistory: [],
@@ -77,8 +94,8 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                 }
             }
 
-            toast.success(`Joined as ${name}!`);
-            onJoin(code, name, targetClassId); // Notify parent to switch view
+            toast.success(`Joined as ${sanitizedName}!`);
+            onJoin(sanitizedCode, sanitizedName, targetClassId); // Notify parent to switch view
 
         } catch (err) {
             console.error("Join Error:", err);
@@ -99,9 +116,11 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         id="code"
                         type="text"
                         value={code}
-                        onChange={(e) => setCode(e.target.value.toUpperCase())}
+                        onChange={(e) => setCode(sanitizeCode(e.target.value))}
                         placeholder="Enter 6-digit code"
                         maxLength={6}
+                        autoComplete="off"
+                        spellCheck={false}
                         className={`
                             input-base text-center text-2xl font-mono tracking-[0.5em]
                             placeholder:text-sm placeholder:font-sans placeholder:tracking-normal
@@ -119,8 +138,11 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         id="name"
                         type="text"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="What's your name?"
+                        onChange={(e) => setName(sanitizeName(e.target.value))}
+                        placeholder="Your name (letters only)"
+                        maxLength={12}
+                        autoComplete="off"
+                        spellCheck={false}
                         className="input-base text-center text-lg input-focus"
                     />
                 </div>
@@ -134,7 +156,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
 
             <button
                 type="submit"
-                disabled={isJoining || code.length !== 6 || !name.trim()}
+                disabled={isJoining || sanitizeCode(code).length !== 6 || !validateName(sanitizeName(name)).valid}
                 className="btn-primary-green text-lg"
             >
                 {isJoining ? 'Joining...' : 'Join Class'}

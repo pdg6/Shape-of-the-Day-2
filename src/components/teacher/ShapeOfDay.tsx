@@ -93,13 +93,13 @@ const ShapeOfDay: React.FC = () => {
                                 <span className="font-bold text-sm">{activeStudentCount} Active</span>
                             </div>
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight leading-tight">
+                        <h1 className="text-fluid-3xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight leading-tight">
                             {currentClass.name}
                         </h1>
                     </div>
 
                     {/* Right: Connection Info (Compact) */}
-                    <div className="flex-shrink-0 flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="flex-shrink-0 flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border-[3px] border-dashed border-gray-200 dark:border-gray-700">
                         <div className="text-right">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Join at</p>
                             <p className="text-base font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2 flex items-center justify-end gap-1">

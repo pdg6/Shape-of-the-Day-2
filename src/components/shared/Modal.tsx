@@ -92,7 +92,7 @@ export const Modal: React.FC<ModalProps> = ({
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between p-6">
-                    <h2 id={titleId} className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                    <h2 id={titleId} className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                         {title}
                     </h2>
                     <button

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import MiniCalendar from './MiniCalendar';
 import CurrentTaskList from './CurrentTaskList';
 import DayTaskPreview from './DayTaskPreview';
@@ -7,10 +7,11 @@ import StudentMenuModal from './StudentMenuModal';
 import StudentSidebar from './StudentSidebar';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { Calendar, ListTodo, Menu } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
+import { throttle } from '../../utils/security';
 
 /**
  * Props for the StudentView component.
@@ -112,6 +113,7 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
+     * Throttled to prevent excessive writes from rapid status changes.
      */
     const syncToTeacher = async (taskId: string, status: TaskStatus, comment: string = '') => {
         if (!auth.currentUser || !classId) return;
@@ -129,7 +131,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 'metrics.tasksCompleted': completedCount,
                 'metrics.activeTasks': activeTasks,
                 currentMessage: comment,
-                lastActive: new Date() // Heartbeat
+                lastActive: serverTimestamp() // Server timestamp for accurate heartbeat
             });
 
             console.log('[SYNC] Updated Firestore for student:', auth.currentUser.uid);
@@ -138,6 +140,40 @@ const StudentView: React.FC<StudentViewProps> = ({
             // Don't show toast for background sync errors to avoid spamming the user
         }
     };
+
+    /**
+     * SECURITY: Student heartbeat - updates lastSeen every 60 seconds
+     * Allows teachers to identify inactive/disconnected students
+     * Can be used for session cleanup (students inactive >5min can be removed)
+     */
+    useEffect(() => {
+        if (!auth.currentUser || !classId) return;
+
+        const sendHeartbeat = async () => {
+            try {
+                const studentRef = doc(db, 'classrooms', classId, 'live_students', auth.currentUser!.uid);
+                await updateDoc(studentRef, {
+                    lastSeen: serverTimestamp(),
+                    // Also update lastActive if they're actively on the page
+                    lastActive: serverTimestamp()
+                });
+                console.log('[HEARTBEAT] Updated lastSeen timestamp');
+            } catch (error) {
+                console.error('[HEARTBEAT] Failed to update:', error);
+            }
+        };
+
+        // Send initial heartbeat
+        sendHeartbeat();
+
+        // Send heartbeat every 60 seconds
+        const heartbeatInterval = setInterval(sendHeartbeat, 60000);
+
+        // Cleanup on unmount or classId change
+        return () => {
+            clearInterval(heartbeatInterval);
+        };
+    }, [classId]);
 
     /**
      * Updates the status of a specific task (e.g., todo -> in_progress).

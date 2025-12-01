@@ -141,7 +141,7 @@ const TeacherDashboard: React.FC = () => {
                                     className={`
                                     group relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px] overflow-hidden
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
-                                    focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/50
+                                    focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
                                             ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
                                             : 'border-transparent text-gray-500 hover:border-gray-100 dark:hover:border-gray-500'

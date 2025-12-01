@@ -3,8 +3,9 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { CheckCircle, Activity, Users } from 'lucide-react';
+import { CheckCircle, Activity, Users, Copy, Check } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
+import { QRCodeSVG } from 'qrcode.react';
 
 /**
  * LiveView Component
@@ -19,10 +20,14 @@ interface LiveViewProps {
 }
 
 const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
-    const { currentClassId } = useClassStore();
+    const { currentClassId, classrooms } = useClassStore();
     const [students, setStudents] = useState<LiveStudent[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
+    const [copied, setCopied] = useState(false);
+
+    const currentClass = classrooms.find(c => c.id === currentClassId);
+    const joinUrl = `${window.location.origin}/join`;
 
     // Fetch Live Students
     useEffect(() => {
@@ -85,8 +90,8 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
             {/* Header with Toggle */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Live Classroom</h2>
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">Monitor student progress in real-time</p>
+                    <h2 className="text-fluid-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Live Classroom</h2>
+                    <p className="text-fluid-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Monitor student progress in real-time</p>
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -100,14 +105,61 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
 
             {/* Content */}
             {students.length === 0 ? (
-                <div className="text-center py-16 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-300 dark:border-gray-700">
+                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-gray-400" />
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Waiting for students...</h3>
-                    <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-                        Students will appear here when they join using the class code.
+                    <h3 className="text-fluid-lg font-bold text-gray-900 dark:text-white mb-1">Waiting for students...</h3>
+                    <p className="text-fluid-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+                        Share this code with your students to get started.
                     </p>
+
+                    {/* Join Code Section */}
+                    {currentClass && (
+                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl border-[3px] border-dashed border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-6">
+                                {/* QR Code */}
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+                                    <QRCodeSVG
+                                        value={`${joinUrl}?code=${currentClass.joinCode}`}
+                                        size={80}
+                                        level="H"
+                                        fgColor="#000000"
+                                        bgColor="#ffffff"
+                                    />
+                                </div>
+
+                                {/* Code & URL */}
+                                <div className="text-left">
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Join at</p>
+                                    <p className="text-fluid-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-3">
+                                        shapeoftheday.app/join
+                                    </p>
+                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Class Code</p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl font-mono font-black text-brand-accent tracking-widest">
+                                            {currentClass.joinCode}
+                                        </span>
+                                        <button
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(currentClass.joinCode);
+                                                setCopied(true);
+                                                setTimeout(() => setCopied(false), 2000);
+                                            }}
+                                            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
+                                            title="Copy code"
+                                        >
+                                            {copied ? (
+                                                <Check className="w-4 h-4 text-green-500" />
+                                            ) : (
+                                                <Copy className="w-4 h-4 text-gray-400" />
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             ) : activeView === 'students' ? (
                 <StudentListView students={students} totalTasks={tasks.length} tasks={tasks} />

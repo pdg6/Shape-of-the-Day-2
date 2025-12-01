@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom } from '../../types';
 import { X, Trash2 } from 'lucide-react';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { useClassStore } from '../../store/classStore';
 import { themeColors } from '../../styles/tokens';
+import { generateSecureCode } from '../../utils/security';
 
 export const ClassFormModal: React.FC = () => {
     const { isClassModalOpen, setIsClassModalOpen, editingClass, classrooms, setClassrooms, currentClassId, setCurrentClassId } = useClassStore();
@@ -63,10 +64,28 @@ export const ClassFormModal: React.FC = () => {
                 setClassrooms(classrooms.map(c => c.id === editingClass.id ? { ...c, ...formData } : c));
                 handleSuccess('Class updated successfully');
             } else {
-                // Create
+                // Create with cryptographically secure join code
+                // Generate unique code (check for collisions)
+                let joinCode = generateSecureCode(6);
+                let attempts = 0;
+                const maxAttempts = 10;
+                
+                while (attempts < maxAttempts) {
+                    const existing = await getDocs(
+                        query(collection(db, 'classrooms'), where('joinCode', '==', joinCode))
+                    );
+                    if (existing.empty) break;
+                    joinCode = generateSecureCode(6);
+                    attempts++;
+                }
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Could not generate unique join code. Please try again.');
+                }
+                
                 const newClass = {
                     teacherId: auth.currentUser.uid,
-                    joinCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+                    joinCode: joinCode,
                     name: formData.name,
                     subject: formData.subject,
                     gradeLevel: formData.gradeLevel,

@@ -1,10 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 
 import LandingPage from './components/shared/LandingPage';
-import TeacherDashboard from './components/teacher/TeacherDashboard';
-import StudentView from './components/student/StudentView';
 import StudentNameModal from './components/student/StudentNameModal';
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -13,6 +11,20 @@ import { Classroom } from './types';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider, UserRole } from './context/ThemeContext';
 import { loadDummyData, getDummyJoinCodes } from './services/dummyDataService';
+
+// Lazy load heavy components for better initial load performance
+const TeacherDashboard = lazy(() => import('./components/teacher/TeacherDashboard'));
+const StudentView = lazy(() => import('./components/student/StudentView'));
+
+// Loading fallback component
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center h-screen bg-brand-light dark:bg-brand-dark">
+        <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
+            <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary font-medium">Loading...</p>
+        </div>
+    </div>
+);
 
 /**
  * App Component
@@ -70,7 +82,11 @@ function App() {
     }, [user, loading]);
 
     // Developer Mode: Keyboard shortcut to load dummy data (Ctrl+Shift+D)
+    // SECURITY: Only enabled in development mode to prevent production abuse
     useEffect(() => {
+        // Skip in production builds
+        if (!import.meta.env.DEV) return;
+        
         const handleKeyPress = async (event: KeyboardEvent) => {
             // Check for Ctrl+Shift+D (or Cmd+Shift+D on Mac)
             if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'D') {
@@ -240,15 +256,21 @@ function App() {
                         />
                     )}
 
-                    {view === 'teacher' && <TeacherDashboard />}
+                    {view === 'teacher' && (
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <TeacherDashboard />
+                        </Suspense>
+                    )}
                     {view === 'student' && (
-                        <StudentView
-                            studentName={studentName}
-                            classId={classId}
-                            onEditName={() => setShowNameModal(true)}
-                            onNameSubmit={handleNameSubmit}
-                            onSignOut={handleLogout}
-                        />
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <StudentView
+                                studentName={studentName}
+                                classId={classId}
+                                onEditName={() => setShowNameModal(true)}
+                                onNameSubmit={handleNameSubmit}
+                                onSignOut={handleLogout}
+                            />
+                        </Suspense>
                     )}
                 </main>
             </div>

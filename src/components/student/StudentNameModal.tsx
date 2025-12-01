@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GraduationCap, X } from 'lucide-react';
+import { sanitizeName, validateName } from '../../utils/security';
 
 /**
  * Props for the StudentNameModal component.
@@ -27,31 +28,34 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
 
     /**
      * Handles form submission.
-     * Validates that the name is not empty before calling onSubmit.
+     * Validates that the name is not empty, letters only, and within length limits.
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // Stop propagation to prevent clicks from bubbling up to the background (which might close the modal)
         e.stopPropagation();
 
-        if (!name.trim()) {
-            setError('Please enter your name');
+        const sanitized = sanitizeName(name);
+        const validation = validateName(sanitized);
+        
+        if (!validation.valid) {
+            setError(validation.error);
             return;
         }
-        onSubmit(name);
+        
+        onSubmit(sanitized);
     };
 
     /**
      * Handles input changes.
-     * Enforces a maximum length of 12 characters.
+     * Sanitizes input to letters only, enforces max 12 characters.
      */
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        if (value.length <= 12) {
-            setName(value);
-            // Clear error message when user starts typing
-            if (error) setError('');
-        }
+        // Sanitize as user types - only letters and spaces allowed
+        const sanitized = sanitizeName(e.target.value);
+        setName(sanitized);
+        // Clear error message when user starts typing
+        if (error) setError('');
     };
 
     return (
@@ -85,7 +89,10 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                             type="text"
                             value={name}
                             onChange={handleChange}
-                            placeholder="Your Name"
+                            placeholder="Your Name (letters only)"
+                            maxLength={12}
+                            autoComplete="off"
+                            spellCheck={false}
                             className={`
                                 input-base input-focus text-lg text-center tracking-[0.5em] rounded-lg
                                 placeholder:tracking-normal placeholder:font-sans
@@ -101,7 +108,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
 
                     <button
                         type="submit"
-                        disabled={!name.trim()}
+                        disabled={!validateName(sanitizeName(name)).valid}
                         onClick={(e) => e.stopPropagation()}
                         className="btn-primary-green text-lg"
                     >
