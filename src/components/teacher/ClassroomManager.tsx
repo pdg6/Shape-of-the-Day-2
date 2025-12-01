@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, deleteDoc, doc, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Classroom, AnalyticsLog } from '../../types';
-import { Plus, Trash2, Edit2, Calendar as CalendarIcon, Users, BookOpen, X, Check, RefreshCw, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Users, X, Check, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle, BookOpen } from 'lucide-react';
 import { Button } from '../shared/Button';
-import { handleError, handleSuccess } from '../../utils/errorHandler';
+import { handleError } from '../../utils/errorHandler';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
 import { useClassStore } from '../../store/classStore';
+import { ClassCard } from './ClassCard';
 
 /**
  * ClassroomManager Component
@@ -18,9 +19,10 @@ import { useClassStore } from '../../store/classStore';
  */
 interface ClassroomManagerProps {
     activeView?: 'classes' | 'history' | 'analytics';
+    onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms', subTab?: string) => void;
 }
 
-const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'classes' }) => {
+const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'classes', onNavigate }) => {
     const [internalTab, setInternalTab] = useState<'classes' | 'history' | 'analytics'>(activeView);
 
     useEffect(() => {
@@ -28,7 +30,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
     }, [activeView]);
 
     // Global Store
-    const { classrooms, setClassrooms, currentClassId, setCurrentClassId, setIsClassModalOpen } = useClassStore();
+    const { classrooms, currentClassId, setCurrentClassId, setIsClassModalOpen } = useClassStore();
 
     // --- State for History/Analytics ---
     const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -97,8 +99,8 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 const taskStat = taskStats[task.taskId];
                 if (taskStat) {
                     taskStat.attempts++;
-                if (task.statusWasStuck) taskStat.stuckCount++;
-                taskStat.totalTime += task.timeToComplete_ms;
+                    if (task.statusWasStuck) taskStat.stuckCount++;
+                    taskStat.totalTime += task.timeToComplete_ms;
                 }
             });
         });
@@ -146,23 +148,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
     // --- CRUD Handlers ---
 
-    const handleDeleteClass = async (id: string) => {
-        if (!confirm('Are you sure? This will delete the class and all associated data.')) return;
-        try {
-            await deleteDoc(doc(db, 'classrooms', id));
-            const updatedClassrooms = classrooms.filter(c => c.id !== id);
-            setClassrooms(updatedClassrooms);
 
-            // If deleted class was selected, select another one
-            if (currentClassId === id) {
-                setCurrentClassId(updatedClassrooms.length > 0 ? updatedClassrooms[0]?.id ?? null : null);
-            }
-
-            handleSuccess('Class deleted');
-        } catch (error) {
-            handleError(error, 'deleting class');
-        }
-    };
 
     const openEditModal = (cls: Classroom) => {
         setIsClassModalOpen(true, cls);
@@ -188,78 +174,118 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
         setShowDaySummary(true);
     };
 
+    // Calculate total tasks across all classrooms
+    const totalTasks = classrooms.reduce((acc, cls) => acc + (cls.contentLibrary?.length || 0), 0);
+
     return (
         <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500">
             {/* Content Area */}
             <div className="flex-1 overflow-hidden">
                 {internalTab === 'classes' && (
                     <div className="h-full overflow-y-auto pr-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
                             {/* Add New Card */}
-                            <button
-                                onClick={openCreateModal}
-                                className="flex flex-col items-center justify-center h-64 border-[3px] border-dashed border-gray-300 dark:border-gray-700 rounded-xl hover:border-brand-accent hover:bg-brand-accent/5 transition-all group focus:outline-none focus:ring-4 focus:ring-brand-accent/20"
-                                aria-label="Create New Class"
-                            >
-                                <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                    <Plus className="w-8 h-8 text-gray-400 group-hover:text-brand-accent" />
+                            {/* Summary / Create Card */}
+                            <div className="flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden">
+                                {/* Header */}
+                                <div className="h-24 p-6 flex items-start justify-between bg-gray-50/50 dark:bg-gray-900/20">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight mb-1">
+                                            Overview
+                                        </h3>
+                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                            Classroom Manager
+                                        </p>
+                                    </div>
+                                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                        <BookOpen className="w-5 h-5" />
+                                    </div>
                                 </div>
-                                <span className="font-bold text-gray-500 group-hover:text-brand-accent">Create New Class</span>
-                            </button>
+
+                                {/* Body */}
+                                <div className="flex-1 p-6 pt-2 flex flex-col justify-center">
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex-1 text-left p-2 -ml-2">
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Classes</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                    {classrooms.length}
+                                                </span>
+                                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500">
+                                                    active
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="w-px bg-gray-200 dark:bg-gray-700 self-stretch my-2" />
+
+                                        <div className="flex-1 text-left p-2 -mr-2">
+                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Tasks</p>
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                    {totalTasks}
+                                                </span>
+                                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500">
+                                                    total
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Footer Action */}
+                                <div className="p-4 border-t-[3px] border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+                                    <button
+                                        onClick={openCreateModal}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-[3px] border-brand-accent bg-brand-accent text-white font-bold hover:bg-brand-accent/90 hover:border-brand-accent/90 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 shadow-lg shadow-brand-accent/20"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        <span>Create New Class</span>
+                                    </button>
+                                </div>
+                            </div>
 
                             {/* Class Cards */}
                             {classrooms.map(cls => (
-                                <div key={cls.id} className="card-base overflow-hidden flex flex-col">
-                                    <div className="h-2" style={{ backgroundColor: cls.color || '#3B82F6' }} />
-                                    <div className="p-6 flex-1">
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{cls.name}</h3>
-                                                <p className="text-sm text-gray-500">{cls.subject} • {cls.gradeLevel}</p>
-                                            </div>
-                                            <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                                                <BookOpen className="w-5 h-5 text-gray-500" />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border-[3px] border-gray-200 dark:border-gray-700">
-                                                <span className="text-xs font-bold text-gray-400 uppercase">Join Code</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-mono font-bold text-lg tracking-widest">{cls.joinCode}</span>
-                                                    <button className="text-gray-400 hover:text-brand-accent" title="Regenerate">
-                                                        <RefreshCw className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="p-4 border-t-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between">
-                                        <Button
-                                            variant="tertiary"
-                                            size="sm"
-                                            onClick={() => { setCurrentClassId(cls.id); setInternalTab('history'); }}
-                                        >
-                                            View History
-                                        </Button>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                variant="icon"
-                                                size="sm"
-                                                onClick={() => openEditModal(cls)}
-                                                className="hover:bg-white dark:hover:bg-gray-700"
-                                                icon={Edit2}
-                                            />
-                                            <Button
-                                                variant="icon"
-                                                size="sm"
-                                                onClick={() => handleDeleteClass(cls.id)}
-                                                className="hover:text-red-500 hover:bg-white dark:hover:bg-gray-700"
-                                                icon={Trash2}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+                                <ClassCard
+                                    key={cls.id}
+                                    classroom={cls}
+                                    onEdit={openEditModal}
+                                    onSelect={(id) => {
+                                        setCurrentClassId(id);
+                                        // Do not navigate away from classrooms tab
+                                    }}
+                                    onViewHistory={(id) => {
+                                        setCurrentClassId(id);
+                                        setInternalTab('history');
+                                    }}
+                                    onViewStudents={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('live', 'students');
+                                    }}
+                                    onViewTasks={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('live', 'tasks');
+                                    }}
+                                    onManageTasks={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('tasks');
+                                    }}
+                                    onViewShape={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('shape');
+                                    }}
+                                    onViewCalendar={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('data', 'history');
+                                    }}
+                                    onViewData={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onNavigate) onNavigate('data', 'analytics');
+                                    }}
+                                />
                             ))}
                         </div>
                     </div>

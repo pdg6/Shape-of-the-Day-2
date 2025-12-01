@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Clock, Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home } from 'lucide-react';
+import { Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
@@ -42,8 +42,8 @@ const TeacherDashboard: React.FC = () => {
 
     const menuItems: MenuItem[] = [
         { id: 'classrooms', label: 'Classrooms', icon: School },
-        { id: 'tasks', label: 'Task Manager', icon: LayoutDashboard },
-        { id: 'shape', label: 'Shape of Day', icon: Clock },
+        { id: 'tasks', label: 'Task Manager', icon: ListTodo },
+        { id: 'shape', label: 'Shape of Day', icon: Presentation },
         { id: 'live', label: 'Live View', icon: Activity },
         { id: 'data', label: 'Data', icon: BarChart2 },
     ];
@@ -72,18 +72,28 @@ const TeacherDashboard: React.FC = () => {
         // For now, just stay on current view but update context
     };
 
+    const handleDeepNavigation = (tab: MenuItem['id'], subTab?: string) => {
+        setActiveTab(tab);
+        if (tab === 'live' && subTab) {
+            setLiveViewSubTab(subTab as 'tasks' | 'students');
+        } else if (tab === 'data' && subTab) {
+            setClassroomSubTab(subTab as 'classes' | 'history' | 'analytics');
+        }
+    };
+
     const renderContent = () => {
         switch (activeTab) {
+            case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} />;
             case 'tasks': return <TaskManager />;
             case 'shape': return <ShapeOfDay />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
-            case 'data': return <ClassroomManager activeView={classroomSubTab} />;
+            case 'data': return <ClassroomManager activeView={classroomSubTab} onNavigate={handleDeepNavigation} />;
             default: return <TaskManager />;
         }
     };
 
     return (
-        <div className="flex h-full bg-brand-bg dark:bg-brand-darkBg text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
+        <div className="flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
             {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
@@ -208,7 +218,7 @@ const TeacherDashboard: React.FC = () => {
                                                 onClick={() => setClassroomSubTab('history')}
                                                 className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'history' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
                                             >
-                                                History
+                                                Calendar
                                             </button>
                                         </li>
                                         <li>
@@ -356,18 +366,18 @@ const TeacherDashboard: React.FC = () => {
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 relative">
                 {/* Header */}
-                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-center justify-between px-4 md:px-6 z-dropdown border-b border-gray-200 dark:border-gray-800">
+                <header className="h-16 bg-brand-lightSurface dark:bg-brand-darkSurface flex items-baseline justify-between px-4 md:px-6 z-dropdown border-b border-gray-200 dark:border-gray-800 pb-4">
                     {/* Left: Class Name */}
                     <h2 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
                         {currentClass?.name || 'No Class Selected'}
                     </h2>
                     {/* Right: Current Tab/Sub-tab (blue) + Date (gray) */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-baseline gap-3 flex-shrink-0">
                         <span className="text-fluid-lg font-semibold text-blue-600 dark:text-blue-500">
                             {activeTab === 'live'
                                 ? `Live View - ${liveViewSubTab === 'tasks' ? 'By Task' : 'By Student'}`
                                 : activeTab === 'data'
-                                    ? `Data - ${classroomSubTab === 'history' ? 'History' : 'Analytics'}`
+                                    ? `Data - ${classroomSubTab === 'history' ? 'Calendar' : 'Analytics'}`
                                     : menuItems.find(i => i.id === activeTab)?.label}
                         </span>
                         <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">
@@ -465,7 +475,7 @@ const TeacherDashboard: React.FC = () => {
                                 }`}
                             aria-label="Task Manager"
                         >
-                            <LayoutDashboard className="w-6 h-6" />
+                            <ListTodo className="w-6 h-6" />
                             <span className="text-fluid-xs font-bold">Tasks</span>
                         </button>
                     </li>
@@ -479,7 +489,7 @@ const TeacherDashboard: React.FC = () => {
                                 }`}
                             aria-label="Shape of Day"
                         >
-                            <Clock className="w-6 h-6" />
+                            <Presentation className="w-6 h-6" />
                             <span className="text-fluid-xs font-bold">Shape</span>
                         </button>
                     </li>

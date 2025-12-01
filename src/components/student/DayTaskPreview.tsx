@@ -52,7 +52,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
     // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
-            <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 text-center mb-6">
+            <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 text-center mb-6">
                 <p className="text-gray-400 dark:text-gray-500">No tasks scheduled for this day.</p>
             </div>
         );
@@ -112,7 +112,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     return (
                         <div
                             key={task.id}
-                            className={`relative bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border-[3px] ${borderClass} transition-all duration-200 hover:brightness-95 dark:hover:brightness-110`}
+                            className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] ${borderClass} transition-all duration-200 hover:brightness-95 dark:hover:brightness-110`}
                         >
                             {/* Import Button - Top Right */}
                             {onImportTask && !hideImportButtons && (

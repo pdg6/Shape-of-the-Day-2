@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom } from '../../types';
-import { X } from 'lucide-react';
+import { X, Trash2 } from 'lucide-react';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { useClassStore } from '../../store/classStore';
 
 export const ClassFormModal: React.FC = () => {
-    const { isClassModalOpen, setIsClassModalOpen, editingClass, classrooms, setClassrooms, setCurrentClassId } = useClassStore();
+    const { isClassModalOpen, setIsClassModalOpen, editingClass, classrooms, setClassrooms, currentClassId, setCurrentClassId } = useClassStore();
 
     const [formData, setFormData] = useState({
         name: '',
@@ -28,6 +28,23 @@ export const ClassFormModal: React.FC = () => {
             setFormData({ name: '', subject: '', gradeLevel: '', color: '#3B82F6' });
         }
     }, [editingClass, isClassModalOpen]);
+
+    const handleDeleteClass = async () => {
+        if (!editingClass) return;
+        if (!window.confirm('Are you sure you want to delete this class? This action cannot be undone.')) return;
+
+        try {
+            await deleteDoc(doc(db, 'classrooms', editingClass.id));
+            setClassrooms(classrooms.filter(c => c.id !== editingClass.id));
+            if (currentClassId === editingClass.id) {
+                setCurrentClassId(null);
+            }
+            handleSuccess('Class deleted successfully');
+            setIsClassModalOpen(false);
+        } catch (error) {
+            handleError(error, 'deleting class');
+        }
+    };
 
     const handleSaveClass = async () => {
         if (!formData.name) return handleError(new Error('Class name is required'));
@@ -128,6 +145,16 @@ export const ClassFormModal: React.FC = () => {
                     >
                         {editingClass ? 'Save Changes' : 'Create Class'}
                     </button>
+
+                    {editingClass && (
+                        <button
+                            onClick={handleDeleteClass}
+                            className="w-full py-3 bg-red-50 text-red-500 font-bold rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Delete Class
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

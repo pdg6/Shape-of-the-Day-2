@@ -193,7 +193,7 @@ function App() {
     }
 
     return (
-        <div className="flex flex-col h-screen-safe bg-brand-light dark:bg-brand-dark transition-colors duration-200">
+        <div className="flex flex-col h-screen-safe bg-brand-lightSurface dark:bg-brand-darkSurface transition-colors duration-200">
             {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
             <a href="#main-content" className="skip-link">
                 Skip to main content

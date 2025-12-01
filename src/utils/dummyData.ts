@@ -117,6 +117,36 @@ export const CS101_TASKS: Task[] = [
         status: 'todo',
         dueDate: '11:45 AM',
     },
+    // Day +2 Tasks
+    {
+        id: `task-cs-6`,
+        title: 'Linked Lists: Singly vs Doubly',
+        description: 'Read Chapter 4 in the textbook. Compare and contrast singly and doubly linked lists. When would you use one over the other?',
+        status: 'todo',
+        dueDate: '9:00 AM',
+    },
+    {
+        id: `task-cs-7`,
+        title: 'Coding Challenge: Reverse a Linked List',
+        description: 'Implement a function to reverse a singly linked list in place. Submit your solution to the class repository.',
+        status: 'todo',
+        dueDate: '10:30 AM',
+    },
+    // Day +3 Tasks
+    {
+        id: `task-cs-8`,
+        title: 'Trees: Introduction to Binary Trees',
+        description: 'Watch the introductory video on Binary Trees. Understand the terminology: root, leaf, child, parent, height, depth.',
+        status: 'todo',
+        dueDate: '9:00 AM',
+    },
+    {
+        id: `task-cs-9`,
+        title: 'Traversal Algorithms: Pre-order, In-order, Post-order',
+        description: 'Implement the three depth-first traversal algorithms for a binary tree. Visualize the traversal order.',
+        status: 'todo',
+        dueDate: '11:00 AM',
+    },
 ];
 
 /**
@@ -155,6 +185,36 @@ export const WEBDEV_TASKS: Task[] = [
         id: `task-web-5`,
         title: 'Deploy to Vercel',
         description: 'Deploy your completed app to Vercel. Set up automatic deployments from your GitHub repository. Submit the live URL.',
+        status: 'todo',
+        dueDate: '1:00 PM',
+    },
+    // Day +2 Tasks
+    {
+        id: `task-web-6`,
+        title: 'Introduction to Next.js',
+        description: 'Watch the "Next.js for Beginners" crash course. Set up a new Next.js project using create-next-app.',
+        status: 'todo',
+        dueDate: '9:00 AM',
+    },
+    {
+        id: `task-web-7`,
+        title: 'Routing in Next.js',
+        description: 'Create a multi-page application using the App Router. Implement dynamic routes and nested layouts.',
+        status: 'todo',
+        dueDate: '11:00 AM',
+    },
+    // Day +3 Tasks
+    {
+        id: `task-web-8`,
+        title: 'Server-Side Rendering (SSR) vs Static Site Generation (SSG)',
+        description: 'Read the documentation on data fetching in Next.js. Understand when to use SSR, SSG, and ISR.',
+        status: 'todo',
+        dueDate: '9:30 AM',
+    },
+    {
+        id: `task-web-9`,
+        title: 'API Routes in Next.js',
+        description: 'Build a simple API within your Next.js application. Create endpoints to GET and POST data.',
         status: 'todo',
         dueDate: '1:00 PM',
     },
@@ -198,6 +258,36 @@ export const DESIGN_TASKS: Task[] = [
         description: 'Prepare a 5-minute presentation of your redesign. Include problem statement, research, design decisions, and before/after comparisons.',
         status: 'todo',
         dueDate: '1:30 PM',
+    },
+    // Day +2 Tasks
+    {
+        id: `task-design-6`,
+        title: 'Introduction to User Research',
+        description: 'Read the article on "The Importance of User Research". Write a brief summary of the key takeaways.',
+        status: 'todo',
+        dueDate: '10:00 AM',
+    },
+    {
+        id: `task-design-7`,
+        title: 'Conducting User Interviews',
+        description: 'Prepare a script for user interviews. Identify 3 potential users to interview for your next project.',
+        status: 'todo',
+        dueDate: '2:00 PM',
+    },
+    // Day +3 Tasks
+    {
+        id: `task-design-8`,
+        title: 'Creating User Personas',
+        description: 'Based on your initial research, create 2 distinct user personas. Include demographics, goals, frustrations, and behaviors.',
+        status: 'todo',
+        dueDate: '11:00 AM',
+    },
+    {
+        id: `task-design-9`,
+        title: 'Journey Mapping',
+        description: 'Map out the current user journey for one of your personas. Identify pain points and opportunities for improvement.',
+        status: 'todo',
+        dueDate: '3:00 PM',
     },
 ];
 
@@ -574,16 +664,22 @@ export const getTasksByDate = (classId: string) => {
         [getDateString(0)]: [], // Today
         [getDateString(-1)]: [], // Yesterday
         [getDateString(1)]: [], // Tomorrow
+        [getDateString(2)]: [], // Day +2
+        [getDateString(3)]: [], // Day +3
     };
 
-    // Distribute tasks by date (this is simplified - in real app would use actual date fields)
+    // Distribute tasks by date
     tasks.forEach((task, index) => {
         if (index < 5) {
             tasksByDate[getDateString(0)]?.push(task);
         } else if (index < 7) {
             tasksByDate[getDateString(-1)]?.push(task);
-        } else {
+        } else if (index < 8) { // task 7 (index 7) goes to tomorrow
             tasksByDate[getDateString(1)]?.push(task);
+        } else if (index < 10) { // tasks 8, 9 (indices 8, 9) go to Day +2
+            tasksByDate[getDateString(2)]?.push(task);
+        } else { // Remaining tasks go to Day +3
+            tasksByDate[getDateString(3)]?.push(task);
         }
     });
 

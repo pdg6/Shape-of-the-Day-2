@@ -317,15 +317,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                         ref={statusButtonRef}
                         className="float-right ml-3 mb-2 z-10"
                     >
-                        <div className={`flex items-center overflow-hidden rounded-full border-2 transition-all duration-300 ease-out ${
-                            activeAction ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700'
-                        } ${isStatusExpanded ? 'shadow-lg scale-105' : 'shadow-md hover:shadow-lg hover:scale-[1.02]'}`}>
+                        <div className={`flex items-center overflow-hidden rounded-full border-2 transition-all duration-300 ease-out ${activeAction ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700'
+                            } ${isStatusExpanded ? 'shadow-lg scale-105' : 'shadow-md hover:shadow-lg hover:scale-[1.02]'}`}>
                             {/* Reset Button - Slides in from left */}
                             <button
                                 onClick={handleReset}
-                                className={`flex items-center gap-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all duration-300 ease-out overflow-hidden ${
-                                    isStatusExpanded ? 'w-[72px] px-3 py-2 opacity-100' : 'w-0 px-0 py-2 opacity-0'
-                                }`}
+                                className={`flex items-center gap-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all duration-300 ease-out overflow-hidden ${isStatusExpanded ? 'w-[72px] px-3 py-2 opacity-100' : 'w-0 px-0 py-2 opacity-0'
+                                    }`}
                             >
                                 <RotateCcw className={`w-4 h-4 shrink-0 transition-transform duration-300 ${isStatusExpanded ? 'rotate-0' : '-rotate-180'}`} />
                                 <span className="whitespace-nowrap">Reset</span>
@@ -334,9 +332,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                             {/* Current Status Button */}
                             <button
                                 onClick={handleStatusButtonClick}
-                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 ${
-                                    activeAction ? `${activeAction.activeColor} bg-white dark:bg-brand-darkSurface` : 'text-gray-500 bg-white dark:bg-brand-darkSurface'
-                                } ${task.status !== 'todo' ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
+                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold transition-all duration-200 ${activeAction ? `${activeAction.activeColor} bg-white dark:bg-brand-darkSurface` : 'text-gray-500 bg-white dark:bg-brand-darkSurface'
+                                    } ${task.status !== 'todo' ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
                             >
                                 {activeAction && <activeAction.icon className={`w-4 h-4 transition-transform duration-200 ${isStatusExpanded ? 'rotate-0' : ''}`} />}
                                 <span className="whitespace-nowrap">{getStatusLabel(task.status)}</span>
@@ -429,7 +426,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
             const assignedDate = new Date(assigned);
             const dueDate = new Date(due);
             const sameMonth = assignedDate.getMonth() === dueDate.getMonth() &&
-                              assignedDate.getFullYear() === dueDate.getFullYear();
+                assignedDate.getFullYear() === dueDate.getFullYear();
 
             const assignedStr = assignedIsToday ? 'Today' : formatSingleDate(assigned);
             const dueStr = dueIsToday ? 'Today' : (sameMonth ? dueDate.getDate().toString() : formatSingleDate(due));

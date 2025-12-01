@@ -252,7 +252,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     const currentTaskIds = new Set(currentTasks.map(t => t.id));
 
     return (
-        <div className="h-full flex overflow-hidden bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
+        <div className="h-full flex overflow-hidden bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Desktop Sidebar */}
             <StudentSidebar
                 studentName={studentName}
@@ -271,13 +271,13 @@ const StudentView: React.FC<StudentViewProps> = ({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Header - Class Name (left), Tasks & Progress + Date (right) */}
-                <header className="md:hidden h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-800">
+                <header className="md:hidden h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 flex items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-3">
                     {/* Left: Class Name */}
                     <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
                         {currentClassName}
                     </h1>
                     {/* Right: Tasks & Progress (emerald) + Date (gray) */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-baseline gap-2 flex-shrink-0">
                         <span className="text-fluid-sm font-semibold text-emerald-600 dark:text-emerald-500">
                             {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
                         </span>
@@ -293,13 +293,13 @@ const StudentView: React.FC<StudentViewProps> = ({
                 />
 
                 {/* Desktop Header - Class Name (left), Tasks & Progress + Date (right) */}
-                <header className="hidden md:flex h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-center justify-between border-b border-gray-200 dark:border-gray-800">
+                <header className="hidden md:flex h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-4">
                     {/* Left: Class Name */}
                     <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
                         {currentClassName}
                     </h1>
                     {/* Right: Tasks & Progress (emerald) + Date (gray) */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
+                    <div className="flex items-baseline gap-3 flex-shrink-0">
                         <span className="text-fluid-lg font-semibold text-emerald-600 dark:text-emerald-500">
                             {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
                         </span>
