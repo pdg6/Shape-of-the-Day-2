@@ -37,3 +37,20 @@ export const duration = {
     base: 200,
     slow: 300,
 }
+
+// Theme colors - Role-based defaults
+export const themeColors = {
+    studentAccent: '#10B981',  // Emerald-500
+    teacherAccent: '#3B82F6',  // Blue-500
+    // Classroom theme colors (teacher selectable)
+    classroomOptions: [
+        '#3B82F6', // Blue (default teacher)
+        '#10B981', // Emerald (default student)
+        '#EF4444', // Red
+        '#F59E0B', // Amber
+        '#8B5CF6', // Purple
+        '#EC4899', // Pink
+        '#06B6D4', // Cyan
+        '#F97316', // Orange
+    ]
+}

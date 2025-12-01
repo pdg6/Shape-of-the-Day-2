@@ -75,7 +75,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                 )}
 
                 <div className="text-center mb-8">
-                    <GraduationCap className="w-16 h-16 text-emerald-600 dark:text-emerald-400 mx-auto mb-6" />
+                    <GraduationCap className="w-16 h-16 text-brand-accent mx-auto mb-6" />
                     <h2 className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">What is your name?</h2>
                 </div>
 

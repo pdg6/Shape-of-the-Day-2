@@ -81,7 +81,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
                                     focus:outline-none
                                     ${activeTab === item.id
-                                        ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+                                        ? 'border-brand-accent text-brand-accent'
                                         : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                     }
                                     ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
@@ -123,12 +123,12 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     `}
                     title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                 >
-                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-emerald-500">
+                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-brand-accent">
                         {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
                     </div>
                     <span className={`
                         whitespace-nowrap transition-all duration-200 flex-1 text-left
-                        text-gray-500 group-hover:text-emerald-500
+                        text-gray-500 group-hover:text-brand-accent
                         ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                     `}>
                         Collapse
@@ -146,7 +146,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     `}
                     title={isCollapsed ? 'Settings' : undefined}
                 >
-                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 group-hover:text-emerald-500">
+                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 group-hover:text-brand-accent">
                         <Settings className="w-5 h-5" />
                     </div>
                     <span className={`

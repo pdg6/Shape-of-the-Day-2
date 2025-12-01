@@ -5,6 +5,7 @@ import { Classroom } from '../../types';
 import { X, Trash2 } from 'lucide-react';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { useClassStore } from '../../store/classStore';
+import { themeColors } from '../../styles/tokens';
 
 export const ClassFormModal: React.FC = () => {
     const { isClassModalOpen, setIsClassModalOpen, editingClass, classrooms, setClassrooms, currentClassId, setCurrentClassId } = useClassStore();
@@ -89,7 +90,7 @@ export const ClassFormModal: React.FC = () => {
     if (!isClassModalOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-modal flex items-center justify-center p-4">
             <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] border-gray-200 dark:border-gray-700 p-6 transition-transform duration-200">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
@@ -102,7 +103,7 @@ export const ClassFormModal: React.FC = () => {
                             type="text"
                             value={formData.name}
                             onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full p-2 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary"
+                            className="input-base input-focus"
                             placeholder="e.g. Period 1 - Math"
                         />
                     </div>
@@ -112,7 +113,7 @@ export const ClassFormModal: React.FC = () => {
                             type="text"
                             value={formData.subject}
                             onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                            className="w-full p-2 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary"
+                            className="input-base input-focus"
                             placeholder="e.g. Mathematics"
                         />
                     </div>
@@ -122,26 +123,28 @@ export const ClassFormModal: React.FC = () => {
                             type="text"
                             value={formData.gradeLevel}
                             onChange={e => setFormData({ ...formData, gradeLevel: e.target.value })}
-                            className="w-full p-2 border-[3px] border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary"
+                            className="input-base input-focus"
                             placeholder="e.g. 10th Grade"
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Theme Color</label>
-                        <div className="flex gap-2">
-                            {['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'].map(color => (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">This color will accent both teacher and student views</p>
+                        <div className="flex flex-wrap gap-2">
+                            {themeColors.classroomOptions.map(color => (
                                 <button
                                     key={color}
                                     onClick={() => setFormData({ ...formData, color })}
-                                    className={`w-8 h-8 rounded-full border-2 ${formData.color === color ? 'border-brand-textDarkPrimary dark:border-white scale-110' : 'border-transparent'}`}
-                                    style={{ backgroundColor: color }}
+                                    className={`w-8 h-8 rounded-full border-[3px] transition-all ${formData.color === color ? 'border-brand-textDarkPrimary dark:border-white scale-110 ring-2 ring-offset-2 ring-offset-brand-lightSurface dark:ring-offset-brand-darkSurface' : 'border-transparent hover:scale-105'}`}
+                                    style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 0 2px ${color}40` : undefined }}
+                                    title={`Select ${color} as theme color`}
                                 />
                             ))}
                         </div>
                     </div>
                     <button
                         onClick={handleSaveClass}
-                        className="w-full py-3 bg-brand-accent text-white font-bold rounded-lg mt-4 hover:bg-blue-600 transition-colors"
+                        className="w-full py-3 bg-brand-accent text-white font-bold rounded-xl mt-4 hover:opacity-90 transition-all"
                     >
                         {editingClass ? 'Save Changes' : 'Create Class'}
                     </button>

@@ -66,7 +66,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                 </h3>
                 {!hideImportButtons && (
                     allTasksImported ? (
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-[3px] border-emerald-200 dark:border-emerald-800">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent/10 text-brand-accent border-[3px] border-brand-accent/30">
                             <Check className="w-4 h-4" />
                             <span className="font-medium hidden sm:inline">All Added</span>
                             <span className="font-medium sm:hidden">Added</span>
@@ -74,7 +74,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     ) : (
                         <button
                             onClick={onImport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10"
                         >
                             <Download className="w-4 h-4" />
                             <span className="font-medium hidden sm:inline">
@@ -118,7 +118,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                             {onImportTask && !hideImportButtons && (
                                 importedTaskIds.has(task.id) ? (
                                     <div
-                                        className="absolute top-3 right-3 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 dark:text-emerald-400 border-[3px] border-emerald-200 dark:border-emerald-800"
+                                        className="absolute top-3 right-3 p-2 rounded-lg bg-brand-accent/10 text-brand-accent border-[3px] border-brand-accent/30"
                                         title="Already added"
                                         aria-label={`${task.title} already added`}
                                     >
@@ -127,7 +127,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                                 ) : (
                                     <button
                                         onClick={() => onImportTask(task)}
-                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 active:bg-emerald-50 dark:active:bg-emerald-900/20 active:text-emerald-600 dark:active:text-emerald-400"
+                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10 active:text-brand-accent"
                                         title="Import this task"
                                         aria-label={`Import ${task.title}`}
                                     >

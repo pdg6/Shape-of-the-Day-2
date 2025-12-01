@@ -11,6 +11,52 @@ This document outlines the standard UI patterns, animations, color themes, and r
 - **Micro-Animations:** Arrows and icons animate on hover (`translate-x-1`) to encourage interaction.
 - **Mobile-First Responsive:** All layouts adapt gracefully from mobile to desktop using fluid utilities.
 - **Accessibility-First:** Skip links, ARIA attributes, and keyboard navigation are built-in.
+- **Theme-Aware Colors:** Components adapt accent colors based on user role and classroom settings.
+
+---
+
+## Theme Color System
+
+### Role-Based Default Colors
+
+The application uses different default accent colors based on user role:
+
+| Role | Default Accent | Tailwind Classes | Hex Code |
+|------|---------------|------------------|----------|
+| **Student** | Emerald | `emerald-500`, `emerald-600` | `#10B981`, `#059669` |
+| **Teacher** | Blue | `blue-500`, `blue-600` | `#3B82F6`, `#2563EB` |
+
+### Classroom Theme Override
+
+When a teacher sets a classroom theme color, that color becomes the accent for **both** teacher and student views within that classroom. This creates visual consistency and helps students identify which class they're in.
+
+**Priority Order:**
+1. Classroom theme color (if set) → Used as `--color-brand-accent`
+2. Role default (Student = Emerald, Teacher = Blue)
+
+### CSS Custom Property
+
+The accent color is set dynamically via CSS custom property:
+
+```css
+:root {
+    --color-brand-accent: #2563EB; /* Default: Teacher Blue */
+}
+
+/* Overridden by ThemeContext based on classroom.color */
+```
+
+### Theme-Aware Component Classes
+
+Use these semantic classes that automatically adapt to the current theme:
+
+```css
+/* Accent-aware classes (use CSS variable) */
+.accent-border { @apply border-[var(--color-brand-accent)]; }
+.accent-text { @apply text-[var(--color-brand-accent)]; }
+.accent-bg { @apply bg-[var(--color-brand-accent)]; }
+.accent-ring { @apply ring-[var(--color-brand-accent)]/20; }
+```
 
 ---
 
@@ -24,7 +70,11 @@ Defined in `index.css` under `@theme`:
 --color-brand-darkSurface: #10100eff;
 --color-brand-light: #E5E5E5;
 --color-brand-lightSurface: #FFFFFF;
---color-brand-accent: #2563EB;
+--color-brand-accent: #2563EB;       /* Dynamic: Set by ThemeContext */
+
+/* Role Default Colors */
+--color-student-accent: #10B981;     /* Emerald-500 */
+--color-teacher-accent: #3B82F6;     /* Blue-500 */
 
 /* Text Colors */
 --color-brand-textPrimary: #F2EFEA;      /* Light text on dark */
@@ -192,9 +242,16 @@ Padding that shrinks on mobile, caps on desktop using `min()`:
 
 ## Component Themes
 
-### 1. Student Theme (Emerald Green)
+### Theme-Aware Components
 
-Used for all student-facing components (`StudentView`, `StudentNameModal`, `JoinRoom`, etc.).
+All interactive components should use the dynamic `brand-accent` color which adapts based on:
+1. **Classroom theme color** (highest priority) - set by teacher
+2. **User role default** - Emerald for students, Blue for teachers
+
+### 1. Student Theme (Default: Emerald Green)
+
+Used for all student-facing components when no classroom theme is set.
+When a classroom has a theme color, replace emerald classes with `brand-accent`.
 
 ```css
 /* Base Tile/Input/Button Style */
@@ -211,8 +268,8 @@ Used for all student-facing components (`StudentView`, `StudentNameModal`, `Join
 
 .student-tile:focus-within,
 .student-tile:focus {
-  @apply outline-none border-emerald-500;
-  @apply ring-2 ring-emerald-200 dark:ring-emerald-900/50;
+  @apply outline-none border-brand-accent;
+  @apply ring-2 ring-brand-accent/20;
 }
 
 /* Ghost Button Style (Nav/Footer) */
@@ -229,8 +286,8 @@ Used for all student-facing components (`StudentView`, `StudentNameModal`, `Join
 
 .student-ghost:focus,
 .student-ghost.active {
-  @apply border-emerald-500 text-emerald-600 dark:text-emerald-500;
-  @apply ring-2 ring-emerald-200 dark:ring-emerald-900/50;
+  @apply border-brand-accent text-brand-accent;
+  @apply ring-2 ring-brand-accent/20;
 }
 
 /* Arrow Animation (requires 'group' on parent) */
@@ -238,13 +295,14 @@ Used for all student-facing components (`StudentView`, `StudentNameModal`, `Join
   @apply transition-all duration-200;
 }
 .group:hover .student-arrow {
-  @apply translate-x-1 text-emerald-500;
+  @apply translate-x-1 text-brand-accent;
 }
 ```
 
-### 2. Teacher Theme (Blue)
+### 2. Teacher Theme (Default: Blue)
 
-Used for all teacher-facing dashboard tiles (`TaskManager`, `ClassPlanner`, etc.).
+Used for all teacher-facing dashboard tiles. Uses `brand-accent` which defaults to blue
+but can be overridden by classroom theme color.
 
 ```css
 /* Base Tile/Input/Button Style */
@@ -261,8 +319,8 @@ Used for all teacher-facing dashboard tiles (`TaskManager`, `ClassPlanner`, etc.
 
 .teacher-tile:focus-within,
 .teacher-tile:focus {
-  @apply outline-none border-blue-500;
-  @apply ring-2 ring-blue-200 dark:ring-blue-900/50;
+  @apply outline-none border-brand-accent;
+  @apply ring-2 ring-brand-accent/20;
 }
 
 /* Ghost Button Style (Nav/Footer) */
@@ -279,15 +337,79 @@ Used for all teacher-facing dashboard tiles (`TaskManager`, `ClassPlanner`, etc.
 
 .teacher-ghost:focus,
 .teacher-ghost.active {
-  @apply border-blue-500 text-blue-600 dark:text-blue-500;
-  @apply ring-2 ring-blue-200 dark:ring-blue-900/50;
+  @apply border-brand-accent text-brand-accent;
+  @apply ring-2 ring-brand-accent/20;
 }
 
 /* Arrow Animation */
 .group:hover .teacher-arrow {
-  @apply translate-x-1 text-blue-500;
+  @apply translate-x-1 text-brand-accent;
 }
 ```
+
+### Theme Implementation in Components
+
+When building components, use `brand-accent` for all accent colors:
+
+```jsx
+// ✅ Correct: Uses dynamic brand-accent
+className="border-brand-accent text-brand-accent ring-brand-accent/20"
+
+// ❌ Incorrect: Hardcoded color
+className="border-emerald-500 text-emerald-600"  // Don't do this
+className="border-blue-500 text-blue-600"        // Don't do this
+```
+
+**Exception:** Status colors (stuck, question, progress, complete) remain constant regardless of theme.
+
+---
+
+## Using the Theme Context
+
+### ThemeProvider Setup
+
+The `ThemeProvider` wraps your app and manages the accent color:
+
+```tsx
+// In App.tsx
+import { ThemeProvider, UserRole } from './context/ThemeContext';
+
+// Determine role based on view
+const userRole: UserRole = view === 'student' ? 'student' : 'teacher';
+
+return (
+    <ThemeProvider 
+        role={userRole} 
+        classroomColor={view === 'student' ? studentClassroomColor : undefined}
+    >
+        {/* App content */}
+    </ThemeProvider>
+);
+```
+
+### Accessing Theme Values
+
+```tsx
+import { useTheme } from './context/ThemeContext';
+
+const MyComponent = () => {
+    const { accentColor, role, isClassroomThemed } = useTheme();
+    
+    // accentColor: Current hex color (e.g., "#10B981" or classroom color)
+    // role: 'student' | 'teacher'
+    // isClassroomThemed: true if using classroom's custom color
+    
+    return <div style={{ borderColor: accentColor }}>...</div>;
+};
+```
+
+### Classroom Color Flow
+
+1. Teacher creates classroom → Sets theme color (optional)
+2. Student joins classroom → App fetches classroom.color
+3. ThemeProvider receives classroomColor prop
+4. CSS variable `--color-brand-accent` is set
+5. All `brand-accent` Tailwind classes use new color
 
 ---
 
@@ -306,9 +428,9 @@ Fixed bottom nav bar with square tile buttons (64×64px) and centered icon + tex
           flex flex-col items-center justify-center gap-1 p-2
           w-16 h-16 rounded-xl border-[3px] transition-all duration-200
           bg-brand-lightSurface dark:bg-brand-darkSurface
-          focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
+          focus:outline-none focus:ring-2 focus:ring-brand-accent/20
           ${isActive
-            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+            ? 'border-brand-accent text-brand-accent'
             : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
           }
         `}
@@ -374,7 +496,7 @@ Collapsible sidebar with semantic list structure:
           className={`
             flex items-center rounded-xl border-[3px] transition-all duration-200 font-bold
             ${isActive
-              ? 'border-blue-500 text-blue-600 dark:text-blue-500'
+              ? 'border-brand-accent text-brand-accent'
               : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700'
             }
             ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
@@ -511,25 +633,25 @@ useEffect(() => {
   @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
   @apply border-gray-200 dark:border-gray-700;
   @apply placeholder-gray-400 dark:placeholder-gray-500 font-medium;
-  @apply hover:border-emerald-400 dark:hover:border-emerald-500;
+  @apply hover:border-brand-accent/70;
 }
 
 .input-focus {
-  @apply focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-400;
-  @apply focus:ring-2 focus:ring-emerald-500/20;
+  @apply focus:outline-none focus:border-brand-accent;
+  @apply focus:ring-2 focus:ring-brand-accent/20;
 }
 ```
 
-### Primary Button (Green)
+### Primary Button (Accent)
 
 ```css
-.btn-primary-green {
+.btn-primary-accent {
   @apply w-full py-2.5 px-4 rounded-xl border-[3px] transition-all duration-200;
   @apply bg-transparent;
-  @apply text-emerald-400 font-bold;
-  @apply border-emerald-400;
-  @apply hover:text-emerald-300 hover:border-emerald-300 hover:bg-emerald-400/10;
-  @apply focus:outline-none focus:ring-2 focus:ring-emerald-400/30;
+  @apply text-brand-accent font-bold;
+  @apply border-brand-accent;
+  @apply hover:text-brand-accent/80 hover:border-brand-accent/80 hover:bg-brand-accent/10;
+  @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/30;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }
 ```
@@ -547,9 +669,9 @@ useEffect(() => {
     flex flex-col items-center justify-center gap-1 p-2
     w-16 h-16 rounded-xl border-[3px] transition-all duration-200
     bg-brand-lightSurface dark:bg-brand-darkSurface
-    focus:outline-none focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50
+    focus:outline-none focus:ring-2 focus:ring-brand-accent/20
     ${activeTab === 'tasks'
-      ? 'border-emerald-500 text-emerald-600 dark:text-emerald-500'
+      ? 'border-brand-accent text-brand-accent'
       : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
     }
   `}
@@ -568,7 +690,7 @@ useEffect(() => {
     {className}
   </h2>
   <div className="flex items-center gap-3">
-    <span className="text-fluid-lg font-semibold text-blue-600 dark:text-blue-500">
+    <span className="text-fluid-lg font-semibold text-brand-accent">
       {activeView}
     </span>
     <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">

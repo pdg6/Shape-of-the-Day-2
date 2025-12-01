@@ -6,7 +6,11 @@
     --color-brand-darkSurface: #10100eff;
     --color-brand-light: #E5E5E5;
     --color-brand-lightSurface: #FFFFFF;
-    --color-brand-accent: #2563EB;
+    --color-brand-accent: #3B82F6;      /* Dynamic: Set by ThemeContext */
+
+    /* Role Default Colors */
+    --color-student-accent: #10B981;    /* Emerald-500 */
+    --color-teacher-accent: #3B82F6;    /* Blue-500 */
 
     /* Text Colors */
     --color-brand-textPrimary: #F2EFEA;
@@ -103,7 +107,7 @@ body {
         @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
         @apply border-gray-200 dark:border-gray-700;
         @apply placeholder-gray-400 dark:placeholder-gray-500 font-medium;
-        @apply hover:border-emerald-400 dark:hover:border-emerald-500;
+        @apply hover:border-brand-accent/60;
 
         /* Override browser autofill background */
         &:-webkit-autofill,
@@ -117,19 +121,17 @@ body {
     }
 
     .input-focus {
-        @apply focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-400;
-        @apply focus:ring-2 focus:ring-emerald-500/20;
+        @apply focus:outline-none focus:border-brand-accent;
+        @apply focus:ring-2 focus:ring-brand-accent/20;
     }
 
     .btn-primary-green {
         @apply w-full py-2.5 px-4 rounded-xl border-[3px] transition-all duration-200;
         @apply bg-transparent;
-        @apply text-emerald-400 font-bold;
-        @apply border-emerald-400;
-        @apply hover:text-emerald-300;
-        @apply hover:border-emerald-300;
-        @apply hover:bg-emerald-400/10;
-        @apply focus:outline-none focus:ring-2 focus:ring-emerald-400/30;
+        @apply text-brand-accent font-bold;
+        @apply border-brand-accent;
+        @apply hover:bg-brand-accent/10;
+        @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/30;
         @apply disabled:opacity-50 disabled:cursor-not-allowed;
     }
 

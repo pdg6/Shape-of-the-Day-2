@@ -157,7 +157,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                             value={comment}
                             onChange={(e) => setComment(e.target.value.slice(0, maxChars))}
                             placeholder="I don't understand..."
-                            className="w-full h-32 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-brand-darkSurface focus:border-transparent resize-none transition-all outline-none"
+                            className="w-full h-32 p-3 rounded-xl bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-brand-accent resize-none transition-all outline-none"
                             autoFocus
                         />
                         <div className="absolute bottom-2 right-2 text-xs text-gray-400">

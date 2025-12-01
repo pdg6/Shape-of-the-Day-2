@@ -66,7 +66,7 @@ export const DummyDataControls: React.FC = () => {
     }, []);
 
     return (
-        <div className="fixed bottom-24 md:bottom-5 right-2 md:right-5 p-3 md:p-4 bg-gray-800 rounded-xl border-[3px] border-blue-500 text-white min-w-[200px] md:min-w-[250px] z-toast">
+        <div className="fixed bottom-24 md:bottom-5 right-2 md:right-5 p-3 md:p-4 bg-gray-800 rounded-xl border-[3px] border-brand-accent text-white min-w-[200px] md:min-w-[250px] z-toast">
             <h3 className="text-sm font-bold mb-3">
                 🛠️ Dev Tools
             </h3>
@@ -80,8 +80,8 @@ export const DummyDataControls: React.FC = () => {
                     onClick={handleLoadData}
                     disabled={loading}
                     className={`
-                        px-3 py-2 bg-emerald-500 rounded-md text-white text-xs font-bold cursor-pointer transition-colors
-                        ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-600'}
+                        px-3 py-2 bg-student-accent rounded-md text-white text-xs font-bold cursor-pointer transition-colors
+                        ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-student-accent/80'}
                     `}
                 >
                     {loading ? 'Loading...' : 'Load Dummy Data'}
@@ -89,7 +89,7 @@ export const DummyDataControls: React.FC = () => {
 
                 <button
                     onClick={showJoinCodes}
-                    className="px-3 py-2 bg-blue-500 rounded-md text-white text-xs font-bold cursor-pointer transition-colors hover:bg-blue-600"
+                    className="px-3 py-2 bg-teacher-accent rounded-md text-white text-xs font-bold cursor-pointer transition-colors hover:bg-teacher-accent/80"
                 >
                     Show Join Codes
                 </button>

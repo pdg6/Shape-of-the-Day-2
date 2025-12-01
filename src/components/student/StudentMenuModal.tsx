@@ -55,10 +55,10 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         onEditName();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                        <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
                             <User size={20} />
                         </div>
                         <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
@@ -69,14 +69,14 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                             {studentName}
                         </span>
-                        <span className="text-xs text-emerald-500 font-medium">Edit</span>
+                        <span className="text-xs text-brand-accent font-medium">Edit</span>
                     </div>
                 </button>
 
                 {/* Class Name */}
                 <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                        <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
                             <BookOpen size={20} />
                         </div>
                         <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
@@ -104,8 +104,8 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         aria-checked={darkMode}
                         aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                         className={`
-                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                            ${darkMode ? 'bg-emerald-500' : 'bg-gray-300 border border-gray-400'}
+                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 dark:focus:ring-offset-gray-900
+                            ${darkMode ? 'bg-brand-accent' : 'bg-gray-300 border border-gray-400'}
                         `}
                     >
                         <span
@@ -147,13 +147,13 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                                 {tasksLeft} left
                             </span>
-                            <span className="text-sm font-bold text-emerald-500">{progressPercent}%</span>
+                            <span className="text-sm font-bold text-brand-accent">{progressPercent}%</span>
                         </div>
                     </div>
                     {/* Progress Bar */}
                     <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                            className="h-full bg-brand-accent rounded-full transition-all duration-500"
                             style={{ width: `${progressPercent}%` }}
                         />
                     </div>
@@ -165,7 +165,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         onSignOut();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-900/50"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">

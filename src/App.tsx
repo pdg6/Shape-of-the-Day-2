@@ -7,11 +7,11 @@ import TeacherDashboard from './components/teacher/TeacherDashboard';
 import StudentView from './components/student/StudentView';
 import StudentNameModal from './components/student/StudentNameModal';
 import { db } from './firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useClassStore } from './store/classStore';
 import { Classroom } from './types';
 import { useAuth } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, UserRole } from './context/ThemeContext';
 import { loadDummyData, getDummyJoinCodes } from './services/dummyDataService';
 
 /**
@@ -33,6 +33,10 @@ function App() {
     const [showNameModal, setShowNameModal] = useState(false);
     const [studentName, setStudentName] = useState('');
     const [classId, setClassId] = useState('');
+    const [studentClassroomColor, setStudentClassroomColor] = useState<string | undefined>(undefined);
+
+    // Determine user role for theming
+    const userRole: UserRole = view === 'student' ? 'student' : 'teacher';
 
 
     // Global Store
@@ -159,6 +163,7 @@ function App() {
         // Reset all application state
         setStudentName('');
         setClassId('');
+        setStudentClassroomColor(undefined);
         setView('landing');
         setShowNameModal(false);
         setCurrentClassId(null);
@@ -168,10 +173,22 @@ function App() {
     /**
      * Handles a student joining a room via code.
      */
-    const handleJoinRoom = (code: string, name: string, joinedClassId: string) => {
+    const handleJoinRoom = async (code: string, name: string, joinedClassId: string) => {
         console.log('Joining room:', code, 'as', name, 'ID:', joinedClassId);
         setStudentName(name);
         setClassId(joinedClassId);
+        
+        // Fetch classroom color for theme
+        try {
+            const classDoc = await getDoc(doc(db, 'classrooms', joinedClassId));
+            if (classDoc.exists()) {
+                const classroomData = classDoc.data();
+                setStudentClassroomColor(classroomData?.color);
+            }
+        } catch (error) {
+            console.error('Error fetching classroom color:', error);
+        }
+        
         setView('student');
     };
 
@@ -197,7 +214,7 @@ function App() {
     }
 
     return (
-        <ThemeProvider>
+        <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
             <div className="flex flex-col h-screen-safe bg-brand-lightSurface dark:bg-brand-darkSurface transition-colors duration-200">
                 {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
                 <a href="#main-content" className="skip-link">

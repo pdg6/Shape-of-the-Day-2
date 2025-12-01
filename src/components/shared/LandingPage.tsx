@@ -51,7 +51,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                     <button
                         onClick={() => setActiveTab('student')}
                         className={`relative flex-1 py-3 text-center font-bold text-sm transition-colors z-10 ${activeTab === 'student'
-                            ? 'text-emerald-600 dark:text-emerald-400'
+                            ? 'text-student-accent'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                             }`}
                     >
@@ -60,7 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                     <button
                         onClick={() => setActiveTab('teacher')}
                         className={`relative flex-1 py-3 text-center font-bold text-sm transition-colors z-10 ${activeTab === 'teacher'
-                            ? 'text-blue-600 dark:text-blue-400'
+                            ? 'text-teacher-accent'
                             : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                             }`}
                     >
@@ -72,7 +72,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 <div className="p-6">
                     {activeTab === 'student' ? (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
-                            <div className="text-emerald-600 dark:text-emerald-400">
+                            <div className="text-student-accent">
                                 <GraduationCap className="w-8 h-8" />
                             </div>
                             <div>
@@ -82,7 +82,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                         </div>
                     ) : (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="text-blue-600 dark:text-blue-400">
+                            <div className="text-teacher-accent">
                                 <LayoutDashboard className="w-8 h-8" />
                             </div>
                             <div>
