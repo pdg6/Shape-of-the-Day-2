@@ -6,6 +6,7 @@ import { toDateString } from '../../utils/dateHelpers';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom } from '../../types';
+import { useClassStore } from '../../store/classStore';
 
 // --- Types ---
 
@@ -41,6 +42,10 @@ const INITIAL_FORM_STATE: TaskFormData = {
 };
 
 export default function TaskManager() {
+    // --- Store ---
+    const { currentClassId, classrooms: storeClassrooms } = useClassStore();
+    const currentClass = storeClassrooms.find(c => c.id === currentClassId);
+
     // --- State ---
     const [rooms, setRooms] = useState<Classroom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
@@ -119,6 +124,18 @@ export default function TaskManager() {
         return () => unsubscribe();
     }, []);
 
+    // Auto-select current class when it changes (only if not editing)
+    useEffect(() => {
+        if (!editingTaskId && currentClassId) {
+            setFormData(prev => ({
+                ...prev,
+                selectedRoomIds: prev.selectedRoomIds.includes(currentClassId) 
+                    ? prev.selectedRoomIds 
+                    : [currentClassId, ...prev.selectedRoomIds]
+            }));
+        }
+    }, [currentClassId, editingTaskId]);
+
 
     // --- Helpers ---
 
@@ -140,14 +157,22 @@ export default function TaskManager() {
 
     const weekDays = useMemo(() => getWeekDays(calendarBaseDate), [calendarBaseDate]);
 
+    // Filter tasks by date AND by currently selected class
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
-            return selectedDate >= task.startDate && selectedDate <= task.endDate;
+            const isInDateRange = selectedDate >= task.startDate && selectedDate <= task.endDate;
+            const isAssignedToCurrentClass = currentClassId ? task.selectedRoomIds?.includes(currentClassId) : true;
+            return isInDateRange && isAssignedToCurrentClass;
         });
-    }, [tasks, selectedDate]);
+    }, [tasks, selectedDate, currentClassId]);
 
     const resetForm = () => {
-        setFormData(INITIAL_FORM_STATE);
+        setFormData({
+            ...INITIAL_FORM_STATE,
+            startDate: toDateString(),
+            endDate: toDateString(),
+            selectedRoomIds: currentClassId ? [currentClassId] : []
+        });
         setEditingTaskId(null);
         setIsUploading(false);
     };
@@ -283,8 +308,8 @@ export default function TaskManager() {
             <div className="min-h-full lg:h-full grid grid-cols-1 lg:grid-cols-4 gap-6">
 
                 {/* LEFT PANEL: Task Editor */}
-                <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar p-4 lg:pl-6 lg:py-6 lg:pr-0">
-                    <div className="card-base p-6 space-y-6">
+                <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
+                    <div className="card-base p-6 space-y-6 flex-1 flex flex-col">
                         <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-800 pb-4">
                             <h2 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {editingTaskId ? 'Edit Task' : 'Create New Task'}
@@ -372,8 +397,11 @@ export default function TaskManager() {
                             </div>
                         </div>
 
+                        {/* Spacer to push footer to bottom */}
+                        <div className="flex-1" />
+
                         {/* Class Assignment & Actions */}
-                        <div className="pt-4 border-t-[3px] border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div className="pt-4 border-t-[3px] border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-auto">
 
                             {/* Class Selector */}
                             <div className="flex-1">
@@ -458,8 +486,8 @@ export default function TaskManager() {
                 </div>
 
                 {/* RIGHT PANEL: Calendar & List */}
-                <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden p-4 lg:pr-6 lg:py-6 lg:pl-0">
-                    <div className="card-base h-auto lg:h-full flex flex-col overflow-hidden">
+                <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
+                    <div className="card-base h-auto lg:h-full flex flex-col justify-between overflow-hidden">
 
                         {/* Calendar Header */}
                         <div className="p-4 border-b border-gray-200 dark:border-gray-800">
@@ -469,10 +497,10 @@ export default function TaskManager() {
                                     {calendarBaseDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                                 </h3>
                                 <div className="flex gap-1">
-                                    <button onClick={() => handleWeekNav('prev')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                                    <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-xl border-[3px] border-transparent hover:border-gray-100 dark:hover:border-gray-500 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                         <ChevronLeft size={20} />
                                     </button>
-                                    <button onClick={() => handleWeekNav('next')} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                                    <button onClick={() => handleWeekNav('next')} className="p-2 rounded-xl border-[3px] border-transparent hover:border-gray-100 dark:hover:border-gray-500 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                         <ChevronRight size={20} />
                                     </button>
                                 </div>
@@ -489,21 +517,16 @@ export default function TaskManager() {
                                         <button
                                             key={dateStr}
                                             onClick={() => setSelectedDate(dateStr)}
-                                            className={`
-                                                flex flex-col items-center justify-center p-2 rounded-lg transition-all
-                                                ${isSelected
-                                                    ? 'bg-brand-accent/10 dark:bg-brand-accent/20'
-                                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800'}
-                                            `}
+                                            className="flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
                                         >
                                             <span className={`text-xs font-medium ${isToday ? 'text-brand-accent' : 'text-gray-500'}`}>
                                                 {date.toLocaleDateString('en-US', { weekday: 'short' })}
                                             </span>
                                             <span className={`
-                                                text-sm font-bold mt-1 px-2 py-0.5 rounded-full border-b-2
+                                                text-sm font-bold mt-1 px-2 py-0.5
                                                 ${isSelected
-                                                    ? 'text-brand-accent border-brand-accent'
-                                                    : 'text-brand-textDarkPrimary dark:text-brand-textPrimary border-transparent'}
+                                                    ? 'text-brand-accent'
+                                                    : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}
                                             `}>
                                                 {date.getDate()}
                                             </span>
@@ -515,11 +538,24 @@ export default function TaskManager() {
 
                         {/* Task List */}
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
-                            <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">
-                                Tasks for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </h4>
+                            <div className="mb-3">
+                                <h4 className="text-xs font-bold text-gray-500 uppercase mb-1">
+                                    {selectedDate === toDateString() 
+                                        ? 'Today' 
+                                        : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                                </h4>
+                                {currentClass && (
+                                    <p className="text-sm font-semibold" style={{ color: currentClass.color }}>
+                                        {currentClass.name}
+                                    </p>
+                                )}
+                            </div>
 
-                            {filteredTasks.length === 0 ? (
+                            {!currentClassId ? (
+                                <div className="text-center py-8 text-gray-400 italic text-sm">
+                                    Select a class to view schedule.
+                                </div>
+                            ) : filteredTasks.length === 0 ? (
                                 <div className="text-center py-8 text-gray-400 italic text-sm">
                                     No tasks scheduled.
                                 </div>
@@ -535,48 +571,33 @@ export default function TaskManager() {
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
                                         `}
                                     >
-                                        <div className="flex justify-between items-start gap-2">
-                                            <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-2">
-                                                {task.title}
-                                            </h5>
-
-                                            {/* Reorder Controls */}
-                                            <div className="flex flex-col opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                                        <div className="flex items-center gap-2">
+                                            {/* Reorder Controls - Always visible */}
+                                            <div className="flex flex-col" onClick={e => e.stopPropagation()}>
                                                 <button
                                                     onClick={() => handleReorder(task.id, 'up')}
                                                     disabled={index === 0}
-                                                    className="p-0.5 hover:text-brand-accent disabled:opacity-30"
+                                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                 >
-                                                    <ArrowUp size={12} />
+                                                    <ArrowUp size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleReorder(task.id, 'down')}
                                                     disabled={index === filteredTasks.length - 1}
-                                                    className="p-0.5 hover:text-brand-accent disabled:opacity-30"
+                                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                 >
-                                                    <ArrowDown size={12} />
+                                                    <ArrowDown size={14} />
                                                 </button>
                                             </div>
-                                        </div>
 
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {task.selectedRoomIds?.map(roomId => {
-                                                const room = rooms.find(r => r.id === roomId);
-                                                if (!room) return null;
-                                                return (
-                                                    <span
-                                                        key={roomId}
-                                                        className="text-[10px] px-1.5 py-0.5 rounded-md font-medium border"
-                                                        style={{
-                                                            borderColor: room.color,
-                                                            color: room.color,
-                                                            backgroundColor: `${room.color}15` // 10% opacity hex
-                                                        }}
-                                                    >
-                                                        {room.name}
-                                                    </span>
-                                                );
-                                            })}
+                                            {/* Task number badge */}
+                                            <span className="flex-shrink-0 w-6 h-6 rounded-md bg-brand-accent/10 text-brand-accent text-xs font-bold flex items-center justify-center">
+                                                {index + 1}
+                                            </span>
+
+                                            <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1 flex-1">
+                                                {task.title}
+                                            </h5>
                                         </div>
                                     </div>
                                 ))
@@ -584,17 +605,14 @@ export default function TaskManager() {
                         </div>
 
                         {/* Footer with Create New Task Button */}
-                        <div className="p-4 border-t border-gray-200 dark:border-gray-800 flex justify-end">
-                            <Button
-                                variant="primary"
-                                size="sm"
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-800 mt-auto">
+                            <button
                                 onClick={resetForm}
-                                icon={Plus}
-                                disabled={!editingTaskId} // Optional: disable if already in create mode, or just let it reset
-                                className={!editingTaskId ? 'opacity-50 cursor-not-allowed' : ''}
+                                className="group flex items-center gap-2 w-full h-12 px-4 rounded-xl font-bold transition-all duration-200 border-[3px] border-transparent hover:border-brand-accent text-brand-accent hover:bg-brand-accent/5 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             >
-                                Create New Task
-                            </Button>
+                                <Plus size={20} />
+                                <span>Create New Task</span>
+                            </button>
                         </div>
                     </div>
                 </div>

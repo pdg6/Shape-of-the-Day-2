@@ -79,7 +79,7 @@ const ShapeOfDay: React.FC = () => {
         <div className="h-full flex flex-col gap-4 overflow-y-auto custom-scrollbar p-1">
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface border-[3px] border-gray-200 dark:border-gray-700 rounded-2xl p-4 md:p-6 shadow-sm flex-shrink-0">
+            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl px-4 md:px-6 flex-shrink-0">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -99,7 +99,7 @@ const ShapeOfDay: React.FC = () => {
                     </div>
 
                     {/* Right: Connection Info (Compact) */}
-                    <div className="flex-shrink-0 flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border-[3px] border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="flex-shrink-0 flex items-center gap-4">
                         <div className="text-right">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Join at</p>
                             <p className="text-base font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
