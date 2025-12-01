@@ -121,7 +121,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="question-overlay-title"
-                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all scale-100 animate-in fade-in zoom-in duration-300`}
+                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all duration-300`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}

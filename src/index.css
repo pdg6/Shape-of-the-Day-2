@@ -4,8 +4,10 @@
 @theme {
     --color-brand-dark: #10100eff;
     --color-brand-darkSurface: #10100eff;
+    --color-brand-darkBg: #141211;
     --color-brand-light: #E5E5E5;
     --color-brand-lightSurface: #FFFFFF;
+    --color-brand-bg: #F5F5F5;
     --color-brand-accent: #2563EB;
     --color-brand-textPrimary: #F2EFEA;
     --color-brand-textSecondary: #A8A29D;
@@ -85,6 +87,7 @@
 }
 
 @layer components {
+
     /* Skip link - Accessibility: hidden until focused */
     .skip-link {
         position: absolute;
@@ -108,7 +111,8 @@
 
     /* Dynamic viewport height utility for mobile browser compatibility */
     .h-screen-safe {
-        height: 100vh; /* Fallback */
+        height: 100vh;
+        /* Fallback */
         height: 100dvh;
     }
 

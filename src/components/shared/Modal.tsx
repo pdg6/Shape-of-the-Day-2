@@ -18,8 +18,6 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
     const titleId = useId();
 
-    if (!isOpen) return null;
-
     const widthClasses = {
         sm: 'max-w-sm',
         md: 'max-w-md',
@@ -78,9 +76,11 @@ export const Modal: React.FC<ModalProps> = ({
         };
     }, [isOpen, onClose]);
 
+    if (!isOpen) return null;
+
     return (
         <div
-            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
             onClick={onClose}
         >
             <div
@@ -88,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl animate-in zoom-in-95 duration-200`}
+                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl transition-transform duration-200`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between p-6">

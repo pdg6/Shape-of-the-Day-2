@@ -66,7 +66,7 @@ export const DummyDataControls: React.FC = () => {
     }, []);
 
     return (
-        <div className="fixed bottom-5 right-5 p-4 bg-gray-800 rounded-xl border-[3px] border-blue-500 text-white min-w-[250px] z-toast">
+        <div className="fixed bottom-24 md:bottom-5 right-2 md:right-5 p-3 md:p-4 bg-gray-800 rounded-xl border-[3px] border-blue-500 text-white min-w-[200px] md:min-w-[250px] z-toast">
             <h3 className="text-sm font-bold mb-3">
                 🛠️ Dev Tools
             </h3>

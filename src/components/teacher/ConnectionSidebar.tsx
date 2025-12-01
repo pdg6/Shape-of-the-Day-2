@@ -77,7 +77,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
             aria-hidden={!isSidebarOpen}
             className={`
                 fixed right-0 top-[64px] h-[calc(100dvh-64px)] w-80 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-2xl transition-transform duration-300 ease-in-out z-sidebar
-                ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+                ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'}
             `}
         >
             <div className="h-full flex flex-col">

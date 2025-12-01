@@ -127,7 +127,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
             </div>
 
             {error && (
-                <p className="text-red-500 text-sm font-medium animate-in slide-in-from-top-1">
+                <p className="text-red-500 text-sm font-medium">
                     {error}
                 </p>
             )}

@@ -11,7 +11,7 @@ import { ClassFormModal } from './ClassFormModal';
 import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
 import { Modal } from '../shared/Modal';
-import { DummyDataControls } from '../shared/DummyDataControls';
+// import { DummyDataControls } from '../shared/DummyDataControls';
 
 interface MenuItem {
     id: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms';
@@ -124,139 +124,139 @@ const TeacherDashboard: React.FC = () => {
 
                 <nav id="teacher-sidebar-nav" aria-label="Main navigation" className="flex-1 min-h-0 p-4 overflow-y-auto custom-scrollbar overflow-x-hidden">
                     <ul className="space-y-2 list-none m-0 p-0">
-                    {menuItems.map(item => (
-                        <li key={item.id}>
-                            <button
-                                onClick={() => handleTabChange(item.id)}
-                                className={`
+                        {menuItems.map(item => (
+                            <li key={item.id}>
+                                <button
+                                    onClick={() => handleTabChange(item.id)}
+                                    className={`
                                     group relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px] overflow-hidden
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
                                     focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/50
                                     ${activeTab === item.id
-                                        ? 'border-blue-500 text-blue-600 dark:text-blue-500 bg-blue-500/5 shadow-sm'
-                                        : 'border-transparent text-gray-500 hover:border-gray-100 dark:hover:border-gray-500'
-                                    }
+                                            ? 'border-blue-500 text-blue-600 dark:text-blue-500 bg-blue-500/5 shadow-sm'
+                                            : 'border-transparent text-gray-500 hover:border-gray-100 dark:hover:border-gray-500'
+                                        }
                                     ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
                                 `}
-                                title={isCollapsed ? item.label : undefined}
-                                aria-label={item.label}
-                                aria-expanded={
-                                    item.id === 'classrooms' ? (isClassroomsMenuOpen && !isCollapsed) :
-                                    (item.id === 'live' || item.id === 'data') ? (activeTab === item.id && !isCollapsed) :
-                                    undefined
-                                }
-                                aria-controls={
-                                    item.id === 'classrooms' ? 'submenu-classrooms' :
-                                    item.id === 'live' ? 'submenu-live' :
-                                    item.id === 'data' ? 'submenu-data' :
-                                    undefined
-                                }
-                            >
-                                <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'
-                                    }`}>
-                                    <item.icon size={20} className="flex-shrink-0" />
-                                </div>
+                                    title={isCollapsed ? item.label : undefined}
+                                    aria-label={item.label}
+                                    aria-expanded={
+                                        item.id === 'classrooms' ? (isClassroomsMenuOpen && !isCollapsed) :
+                                            (item.id === 'live' || item.id === 'data') ? (activeTab === item.id && !isCollapsed) :
+                                                undefined
+                                    }
+                                    aria-controls={
+                                        item.id === 'classrooms' ? 'submenu-classrooms' :
+                                            item.id === 'live' ? 'submenu-live' :
+                                                item.id === 'data' ? 'submenu-data' :
+                                                    undefined
+                                    }
+                                >
+                                    <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'
+                                        }`}>
+                                        <item.icon size={20} className="flex-shrink-0" />
+                                    </div>
 
-                                <span className={`
+                                    <span className={`
                                     whitespace-nowrap transition-all duration-300 ease-in-out
                                     ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                                 `}>
-                                    {item.label}
-                                </span>
+                                        {item.label}
+                                    </span>
 
-                            </button>
+                                </button>
 
-                            {/* Sub-menu for Live View */}
-                            <div
-                                id="submenu-live"
-                                className={`
+                                {/* Sub-menu for Live View */}
+                                <div
+                                    id="submenu-live"
+                                    className={`
                                     grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
                                     ${!isCollapsed && item.id === 'live' && activeTab === 'live' ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
                                 `}
-                            >
-                                <ul className="min-h-0 overflow-hidden ml-9 space-y-1 list-none m-0 p-0">
-                                    <li>
-                                        <button
-                                            onClick={() => setLiveViewSubTab('tasks')}
-                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'tasks' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                        >
-                                            By Task
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button
-                                            onClick={() => setLiveViewSubTab('students')}
-                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'students' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                        >
-                                            By Student
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
+                                >
+                                    <ul className="min-h-0 overflow-hidden ml-9 space-y-1 list-none m-0 p-0">
+                                        <li>
+                                            <button
+                                                onClick={() => setLiveViewSubTab('tasks')}
+                                                className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'tasks' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                            >
+                                                By Task
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={() => setLiveViewSubTab('students')}
+                                                className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${liveViewSubTab === 'students' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                            >
+                                                By Student
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
 
-                            {/* Sub-menu for Data (Classrooms) */}
-                            <div
-                                id="submenu-data"
-                                className={`
+                                {/* Sub-menu for Data (Classrooms) */}
+                                <div
+                                    id="submenu-data"
+                                    className={`
                                     grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
                                     ${!isCollapsed && item.id === 'data' && activeTab === 'data' ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
                                 `}
-                            >
-                                <ul className="min-h-0 overflow-hidden ml-9 space-y-1 list-none m-0 p-0">
-                                    <li>
-                                        <button
-                                            onClick={() => setClassroomSubTab('history')}
-                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'history' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                        >
-                                            History
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button
-                                            onClick={() => setClassroomSubTab('analytics')}
-                                            className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'analytics' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-                                        >
-                                            Analytics
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
+                                >
+                                    <ul className="min-h-0 overflow-hidden ml-9 space-y-1 list-none m-0 p-0">
+                                        <li>
+                                            <button
+                                                onClick={() => setClassroomSubTab('history')}
+                                                className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'history' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                            >
+                                                History
+                                            </button>
+                                        </li>
+                                        <li>
+                                            <button
+                                                onClick={() => setClassroomSubTab('analytics')}
+                                                className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors ${classroomSubTab === 'analytics' ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+                                            >
+                                                Analytics
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
 
-                            {/* Sub-menu for Classrooms Selector */}
-                            <div
-                                id="submenu-classrooms"
-                                className={`
+                                {/* Sub-menu for Classrooms Selector */}
+                                <div
+                                    id="submenu-classrooms"
+                                    className={`
                                     grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
                                     ${!isCollapsed && item.id === 'classrooms' && isClassroomsMenuOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
                                 `}
-                            >
-                                <ul className="min-h-0 overflow-hidden ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 space-y-1 list-none m-0 p-0">
-                                    {classrooms.map(cls => (
-                                        <li key={cls.id}>
-                                            <button
-                                                onClick={() => handleClassSelect(cls.id)}
-                                                className={`
+                                >
+                                    <ul className="min-h-0 overflow-hidden ml-4 border-l-2 border-gray-200 dark:border-gray-700 pl-4 space-y-1 list-none m-0 p-0">
+                                        {classrooms.map(cls => (
+                                            <li key={cls.id}>
+                                                <button
+                                                    onClick={() => handleClassSelect(cls.id)}
+                                                    className={`
                                                     w-full text-left p-2 text-sm rounded-lg font-medium transition-colors
                                                     ${currentClassId === cls.id ? 'text-blue-600 dark:text-blue-500 bg-blue-500/10' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}
                                                 `}
+                                                >
+                                                    <span className="truncate">{cls.name}</span>
+                                                </button>
+                                            </li>
+                                        ))}
+                                        <li>
+                                            <button
+                                                onClick={() => setIsClassModalOpen(true)}
+                                                className="w-full text-left p-2 text-sm rounded-lg font-bold text-blue-600 dark:text-blue-500 hover:bg-blue-500/10 transition-colors flex items-center gap-2 mt-2"
                                             >
-                                                <span className="truncate">{cls.name}</span>
+                                                <Plus size={14} />
+                                                Add Class
                                             </button>
                                         </li>
-                                    ))}
-                                    <li>
-                                        <button
-                                            onClick={() => setIsClassModalOpen(true)}
-                                            className="w-full text-left p-2 text-sm rounded-lg font-bold text-blue-600 dark:text-blue-500 hover:bg-blue-500/10 transition-colors flex items-center gap-2 mt-2"
-                                        >
-                                            <Plus size={14} />
-                                            Add Class
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </li>
-                    ))}
+                                    </ul>
+                                </div>
+                            </li>
+                        ))}
                     </ul>
 
                     {/* Sidebar Toggle */}
@@ -367,8 +367,8 @@ const TeacherDashboard: React.FC = () => {
                             {activeTab === 'live'
                                 ? `Live View - ${liveViewSubTab === 'tasks' ? 'By Task' : 'By Student'}`
                                 : activeTab === 'data'
-                                ? `Data - ${classroomSubTab === 'history' ? 'History' : 'Analytics'}`
-                                : menuItems.find(i => i.id === activeTab)?.label}
+                                    ? `Data - ${classroomSubTab === 'history' ? 'History' : 'Analytics'}`
+                                    : menuItems.find(i => i.id === activeTab)?.label}
                         </span>
                         <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">
                             {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -431,7 +431,7 @@ const TeacherDashboard: React.FC = () => {
             </main>
 
             {/* Development Tools - Remove in production */}
-            <DummyDataControls />
+            {/* <DummyDataControls /> */}
 
             {/* Mobile footer fade gradient - content fades as it scrolls under */}
             <div

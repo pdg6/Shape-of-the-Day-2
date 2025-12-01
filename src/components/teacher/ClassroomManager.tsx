@@ -495,7 +495,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {/* Daily Summary Modal */}
             {showDaySummary && selectedDate && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl border-[3px] border-gray-200 dark:border-gray-700 flex flex-col animate-in zoom-in-95 duration-200">
+                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl border-[3px] border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-200">
                         <div className="p-6 border-b-[3px] border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-t-xl">
                             <div>
                                 <h3 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
