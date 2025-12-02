@@ -5,11 +5,12 @@ import DayTaskPreview from './DayTaskPreview';
 import StudentNameModal from './StudentNameModal';
 import StudentMenuModal from './StudentMenuModal';
 import StudentSidebar from './StudentSidebar';
+import StudentProjectsView from './StudentProjectsView';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
 import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
-import { Calendar, ListTodo, Menu } from 'lucide-react';
+import { Calendar, ListTodo, Menu, FolderOpen } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
 import { throttle } from '../../utils/security';
 
@@ -81,11 +82,11 @@ const StudentView: React.FC<StudentViewProps> = ({
     // Show it automatically if no studentName is provided
     const [showNameModal, setShowNameModal] = useState<boolean>(!studentName);
 
-    // Mobile tab navigation state (tasks and schedule only, home replaced with menu modal)
-    const [mobileTab, setMobileTab] = useState<'tasks' | 'schedule'>('tasks');
+    // Mobile tab navigation state (tasks, projects, and schedule)
+    const [mobileTab, setMobileTab] = useState<'tasks' | 'projects' | 'schedule'>('tasks');
 
     // Desktop tab navigation state for sidebar
-    const [desktopTab, setDesktopTab] = useState<'tasks' | 'schedule'>('tasks');
+    const [desktopTab, setDesktopTab] = useState<'tasks' | 'projects' | 'schedule'>('tasks');
 
     // Menu modal state (mobile)
     const [showMenuModal, setShowMenuModal] = useState<boolean>(false);
@@ -350,7 +351,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     aria-hidden="true"
                 />
 
-                {/* Desktop Content - Split into Tasks and Schedule based on tab */}
+                {/* Desktop Content - Split into Tasks, Projects, and Schedule based on tab */}
                 <main className="hidden md:flex row-start-2 flex-1 overflow-hidden">
                     {desktopTab === 'tasks' ? (
                         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
@@ -379,6 +380,19 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         </p>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    ) : desktopTab === 'projects' ? (
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                            <div className="max-w-4xl mx-auto">
+                                <h2 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                    Projects & Assignments
+                                </h2>
+                                <StudentProjectsView
+                                    classId={classId}
+                                    onImportTask={handleImportTask}
+                                    currentTaskIds={currentTaskIds}
+                                />
                             </div>
                         </div>
                     ) : (
@@ -438,6 +452,17 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 </div>
                             )}
                         </div>
+                    ) : mobileTab === 'projects' ? (
+                        <div>
+                            <h2 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                Projects & Assignments
+                            </h2>
+                            <StudentProjectsView
+                                classId={classId}
+                                onImportTask={handleImportTask}
+                                currentTaskIds={currentTaskIds}
+                            />
+                        </div>
                     ) : (
                         <div>
 
@@ -495,50 +520,63 @@ const StudentView: React.FC<StudentViewProps> = ({
                 aria-hidden="true"
             />
 
-            {/* Mobile Bottom Navigation - Menu, Tasks, Schedule */}
+            {/* Mobile Bottom Navigation - Menu, Tasks, Projects, Schedule */}
             <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
                 <ul className="flex justify-around items-center h-16 px-2 list-none m-0 p-0">
                     <li aria-hidden="true">
                         <img
                             src="/shape of the day logo.png"
                             alt=""
-                            className="w-8 h-8 aspect-square object-contain"
+                            className="w-7 h-7 aspect-square object-contain"
                         />
                     </li>
                     <li>
                         <button
                             onClick={() => setShowMenuModal(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                            className="flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Menu"
                         >
-                            <Menu className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Menu</span>
+                            <Menu className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Menu</span>
                         </button>
                     </li>
                     <li>
                         <button
                             onClick={() => setMobileTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
+                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Tasks"
                         >
-                            <ListTodo className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Tasks</span>
+                            <ListTodo className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Tasks</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button
+                            onClick={() => setMobileTab('projects')}
+                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'projects'
+                                ? 'border-brand-accent text-brand-accent'
+                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                }`}
+                            aria-label="Projects"
+                        >
+                            <FolderOpen className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Projects</span>
                         </button>
                     </li>
                     <li>
                         <button
                             onClick={() => setMobileTab('schedule')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
+                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Schedule"
                         >
-                            <Calendar className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Schedule</span>
+                            <Calendar className="w-5 h-5" />
+                            <span className="text-[10px] font-bold">Schedule</span>
                         </button>
                     </li>
                 </ul>

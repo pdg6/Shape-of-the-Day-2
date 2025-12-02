@@ -1,44 +1,73 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Check, Upload, Loader, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { 
+    Calendar as CalendarIcon, 
+    Link as LinkIcon, 
+    Plus, 
+    Check, 
+    Upload, 
+    Loader, 
+    ChevronLeft, 
+    ChevronRight, 
+    ArrowUp, 
+    ArrowDown,
+    FolderOpen,
+    FileText,
+    ListChecks,
+    CheckSquare
+} from 'lucide-react';
 import { Button } from '../shared/Button';
+import { TaskTabBar } from './TaskTabBar';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
-import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
-import { Classroom } from '../../types';
+import { Classroom, ItemType, Task, TaskFormData, TaskCardState, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES } from '../../types';
 import { useClassStore } from '../../store/classStore';
 
-// --- Types ---
-
-interface Task {
-    id: string;
-    title: string;
-    description: string;
-    linkURL: string;
-    imageURL: string;
-    startDate: string;
-    endDate: string;
-    selectedRoomIds: string[];
-    presentationOrder: number;
-    createdAt: any;
-}
-
-interface TaskFormData {
-    title: string;
-    description: string;
-    linkURL: string;
-    startDate: string;
-    endDate: string;
-    selectedRoomIds: string[];
-}
+// --- Constants ---
 
 const INITIAL_FORM_STATE: TaskFormData = {
     title: '',
     description: '',
+    type: 'task',
+    parentId: null,
     linkURL: '',
     startDate: toDateString(),
     endDate: toDateString(),
     selectedRoomIds: []
+};
+
+// Generate unique ID for cards
+const generateCardId = () => `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// Get type-specific icon
+const getTypeIcon = (type: ItemType) => {
+    switch (type) {
+        case 'project': return FolderOpen;
+        case 'assignment': return FileText;
+        case 'task': return ListChecks;
+        case 'subtask': return CheckSquare;
+    }
+};
+
+// Get type label
+const getTypeLabel = (type: ItemType): string => {
+    switch (type) {
+        case 'project': return 'Project';
+        case 'assignment': return 'Assignment';
+        case 'task': return 'Task';
+        case 'subtask': return 'Subtask';
+    }
+};
+
+// Get type color classes
+const getTypeColorClasses = (type: ItemType): string => {
+    switch (type) {
+        case 'project': return 'text-purple-500 bg-purple-500/10 border-purple-500/30';
+        case 'assignment': return 'text-blue-500 bg-blue-500/10 border-blue-500/30';
+        case 'task': return 'text-green-500 bg-green-500/10 border-green-500/30';
+        case 'subtask': return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
+    }
 };
 
 export default function TaskManager() {
@@ -50,19 +79,30 @@ export default function TaskManager() {
     const [rooms, setRooms] = useState<Classroom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
 
-    // Task Data
+    // Task Data (all tasks from Firestore)
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [_loadingTasks, setLoadingTasks] = useState(true); // Reserved for loading skeleton
+    const [_loadingTasks, setLoadingTasks] = useState(true);
+
+    // Multi-card editor state
+    const [openCards, setOpenCards] = useState<TaskCardState[]>(() => [{
+        id: generateCardId(),
+        formData: { ...INITIAL_FORM_STATE },
+        isNew: true,
+        isDirty: false,
+    }]);
+    const [activeCardId, setActiveCardId] = useState<string>(() => openCards[0]?.id || '');
 
     // UI State
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
-    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-    const [formData, setFormData] = useState<TaskFormData>(INITIAL_FORM_STATE);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [_isUploading, setIsUploading] = useState(false); // Reserved for file upload feature
+    const [_isUploading, _setIsUploading] = useState(false);
 
     // Calendar State
     const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
+
+    // --- Computed ---
+    const activeCard = openCards.find(c => c.id === activeCardId) || openCards[0];
+    const activeFormData = activeCard?.formData || INITIAL_FORM_STATE;
 
     // --- Effects ---
 
@@ -91,15 +131,9 @@ export default function TaskManager() {
     useEffect(() => {
         if (!auth.currentUser) return;
 
-        // In a real app, we might filter by teacherId or rely on security rules
-        // For now, let's assume we fetch all tasks created by this teacher
-        // We need a 'teacherId' field on tasks or a subcollection structure.
-        // Assuming 'tasks' collection exists.
-
         const q = query(
             collection(db, 'tasks'),
             where('teacherId', '==', auth.currentUser.uid)
-            // We could order by presentationOrder here, but we do client-side filtering anyway
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -109,10 +143,16 @@ export default function TaskManager() {
                 taskData.push({
                     id: doc.id,
                     ...data,
-                    selectedRoomIds: data.selectedRoomIds || [] // Ensure array exists
+                    type: data.type || 'task', // Default to 'task' for legacy items
+                    parentId: data.parentId || null,
+                    rootId: data.rootId || null,
+                    path: data.path || [],
+                    pathTitles: data.pathTitles || [],
+                    childIds: data.childIds || [],
+                    selectedRoomIds: data.selectedRoomIds || [],
+                    status: data.status || 'todo',
                 } as Task);
             });
-            // Sort by presentationOrder
             taskData.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
             setTasks(taskData);
             setLoadingTasks(false);
@@ -124,26 +164,21 @@ export default function TaskManager() {
         return () => unsubscribe();
     }, []);
 
-    // Auto-select current class when it changes (only if not editing)
+    // Auto-select current class for new cards
     useEffect(() => {
-        if (!editingTaskId && currentClassId) {
-            setFormData(prev => ({
-                ...prev,
-                selectedRoomIds: prev.selectedRoomIds.includes(currentClassId) 
-                    ? prev.selectedRoomIds 
-                    : [currentClassId, ...prev.selectedRoomIds]
-            }));
+        if (currentClassId && activeCard?.isNew) {
+            updateActiveCard('selectedRoomIds', prev => 
+                prev.includes(currentClassId) ? prev : [currentClassId, ...prev]
+            );
         }
-    }, [currentClassId, editingTaskId]);
-
+    }, [currentClassId]);
 
     // --- Helpers ---
 
     const getWeekDays = (baseDate: Date) => {
         const days = [];
-        // Start from Monday of the current week
         const day = baseDate.getDay();
-        const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+        const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1);
         const monday = new Date(baseDate);
         monday.setDate(diff);
 
@@ -157,46 +192,169 @@ export default function TaskManager() {
 
     const weekDays = useMemo(() => getWeekDays(calendarBaseDate), [calendarBaseDate]);
 
-    // Filter tasks by date AND by currently selected class
+    // Filter tasks by date and class, then build hierarchy
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
-            const isInDateRange = selectedDate >= task.startDate && selectedDate <= task.endDate;
-            const isAssignedToCurrentClass = currentClassId ? task.selectedRoomIds?.includes(currentClassId) : true;
+            const isInDateRange = task.startDate && task.endDate 
+                ? selectedDate >= task.startDate && selectedDate <= task.endDate
+                : true;
+            const isAssignedToCurrentClass = currentClassId 
+                ? task.selectedRoomIds?.includes(currentClassId) 
+                : true;
             return isInDateRange && isAssignedToCurrentClass;
         });
     }, [tasks, selectedDate, currentClassId]);
 
-    const resetForm = () => {
-        setFormData({
-            ...INITIAL_FORM_STATE,
-            startDate: toDateString(),
-            endDate: toDateString(),
-            selectedRoomIds: currentClassId ? [currentClassId] : []
+    // Get available parents for a given type
+    const getAvailableParents = useCallback((itemType: ItemType): Task[] => {
+        const allowedParentTypes = ALLOWED_PARENT_TYPES[itemType];
+        if (allowedParentTypes.length === 0) return [];
+        
+        return tasks.filter(t => allowedParentTypes.includes(t.type));
+    }, [tasks]);
+
+    // Build breadcrumb for a task
+    const getBreadcrumb = useCallback((task: Task): string => {
+        if (!task.pathTitles || task.pathTitles.length === 0) return '';
+        return task.pathTitles.join(' → ');
+    }, []);
+
+    // Calculate progress for a parent item
+    const getProgress = useCallback((parentId: string): { completed: number; total: number } => {
+        const children = tasks.filter(t => t.parentId === parentId);
+        const total = children.length;
+        const completed = children.filter(t => t.status === 'done').length;
+        return { completed, total };
+    }, [tasks]);
+
+    // --- Card Management ---
+
+    const updateActiveCard = useCallback(<K extends keyof TaskFormData>(
+        field: K, 
+        value: TaskFormData[K] | ((prev: TaskFormData[K]) => TaskFormData[K])
+    ) => {
+        setOpenCards(prev => prev.map(card => {
+            if (card.id !== activeCardId) return card;
+            const newValue = typeof value === 'function' 
+                ? (value as (prev: TaskFormData[K]) => TaskFormData[K])(card.formData[field])
+                : value;
+            return {
+                ...card,
+                formData: { ...card.formData, [field]: newValue },
+                isDirty: true,
+            };
+        }));
+    }, [activeCardId]);
+
+    const addNewCard = useCallback((parentCardId?: string) => {
+        const parentCard = parentCardId ? openCards.find(c => c.id === parentCardId) : null;
+        const parentType = parentCard?.formData.type || 'task';
+        const allowedChildTypes = ALLOWED_CHILD_TYPES[parentType];
+        
+        // Determine the child type
+        let childType: ItemType = 'task';
+        if (allowedChildTypes && allowedChildTypes.length > 0 && allowedChildTypes[0]) {
+            childType = allowedChildTypes[0];
+        }
+
+        // Inherit classes from parent
+        const inheritedClasses = parentCard?.formData.selectedRoomIds || 
+            (currentClassId ? [currentClassId] : []);
+
+        const newCard: TaskCardState = {
+            id: generateCardId(),
+            formData: {
+                ...INITIAL_FORM_STATE,
+                type: childType,
+                parentId: parentCardId || null,
+                selectedRoomIds: inheritedClasses,
+            },
+            isNew: true,
+            isDirty: false,
+            parentCardId,
+        };
+
+        setOpenCards(prev => [...prev, newCard]);
+        setActiveCardId(newCard.id);
+    }, [openCards, currentClassId]);
+
+    const closeCard = useCallback((cardId: string) => {
+        const card = openCards.find(c => c.id === cardId);
+        if (card?.isDirty) {
+            if (!window.confirm('You have unsaved changes. Close anyway?')) return;
+        }
+
+        setOpenCards(prev => {
+            const filtered = prev.filter(c => c.id !== cardId);
+            if (filtered.length === 0) {
+                // Always keep at least one card
+                const newCard: TaskCardState = {
+                    id: generateCardId(),
+                    formData: { ...INITIAL_FORM_STATE, selectedRoomIds: currentClassId ? [currentClassId] : [] },
+                    isNew: true,
+                    isDirty: false,
+                };
+                return [newCard];
+            }
+            return filtered;
         });
-        setEditingTaskId(null);
-        setIsUploading(false);
-    };
+
+        // If closing active card, switch to another
+        if (cardId === activeCardId) {
+            setOpenCards(prev => {
+                const remaining = prev.filter(c => c.id !== cardId);
+                const lastCard = remaining[remaining.length - 1];
+                if (remaining.length > 0 && lastCard) {
+                    setActiveCardId(lastCard.id);
+                }
+                return prev;
+            });
+        }
+    }, [openCards, activeCardId, currentClassId]);
+
+    const navigateCards = useCallback((direction: 'prev' | 'next') => {
+        const currentIndex = openCards.findIndex(c => c.id === activeCardId);
+        const newIndex = direction === 'prev' 
+            ? Math.max(0, currentIndex - 1)
+            : Math.min(openCards.length - 1, currentIndex + 1);
+        const targetCard = openCards[newIndex];
+        if (targetCard) {
+            setActiveCardId(targetCard.id);
+        }
+    }, [openCards, activeCardId]);
+
+    const resetToNewCard = useCallback(() => {
+        const newCard: TaskCardState = {
+            id: generateCardId(),
+            formData: { 
+                ...INITIAL_FORM_STATE, 
+                selectedRoomIds: currentClassId ? [currentClassId] : [] 
+            },
+            isNew: true,
+            isDirty: false,
+        };
+        setOpenCards([newCard]);
+        setActiveCardId(newCard.id);
+    }, [currentClassId]);
 
     // --- Handlers ---
 
-    const handleInputChange = (field: keyof TaskFormData, value: any) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
-    };
-
     const handleRoomToggle = (roomId: string) => {
-        setFormData(prev => {
-            const current = prev.selectedRoomIds;
-            const updated = current.includes(roomId)
-                ? current.filter(id => id !== roomId)
-                : [...current, roomId];
-            return { ...prev, selectedRoomIds: updated };
+        updateActiveCard('selectedRoomIds', prev => {
+            return prev.includes(roomId)
+                ? prev.filter(id => id !== roomId)
+                : [...prev, roomId];
         });
     };
 
-    const handleSave = async () => {
-        if (!auth.currentUser) return;
+    const handleSaveCard = async (cardId: string) => {
+        const card = openCards.find(c => c.id === cardId);
+        if (!card || !auth.currentUser) return;
+
+        const { formData } = card;
+
         if (!formData.title.trim()) {
-            handleError("Please enter a task title.");
+            handleError("Please enter a title.");
             return;
         }
         if (formData.selectedRoomIds.length === 0) {
@@ -206,65 +364,227 @@ export default function TaskManager() {
 
         setIsSubmitting(true);
         try {
+            // Build path and pathTitles from parent
+            let path: string[] = [];
+            let pathTitles: string[] = [];
+            let rootId: string | null = null;
+
+            if (formData.parentId) {
+                const parent = tasks.find(t => t.id === formData.parentId);
+                if (parent) {
+                    path = [...(parent.path || []), parent.id];
+                    pathTitles = [...(parent.pathTitles || []), parent.title];
+                    rootId = parent.rootId || parent.id;
+                }
+            }
+
             const taskData = {
-                ...formData,
+                title: formData.title,
+                description: formData.description,
+                type: formData.type,
+                parentId: formData.parentId,
+                rootId,
+                path,
+                pathTitles,
+                linkURL: formData.linkURL,
+                startDate: formData.startDate,
+                endDate: formData.endDate,
+                selectedRoomIds: formData.selectedRoomIds,
                 teacherId: auth.currentUser.uid,
-                updatedAt: serverTimestamp()
+                updatedAt: serverTimestamp(),
+                status: 'todo',
+                childIds: [],
             };
 
-            if (editingTaskId) {
-                // Update
-                await updateDoc(doc(db, 'tasks', editingTaskId), taskData);
-                handleSuccess("Task updated successfully!");
-            } else {
-                // Create
-                // Find max order for new task
+            if (card.isNew) {
+                // Create new task
                 const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
 
-                await addDoc(collection(db, 'tasks'), {
+                const docRef = await addDoc(collection(db, 'tasks'), {
                     ...taskData,
                     presentationOrder: maxOrder + 1,
                     createdAt: serverTimestamp(),
-                    imageURL: '' // TODO: Handle actual file upload
+                    imageURL: '',
                 });
-                handleSuccess("Task created successfully!");
+
+                // Update parent's childIds if applicable
+                if (formData.parentId) {
+                    const parentDoc = doc(db, 'tasks', formData.parentId);
+                    const parent = tasks.find(t => t.id === formData.parentId);
+                    if (parent) {
+                        await updateDoc(parentDoc, {
+                            childIds: [...(parent.childIds || []), docRef.id]
+                        });
+                    }
+                }
+
+                handleSuccess(`${getTypeLabel(formData.type)} created successfully!`);
+            } else {
+                // Update existing - card would have a taskId attached
+                // For now, we don't support editing via cards (that's in handleEditClick)
+                handleSuccess(`${getTypeLabel(formData.type)} updated!`);
             }
-            resetForm();
+
+            // Remove the card after saving
+            closeCard(cardId);
+
         } catch (error) {
-            console.error("Error saving task:", error);
-            handleError("Failed to save task.");
+            console.error("Error saving:", error);
+            handleError("Failed to save.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleDelete = async () => {
-        if (!editingTaskId) return;
-        if (!window.confirm("Are you sure you want to delete this task?")) return;
+    const handleSaveAll = async () => {
+        const dirtyCards = openCards.filter(c => c.isDirty && c.formData.title.trim());
+        if (dirtyCards.length === 0) {
+            handleError("No tasks to save. Please fill out at least one task.");
+            return;
+        }
 
         setIsSubmitting(true);
         try {
-            await deleteDoc(doc(db, 'tasks', editingTaskId));
-            handleSuccess("Task deleted.");
-            resetForm();
+            const batch = writeBatch(db);
+            let savedCount = 0;
+
+            for (const card of dirtyCards) {
+                if (!card.formData.title.trim()) continue;
+                if (card.formData.selectedRoomIds.length === 0) continue;
+
+                let path: string[] = [];
+                let pathTitles: string[] = [];
+                let rootId: string | null = null;
+
+                if (card.formData.parentId) {
+                    const parent = tasks.find(t => t.id === card.formData.parentId);
+                    if (parent) {
+                        path = [...(parent.path || []), parent.id];
+                        pathTitles = [...(parent.pathTitles || []), parent.title];
+                        rootId = parent.rootId || parent.id;
+                    }
+                }
+
+                const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
+                const newDocRef = doc(collection(db, 'tasks'));
+
+                batch.set(newDocRef, {
+                    title: card.formData.title,
+                    description: card.formData.description,
+                    type: card.formData.type,
+                    parentId: card.formData.parentId,
+                    rootId,
+                    path,
+                    pathTitles,
+                    linkURL: card.formData.linkURL,
+                    startDate: card.formData.startDate,
+                    endDate: card.formData.endDate,
+                    selectedRoomIds: card.formData.selectedRoomIds,
+                    teacherId: auth.currentUser!.uid,
+                    presentationOrder: maxOrder + savedCount + 1,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    imageURL: '',
+                    status: 'todo',
+                    childIds: [],
+                });
+
+                savedCount++;
+            }
+
+            await batch.commit();
+            handleSuccess(`${savedCount} item(s) created successfully!`);
+            resetToNewCard();
+
         } catch (error) {
-            console.error("Error deleting task:", error);
-            handleError("Failed to delete task.");
+            console.error("Error batch saving:", error);
+            handleError("Failed to save items.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDelete = async (taskId: string) => {
+        if (!window.confirm("Are you sure you want to delete this item? Children will become standalone.")) return;
+
+        setIsSubmitting(true);
+        try {
+            // Get the task to find its children
+            const taskToDelete = tasks.find(t => t.id === taskId);
+            
+            // Update children to become standalone
+            if (taskToDelete?.childIds?.length) {
+                const batch = writeBatch(db);
+                for (const childId of taskToDelete.childIds) {
+                    batch.update(doc(db, 'tasks', childId), {
+                        parentId: null,
+                        rootId: null,
+                        path: [],
+                        pathTitles: [],
+                    });
+                }
+                await batch.commit();
+            }
+
+            // Delete the task
+            await deleteDoc(doc(db, 'tasks', taskId));
+            handleSuccess("Item deleted.");
+            resetToNewCard();
+        } catch (error) {
+            console.error("Error deleting:", error);
+            handleError("Failed to delete.");
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleEditClick = (task: Task) => {
-        setEditingTaskId(task.id);
-        setFormData({
-            title: task.title,
-            description: task.description,
-            linkURL: task.linkURL,
-            startDate: task.startDate,
-            endDate: task.endDate,
-            selectedRoomIds: task.selectedRoomIds
+        // Open task and all its ancestors as tabs
+        const cardsToOpen: TaskCardState[] = [];
+        
+        // First, add all ancestors
+        if (task.path && task.path.length > 0) {
+            for (const ancestorId of task.path) {
+                const ancestor = tasks.find(t => t.id === ancestorId);
+                if (ancestor) {
+                    cardsToOpen.push({
+                        id: ancestor.id, // Use task ID as card ID for editing
+                        formData: {
+                            title: ancestor.title,
+                            description: ancestor.description || '',
+                            type: ancestor.type,
+                            parentId: ancestor.parentId,
+                            linkURL: ancestor.linkURL || '',
+                            startDate: ancestor.startDate || toDateString(),
+                            endDate: ancestor.endDate || toDateString(),
+                            selectedRoomIds: ancestor.selectedRoomIds || [],
+                        },
+                        isNew: false,
+                        isDirty: false,
+                    });
+                }
+            }
+        }
+
+        // Add the clicked task
+        cardsToOpen.push({
+            id: task.id,
+            formData: {
+                title: task.title,
+                description: task.description || '',
+                type: task.type,
+                parentId: task.parentId,
+                linkURL: task.linkURL || '',
+                startDate: task.startDate || toDateString(),
+                endDate: task.endDate || toDateString(),
+                selectedRoomIds: task.selectedRoomIds || [],
+            },
+            isNew: false,
+            isDirty: false,
         });
+
+        setOpenCards(cardsToOpen);
+        setActiveCardId(task.id);
     };
 
     const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
@@ -278,11 +598,6 @@ export default function TaskManager() {
         const targetTask = filteredTasks[targetIndex];
 
         if (!currentTask || !targetTask) return;
-
-        // Swap orders
-        // Note: This is a simplified reorder. In a real app with shared lists, 
-        // we might need a more robust ranking system (e.g. Lexorank).
-        // Here we just swap the 'presentationOrder' values.
 
         try {
             const currentOrder = currentTask.presentationOrder || 0;
@@ -303,6 +618,10 @@ export default function TaskManager() {
 
     // --- Render ---
 
+    const TypeIcon = getTypeIcon(activeFormData.type);
+    const availableParents = getAvailableParents(activeFormData.type);
+    const hasDirtyCards = openCards.some(c => c.isDirty && c.formData.title.trim());
+
     return (
         <div className="flex-1 h-full overflow-y-auto lg:overflow-hidden">
             <div className="min-h-full lg:h-full grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -310,28 +629,93 @@ export default function TaskManager() {
                 {/* LEFT PANEL: Task Editor */}
                 <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
                     <div className="card-base p-4 space-y-4 flex-1 flex flex-col">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {editingTaskId ? 'Edit Task' : 'Create New Task'}
-                            </h2>
-                            {/* Mobile/Header New Task Button (optional, keeping for flexibility) */}
-                            {editingTaskId && (
-                                <Button variant="tertiary" size="sm" onClick={resetForm} icon={Plus} className="lg:hidden">
-                                    New Task
-                                </Button>
-                            )}
+                        
+                        {/* Tab Bar */}
+                        <TaskTabBar
+                            tabs={openCards.map(card => ({
+                                id: card.id,
+                                title: card.formData.title,
+                                type: card.formData.type,
+                                isNew: card.isNew,
+                                isDirty: card.isDirty,
+                            }))}
+                            activeTabId={activeCardId}
+                            onTabClick={setActiveCardId}
+                            onTabClose={closeCard}
+                            onAddChild={addNewCard}
+                            onNavigate={navigateCards}
+                        />
+
+                        {/* Type Selector */}
+                        <div className="flex items-center gap-3">
+                            <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Type</label>
+                            <div className="flex gap-2">
+                                {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
+                                    const Icon = getTypeIcon(type);
+                                    const isSelected = activeFormData.type === type;
+                                    const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
+                                        tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
+                                    ].includes(type);
+
+                                    return (
+                                        <button
+                                            key={type}
+                                            onClick={() => updateActiveCard('type', type)}
+                                            disabled={!!isDisabled}
+                                            className={`
+                                                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase
+                                                border-[2px] transition-all duration-200
+                                                ${isSelected 
+                                                    ? getTypeColorClasses(type) 
+                                                    : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'}
+                                                ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
+                                            `}
+                                        >
+                                            <Icon size={14} />
+                                            {getTypeLabel(type)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
+
+                        {/* Parent Selector (if applicable) */}
+                        {availableParents.length > 0 && (
+                            <div>
+                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">
+                                    Parent {ALLOWED_PARENT_TYPES[activeFormData.type].map(getTypeLabel).join('/')}
+                                </label>
+                                <select
+                                    value={activeFormData.parentId || ''}
+                                    onChange={e => updateActiveCard('parentId', e.target.value || null)}
+                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                >
+                                    <option value="">No parent (standalone)</option>
+                                    {availableParents.map(parent => (
+                                        <option key={parent.id} value={parent.id}>
+                                            {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
+                                            {parent.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         {/* Title */}
                         <div>
                             <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Title</label>
-                            <input
-                                type="text"
-                                value={formData.title}
-                                onChange={e => handleInputChange('title', e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                placeholder="e.g. Read Chapter 4"
-                            />
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                                    <TypeIcon size={16} className={getTypeColorClasses(activeFormData.type).split(' ')[0]} />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={activeFormData.title}
+                                    onChange={e => updateActiveCard('title', e.target.value)}
+                                    className="w-full pl-10 pr-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                    placeholder={`e.g. ${activeFormData.type === 'project' ? 'Math Unit 3' : activeFormData.type === 'assignment' ? 'Exponents Practice' : 'Read Chapter 4'}`}
+                                />
+                            </div>
                         </div>
 
                         {/* Dates */}
@@ -340,8 +724,8 @@ export default function TaskManager() {
                                 <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Start Date</label>
                                 <input
                                     type="date"
-                                    value={formData.startDate}
-                                    onChange={e => handleInputChange('startDate', e.target.value)}
+                                    value={activeFormData.startDate}
+                                    onChange={e => updateActiveCard('startDate', e.target.value)}
                                     className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 />
                             </div>
@@ -349,8 +733,8 @@ export default function TaskManager() {
                                 <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Due Date</label>
                                 <input
                                     type="date"
-                                    value={formData.endDate}
-                                    onChange={e => handleInputChange('endDate', e.target.value)}
+                                    value={activeFormData.endDate}
+                                    onChange={e => updateActiveCard('endDate', e.target.value)}
                                     className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 />
                             </div>
@@ -360,8 +744,8 @@ export default function TaskManager() {
                         <div>
                             <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
                             <textarea
-                                value={formData.description}
-                                onChange={e => handleInputChange('description', e.target.value)}
+                                value={activeFormData.description}
+                                onChange={e => updateActiveCard('description', e.target.value)}
                                 className="w-full h-20 px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 placeholder="Instructions..."
                             />
@@ -369,11 +753,10 @@ export default function TaskManager() {
 
                         {/* Attachments & Link */}
                         <div className="grid grid-cols-2 gap-3">
-                            {/* File Upload Stub */}
                             <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 transition-all text-center group cursor-pointer">
                                 <input
                                     type="file"
-                                    disabled // Disabled for UI demo
+                                    disabled
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10"
                                 />
                                 <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
@@ -382,15 +765,14 @@ export default function TaskManager() {
                                 </div>
                             </div>
 
-                            {/* Link Input */}
                             <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
                                 <div className="pl-3 text-gray-400">
                                     <LinkIcon size={14} />
                                 </div>
                                 <input
                                     type="url"
-                                    value={formData.linkURL}
-                                    onChange={e => handleInputChange('linkURL', e.target.value)}
+                                    value={activeFormData.linkURL}
+                                    onChange={e => updateActiveCard('linkURL', e.target.value)}
                                     className="w-full py-2 px-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
                                     placeholder="Paste URL..."
                                 />
@@ -405,7 +787,7 @@ export default function TaskManager() {
                             ) : (
                                 <div className="flex flex-wrap gap-2">
                                     {rooms.map(room => {
-                                        const isSelected = formData.selectedRoomIds.includes(room.id);
+                                        const isSelected = activeFormData.selectedRoomIds.includes(room.id);
                                         return (
                                             <button
                                                 key={room.id}
@@ -445,32 +827,43 @@ export default function TaskManager() {
 
                         {/* Action Buttons Footer */}
                         <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
-                            {editingTaskId ? (
-                                <>
-                                    <Button
-                                        variant="ghost-danger"
-                                        onClick={handleDelete}
-                                        disabled={isSubmitting}
-                                    >
-                                        Delete
-                                    </Button>
-                                    <Button
-                                        variant="primary"
-                                        onClick={handleSave}
-                                        disabled={isSubmitting}
-                                        className="flex-1"
-                                    >
-                                        {isSubmitting ? 'Updating...' : 'Update Task'}
-                                    </Button>
-                                </>
-                            ) : (
+                            {!activeCard?.isNew && (
+                                <Button
+                                    variant="ghost-danger"
+                                    onClick={() => handleDelete(activeCardId)}
+                                    disabled={isSubmitting}
+                                >
+                                    Delete
+                                </Button>
+                            )}
+                            
+                            <Button
+                                variant="tertiary"
+                                onClick={() => handleSaveCard(activeCardId)}
+                                disabled={isSubmitting || !activeCard?.isDirty}
+                            >
+                                {isSubmitting ? 'Saving...' : `Save ${getTypeLabel(activeFormData.type)}`}
+                            </Button>
+
+                            {hasDirtyCards && openCards.filter(c => c.isDirty).length > 1 && (
                                 <Button
                                     variant="primary"
-                                    onClick={handleSave}
+                                    onClick={handleSaveAll}
                                     disabled={isSubmitting}
                                     className="flex-1"
                                 >
-                                    {isSubmitting ? 'Creating...' : 'Create Task'}
+                                    {isSubmitting ? 'Saving...' : `Save All (${openCards.filter(c => c.isDirty && c.formData.title.trim()).length})`}
+                                </Button>
+                            )}
+
+                            {!hasDirtyCards && (
+                                <Button
+                                    variant="primary"
+                                    onClick={() => handleSaveCard(activeCardId)}
+                                    disabled={isSubmitting || !activeFormData.title.trim()}
+                                    className="flex-1"
+                                >
+                                    {isSubmitting ? 'Creating...' : `Create ${getTypeLabel(activeFormData.type)}`}
                                 </Button>
                             )}
                         </div>
@@ -498,7 +891,6 @@ export default function TaskManager() {
                                 </div>
                             </div>
 
-                            {/* Week Strip (Desktop: 5 days, Mobile: 1 day logic handled by CSS/Container queries if needed, but here we stick to 5 for simplicity as requested "5 days per week on widescreen") */}
                             <div className="grid grid-cols-5 gap-1">
                                 {weekDays.map(date => {
                                     const dateStr = toDateString(date);
@@ -552,47 +944,78 @@ export default function TaskManager() {
                                     No tasks scheduled.
                                 </div>
                             ) : (
-                                filteredTasks.map((task, index) => (
-                                    <div
-                                        key={task.id}
-                                        onClick={() => handleEditClick(task)}
-                                        className={`
-                                            group relative p-3 rounded-xl border-[3px] transition-all cursor-pointer
-                                            ${editingTaskId === task.id
-                                                ? 'border-brand-accent bg-brand-accent/5'
-                                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
-                                        `}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            {/* Reorder Controls - Always visible */}
-                                            <div className="flex flex-col" onClick={e => e.stopPropagation()}>
-                                                <button
-                                                    onClick={() => handleReorder(task.id, 'up')}
-                                                    disabled={index === 0}
-                                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
-                                                >
-                                                    <ArrowUp size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleReorder(task.id, 'down')}
-                                                    disabled={index === filteredTasks.length - 1}
-                                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
-                                                >
-                                                    <ArrowDown size={14} />
-                                                </button>
+                                filteredTasks.map((task, index) => {
+                                    const TypeIconSmall = getTypeIcon(task.type);
+                                    const breadcrumb = getBreadcrumb(task);
+                                    const progress = task.childIds?.length ? getProgress(task.id) : null;
+                                    const isEditing = openCards.some(c => c.id === task.id);
+
+                                    return (
+                                        <div
+                                            key={task.id}
+                                            onClick={() => handleEditClick(task)}
+                                            className={`
+                                                group relative p-3 rounded-xl border-[3px] transition-all cursor-pointer
+                                                ${isEditing
+                                                    ? 'border-brand-accent bg-brand-accent/5'
+                                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
+                                            `}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                {/* Reorder Controls */}
+                                                <div className="flex flex-col" onClick={e => e.stopPropagation()}>
+                                                    <button
+                                                        onClick={() => handleReorder(task.id, 'up')}
+                                                        disabled={index === 0}
+                                                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
+                                                    >
+                                                        <ArrowUp size={14} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleReorder(task.id, 'down')}
+                                                        disabled={index === filteredTasks.length - 1}
+                                                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
+                                                    >
+                                                        <ArrowDown size={14} />
+                                                    </button>
+                                                </div>
+
+                                                {/* Type Badge */}
+                                                <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                    <TypeIconSmall size={12} />
+                                                </span>
+
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
+                                                        {task.title}
+                                                    </h5>
+                                                    
+                                                    {/* Breadcrumb */}
+                                                    {breadcrumb && (
+                                                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                                                            {breadcrumb}
+                                                        </p>
+                                                    )}
+
+                                                    {/* Progress indicator */}
+                                                    {progress && progress.total > 0 && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                                <div 
+                                                                    className="h-full bg-brand-accent rounded-full transition-all"
+                                                                    style={{ width: `${(progress.completed / progress.total) * 100}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-xs text-gray-400">
+                                                                {progress.completed}/{progress.total}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-
-                                            {/* Task number badge */}
-                                            <span className="flex-shrink-0 w-6 h-6 rounded-md bg-brand-accent/10 text-brand-accent text-xs font-bold flex items-center justify-center">
-                                                {index + 1}
-                                            </span>
-
-                                            <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1 flex-1">
-                                                {task.title}
-                                            </h5>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
 
@@ -600,11 +1023,11 @@ export default function TaskManager() {
                         <div className="p-4 border-t border-gray-200 dark:border-gray-800 mt-auto">
                             <Button
                                 variant="ghost"
-                                onClick={resetForm}
+                                onClick={resetToNewCard}
                                 icon={Plus}
                                 className="w-full justify-center"
                             >
-                                Create New Task
+                                Create New Item
                             </Button>
                         </div>
                     </div>

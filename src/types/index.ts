@@ -12,7 +12,27 @@ import { Timestamp } from 'firebase/firestore';
 // Using a "Union Type" (the | symbol) restricts the values to ONLY these strings.
 export type TaskStatus = 'todo' | 'in_progress' | 'stuck' | 'question' | 'done';
 
-// Interface for a Task object
+// Define the hierarchy level for tasks
+// Project → Assignment → Task → Subtask (4 levels max)
+export type ItemType = 'project' | 'assignment' | 'task' | 'subtask';
+
+// Helper to get allowed child types for each item type
+export const ALLOWED_CHILD_TYPES: Record<ItemType, ItemType[]> = {
+    project: ['assignment', 'task'],
+    assignment: ['task'],
+    task: ['subtask'],
+    subtask: [], // Subtasks cannot have children
+};
+
+// Helper to get allowed parent types for each item type
+export const ALLOWED_PARENT_TYPES: Record<ItemType, ItemType[]> = {
+    project: [], // Projects cannot have parents
+    assignment: ['project'],
+    task: ['project', 'assignment'],
+    subtask: ['task'],
+};
+
+// Interface for a Task object (now supports hierarchy)
 export interface Task {
     id: string;             // Unique identifier for the task
     title: string;          // The main display title
@@ -24,6 +44,46 @@ export interface Task {
     completedAt?: number;   // Timestamp when task was completed
     wasStuck?: boolean;     // Flag if student was ever stuck
     questions?: string[];   // Array of questions asked during this task
+    
+    // --- Hierarchy Fields ---
+    type: ItemType;         // The hierarchy level of this item
+    parentId: string | null; // ID of the parent item (null for top-level)
+    rootId: string | null;   // ID of the root project/assignment (for quick filtering)
+    path: string[];          // Array of ancestor IDs for breadcrumb display [rootId, ..., parentId]
+    pathTitles: string[];    // Array of ancestor titles for breadcrumb display
+    childIds: string[];      // Array of direct child IDs (for progress tracking)
+    
+    // --- Teacher-side scheduling fields ---
+    linkURL?: string;        // Resource link
+    imageURL?: string;       // Attachment URL
+    startDate?: string;      // YYYY-MM-DD
+    endDate?: string;        // YYYY-MM-DD
+    selectedRoomIds: string[]; // Multi-class assignment (inherited from parent if not set)
+    presentationOrder: number; // Display order within parent
+    teacherId?: string;      // UID of the teacher who created this
+    createdAt?: any;         // Firebase Timestamp
+    updatedAt?: any;         // Firebase Timestamp
+}
+
+// Type for creating a new task (without id and with optional fields)
+export interface TaskFormData {
+    title: string;
+    description: string;
+    type: ItemType;
+    parentId: string | null;
+    linkURL: string;
+    startDate: string;
+    endDate: string;
+    selectedRoomIds: string[];
+}
+
+// Type for task card in the multi-card editor
+export interface TaskCardState {
+    id: string;              // Temporary ID for the card (not saved to DB)
+    formData: TaskFormData;
+    isNew: boolean;          // True if this is a new unsaved task
+    isDirty: boolean;        // True if form has unsaved changes
+    parentCardId?: string;   // ID of the parent card (for hierarchy in editor)
 }
 
 // Interface for a Student object (used in Roster)

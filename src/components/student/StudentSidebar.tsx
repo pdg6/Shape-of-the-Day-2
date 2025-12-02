@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, UserCircle, ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { LogOut, UserCircle, ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings, FolderOpen } from 'lucide-react';
 
 interface StudentSidebarProps {
     studentName: string;
@@ -8,8 +8,8 @@ interface StudentSidebarProps {
     totalTasks: number;
     onSignOut: () => void;
     onEditName: () => void;
-    activeTab: 'tasks' | 'schedule';
-    onTabChange: (tab: 'tasks' | 'schedule') => void;
+    activeTab: 'tasks' | 'schedule' | 'projects';
+    onTabChange: (tab: 'tasks' | 'schedule' | 'projects') => void;
     isCollapsed: boolean;
     onToggleCollapse: () => void;
     onOpenSettings: () => void;
@@ -41,6 +41,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
 }) => {
     const navItems = [
         { id: 'tasks' as const, label: 'Tasks', icon: ListTodo },
+        { id: 'projects' as const, label: 'Projects', icon: FolderOpen },
         { id: 'schedule' as const, label: 'Schedule', icon: CalendarDays },
     ];
 

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation } from 'lucide-react';
+import { Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation, Archive } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
+import TaskInventory from './TaskInventory';
 import ShapeOfDay from './ShapeOfDay';
 import LiveView from './LiveView';
 import ClassroomManager from './ClassroomManager';
@@ -14,7 +15,7 @@ import { Modal } from '../shared/Modal';
 // import { DummyDataControls } from '../shared/DummyDataControls';
 
 interface MenuItem {
-    id: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms';
+    id: 'tasks' | 'inventory' | 'shape' | 'live' | 'data' | 'classrooms';
     label: string;
     icon: React.ElementType;
 }
@@ -42,7 +43,8 @@ const TeacherDashboard: React.FC = () => {
 
     const menuItems: MenuItem[] = [
         { id: 'classrooms', label: 'Classrooms', icon: School },
-        { id: 'tasks', label: 'Task Manager', icon: ListTodo },
+        { id: 'tasks', label: 'Create Task', icon: ListTodo },
+        { id: 'inventory', label: 'Inventory', icon: Archive },
         { id: 'shape', label: 'Shape of Day', icon: Presentation },
         { id: 'live', label: 'Live View', icon: Activity },
         { id: 'data', label: 'Data', icon: BarChart2 },
@@ -85,6 +87,10 @@ const TeacherDashboard: React.FC = () => {
         switch (activeTab) {
             case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} />;
             case 'tasks': return <TaskManager />;
+            case 'inventory': return <TaskInventory onEditTask={(task) => {
+                // Navigate to TaskManager - the task will be loaded via the store or passed differently
+                setActiveTab('tasks');
+            }} />;
             case 'shape': return <ShapeOfDay />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
             case 'data': return <ClassroomManager activeView={classroomSubTab} onNavigate={handleDeepNavigation} />;
