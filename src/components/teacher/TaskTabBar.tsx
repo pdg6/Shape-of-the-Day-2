@@ -51,15 +51,15 @@ export function TaskTabBar({
     const canAddChild = activeTab && ALLOWED_CHILD_TYPES[activeTab.type].length > 0;
 
     return (
-        <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+        <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
             {/* Navigation Chevrons */}
             <button
                 onClick={() => onNavigate('prev')}
                 disabled={activeIndex <= 0}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-gray-700 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-300 dark:disabled:hover:text-gray-600 transition-all"
                 aria-label="Previous tab"
             >
-                <ChevronLeft size={16} />
+                <ChevronLeft size={14} />
             </button>
 
             {/* Tabs Container - Scrollable */}
@@ -122,29 +122,29 @@ export function TaskTabBar({
                         </div>
                     );
                 })}
+
+                {/* Add Child Button - Right next to tabs */}
+                <button
+                    onClick={() => onAddChild(activeTabId)}
+                    className="p-1.5 rounded-lg text-brand-accent hover:bg-brand-accent/10 transition-all border-[2px] border-transparent hover:border-brand-accent flex-shrink-0"
+                    aria-label="Add new item"
+                    title={canAddChild 
+                        ? `Add ${ALLOWED_CHILD_TYPES[activeTab!.type].join(' or ')} to this ${getTypeLabel(activeTab!.type)}`
+                        : 'Add new item'}
+                >
+                    <Plus size={16} />
+                </button>
             </div>
 
             {/* Navigation Chevron Right */}
             <button
                 onClick={() => onNavigate('next')}
                 disabled={activeIndex >= tabs.length - 1}
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-gray-700 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-gray-700 disabled:text-gray-300 dark:disabled:text-gray-600 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-gray-300 dark:disabled:hover:text-gray-600 transition-all"
                 aria-label="Next tab"
             >
-                <ChevronRight size={16} />
+                <ChevronRight size={14} />
             </button>
-
-            {/* Add Child Button */}
-            {canAddChild && (
-                <button
-                    onClick={() => onAddChild(activeTabId)}
-                    className="p-1.5 rounded-lg text-brand-accent hover:bg-brand-accent/10 transition-all border-[2px] border-transparent hover:border-brand-accent"
-                    aria-label="Add child item"
-                    title={`Add ${ALLOWED_CHILD_TYPES[activeTab.type].join(' or ')} to this ${getTypeLabel(activeTab.type)}`}
-                >
-                    <Plus size={16} />
-                </button>
-            )}
         </div>
     );
 }

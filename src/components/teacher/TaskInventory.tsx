@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
     FolderOpen, 
     FileText, 
@@ -6,12 +6,14 @@ import {
     CheckSquare, 
     ChevronRight, 
     ChevronDown,
+    ChevronLeft,
+    ChevronUp,
     Copy,
     Filter,
     Search,
-    Loader
+    Loader,
+    Calendar
 } from 'lucide-react';
-import { Button } from '../shared/Button';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom, ItemType, Task } from '../../types';
@@ -197,6 +199,16 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterClassroom, setFilterClassroom] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
+    
+    // Date filter
+    const [filterDate, setFilterDate] = useState<string | null>(null);
+    
+    // Calendar refs
+    const calendarRef = useRef<HTMLDivElement>(null);
+    const todayRef = useRef<HTMLButtonElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStartX, setDragStartX] = useState(0);
+    const [scrollStartLeft, setScrollStartLeft] = useState(0);
 
     // --- Effects ---
 
@@ -250,6 +262,68 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         return { completed, total };
     }, [tasks]);
 
+    // Type for calendar items (day or weekend spanner)
+    type CalendarItem = { type: 'day'; date: Date } | { type: 'weekend' };
+
+    // Generate calendar items: weekdays only with weekend spanners (4 weeks = 20 weekdays)
+    const calendarItems = useMemo((): CalendarItem[] => {
+        const items: CalendarItem[] = [];
+        let today = new Date();
+        
+        // If today is Saturday (6) or Sunday (0), snap to next Monday
+        const dayOfWeek = today.getDay();
+        if (dayOfWeek === 0) {
+            today.setDate(today.getDate() + 1); // Sunday -> Monday
+        } else if (dayOfWeek === 6) {
+            today.setDate(today.getDate() + 2); // Saturday -> Monday
+        }
+        
+        // Start from Monday of previous week (show some past dates)
+        const startDate = new Date(today);
+        const currentDayOfWeek = startDate.getDay();
+        const daysFromMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+        startDate.setDate(startDate.getDate() - daysFromMonday - 7); // Go back one more week
+        
+        // Generate 4 weeks of weekdays (20 days total)
+        for (let week = 0; week < 4; week++) {
+            // Add weekend spanner between weeks
+            if (week > 0) {
+                items.push({ type: 'weekend' });
+            }
+            
+            // Add Mon-Fri for this week
+            for (let day = 0; day < 5; day++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + (week * 7) + day);
+                items.push({ type: 'day', date });
+            }
+        }
+        
+        return items;
+    }, []);
+
+    // Helper to format date for display
+    const formatCalendarDate = (date: Date) => ({
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNum: date.getDate(),
+        dateStr: date.toISOString().split('T')[0] ?? '',
+        isToday: new Date().toDateString() === date.toDateString(),
+    });
+
+    // Get task counts for a specific date
+    const getDateTaskCounts = useCallback((dateStr: string) => {
+        const tasksOnDate = tasks.filter(task => {
+            if (!task.startDate || !task.endDate) return false;
+            return dateStr >= task.startDate && dateStr <= task.endDate;
+        });
+        
+        const projects = tasksOnDate.filter(t => t.type === 'project' && !t.parentId).length;
+        const assignments = tasksOnDate.filter(t => t.type === 'assignment' && !t.parentId).length;
+        const standaloneTasks = tasksOnDate.filter(t => (t.type === 'task' || t.type === 'subtask') && !t.parentId).length;
+        
+        return { projects, assignments, tasks: standaloneTasks };
+    }, [tasks]);
+
     // Filter tasks
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
@@ -270,9 +344,15 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
             if (filterStatus === 'active' && task.status === 'done') return false;
             if (filterStatus === 'completed' && task.status !== 'done') return false;
 
+            // Date filter - only show tasks active on the selected date
+            if (filterDate) {
+                if (!task.startDate || !task.endDate) return false;
+                if (filterDate < task.startDate || filterDate > task.endDate) return false;
+            }
+
             return true;
         });
-    }, [tasks, searchQuery, filterClassroom, filterStatus]);
+    }, [tasks, searchQuery, filterClassroom, filterStatus, filterDate]);
 
     // Group tasks by type (only top-level items)
     const groupedTasks = useMemo(() => {
@@ -297,15 +377,6 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
             }
             return next;
         });
-    }, []);
-
-    const expandAll = useCallback(() => {
-        const allIds = tasks.filter(t => t.childIds?.length > 0).map(t => t.id);
-        setExpandedIds(new Set(allIds));
-    }, [tasks]);
-
-    const collapseAll = useCallback(() => {
-        setExpandedIds(new Set());
     }, []);
 
     const handleEdit = useCallback((task: Task) => {
@@ -349,6 +420,97 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         }
     }, [tasks]);
 
+    // Calendar scroll handlers
+    const scrollCalendar = (direction: 'left' | 'right') => {
+        if (calendarRef.current) {
+            calendarRef.current.scrollBy({
+                left: direction === 'left' ? -200 : 200,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    const handleCalendarMouseDown = (e: React.MouseEvent) => {
+        if (!calendarRef.current) return;
+        setIsDragging(true);
+        setDragStartX(e.pageX - calendarRef.current.offsetLeft);
+        setScrollStartLeft(calendarRef.current.scrollLeft);
+    };
+
+    const handleCalendarMouseMove = (e: React.MouseEvent) => {
+        if (!isDragging || !calendarRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - calendarRef.current.offsetLeft;
+        calendarRef.current.scrollLeft = scrollStartLeft - (x - dragStartX) * 2;
+    };
+
+    const handleCalendarMouseUp = () => setIsDragging(false);
+    const handleCalendarMouseLeave = () => setIsDragging(false);
+
+    // Auto-scroll to center today on mount
+    useEffect(() => {
+        const scrollToToday = () => {
+            if (todayRef.current && calendarRef.current) {
+                const container = calendarRef.current;
+                const todayButton = todayRef.current;
+                const containerWidth = container.offsetWidth;
+                const buttonLeft = todayButton.offsetLeft;
+                const buttonWidth = todayButton.offsetWidth;
+                
+                // Scroll to center today
+                container.scrollLeft = buttonLeft - (containerWidth / 2) + (buttonWidth / 2);
+            }
+        };
+        // Small delay to ensure layout is complete
+        const timer = setTimeout(scrollToToday, 100);
+        return () => clearTimeout(timer);
+    }, [calendarItems]);
+
+    // Keyboard navigation for calendar
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't handle if typing in an input
+            if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'SELECT') {
+                return;
+            }
+            
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                
+                // Get all date strings from calendar items
+                const dateStrings = calendarItems
+                    .filter((item): item is { type: 'day'; date: Date } => item.type === 'day')
+                    .map(item => item.date.toISOString().split('T')[0]);
+                
+                if (dateStrings.length === 0) return;
+                
+                const currentIndex = filterDate ? dateStrings.indexOf(filterDate) : -1;
+                let newIndex: number;
+                
+                if (e.key === 'ArrowLeft') {
+                    newIndex = currentIndex <= 0 ? 0 : currentIndex - 1;
+                } else {
+                    newIndex = currentIndex >= dateStrings.length - 1 ? dateStrings.length - 1 : currentIndex + 1;
+                }
+                
+                const newDate = dateStrings[newIndex];
+                if (newDate) {
+                    setFilterDate(newDate);
+                    
+                    // Scroll the selected date into view
+                    const buttons = calendarRef.current?.querySelectorAll('button[data-date]');
+                    const targetButton = Array.from(buttons || []).find(btn => btn.getAttribute('data-date') === newDate);
+                    targetButton?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            } else if (e.key === 'Escape') {
+                setFilterDate(null);
+            }
+        };
+        
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [filterDate, calendarItems]);
+
     // --- Render ---
 
     if (loading) {
@@ -360,23 +522,10 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     }
 
     return (
-        <div className="flex-1 h-full flex flex-col overflow-hidden">
+        <div className="h-full w-full min-w-0 overflow-hidden">
+            <div className="h-full w-full flex flex-col overflow-y-auto lg:overflow-hidden">
             {/* Header with Filters */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        Task Inventory
-                    </h2>
-                    <div className="flex gap-2">
-                        <Button variant="tertiary" size="sm" onClick={expandAll}>
-                            Expand All
-                        </Button>
-                        <Button variant="tertiary" size="sm" onClick={collapseAll}>
-                            Collapse All
-                        </Button>
-                    </div>
-                </div>
-
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 {/* Search & Filters */}
                 <div className="flex flex-wrap gap-3">
                     {/* Search */}
@@ -419,12 +568,126 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                 </div>
             </div>
 
+            {/* Date Filter Calendar Strip */}
+            <div className="px-4 pb-4 w-full flex-shrink-0">
+                <div className="card-base p-3 w-full overflow-hidden">
+                    <div className="flex items-center gap-3 w-full overflow-hidden">
+                        {/* All Dates Button */}
+                        <button
+                            onClick={() => setFilterDate(null)}
+                            className={`
+                                flex-shrink-0 px-4 py-2 rounded-xl border-[3px] font-bold text-sm transition-all
+                                ${filterDate === null
+                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                    : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
+                                }
+                            `}
+                        >
+                            All
+                        </button>
+
+                        {/* Left Arrow */}
+                        <button
+                            onClick={() => scrollCalendar('left')}
+                            className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+
+                        {/* Scrollable Calendar Days */}
+                        <div
+                            ref={calendarRef}
+                            onMouseDown={handleCalendarMouseDown}
+                            onMouseMove={handleCalendarMouseMove}
+                            onMouseUp={handleCalendarMouseUp}
+                            onMouseLeave={handleCalendarMouseLeave}
+                            className="flex-1 min-w-0 overflow-x-auto flex items-center gap-1 scrollbar-hide cursor-grab active:cursor-grabbing select-none"
+                        >
+                            {calendarItems.map((item, index) => {
+                                // Weekend spanner (subtle gap)
+                                if (item.type === 'weekend') {
+                                    return <div key={`weekend-${index}`} className="w-4 flex-shrink-0" />;
+                                }
+                                
+                                // Day button
+                                const { dayName, dayNum, dateStr, isToday } = formatCalendarDate(item.date);
+                                const isSelected = filterDate === dateStr;
+                                const counts = getDateTaskCounts(dateStr);
+                                const hasItems = counts.projects > 0 || counts.assignments > 0 || counts.tasks > 0;
+
+                                return (
+                                    <button
+                                        key={dateStr}
+                                        ref={isToday ? todayRef : null}
+                                        data-date={dateStr}
+                                        onClick={() => !isDragging && setFilterDate(dateStr)}
+                                        className={`
+                                            flex flex-col items-center justify-center flex-shrink-0
+                                            w-14 h-16 rounded-xl border-2 transition-all
+                                            ${isToday && !isSelected
+                                                ? 'bg-brand-accent/10 border-brand-accent/30'
+                                                : ''}
+                                            ${isSelected
+                                                ? 'border-brand-accent bg-brand-accent/20 ring-2 ring-brand-accent/30'
+                                                : !isToday ? 'border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50' : 'hover:bg-brand-accent/20'}
+                                        `}
+                                    >
+                                        <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-brand-accent' : 'text-gray-400'}`}>
+                                            {dayName}
+                                        </span>
+                                        <span className={`text-lg font-bold ${isSelected ? 'text-brand-accent' : isToday ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                            {dayNum}
+                                        </span>
+                                        {/* Task counts - colored dots */}
+                                        {hasItems && (
+                                            <div className="flex gap-1 mt-0.5">
+                                                {counts.projects > 0 && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500" title={`${counts.projects} projects`} />
+                                                )}
+                                                {counts.assignments > 0 && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title={`${counts.assignments} assignments`} />
+                                                )}
+                                                {counts.tasks > 0 && (
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" title={`${counts.tasks} tasks`} />
+                                                )}
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Right Arrow */}
+                        <button
+                            onClick={() => scrollCalendar('right')}
+                            className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+
+                        {/* Date Picker - Direct Input with Calendar Icon */}
+                        <div className="relative flex-shrink-0">
+                            <input
+                                type="date"
+                                value={filterDate || ''}
+                                onChange={(e) => setFilterDate(e.target.value || null)}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                style={{ colorScheme: 'dark' }}
+                            />
+                            <div className="p-2 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300 transition-all pointer-events-none">
+                                <Calendar size={18} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Content - Three Columns */}
-            <div className="flex-1 overflow-y-auto p-4">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-full">
                     
                     {/* Projects Column */}
-                    <div className="card-base p-4">
+                    <div className="card-base p-4 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('project')}`}>
                                 <FolderOpen size={16} />
@@ -432,9 +695,33 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                             <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 Projects
                             </h3>
-                            <span className="ml-auto text-xs text-gray-400 font-medium">
+                            <span className="text-xs text-gray-400 font-medium">
                                 {groupedTasks.projects.length}
                             </span>
+                            {groupedTasks.projects.some(p => p.childIds?.length > 0) && (
+                                <button
+                                    onClick={() => {
+                                        const projectIds = groupedTasks.projects.filter(p => p.childIds?.length > 0).map(p => p.id);
+                                        const allExpanded = projectIds.every(id => expandedIds.has(id));
+                                        if (allExpanded) {
+                                            setExpandedIds(prev => {
+                                                const next = new Set(prev);
+                                                projectIds.forEach(id => next.delete(id));
+                                                return next;
+                                            });
+                                        } else {
+                                            setExpandedIds(prev => new Set([...prev, ...projectIds]));
+                                        }
+                                    }}
+                                    className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                >
+                                    {groupedTasks.projects.filter(p => p.childIds?.length > 0).every(p => expandedIds.has(p.id)) ? (
+                                        <><span>Collapse</span><ChevronUp size={14} /></>
+                                    ) : (
+                                        <><span>Expand</span><ChevronDown size={14} /></>
+                                    )}
+                                </button>
+                            )}
                         </div>
 
                         {groupedTasks.projects.length === 0 ? (
@@ -461,7 +748,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                     </div>
 
                     {/* Assignments Column */}
-                    <div className="card-base p-4">
+                    <div className="card-base p-4 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
                                 <FileText size={16} />
@@ -469,9 +756,33 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                             <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 Assignments
                             </h3>
-                            <span className="ml-auto text-xs text-gray-400 font-medium">
+                            <span className="text-xs text-gray-400 font-medium">
                                 {groupedTasks.assignments.length}
                             </span>
+                            {groupedTasks.assignments.some(a => a.childIds?.length > 0) && (
+                                <button
+                                    onClick={() => {
+                                        const assignmentIds = groupedTasks.assignments.filter(a => a.childIds?.length > 0).map(a => a.id);
+                                        const allExpanded = assignmentIds.every(id => expandedIds.has(id));
+                                        if (allExpanded) {
+                                            setExpandedIds(prev => {
+                                                const next = new Set(prev);
+                                                assignmentIds.forEach(id => next.delete(id));
+                                                return next;
+                                            });
+                                        } else {
+                                            setExpandedIds(prev => new Set([...prev, ...assignmentIds]));
+                                        }
+                                    }}
+                                    className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                >
+                                    {groupedTasks.assignments.filter(a => a.childIds?.length > 0).every(a => expandedIds.has(a.id)) ? (
+                                        <><span>Collapse</span><ChevronUp size={14} /></>
+                                    ) : (
+                                        <><span>Expand</span><ChevronDown size={14} /></>
+                                    )}
+                                </button>
+                            )}
                         </div>
 
                         {groupedTasks.assignments.length === 0 ? (
@@ -497,23 +808,47 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         )}
                     </div>
 
-                    {/* Standalone Tasks Column */}
-                    <div className="card-base p-4">
+                    {/* Tasks Column */}
+                    <div className="card-base p-4 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('task')}`}>
                                 <ListChecks size={16} />
                             </span>
                             <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Standalone Tasks
+                                Tasks
                             </h3>
-                            <span className="ml-auto text-xs text-gray-400 font-medium">
+                            <span className="text-xs text-gray-400 font-medium">
                                 {groupedTasks.standaloneTasks.length}
                             </span>
+                            {groupedTasks.standaloneTasks.some(t => t.childIds?.length > 0) && (
+                                <button
+                                    onClick={() => {
+                                        const taskIds = groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).map(t => t.id);
+                                        const allExpanded = taskIds.every(id => expandedIds.has(id));
+                                        if (allExpanded) {
+                                            setExpandedIds(prev => {
+                                                const next = new Set(prev);
+                                                taskIds.forEach(id => next.delete(id));
+                                                return next;
+                                            });
+                                        } else {
+                                            setExpandedIds(prev => new Set([...prev, ...taskIds]));
+                                        }
+                                    }}
+                                    className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                >
+                                    {groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).every(t => expandedIds.has(t.id)) ? (
+                                        <><span>Collapse</span><ChevronUp size={14} /></>
+                                    ) : (
+                                        <><span>Expand</span><ChevronDown size={14} /></>
+                                    )}
+                                </button>
+                            )}
                         </div>
 
                         {groupedTasks.standaloneTasks.length === 0 ? (
                             <p className="text-center text-sm text-gray-400 py-8 italic">
-                                No standalone tasks
+                                No tasks found
                             </p>
                         ) : (
                             <div className="space-y-1">
@@ -534,6 +869,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         )}
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     );

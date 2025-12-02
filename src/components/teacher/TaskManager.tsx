@@ -63,10 +63,10 @@ const getTypeLabel = (type: ItemType): string => {
 // Get type color classes
 const getTypeColorClasses = (type: ItemType): string => {
     switch (type) {
-        case 'project': return 'text-purple-500 bg-purple-500/10 border-purple-500/30';
-        case 'assignment': return 'text-blue-500 bg-blue-500/10 border-blue-500/30';
-        case 'task': return 'text-green-500 bg-green-500/10 border-green-500/30';
-        case 'subtask': return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
+        case 'project': return 'text-purple-500 border-purple-500';
+        case 'assignment': return 'text-blue-500 border-blue-500';
+        case 'task': return 'text-green-500 border-green-500';
+        case 'subtask': return 'text-orange-500 border-orange-500';
     }
 };
 
@@ -164,14 +164,23 @@ export default function TaskManager() {
         return () => unsubscribe();
     }, []);
 
-    // Auto-select current class for new cards
+    // Auto-select current class for new cards (without marking as dirty)
     useEffect(() => {
         if (currentClassId && activeCard?.isNew) {
-            updateActiveCard('selectedRoomIds', prev => 
-                prev.includes(currentClassId) ? prev : [currentClassId, ...prev]
-            );
+            setOpenCards(prev => prev.map(card => {
+                if (card.id !== activeCardId || !card.isNew) return card;
+                if (card.formData.selectedRoomIds.includes(currentClassId)) return card;
+                return {
+                    ...card,
+                    formData: { 
+                        ...card.formData, 
+                        selectedRoomIds: [currentClassId, ...card.formData.selectedRoomIds] 
+                    },
+                    // Don't mark as dirty for auto-population
+                };
+            }));
         }
-    }, [currentClassId]);
+    }, [currentClassId, activeCardId, activeCard?.isNew]);
 
     // --- Helpers ---
 
@@ -646,60 +655,68 @@ export default function TaskManager() {
                             onNavigate={navigateCards}
                         />
 
-                        {/* Type Selector */}
-                        <div className="flex items-center gap-3">
-                            <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Type</label>
-                            <div className="flex gap-2">
-                                {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
-                                    const Icon = getTypeIcon(type);
-                                    const isSelected = activeFormData.type === type;
-                                    const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
-                                        tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
-                                    ].includes(type);
+                        {/* Type Selector + Parent Selector Row */}
+                        <div className="flex items-center gap-4 flex-wrap">
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                                <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Type</label>
+                                <div className="flex gap-2">
+                                    {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
+                                        const Icon = getTypeIcon(type);
+                                        const isSelected = activeFormData.type === type;
+                                        const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
+                                            tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
+                                        ].includes(type);
 
-                                    return (
-                                        <button
-                                            key={type}
-                                            onClick={() => updateActiveCard('type', type)}
-                                            disabled={!!isDisabled}
-                                            className={`
-                                                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase
-                                                border-[2px] transition-all duration-200
-                                                ${isSelected 
-                                                    ? getTypeColorClasses(type) 
-                                                    : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'}
-                                                ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
-                                            `}
-                                        >
-                                            <Icon size={14} />
-                                            {getTypeLabel(type)}
-                                        </button>
-                                    );
-                                })}
+                                        return (
+                                            <button
+                                                key={type}
+                                                onClick={() => updateActiveCard('type', type)}
+                                                disabled={!!isDisabled}
+                                                className={`
+                                                    flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase
+                                                    border-[2px] transition-all duration-200
+                                                    ${isSelected 
+                                                        ? getTypeColorClasses(type) 
+                                                        : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'}
+                                                    ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
+                                                `}
+                                            >
+                                                <Icon size={14} />
+                                                {getTypeLabel(type)}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
+
+                            {/* Parent Selector (inline with type) */}
+                            {availableParents.length > 0 && (
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                    <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase whitespace-nowrap">
+                                        Linked to
+                                    </label>
+                                    <select
+                                        value={activeFormData.parentId || ''}
+                                        onChange={e => updateActiveCard('parentId', e.target.value || null)}
+                                        className="flex-1 min-w-0 px-3 py-1.5 pr-8 rounded-lg border-[2px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500 appearance-none cursor-pointer"
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1rem'
+                                        }}
+                                    >
+                                        <option value="" className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">None (standalone)</option>
+                                        {availableParents.map(parent => (
+                                            <option key={parent.id} value={parent.id} className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
+                                                {parent.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Parent Selector (if applicable) */}
-                        {availableParents.length > 0 && (
-                            <div>
-                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">
-                                    Parent {ALLOWED_PARENT_TYPES[activeFormData.type].map(getTypeLabel).join('/')}
-                                </label>
-                                <select
-                                    value={activeFormData.parentId || ''}
-                                    onChange={e => updateActiveCard('parentId', e.target.value || null)}
-                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                >
-                                    <option value="">No parent (standalone)</option>
-                                    {availableParents.map(parent => (
-                                        <option key={parent.id} value={parent.id}>
-                                            {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
-                                            {parent.title}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        )}
 
                         {/* Title */}
                         <div>
@@ -726,7 +743,7 @@ export default function TaskManager() {
                                     type="date"
                                     value={activeFormData.startDate}
                                     onChange={e => updateActiveCard('startDate', e.target.value)}
-                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100 [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                 />
                             </div>
                             <div>
@@ -735,24 +752,24 @@ export default function TaskManager() {
                                     type="date"
                                     value={activeFormData.endDate}
                                     onChange={e => updateActiveCard('endDate', e.target.value)}
-                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100 [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                                 />
                             </div>
                         </div>
 
                         {/* Description */}
-                        <div>
+                        <div className="flex-1 flex flex-col min-h-0">
                             <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
                             <textarea
                                 value={activeFormData.description}
                                 onChange={e => updateActiveCard('description', e.target.value)}
-                                className="w-full h-20 px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-none hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                className="w-full flex-1 min-h-[80px] px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-y hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
                                 placeholder="Instructions..."
                             />
                         </div>
 
                         {/* Attachments & Link */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-3 flex-shrink-0">
                             <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 transition-all text-center group cursor-pointer">
                                 <input
                                     type="file"
@@ -780,7 +797,7 @@ export default function TaskManager() {
                         </div>
 
                         {/* Class Assignment */}
-                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
                             <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Assign to Classes</label>
                             {loadingRooms ? (
                                 <Loader className="w-4 h-4 animate-spin text-gray-400" />
@@ -826,7 +843,7 @@ export default function TaskManager() {
                         </div>
 
                         {/* Action Buttons Footer */}
-                        <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
+                        <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3 flex-shrink-0 mt-auto">
                             {!activeCard?.isNew && (
                                 <Button
                                     variant="ghost-danger"
@@ -837,33 +854,21 @@ export default function TaskManager() {
                                 </Button>
                             )}
                             
-                            <Button
-                                variant="tertiary"
+                            <button
                                 onClick={() => handleSaveCard(activeCardId)}
-                                disabled={isSubmitting || !activeCard?.isDirty}
+                                disabled={isSubmitting || !activeFormData.title.trim()}
+                                className="flex-1 py-2.5 px-4 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-accent font-bold border-brand-accent hover:text-brand-accent/80 hover:border-brand-accent/80 hover:bg-brand-accent/10 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? 'Saving...' : `Save ${getTypeLabel(activeFormData.type)}`}
-                            </Button>
+                            </button>
 
                             {hasDirtyCards && openCards.filter(c => c.isDirty).length > 1 && (
                                 <Button
                                     variant="primary"
                                     onClick={handleSaveAll}
                                     disabled={isSubmitting}
-                                    className="flex-1"
                                 >
                                     {isSubmitting ? 'Saving...' : `Save All (${openCards.filter(c => c.isDirty && c.formData.title.trim()).length})`}
-                                </Button>
-                            )}
-
-                            {!hasDirtyCards && (
-                                <Button
-                                    variant="primary"
-                                    onClick={() => handleSaveCard(activeCardId)}
-                                    disabled={isSubmitting || !activeFormData.title.trim()}
-                                    className="flex-1"
-                                >
-                                    {isSubmitting ? 'Creating...' : `Create ${getTypeLabel(activeFormData.type)}`}
                                 </Button>
                             )}
                         </div>
