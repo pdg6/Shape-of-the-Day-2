@@ -80,7 +80,7 @@ export const Modal: React.FC<ModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
+            className="fixed inset-0 z-modal bg-black/60 backdrop-blur-sm transition-opacity duration-200"
             onClick={onClose}
         >
             <div
@@ -88,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl transition-transform duration-200`}
+                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between p-6">

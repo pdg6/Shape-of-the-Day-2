@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Calendar as CalendarIcon, Link as LinkIcon, Plus, Check, Upload, Loader, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
@@ -52,14 +52,14 @@ export default function TaskManager() {
 
     // Task Data
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [loadingTasks, setLoadingTasks] = useState(true);
+    const [_loadingTasks, setLoadingTasks] = useState(true); // Reserved for loading skeleton
 
     // UI State
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
     const [formData, setFormData] = useState<TaskFormData>(INITIAL_FORM_STATE);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isUploading, setIsUploading] = useState(false); // Simple upload state for now
+    const [_isUploading, setIsUploading] = useState(false); // Reserved for file upload feature
 
     // Calendar State
     const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
@@ -447,13 +447,13 @@ export default function TaskManager() {
                         <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3">
                             {editingTaskId ? (
                                 <>
-                                    <button
+                                    <Button
+                                        variant="ghost-danger"
                                         onClick={handleDelete}
                                         disabled={isSubmitting}
-                                        className="group flex items-center justify-center gap-2 h-12 px-6 rounded-xl font-bold transition-all duration-200 border-[3px] border-transparent hover:border-red-500 text-red-500 hover:bg-red-500/5 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
                                     >
                                         Delete
-                                    </button>
+                                    </Button>
                                     <Button
                                         variant="primary"
                                         onClick={handleSave}
@@ -598,13 +598,14 @@ export default function TaskManager() {
 
                         {/* Footer with Create New Task Button */}
                         <div className="p-4 border-t border-gray-200 dark:border-gray-800 mt-auto">
-                            <button
+                            <Button
+                                variant="ghost"
                                 onClick={resetForm}
-                                className="group flex items-center gap-2 w-full h-12 px-4 rounded-xl font-bold transition-all duration-200 border-[3px] border-transparent hover:border-brand-accent text-brand-accent hover:bg-brand-accent/5 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                                icon={Plus}
+                                className="w-full justify-center"
                             >
-                                <Plus size={20} />
-                                <span>Create New Task</span>
-                            </button>
+                                Create New Task
+                            </Button>
                         </div>
                     </div>
                 </div>

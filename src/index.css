@@ -31,9 +31,39 @@
     /* Blue */
 }
 
-/* Global Styles */
-* {
+/* ============================================
+   CSS Custom Properties (Design Tokens)
+   ============================================ */
+:root {
+    /* Spacing Scale */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    
+    /* Border Width */
+    --border-width: 3px;
+    
+    /* Transitions */
+    --transition-fast: 150ms;
+    --transition-normal: 200ms;
+    --transition-slow: 300ms;
+    
+    /* Touch Target Minimum (44px for accessibility) */
+    --touch-target-min: 44px;
+}
 
+/* ============================================
+   Global Styles
+   ============================================ */
+* {
     /* Hide scrollbar for Chrome, Safari and Opera */
     &::-webkit-scrollbar {
         display: none;
@@ -50,7 +80,180 @@ body {
     @apply bg-[#141211] text-[#F2EFEA] antialiased;
 }
 
+/* ============================================
+   Form Styling - accent-color & caret-color
+   ============================================ */
+input[type="date"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"] {
+    accent-color: var(--color-brand-accent);
+}
+
+input,
+textarea {
+    caret-color: var(--color-brand-accent);
+}
+
+/* Date picker indicator styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: all var(--transition-fast) ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: invert(0.7);
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.8);
+}
+
+.dark input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    filter: invert(1);
+}
+
+/* ============================================
+   Focus-Visible Accessibility
+   ============================================ */
+*:focus-visible {
+    outline: 2px solid var(--color-brand-accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Remove default outline when using mouse */
+*:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* ============================================
+   Overflow Fixes (auto instead of scroll)
+   ============================================ */
+.custom-scrollbar {
+    overflow-y: auto; /* Changed from scroll to auto */
+}
+
 @layer components {
+
+    /* ============================================
+       Reusable Input Classes
+       ============================================ */
+    .input-field {
+        @apply w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200;
+        @apply bg-transparent font-medium;
+        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
+        @apply border-gray-200 dark:border-gray-700;
+        @apply placeholder-gray-400 dark:placeholder-gray-500;
+        @apply hover:border-gray-400 dark:hover:border-gray-100;
+        @apply focus:outline-none focus:border-gray-300 dark:focus:border-gray-100;
+    }
+    
+    .input-field-sm {
+        @apply input-field text-sm;
+    }
+
+    /* ============================================
+       Card Interactive States
+       ============================================ */
+    .card-interactive {
+        @apply rounded-xl border-[3px] transition-all cursor-pointer;
+        @apply border-gray-200 dark:border-gray-700;
+        @apply hover:border-gray-300 dark:hover:border-gray-600;
+        @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+    }
+    
+    .card-interactive-selected {
+        @apply border-brand-accent bg-brand-accent/5;
+    }
+
+    /* ============================================
+       Button Ghost/Outline Variants
+       ============================================ */
+    .btn-ghost {
+        @apply flex items-center justify-center gap-2 h-12 px-4 rounded-xl;
+        @apply font-bold transition-all duration-200;
+        @apply border-[3px] border-transparent;
+        @apply hover:border-brand-accent text-brand-accent hover:bg-brand-accent/5;
+        @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/20;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
+    }
+    
+    .btn-ghost-danger {
+        @apply btn-ghost text-red-500;
+        @apply hover:border-red-500 hover:bg-red-500/5;
+        @apply focus:ring-red-500/20;
+    }
+
+    /* ============================================
+       Touch Target Minimum Size
+       ============================================ */
+    .touch-target {
+        min-width: var(--touch-target-min);
+        min-height: var(--touch-target-min);
+        @apply flex items-center justify-center;
+    }
+
+    /* ============================================
+       Active/Pressed State for Touch
+       ============================================ */
+    .btn-tactile:active {
+        transform: scale(0.98);
+        transition: transform 0.1s ease-out;
+    }
+
+    /* ============================================
+       Success Animation
+       ============================================ */
+    @keyframes success-bounce {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    .animate-success {
+        animation: success-bounce 0.3s ease-out;
+    }
+
+    /* ============================================
+       Skeleton Loading Placeholder
+       ============================================ */
+    .skeleton {
+        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
+    }
+    
+    .skeleton-text {
+        @apply skeleton h-4 w-full;
+    }
+    
+    .skeleton-text-sm {
+        @apply skeleton h-3 w-3/4;
+    }
+    
+    .skeleton-card {
+        @apply skeleton h-20 w-full rounded-xl;
+    }
+
+    /* ============================================
+       Accordion Animation (grid-template-rows)
+       ============================================ */
+    .accordion-content {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows var(--transition-slow) ease-out;
+        overflow: hidden;
+    }
+    
+    .accordion-content.open {
+        grid-template-rows: 1fr;
+    }
+    
+    .accordion-inner {
+        min-height: 0;
+    }
 
     /* Skip link - Accessibility: hidden until focused */
     .skip-link {
