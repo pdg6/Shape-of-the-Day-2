@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
     Calendar as CalendarIcon, 
     Link as LinkIcon, 
@@ -13,15 +13,20 @@ import {
     FolderOpen,
     FileText,
     ListChecks,
-    CheckSquare
+    CheckSquare,
+    X,
+    Image as ImageIcon,
+    File as FileIcon,
+    Paperclip
 } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { TaskTabBar } from './TaskTabBar';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'firebase/firestore';
-import { db, auth } from '../../firebase';
-import { Classroom, ItemType, Task, TaskFormData, TaskCardState, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES } from '../../types';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, auth, storage } from '../../firebase';
+import { Classroom, ItemType, Task, TaskFormData, TaskCardState, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
 import { useClassStore } from '../../store/classStore';
 
 // --- Constants ---
@@ -34,8 +39,20 @@ const INITIAL_FORM_STATE: TaskFormData = {
     linkURL: '',
     startDate: toDateString(),
     endDate: toDateString(),
-    selectedRoomIds: []
+    selectedRoomIds: [],
+    attachments: []
 };
+
+// Allowed file types for attachments
+const ALLOWED_FILE_TYPES = [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    'application/pdf',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    'text/plain', 'text/csv'
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Generate unique ID for cards
 const generateCardId = () => `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -95,7 +112,11 @@ export default function TaskManager() {
     // UI State
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [_isUploading, _setIsUploading] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    
+    // Refs
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
     // Calendar State
     const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
@@ -346,6 +367,134 @@ export default function TaskManager() {
         setActiveCardId(newCard.id);
     }, [currentClassId]);
 
+    // --- File Upload Handlers ---
+    
+    const uploadFile = async (file: File): Promise<Attachment | null> => {
+        if (!auth.currentUser) {
+            handleError('You must be logged in to upload files');
+            return null;
+        }
+        
+        // Validate file type
+        if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+            handleError(`File type not allowed: ${file.type}`);
+            return null;
+        }
+        
+        // Validate file size
+        if (file.size > MAX_FILE_SIZE) {
+            handleError(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+            return null;
+        }
+        
+        setIsUploading(true);
+        try {
+            const attachmentId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            const filePath = `attachments/${auth.currentUser.uid}/${attachmentId}_${file.name}`;
+            const storageRef = ref(storage, filePath);
+            
+            await uploadBytes(storageRef, file);
+            const downloadUrl = await getDownloadURL(storageRef);
+            
+            const attachment: Attachment = {
+                id: attachmentId,
+                filename: file.name,
+                mimeType: file.type,
+                url: downloadUrl,
+                size: file.size,
+                uploadedAt: serverTimestamp(),
+                uploadedBy: auth.currentUser.uid,
+            };
+            
+            return attachment;
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            handleError('Failed to upload file');
+            return null;
+        } finally {
+            setIsUploading(false);
+        }
+    };
+    
+    const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+        
+        const newAttachments: Attachment[] = [];
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (file) {
+                const attachment = await uploadFile(file);
+                if (attachment) {
+                    newAttachments.push(attachment);
+                }
+            }
+        }
+        
+        if (newAttachments.length > 0) {
+            updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
+                ...(prev || []),
+                ...newAttachments
+            ]);
+            handleSuccess(`${newAttachments.length} file(s) uploaded`);
+        }
+        
+        // Reset file input
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+    
+    const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const items = event.clipboardData?.items;
+        if (!items) return;
+        
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item && item.type.startsWith('image/')) {
+                event.preventDefault();
+                const file = item.getAsFile();
+                if (file) {
+                    const attachment = await uploadFile(file);
+                    if (attachment) {
+                        updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
+                            ...(prev || []),
+                            attachment
+                        ]);
+                        handleSuccess('Image pasted and uploaded');
+                    }
+                }
+                break;
+            }
+        }
+    };
+    
+    const removeAttachment = async (attachmentId: string) => {
+        const currentAttachments = activeFormData.attachments || [];
+        const attachment = currentAttachments.find(a => a.id === attachmentId);
+        
+        if (attachment) {
+            try {
+                // Try to delete from storage (may fail if URL structure changed)
+                const pathMatch = attachment.url.match(/attachments%2F([^?]+)/);
+                if (pathMatch) {
+                    const filePath = decodeURIComponent(pathMatch[1]);
+                    const storageRef = ref(storage, `attachments/${filePath}`);
+                    await deleteObject(storageRef).catch(() => {
+                        // Ignore deletion errors - file may already be deleted
+                    });
+                }
+            } catch (error) {
+                console.warn('Could not delete attachment from storage:', error);
+            }
+        }
+        
+        updateActiveCard('attachments', (prev: Attachment[] | undefined) => 
+            (prev || []).filter(a => a.id !== attachmentId)
+        );
+    };
+
     // --- Handlers ---
 
     const handleRoomToggle = (roomId: string) => {
@@ -399,6 +548,7 @@ export default function TaskManager() {
                 startDate: formData.startDate,
                 endDate: formData.endDate,
                 selectedRoomIds: formData.selectedRoomIds,
+                attachments: formData.attachments || [],
                 teacherId: auth.currentUser.uid,
                 updatedAt: serverTimestamp(),
                 status: 'todo',
@@ -489,6 +639,7 @@ export default function TaskManager() {
                     startDate: card.formData.startDate,
                     endDate: card.formData.endDate,
                     selectedRoomIds: card.formData.selectedRoomIds,
+                    attachments: card.formData.attachments || [],
                     teacherId: auth.currentUser!.uid,
                     presentationOrder: maxOrder + savedCount + 1,
                     createdAt: serverTimestamp(),
@@ -496,6 +647,7 @@ export default function TaskManager() {
                     imageURL: '',
                     status: 'todo',
                     childIds: [],
+                    // Note: questionHistory is NOT copied - it belongs to original task only
                 });
 
                 savedCount++;
@@ -759,26 +911,81 @@ export default function TaskManager() {
 
                         {/* Description */}
                         <div className="flex-1 flex flex-col min-h-0">
-                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Description</label>
+                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">
+                                Description 
+                                <span className="font-normal text-gray-400 ml-1">(paste images here)</span>
+                            </label>
                             <textarea
+                                ref={descriptionRef}
                                 value={activeFormData.description}
                                 onChange={e => updateActiveCard('description', e.target.value)}
+                                onPaste={handlePaste}
                                 className="w-full flex-1 min-h-[80px] px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-y hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                placeholder="Instructions..."
+                                placeholder="Instructions... (you can paste images directly here)"
                             />
                         </div>
 
+                        {/* Attachments Display */}
+                        {activeFormData.attachments && activeFormData.attachments.length > 0 && (
+                            <div className="flex-shrink-0">
+                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">
+                                    Attachments ({activeFormData.attachments.length})
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {activeFormData.attachments.map(attachment => (
+                                        <div 
+                                            key={attachment.id}
+                                            className="group relative flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                                        >
+                                            {attachment.mimeType.startsWith('image/') ? (
+                                                <ImageIcon size={14} className="text-blue-500" />
+                                            ) : (
+                                                <FileIcon size={14} className="text-gray-500" />
+                                            )}
+                                            <a 
+                                                href={attachment.url} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[150px]"
+                                                title={attachment.filename}
+                                            >
+                                                {attachment.filename}
+                                            </a>
+                                            <button
+                                                onClick={() => removeAttachment(attachment.id)}
+                                                className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
+                                                title="Remove attachment"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Attachments & Link */}
                         <div className="grid grid-cols-2 gap-3 flex-shrink-0">
-                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 transition-all text-center group cursor-pointer">
+                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-brand-accent dark:hover:border-brand-accent transition-all text-center group cursor-pointer">
                                 <input
+                                    ref={fileInputRef}
                                     type="file"
-                                    disabled
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-not-allowed z-10"
+                                    multiple
+                                    accept={ALLOWED_FILE_TYPES.join(',')}
+                                    onChange={handleFileSelect}
+                                    disabled={isUploading}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                                    data-testid="file-upload-input"
                                 />
-                                <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-brand-accent transition-colors">
-                                    <Upload size={16} />
-                                    <span className="text-xs font-bold">Upload File</span>
+                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-brand-accent'}`}>
+                                    {isUploading ? (
+                                        <Loader size={16} className="animate-spin" />
+                                    ) : (
+                                        <Upload size={16} />
+                                    )}
+                                    <span className="text-xs font-bold">
+                                        {isUploading ? 'Uploading...' : 'Upload File'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -792,6 +999,7 @@ export default function TaskManager() {
                                     onChange={e => updateActiveCard('linkURL', e.target.value)}
                                     className="w-full py-2 px-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
                                     placeholder="Paste URL..."
+                                    data-testid="link-url-input"
                                 />
                             </div>
                         </div>

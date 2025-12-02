@@ -370,6 +370,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         onUpdateStatus={handleUpdateStatus}
                                         onUpdateComment={handleUpdateComment}
                                         assignedDate={today}
+                                        studentName={studentName}
+                                        classroomId={classId}
                                     />
                                 ) : (
                                     <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
@@ -441,6 +443,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     onUpdateStatus={handleUpdateStatus}
                                     onUpdateComment={handleUpdateComment}
                                     assignedDate={today}
+                                    studentName={studentName}
+                                    classroomId={classId}
                                 />
                             ) : (
                                 <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">

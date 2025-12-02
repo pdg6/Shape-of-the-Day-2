@@ -32,6 +32,31 @@ export const ALLOWED_PARENT_TYPES: Record<ItemType, ItemType[]> = {
     subtask: ['task'],
 };
 
+// Interface for file/image attachments on tasks
+export interface Attachment {
+    id: string;              // Unique identifier for the attachment
+    filename: string;        // Original filename (e.g., "worksheet.pdf")
+    mimeType: string;        // MIME type (e.g., "application/pdf", "image/png")
+    url: string;             // Download/view URL from Firebase Storage
+    size: number;            // File size in bytes
+    uploadedAt: any;         // Firebase Timestamp
+    uploadedBy: string;      // UID of uploader (teacher)
+}
+
+// Interface for student question history on a task
+// Note: Questions are NOT duplicated when a task is copied
+export interface QuestionEntry {
+    id: string;              // Unique identifier
+    studentId: string;       // UID of the student who asked
+    studentName: string;     // Display name of the student
+    classroomId: string;     // Which class this question was asked in
+    question: string;        // The question text
+    askedAt: any;            // Firebase Timestamp
+    resolved: boolean;       // Whether the teacher has addressed it
+    resolvedAt?: any;        // Firebase Timestamp when resolved
+    teacherResponse?: string; // Optional teacher response
+}
+
 // Interface for a Task object (now supports hierarchy)
 export interface Task {
     id: string;             // Unique identifier for the task
@@ -43,7 +68,7 @@ export interface Task {
     startedAt?: number;     // Timestamp when task was started
     completedAt?: number;   // Timestamp when task was completed
     wasStuck?: boolean;     // Flag if student was ever stuck
-    questions?: string[];   // Array of questions asked during this task
+    questions?: string[];   // Array of questions asked during this task (deprecated, use questionHistory)
     
     // --- Hierarchy Fields ---
     type: ItemType;         // The hierarchy level of this item
@@ -53,9 +78,16 @@ export interface Task {
     pathTitles: string[];    // Array of ancestor titles for breadcrumb display
     childIds: string[];      // Array of direct child IDs (for progress tracking)
     
+    // --- Attachments ---
+    attachments?: Attachment[]; // Array of file/image attachments
+    
+    // --- Question History ---
+    // Note: This is stored separately and NOT copied when duplicating tasks
+    questionHistory?: QuestionEntry[]; // Array of student questions for this task
+    
     // --- Teacher-side scheduling fields ---
     linkURL?: string;        // Resource link
-    imageURL?: string;       // Attachment URL
+    imageURL?: string;       // Attachment URL (legacy, prefer attachments array)
     startDate?: string;      // YYYY-MM-DD
     endDate?: string;        // YYYY-MM-DD
     selectedRoomIds: string[]; // Multi-class assignment (inherited from parent if not set)
@@ -75,6 +107,7 @@ export interface TaskFormData {
     startDate: string;
     endDate: string;
     selectedRoomIds: string[];
+    attachments?: Attachment[]; // File/image attachments
 }
 
 // Type for task card in the multi-card editor

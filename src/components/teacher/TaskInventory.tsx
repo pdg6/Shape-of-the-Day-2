@@ -327,12 +327,15 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     // Filter tasks
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
-            // Search filter
+            // Search filter - matches title, description, or attachment filenames
             if (searchQuery) {
                 const query = searchQuery.toLowerCase();
                 const matchesTitle = task.title.toLowerCase().includes(query);
                 const matchesDesc = task.description?.toLowerCase().includes(query);
-                if (!matchesTitle && !matchesDesc) return false;
+                const matchesAttachment = task.attachments?.some(
+                    att => att.filename.toLowerCase().includes(query)
+                );
+                if (!matchesTitle && !matchesDesc && !matchesAttachment) return false;
             }
 
             // Classroom filter

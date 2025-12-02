@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon } from 'lucide-react';
-import { Task, TaskStatus } from '../../types';
+import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle } from 'lucide-react';
+import { Task, TaskStatus, QuestionEntry } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { sanitizeComment, filterProfanity, escapeHtml } from '../../utils/security';
+import { addQuestionToTask } from '../../services/firestoreService';
+import { auth } from '../../firebase';
+import toast from 'react-hot-toast';
 
 /**
  * Configuration for the different task status actions.
@@ -67,6 +70,8 @@ interface QuestionOverlayProps {
     task: Task;
     onClose: () => void;
     onUpdateComment: (taskId: string, comment: string) => void;
+    studentName: string;
+    classroomId: string;
 }
 
 /**
@@ -74,9 +79,12 @@ interface QuestionOverlayProps {
  *
  * A modal overlay that appears when a student marks a task as "Stuck" or "Question".
  * It allows them to type a specific question or comment for the teacher.
+ * Questions are saved to the task's questionHistory for teacher review.
  */
-const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpdateComment }) => {
+const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpdateComment, studentName, classroomId }) => {
     const [comment, setComment] = useState(task.comment || '');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submittedQuestions, setSubmittedQuestions] = useState<string[]>([]);
     const maxChars = 200;
     const overlayRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -90,6 +98,40 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
         // Filter profanity as user types (for immediate feedback)
         const filtered = filterProfanity(raw);
         setComment(filtered);
+    };
+
+    /**
+     * Submit the question to the task's question history
+     */
+    const handleSubmitQuestion = async () => {
+        if (!comment.trim() || !auth.currentUser) return;
+        
+        setIsSubmitting(true);
+        try {
+            const sanitized = sanitizeComment(comment, maxChars);
+            
+            // Save to task's questionHistory in Firestore
+            await addQuestionToTask(task.id, {
+                studentId: auth.currentUser.uid,
+                studentName: studentName,
+                classroomId: classroomId,
+                question: sanitized,
+            });
+            
+            // Also update the comment for immediate display
+            onUpdateComment(task.id, sanitized);
+            
+            // Track submitted question
+            setSubmittedQuestions(prev => [...prev, sanitized]);
+            
+            toast.success('Question submitted to teacher!');
+            setComment(''); // Clear for next question
+        } catch (error) {
+            console.error('Error submitting question:', error);
+            toast.error('Failed to submit question');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     // Focus management: store previous focus and focus close button on mount
@@ -114,15 +156,22 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
-    // Sync comment changes to the parent component with sanitization
+    // Sync comment changes to the parent component with sanitization (for live preview)
     useEffect(() => {
-        // Sanitize (escape HTML) before saving to Firestore
-        const sanitized = sanitizeComment(comment, maxChars);
-        onUpdateComment(task.id, sanitized);
+        // Only auto-sync if not empty - don't clear on load
+        if (comment) {
+            const sanitized = sanitizeComment(comment, maxChars);
+            onUpdateComment(task.id, sanitized);
+        }
     }, [comment, task.id, onUpdateComment]);
 
     const activeAction = STATUS_ACTIONS.find(a => a.id === task.status);
     const borderColor = activeAction ? activeAction.borderColor : 'border-gray-200 dark:border-gray-700';
+
+    // Get previous questions for this task from questionHistory
+    const previousQuestions = task.questionHistory?.filter(
+        q => q.classroomId === classroomId
+    ) || [];
 
     return (
         <div
@@ -134,7 +183,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="question-overlay-title"
-                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all duration-300`}
+                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -160,8 +209,39 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                     </button>
                 </div>
 
+                {/* Previous Questions */}
+                {(previousQuestions.length > 0 || submittedQuestions.length > 0) && (
+                    <div className="px-4 pt-3 max-h-32 overflow-y-auto border-b border-gray-100 dark:border-gray-800">
+                        <div className="flex items-center gap-2 mb-2">
+                            <MessageCircle size={14} className="text-gray-400" />
+                            <span className="text-xs font-medium text-gray-500 uppercase">Previous Questions</span>
+                        </div>
+                        <div className="space-y-2 pb-3">
+                            {previousQuestions.map((q, idx) => (
+                                <div key={q.id || idx} className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
+                                    <span className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                        "{q.question}"
+                                    </span>
+                                    {q.resolved && q.teacherResponse && (
+                                        <div className="mt-1 pl-2 border-l-2 border-brand-accent text-brand-accent">
+                                            Teacher: {q.teacherResponse}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {submittedQuestions.map((q, idx) => (
+                                <div key={`new-${idx}`} className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-200 dark:border-green-800">
+                                    <span className="text-green-700 dark:text-green-400">
+                                        ✓ "{q}" (just submitted)
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Content */}
-                <div className="p-4">
+                <div className="p-4 flex-1 overflow-y-auto">
                     <label className="block text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2">
                         What do you need help with?
                     </label>
@@ -175,6 +255,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                             spellCheck={true}
                             className="w-full h-32 p-3 rounded-xl bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-brand-accent resize-none transition-all outline-none"
                             autoFocus
+                            data-testid="question-input"
                         />
                         <div className="absolute bottom-2 right-2 text-xs text-gray-400">
                             {comment.length}/{maxChars}
@@ -183,12 +264,25 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+                <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between gap-3">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-brand-light dark:bg-brand-dark hover:bg-gray-100 dark:hover:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary rounded-lg text-sm font-medium transition-colors"
                     >
                         Close
+                    </button>
+                    <button
+                        onClick={handleSubmitQuestion}
+                        disabled={!comment.trim() || isSubmitting}
+                        className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white disabled:text-gray-500 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
+                        data-testid="submit-question-btn"
+                    >
+                        {isSubmitting ? (
+                            <span className="animate-spin">⏳</span>
+                        ) : (
+                            <Send size={14} />
+                        )}
+                        Submit Question
                     </button>
                 </div>
             </div>
@@ -382,6 +476,8 @@ interface CurrentTaskListProps {
     onUpdateStatus: (taskId: string, status: TaskStatus) => void;
     onUpdateComment: (taskId: string, comment: string) => void;
     assignedDate?: string; // Optional: The date these tasks were assigned
+    studentName: string;   // Student's display name for question attribution
+    classroomId: string;   // Classroom ID for question context
 }
 
 /**
@@ -390,7 +486,14 @@ interface CurrentTaskListProps {
  * Renders the list of active tasks for the day.
  * It handles sorting (completed tasks go to the bottom) and manages the overlay state.
  */
-const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus, onUpdateComment, assignedDate }) => {
+const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ 
+    tasks, 
+    onUpdateStatus, 
+    onUpdateComment, 
+    assignedDate,
+    studentName,
+    classroomId 
+}) => {
     const [overlayTask, setOverlayTask] = useState<Task | null>(null);
 
     // Helper function to format a single date
@@ -503,6 +606,8 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({ tasks, onUpdateStatus
                     task={overlayTask}
                     onClose={handleCloseOverlay}
                     onUpdateComment={onUpdateComment}
+                    studentName={studentName}
+                    classroomId={classroomId}
                 />
             )}
         </div>

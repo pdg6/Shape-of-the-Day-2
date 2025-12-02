@@ -461,3 +461,106 @@ export const deleteTaskWithChildren = async (taskId, deleteChildren = true) => {
     
     return deletedCount;
 };
+
+// ============================================
+// STUDENT QUESTION FUNCTIONS
+// ============================================
+
+/**
+ * Add a question to a task's question history
+ * Note: Questions are stored on the task and NOT duplicated when task is copied
+ * @param {string} taskId - The task ID
+ * @param {Object} questionData - Question data
+ * @param {string} questionData.studentId - Student's UID
+ * @param {string} questionData.studentName - Student's display name
+ * @param {string} questionData.classroomId - Classroom ID where question was asked
+ * @param {string} questionData.question - The question text
+ * @returns {Promise<string>} Question ID
+ */
+export const addQuestionToTask = async (taskId, questionData) => {
+    const taskRef = doc(db, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    
+    if (!taskDoc.exists()) {
+        throw new Error('Task not found');
+    }
+    
+    const task = taskDoc.data();
+    const questionHistory = task.questionHistory || [];
+    
+    const questionId = `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newQuestion = {
+        id: questionId,
+        studentId: questionData.studentId,
+        studentName: questionData.studentName,
+        classroomId: questionData.classroomId,
+        question: questionData.question,
+        askedAt: serverTimestamp(),
+        resolved: false,
+    };
+    
+    await updateDoc(taskRef, {
+        questionHistory: [...questionHistory, newQuestion],
+        updatedAt: serverTimestamp(),
+    });
+    
+    return questionId;
+};
+
+/**
+ * Mark a question as resolved
+ * @param {string} taskId - The task ID
+ * @param {string} questionId - The question ID to resolve
+ * @param {string} teacherResponse - Optional teacher response
+ * @returns {Promise<void>}
+ */
+export const resolveQuestion = async (taskId, questionId, teacherResponse = '') => {
+    const taskRef = doc(db, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    
+    if (!taskDoc.exists()) {
+        throw new Error('Task not found');
+    }
+    
+    const task = taskDoc.data();
+    const questionHistory = (task.questionHistory || []).map(q => {
+        if (q.id === questionId) {
+            return {
+                ...q,
+                resolved: true,
+                resolvedAt: serverTimestamp(),
+                teacherResponse,
+            };
+        }
+        return q;
+    });
+    
+    await updateDoc(taskRef, {
+        questionHistory,
+        updatedAt: serverTimestamp(),
+    });
+};
+
+/**
+ * Get questions for a task, optionally filtered by classroom
+ * @param {string} taskId - The task ID
+ * @param {string} classroomId - Optional: filter by classroom
+ * @returns {Promise<Array>} Array of questions
+ */
+export const getTaskQuestions = async (taskId, classroomId = null) => {
+    const taskRef = doc(db, 'tasks', taskId);
+    const taskDoc = await getDoc(taskRef);
+    
+    if (!taskDoc.exists()) {
+        return [];
+    }
+    
+    const task = taskDoc.data();
+    let questions = task.questionHistory || [];
+    
+    if (classroomId) {
+        questions = questions.filter(q => q.classroomId === classroomId);
+    }
+    
+    return questions;
+};
