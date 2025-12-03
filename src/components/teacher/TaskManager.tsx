@@ -16,8 +16,7 @@ import {
     CheckSquare,
     X,
     Image as ImageIcon,
-    File as FileIcon,
-    Paperclip
+    File as FileIcon
 } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { TaskTabBar } from './TaskTabBar';
