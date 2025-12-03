@@ -230,7 +230,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
     };
 
     // Render a single tree node
-    const renderNode = (node: TreeNode, key: string) => {
+    const renderNode = (node: TreeNode, key: string, isNested: boolean = false) => {
         const { task, children, depth } = node;
         const config = TYPE_CONFIG[task.type || 'task'];
         const Icon = config.icon;
@@ -238,53 +238,76 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
         const isExpanded = expandedNodes.has(task.id);
         const isImported = currentTaskIds.has(task.id);
         const canImport = task.type === 'task' || task.type === 'subtask';
+        const isParentType = task.type === 'project' || task.type === 'assignment';
 
+        // Accordion pattern: parent container wraps children when expanded
         return (
-            <div key={key} className="select-none">
+            <div 
+                key={key} 
+                className={`
+                    select-none
+                    ${!isNested ? 'mx-1 my-1' : ''}
+                    ${isParentType && hasChildren ? `
+                        rounded-xl overflow-hidden
+                        ${isExpanded 
+                            ? 'border-[3px] border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20' 
+                            : 'border-[3px] border-transparent hover:border-gray-200 dark:hover:border-gray-700'}
+                    ` : ''}
+                    transition-all duration-200
+                `}
+            >
                 {/* Node row */}
                 <div
                     className={`
-                        flex items-center gap-2 py-2 px-3 rounded-lg
-                        hover:bg-gray-100 dark:hover:bg-gray-800/50
-                        transition-colors duration-150
+                        flex items-center gap-3 py-3 px-4
+                        ${!isParentType || !hasChildren ? `
+                            rounded-xl
+                            ${isNested ? 'mx-2 my-1' : ''}
+                            border-[3px] border-transparent
+                            hover:border-gray-200 dark:hover:border-gray-700
+                            hover:bg-gray-50 dark:hover:bg-gray-800/30
+                        ` : `
+                            ${isExpanded ? 'bg-white/60 dark:bg-gray-900/40' : ''}
+                        `}
+                        transition-all duration-200
                     `}
-                    style={{ paddingLeft: `${depth * 24 + 12}px` }}
+                    style={{ paddingLeft: `${(isNested ? depth * 16 : 0) + 16}px` }}
                 >
                     {/* Expand/collapse button */}
                     {hasChildren ? (
                         <button
                             onClick={() => toggleExpand(task.id)}
-                            className="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
                             aria-label={isExpanded ? 'Collapse' : 'Expand'}
                         >
                             {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                             ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                             )}
                         </button>
                     ) : (
-                        <div className="w-6" /> // Spacer
+                        <div className="w-7" /> // Spacer
                     )}
 
                     {/* Type icon */}
-                    <div className={`p-1.5 rounded ${config.bgColor}`}>
-                        <Icon className={`w-4 h-4 ${config.color}`} />
+                    <div className={`p-2 rounded-lg ${config.bgColor}`}>
+                        <Icon className={`w-5 h-5 ${config.color}`} />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                            <span className="font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
                                 {task.title}
                             </span>
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${config.bgColor} ${config.color}`}>
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${config.bgColor} ${config.color}`}>
                                 {config.label}
                             </span>
                         </div>
                         {/* Breadcrumb */}
                         {task.pathTitles && task.pathTitles.length > 0 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
                                 {task.pathTitles.join(' → ')}
                             </div>
                         )}
@@ -298,10 +321,10 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                                 onClick={() => handleImport(task)}
                                 disabled={isImported}
                                 className={`
-                                    p-1.5 rounded-lg transition-colors text-sm font-medium
+                                    p-2 rounded-xl border-[3px] transition-all duration-200 text-sm font-medium
                                     ${isImported
-                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-                                        : 'bg-brand-accent text-white hover:bg-brand-accent/90'
+                                        ? 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
+                                        : 'border-transparent bg-gray-100 dark:bg-gray-800 text-brand-accent hover:border-brand-accent hover:bg-brand-accent/10'
                                     }
                                 `}
                                 title={isImported ? 'Already imported' : 'Add to today'}
@@ -311,10 +334,10 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                         )}
                         
                         {/* Import all button for parents */}
-                        {hasChildren && (task.type === 'project' || task.type === 'assignment') && (
+                        {hasChildren && isParentType && (
                             <button
                                 onClick={() => importAllChildren(node)}
-                                className="px-2 py-1 text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800/30 transition-colors"
+                                className="px-3 py-1.5 text-xs font-semibold bg-brand-accent text-white rounded-xl border-[3px] border-transparent hover:border-brand-accent/70 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-200"
                                 title="Import all tasks"
                             >
                                 Import All
@@ -323,10 +346,14 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     </div>
                 </div>
 
-                {/* Children */}
+                {/* Children - rendered inside parent card for accordion effect */}
                 {hasChildren && isExpanded && (
-                    <div className="border-l-2 border-gray-200 dark:border-gray-700 ml-6">
-                        {children.map((child, idx) => renderNode(child, `${key}-${idx}`))}
+                    <div className={`
+                        ${isParentType 
+                            ? 'border-t border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-900/20 py-1' 
+                            : 'pl-6'}
+                    `}>
+                        {children.map((child, idx) => renderNode(child, `${key}-${idx}`, true))}
                     </div>
                 )}
             </div>
@@ -341,11 +368,11 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
 
         return (
             <div className="mb-6">
-                <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-1">
                     {title}
                 </h3>
-                <div className="bg-white dark:bg-gray-800/50 rounded-xl border-2 border-gray-200 dark:border-gray-700">
-                    {nodes.map((node, idx) => renderNode(node, `${title}-${idx}`))}
+                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden p-1">
+                    {nodes.map((node, idx) => renderNode(node, `${title}-${idx}`, false))}
                 </div>
             </div>
         );
@@ -367,21 +394,21 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
         <div className="space-y-6">
             {/* Search Bar */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search projects, assignments, tasks..."
-                    className="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none focus:border-brand-accent transition-colors"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none hover:border-brand-accent/70 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all duration-200"
                 />
             </div>
 
             {/* Empty State */}
             {isEmpty ? (
-                <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
-                    <Inbox className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-600">
+                    <Inbox className="w-14 h-14 mx-auto text-gray-400 mb-4" />
+                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary text-base">
                         {searchQuery 
                             ? 'No results found for your search.'
                             : 'No projects or assignments available yet.'}

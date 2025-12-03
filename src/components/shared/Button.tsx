@@ -30,7 +30,7 @@ export const Button: React.FC<ButtonProps> = ({
     title,
     'aria-label': ariaLabel
 }) => {
-    const baseClasses = 'font-bold rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-[0.98]';
+    const baseClasses = 'font-bold rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer';
 
     const variantClasses = {
         primary: 'bg-brand-accent text-white hover:bg-brand-accent/90 focus:ring-brand-accent/20',

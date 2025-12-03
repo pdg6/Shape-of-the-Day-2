@@ -12,11 +12,12 @@ import {
     Filter,
     Search,
     Loader,
-    Calendar
+    Calendar,
+    Plus
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
-import { Classroom, ItemType, Task } from '../../types';
+import { Classroom, ItemType, Task, ALLOWED_CHILD_TYPES } from '../../types';
 import { useClassStore } from '../../store/classStore';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -65,6 +66,13 @@ interface TreeItemProps {
     onEdit: (task: Task) => void;
     onDuplicate: (task: Task) => void;
     getProgress: (parentId: string) => { completed: number; total: number };
+    onQuickAdd: (parentTask: Task) => void;
+    quickAddParentId: string | null;
+    quickAddTitle: string;
+    onQuickAddTitleChange: (value: string) => void;
+    onQuickAddSave: () => void;
+    onQuickAddCancel: () => void;
+    isQuickAddSaving: boolean;
 }
 
 function TreeItem({ 
@@ -75,13 +83,33 @@ function TreeItem({
     onToggleExpand, 
     onEdit, 
     onDuplicate,
-    getProgress 
+    getProgress,
+    onQuickAdd,
+    quickAddParentId,
+    quickAddTitle,
+    onQuickAddTitleChange,
+    onQuickAddSave,
+    onQuickAddCancel,
+    isQuickAddSaving
 }: TreeItemProps) {
     const TypeIcon = getTypeIcon(task.type);
     const children = allTasks.filter(t => t.parentId === task.id);
     const hasChildren = children.length > 0;
     const isExpanded = expandedIds.has(task.id);
     const progress = hasChildren ? getProgress(task.id) : null;
+    
+    // Check if this task type can have children
+    const allowedChildTypes = ALLOWED_CHILD_TYPES[task.type];
+    const canHaveChildren = allowedChildTypes && allowedChildTypes.length > 0;
+    const isQuickAddActive = quickAddParentId === task.id;
+    const quickAddInputRef = useRef<HTMLInputElement>(null);
+    
+    // Auto-focus input when quick add becomes active
+    useEffect(() => {
+        if (isQuickAddActive && quickAddInputRef.current) {
+            quickAddInputRef.current.focus();
+        }
+    }, [isQuickAddActive]);
 
     return (
         <div>
@@ -138,30 +166,101 @@ function TreeItem({
                     )}
                 </div>
 
-                {/* Date Range */}
+                {/* Date Range - compact on mobile, full on desktop */}
                 {task.startDate && task.endDate && (
-                    <span className="text-xs text-gray-400 hidden sm:block">
-                        {new Date(task.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        {task.startDate !== task.endDate && (
-                            <> - {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
-                        )}
+                    <span className="text-xs text-gray-400 flex-shrink-0">
+                        {/* Mobile: show due date only */}
+                        <span className="sm:hidden">
+                            {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                        {/* Desktop: show full range */}
+                        <span className="hidden sm:inline">
+                            {new Date(task.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            {task.startDate !== task.endDate && (
+                                <> - {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
+                            )}
+                        </span>
                     </span>
                 )}
 
                 {/* Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
+                    {/* Quick Add Button - only show for items that can have children */}
+                    {canHaveChildren && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onQuickAdd(task);
+                            }}
+                            className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-500 transition-all flex items-center justify-center"
+                            title={`Add ${allowedChildTypes[0]}`}
+                        >
+                            <Plus size={14} />
+                        </button>
+                    )}
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onDuplicate(task);
                         }}
-                        className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-brand-accent transition-all"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-brand-accent transition-all flex items-center justify-center"
                         title="Duplicate"
                     >
                         <Copy size={14} />
                     </button>
                 </div>
             </div>
+
+            {/* Quick Add Input Row */}
+            {isQuickAddActive && (
+                <div 
+                    className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg mx-2 mb-1 border-2 border-dashed border-green-300 dark:border-green-700"
+                    style={{ marginLeft: `${(depth + 1) * 20 + 8}px` }}
+                >
+                    <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(allowedChildTypes[0] || 'task')}`}>
+                        {(() => {
+                            const ChildTypeIcon = getTypeIcon(allowedChildTypes[0] || 'task');
+                            return <ChildTypeIcon size={12} />;
+                        })()}
+                    </span>
+                    <input
+                        ref={quickAddInputRef}
+                        type="text"
+                        value={quickAddTitle}
+                        onChange={(e) => onQuickAddTitleChange(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && quickAddTitle.trim()) {
+                                onQuickAddSave();
+                            } else if (e.key === 'Escape') {
+                                onQuickAddCancel();
+                            }
+                        }}
+                        onBlur={() => {
+                            // Small delay to allow button clicks to register
+                            setTimeout(() => {
+                                if (!quickAddTitle.trim()) {
+                                    onQuickAddCancel();
+                                }
+                            }, 150);
+                        }}
+                        placeholder={`New ${getTypeLabel(allowedChildTypes[0] || 'task').toLowerCase()} title...`}
+                        className="flex-1 px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        disabled={isQuickAddSaving}
+                    />
+                    {isQuickAddSaving ? (
+                        <Loader size={16} className="animate-spin text-green-500" />
+                    ) : (
+                        <button
+                            onClick={onQuickAddSave}
+                            disabled={!quickAddTitle.trim()}
+                            className="p-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            title="Save"
+                        >
+                            <Plus size={14} />
+                        </button>
+                    )}
+                </div>
+            )}
 
             {/* Children */}
             {isExpanded && hasChildren && (
@@ -177,6 +276,13 @@ function TreeItem({
                             onEdit={onEdit}
                             onDuplicate={onDuplicate}
                             getProgress={getProgress}
+                            onQuickAdd={onQuickAdd}
+                            quickAddParentId={quickAddParentId}
+                            quickAddTitle={quickAddTitle}
+                            onQuickAddTitleChange={onQuickAddTitleChange}
+                            onQuickAddSave={onQuickAddSave}
+                            onQuickAddCancel={onQuickAddCancel}
+                            isQuickAddSaving={isQuickAddSaving}
                         />
                     ))}
                 </div>
@@ -194,6 +300,14 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     const [rooms, setRooms] = useState<Classroom[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+    
+    // Quick Add State
+    const [quickAddParentId, setQuickAddParentId] = useState<string | null>(null);
+    const [quickAddTitle, setQuickAddTitle] = useState('');
+    const [isQuickAddSaving, setIsQuickAddSaving] = useState(false);
+    
+    // Mobile view state - which column to show on small screens
+    const [mobileActiveTab, setMobileActiveTab] = useState<'projects' | 'assignments' | 'tasks'>('projects');
     
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
@@ -423,6 +537,77 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         }
     }, [tasks]);
 
+    // Quick Add handlers
+    const handleQuickAdd = useCallback((parentTask: Task) => {
+        setQuickAddParentId(parentTask.id);
+        setQuickAddTitle('');
+        // Auto-expand parent to show the quick add row
+        setExpandedIds(prev => {
+            const next = new Set(prev);
+            next.add(parentTask.id);
+            return next;
+        });
+    }, []);
+
+    const handleQuickAddSave = useCallback(async () => {
+        if (!auth.currentUser || !quickAddParentId || !quickAddTitle.trim()) return;
+
+        const parentTask = tasks.find(t => t.id === quickAddParentId);
+        if (!parentTask) return;
+
+        const allowedChildTypes = ALLOWED_CHILD_TYPES[parentTask.type];
+        if (!allowedChildTypes || allowedChildTypes.length === 0) return;
+
+        const childType = allowedChildTypes[0];
+        if (!childType) return;
+
+        setIsQuickAddSaving(true);
+        try {
+            const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
+
+            // Build path and pathTitles from parent
+            const path = [...(parentTask.path || []), parentTask.id];
+            const pathTitles = [...(parentTask.pathTitles || []), parentTask.title];
+            const rootId = parentTask.rootId || parentTask.id;
+
+            await addDoc(collection(db, 'tasks'), {
+                title: quickAddTitle.trim(),
+                description: '',
+                type: childType,
+                parentId: parentTask.id,
+                rootId,
+                path,
+                pathTitles,
+                linkURL: '',
+                startDate: parentTask.startDate || toDateString(),
+                endDate: parentTask.endDate || toDateString(),
+                selectedRoomIds: parentTask.selectedRoomIds || [],
+                teacherId: auth.currentUser.uid,
+                presentationOrder: maxOrder + 1,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                imageURL: '',
+                status: 'todo',
+                childIds: [],
+                attachments: [],
+            });
+
+            handleSuccess(`${getTypeLabel(childType)} added!`);
+            setQuickAddParentId(null);
+            setQuickAddTitle('');
+        } catch (error) {
+            console.error("Error creating quick add task:", error);
+            handleError("Failed to create item.");
+        } finally {
+            setIsQuickAddSaving(false);
+        }
+    }, [quickAddParentId, quickAddTitle, tasks]);
+
+    const handleQuickAddCancel = useCallback(() => {
+        setQuickAddParentId(null);
+        setQuickAddTitle('');
+    }, []);
+
     // Calendar scroll handlers
     const scrollCalendar = (direction: 'left' | 'right') => {
         if (calendarRef.current) {
@@ -549,7 +734,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         <select
                             value={filterClassroom}
                             onChange={e => setFilterClassroom(e.target.value)}
-                            className="px-3 py-2 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent transition-all"
+                            className="px-3 py-2 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all cursor-pointer"
                         >
                             <option value="all">All Classes</option>
                             {rooms.map(room => (
@@ -562,7 +747,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                     <select
                         value={filterStatus}
                         onChange={e => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
-                        className="px-3 py-2 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent transition-all"
+                        className="px-3 py-2 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all cursor-pointer"
                     >
                         <option value="all">All Status</option>
                         <option value="active">Active</option>
@@ -579,7 +764,8 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         <button
                             onClick={() => setFilterDate(null)}
                             className={`
-                                flex-shrink-0 px-4 py-2 rounded-xl border-[3px] font-bold text-sm transition-all
+                                flex-shrink-0 px-4 py-2 rounded-xl border-[3px] font-bold text-sm transition-all select-none cursor-pointer
+                                focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95
                                 ${filterDate === null
                                     ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
                                     : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
@@ -687,10 +873,52 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
 
             {/* Content - Three Columns */}
             <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
+                {/* Mobile Tab Selector - only visible on small screens */}
+                <div className="lg:hidden mb-4">
+                    <div className="flex rounded-xl border-[3px] border-gray-200 dark:border-gray-700 p-1 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                        <button
+                            onClick={() => setMobileActiveTab('projects')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
+                                mobileActiveTab === 'projects'
+                                    ? 'bg-purple-500/10 text-purple-500'
+                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            <FolderOpen size={16} />
+                            <span className="hidden sm:inline">Projects</span>
+                            <span className="text-xs opacity-70">({groupedTasks.projects.length})</span>
+                        </button>
+                        <button
+                            onClick={() => setMobileActiveTab('assignments')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
+                                mobileActiveTab === 'assignments'
+                                    ? 'bg-blue-500/10 text-blue-500'
+                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            <FileText size={16} />
+                            <span className="hidden sm:inline">Assignments</span>
+                            <span className="text-xs opacity-70">({groupedTasks.assignments.length})</span>
+                        </button>
+                        <button
+                            onClick={() => setMobileActiveTab('tasks')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${
+                                mobileActiveTab === 'tasks'
+                                    ? 'bg-green-500/10 text-green-500'
+                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            }`}
+                        >
+                            <ListChecks size={16} />
+                            <span className="hidden sm:inline">Tasks</span>
+                            <span className="text-xs opacity-70">({groupedTasks.standaloneTasks.length})</span>
+                        </button>
+                    </div>
+                </div>
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-full">
                     
                     {/* Projects Column */}
-                    <div className="card-base p-4 min-w-0 overflow-hidden">
+                    <div className={`card-base p-4 min-w-0 overflow-hidden ${mobileActiveTab !== 'projects' ? 'hidden lg:block' : ''}`}>
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('project')}`}>
                                 <FolderOpen size={16} />
@@ -744,6 +972,13 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                         onEdit={handleEdit}
                                         onDuplicate={handleDuplicate}
                                         getProgress={getProgress}
+                                        onQuickAdd={handleQuickAdd}
+                                        quickAddParentId={quickAddParentId}
+                                        quickAddTitle={quickAddTitle}
+                                        onQuickAddTitleChange={setQuickAddTitle}
+                                        onQuickAddSave={handleQuickAddSave}
+                                        onQuickAddCancel={handleQuickAddCancel}
+                                        isQuickAddSaving={isQuickAddSaving}
                                     />
                                 ))}
                             </div>
@@ -751,7 +986,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                     </div>
 
                     {/* Assignments Column */}
-                    <div className="card-base p-4 min-w-0 overflow-hidden">
+                    <div className={`card-base p-4 min-w-0 overflow-hidden ${mobileActiveTab !== 'assignments' ? 'hidden lg:block' : ''}`}>
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
                                 <FileText size={16} />
@@ -805,6 +1040,13 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                         onEdit={handleEdit}
                                         onDuplicate={handleDuplicate}
                                         getProgress={getProgress}
+                                        onQuickAdd={handleQuickAdd}
+                                        quickAddParentId={quickAddParentId}
+                                        quickAddTitle={quickAddTitle}
+                                        onQuickAddTitleChange={setQuickAddTitle}
+                                        onQuickAddSave={handleQuickAddSave}
+                                        onQuickAddCancel={handleQuickAddCancel}
+                                        isQuickAddSaving={isQuickAddSaving}
                                     />
                                 ))}
                             </div>
@@ -812,7 +1054,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                     </div>
 
                     {/* Tasks Column */}
-                    <div className="card-base p-4 min-w-0 overflow-hidden">
+                    <div className={`card-base p-4 min-w-0 overflow-hidden ${mobileActiveTab !== 'tasks' ? 'hidden lg:block' : ''}`}>
                         <div className="flex items-center gap-2 mb-4">
                             <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('task')}`}>
                                 <ListChecks size={16} />
@@ -866,6 +1108,13 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                         onEdit={handleEdit}
                                         onDuplicate={handleDuplicate}
                                         getProgress={getProgress}
+                                        onQuickAdd={handleQuickAdd}
+                                        quickAddParentId={quickAddParentId}
+                                        quickAddTitle={quickAddTitle}
+                                        onQuickAddTitleChange={setQuickAddTitle}
+                                        onQuickAddSave={handleQuickAddSave}
+                                        onQuickAddCancel={handleQuickAddCancel}
+                                        isQuickAddSaving={isQuickAddSaving}
                                     />
                                 ))}
                             </div>

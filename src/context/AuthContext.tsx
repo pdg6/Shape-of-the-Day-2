@@ -39,6 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             await signOut(auth);
             setUser(null);
+            // Clear any persisted task form data on sign-out
+            sessionStorage.removeItem('taskManager.openCards');
+            sessionStorage.removeItem('taskManager.activeCardId');
             toast.success('Signed out successfully');
         } catch (error) {
             console.error('Logout failed:', error);

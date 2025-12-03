@@ -91,19 +91,19 @@ export const Modal: React.FC<ModalProps> = ({
                 className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
                 onClick={e => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-6">
+                <div className="flex items-center justify-between px-6 pt-6 pb-4">
                     <h2 id={titleId} className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                         {title}
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none"
                         aria-label="Close"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                <div className="p-6">
+                <div className="px-6 pb-6">
                     {children}
                 </div>
             </div>
