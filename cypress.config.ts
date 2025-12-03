@@ -10,7 +10,6 @@ export default defineConfig({
     responseTimeout: 10000,
     video: false,
     screenshotOnRunFailure: true,
-    experimentalStudio: true,
     
     // Firebase Emulator Configuration
     env: {

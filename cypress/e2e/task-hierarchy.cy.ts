@@ -2,7 +2,8 @@
  * Task Hierarchy E2E Tests
  * 
  * Tests the creation and management of hierarchical tasks:
- * Project → Assignment → Task → Subtask
+ * Project → Task → Subtask (projects contain tasks directly)
+ * Assignment → Task → Subtask (assignments are standalone, not under projects)
  * 
  * Priority: 1 (Highest)
  */
@@ -42,27 +43,16 @@ describe('Task Hierarchy', () => {
       cy.contains('Project').should('be.visible');
     });
 
-    it('should create an Assignment under a Project', () => {
-      // First create a project
+    it('should create an Assignment as a standalone item', () => {
+      // Assignments are now standalone (not nested under projects)
       cy.visit('/');
       cy.contains('Tasks').click();
       cy.contains('Create').click();
       
-      cy.get('select').first().select('project');
-      cy.get('input[placeholder*="Math Unit"]').type('Science Project');
-      cy.get('button').contains(/class|period/i).first().click({ force: true });
-      cy.contains('button', /save/i).click();
-      cy.waitForFirebase();
-
-      // Now create an assignment under it
-      cy.contains('Create').click();
       cy.get('select').first().select('assignment');
-      
-      // Select the project as parent
-      cy.get('select').contains('Science Project').click({ force: true });
-      
-      cy.get('input[type="text"]').first().clear().type('Lab Report Assignment');
+      cy.get('input[type="text"]').first().type('Lab Report Assignment');
       cy.get('textarea').first().type('Write a lab report on the experiment');
+      cy.get('button').contains(/class|period/i).first().click({ force: true });
       cy.contains('button', /save/i).click();
       
       cy.waitForFirebase();
@@ -71,22 +61,15 @@ describe('Task Hierarchy', () => {
     });
 
     it('should create a Task under an Assignment', () => {
-      // Create project -> assignment -> task hierarchy
+      // Create standalone assignment -> task hierarchy
       cy.visit('/');
       cy.contains('Tasks').click();
       
-      // Create Project
-      cy.contains('Create').click();
-      cy.get('select').first().select('project');
-      cy.get('input[type="text"]').first().type('History Project');
-      cy.get('button').contains(/class|period/i).first().click({ force: true });
-      cy.contains('button', /save/i).click();
-      cy.waitForFirebase();
-
-      // Create Assignment
+      // Create Assignment (standalone)
       cy.contains('Create').click();
       cy.get('select').first().select('assignment');
       cy.get('input[type="text"]').first().type('Research Paper');
+      cy.get('button').contains(/class|period/i).first().click({ force: true });
       cy.contains('button', /save/i).click();
       cy.waitForFirebase();
 

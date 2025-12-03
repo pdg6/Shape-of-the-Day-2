@@ -62,7 +62,7 @@ const TYPE_CONFIG: Record<ItemType, {
  * StudentProjectsView - Tree view for students to browse all projects and assignments
  * 
  * Features:
- * 1. Hierarchical tree view of projects → assignments → tasks → subtasks
+ * 1. Hierarchical tree view: Projects → Tasks → Subtasks and Assignments → Tasks → Subtasks
  * 2. Search/filter functionality
  * 3. Import individual tasks or entire projects to today's tasks
  * 4. Breadcrumb display for context

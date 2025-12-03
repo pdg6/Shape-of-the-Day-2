@@ -154,7 +154,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
     
     .input-field-sm {
-        @apply input-field text-sm;
+        @apply w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200;
+        @apply bg-transparent font-medium text-sm;
+        @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
+        @apply border-gray-200 dark:border-gray-700;
+        @apply placeholder-gray-400 dark:placeholder-gray-500;
+        @apply hover:border-gray-400 dark:hover:border-gray-100;
+        @apply focus:outline-none focus:border-gray-300 dark:focus:border-gray-100;
     }
 
     /* ============================================
@@ -184,9 +190,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
     
     .btn-ghost-danger {
-        @apply btn-ghost text-red-500;
+        @apply flex items-center justify-center gap-2 h-12 px-4 rounded-xl;
+        @apply font-bold transition-all duration-200;
+        @apply border-[3px] border-transparent;
+        @apply text-red-500;
         @apply hover:border-red-500 hover:bg-red-500/5;
-        @apply focus:ring-red-500/20;
+        @apply focus:outline-none focus:ring-2 focus:ring-red-500/20;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed;
     }
 
     /* ============================================
@@ -226,15 +236,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
     
     .skeleton-text {
-        @apply skeleton h-4 w-full;
+        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-4 w-full;
     }
     
     .skeleton-text-sm {
-        @apply skeleton h-3 w-3/4;
+        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-3 w-3/4;
     }
     
     .skeleton-card {
-        @apply skeleton h-20 w-full rounded-xl;
+        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-20 w-full rounded-xl;
     }
 
     /* ============================================

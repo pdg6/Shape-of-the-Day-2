@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { 
-    Calendar as CalendarIcon, 
-    Link as LinkIcon, 
-    Plus, 
-    Check, 
-    Upload, 
-    Loader, 
-    ChevronLeft, 
-    ChevronRight, 
-    ArrowUp, 
+import {
+    Calendar as CalendarIcon,
+    Link as LinkIcon,
+    Plus,
+    Check,
+    Upload,
+    Loader,
+    ChevronLeft,
+    ChevronRight,
+    ArrowUp,
     ArrowDown,
     FolderOpen,
     FileText,
@@ -16,8 +16,7 @@ import {
     CheckSquare,
     X,
     Image as ImageIcon,
-    File as FileIcon,
-    Paperclip
+    File as FileIcon
 } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { TaskTabBar } from './TaskTabBar';
@@ -113,7 +112,7 @@ export default function TaskManager() {
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    
+
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
     const descriptionRef = useRef<HTMLTextAreaElement>(null);
@@ -193,9 +192,9 @@ export default function TaskManager() {
                 if (card.formData.selectedRoomIds.includes(currentClassId)) return card;
                 return {
                     ...card,
-                    formData: { 
-                        ...card.formData, 
-                        selectedRoomIds: [currentClassId, ...card.formData.selectedRoomIds] 
+                    formData: {
+                        ...card.formData,
+                        selectedRoomIds: [currentClassId, ...card.formData.selectedRoomIds]
                     },
                     // Don't mark as dirty for auto-population
                 };
@@ -225,11 +224,11 @@ export default function TaskManager() {
     // Filter tasks by date and class, then build hierarchy
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
-            const isInDateRange = task.startDate && task.endDate 
+            const isInDateRange = task.startDate && task.endDate
                 ? selectedDate >= task.startDate && selectedDate <= task.endDate
                 : true;
-            const isAssignedToCurrentClass = currentClassId 
-                ? task.selectedRoomIds?.includes(currentClassId) 
+            const isAssignedToCurrentClass = currentClassId
+                ? task.selectedRoomIds?.includes(currentClassId)
                 : true;
             return isInDateRange && isAssignedToCurrentClass;
         });
@@ -239,7 +238,7 @@ export default function TaskManager() {
     const getAvailableParents = useCallback((itemType: ItemType): Task[] => {
         const allowedParentTypes = ALLOWED_PARENT_TYPES[itemType];
         if (allowedParentTypes.length === 0) return [];
-        
+
         return tasks.filter(t => allowedParentTypes.includes(t.type));
     }, [tasks]);
 
@@ -260,12 +259,12 @@ export default function TaskManager() {
     // --- Card Management ---
 
     const updateActiveCard = useCallback(<K extends keyof TaskFormData>(
-        field: K, 
+        field: K,
         value: TaskFormData[K] | ((prev: TaskFormData[K]) => TaskFormData[K])
     ) => {
         setOpenCards(prev => prev.map(card => {
             if (card.id !== activeCardId) return card;
-            const newValue = typeof value === 'function' 
+            const newValue = typeof value === 'function'
                 ? (value as (prev: TaskFormData[K]) => TaskFormData[K])(card.formData[field])
                 : value;
             return {
@@ -280,7 +279,7 @@ export default function TaskManager() {
         const parentCard = parentCardId ? openCards.find(c => c.id === parentCardId) : null;
         const parentType = parentCard?.formData.type || 'task';
         const allowedChildTypes = ALLOWED_CHILD_TYPES[parentType];
-        
+
         // Determine the child type
         let childType: ItemType = 'task';
         if (allowedChildTypes && allowedChildTypes.length > 0 && allowedChildTypes[0]) {
@@ -288,7 +287,7 @@ export default function TaskManager() {
         }
 
         // Inherit classes from parent
-        const inheritedClasses = parentCard?.formData.selectedRoomIds || 
+        const inheritedClasses = parentCard?.formData.selectedRoomIds ||
             (currentClassId ? [currentClassId] : []);
 
         const newCard: TaskCardState = {
@@ -344,7 +343,7 @@ export default function TaskManager() {
 
     const navigateCards = useCallback((direction: 'prev' | 'next') => {
         const currentIndex = openCards.findIndex(c => c.id === activeCardId);
-        const newIndex = direction === 'prev' 
+        const newIndex = direction === 'prev'
             ? Math.max(0, currentIndex - 1)
             : Math.min(openCards.length - 1, currentIndex + 1);
         const targetCard = openCards[newIndex];
@@ -356,9 +355,9 @@ export default function TaskManager() {
     const resetToNewCard = useCallback(() => {
         const newCard: TaskCardState = {
             id: generateCardId(),
-            formData: { 
-                ...INITIAL_FORM_STATE, 
-                selectedRoomIds: currentClassId ? [currentClassId] : [] 
+            formData: {
+                ...INITIAL_FORM_STATE,
+                selectedRoomIds: currentClassId ? [currentClassId] : []
             },
             isNew: true,
             isDirty: false,
@@ -368,34 +367,34 @@ export default function TaskManager() {
     }, [currentClassId]);
 
     // --- File Upload Handlers ---
-    
+
     const uploadFile = async (file: File): Promise<Attachment | null> => {
         if (!auth.currentUser) {
             handleError('You must be logged in to upload files');
             return null;
         }
-        
+
         // Validate file type
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
             handleError(`File type not allowed: ${file.type}`);
             return null;
         }
-        
+
         // Validate file size
         if (file.size > MAX_FILE_SIZE) {
             handleError(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
             return null;
         }
-        
+
         setIsUploading(true);
         try {
             const attachmentId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             const filePath = `attachments/${auth.currentUser.uid}/${attachmentId}_${file.name}`;
             const storageRef = ref(storage, filePath);
-            
+
             await uploadBytes(storageRef, file);
             const downloadUrl = await getDownloadURL(storageRef);
-            
+
             const attachment: Attachment = {
                 id: attachmentId,
                 filename: file.name,
@@ -405,7 +404,7 @@ export default function TaskManager() {
                 uploadedAt: serverTimestamp(),
                 uploadedBy: auth.currentUser.uid,
             };
-            
+
             return attachment;
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -415,13 +414,13 @@ export default function TaskManager() {
             setIsUploading(false);
         }
     };
-    
+
     const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files || files.length === 0) return;
-        
+
         const newAttachments: Attachment[] = [];
-        
+
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (file) {
@@ -431,7 +430,7 @@ export default function TaskManager() {
                 }
             }
         }
-        
+
         if (newAttachments.length > 0) {
             updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
                 ...(prev || []),
@@ -439,17 +438,17 @@ export default function TaskManager() {
             ]);
             handleSuccess(`${newAttachments.length} file(s) uploaded`);
         }
-        
+
         // Reset file input
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
     };
-    
+
     const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
         const items = event.clipboardData?.items;
         if (!items) return;
-        
+
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             if (item && item.type.startsWith('image/')) {
@@ -469,16 +468,16 @@ export default function TaskManager() {
             }
         }
     };
-    
+
     const removeAttachment = async (attachmentId: string) => {
         const currentAttachments = activeFormData.attachments || [];
         const attachment = currentAttachments.find(a => a.id === attachmentId);
-        
+
         if (attachment) {
             try {
                 // Try to delete from storage (may fail if URL structure changed)
                 const pathMatch = attachment.url.match(/attachments%2F([^?]+)/);
-                if (pathMatch) {
+                if (pathMatch && pathMatch[1]) {
                     const filePath = decodeURIComponent(pathMatch[1]);
                     const storageRef = ref(storage, `attachments/${filePath}`);
                     await deleteObject(storageRef).catch(() => {
@@ -489,8 +488,8 @@ export default function TaskManager() {
                 console.warn('Could not delete attachment from storage:', error);
             }
         }
-        
-        updateActiveCard('attachments', (prev: Attachment[] | undefined) => 
+
+        updateActiveCard('attachments', (prev: Attachment[] | undefined) =>
             (prev || []).filter(a => a.id !== attachmentId)
         );
     };
@@ -672,7 +671,7 @@ export default function TaskManager() {
         try {
             // Get the task to find its children
             const taskToDelete = tasks.find(t => t.id === taskId);
-            
+
             // Update children to become standalone
             if (taskToDelete?.childIds?.length) {
                 const batch = writeBatch(db);
@@ -702,7 +701,7 @@ export default function TaskManager() {
     const handleEditClick = (task: Task) => {
         // Open task and all its ancestors as tabs
         const cardsToOpen: TaskCardState[] = [];
-        
+
         // First, add all ancestors
         if (task.path && task.path.length > 0) {
             for (const ancestorId of task.path) {
@@ -790,7 +789,7 @@ export default function TaskManager() {
                 {/* LEFT PANEL: Task Editor */}
                 <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
                     <div className="card-base p-4 space-y-4 flex-1 flex flex-col">
-                        
+
                         {/* Tab Bar */}
                         <TaskTabBar
                             tabs={openCards.map(card => ({
@@ -827,8 +826,8 @@ export default function TaskManager() {
                                                 className={`
                                                     flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase
                                                     border-[2px] transition-all duration-200
-                                                    ${isSelected 
-                                                        ? getTypeColorClasses(type) 
+                                                    ${isSelected
+                                                        ? getTypeColorClasses(type)
                                                         : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'}
                                                     ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
                                                 `}
@@ -912,7 +911,7 @@ export default function TaskManager() {
                         {/* Description */}
                         <div className="flex-1 flex flex-col min-h-0">
                             <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">
-                                Description 
+                                Description
                                 <span className="font-normal text-gray-400 ml-1">(paste images here)</span>
                             </label>
                             <textarea
@@ -933,7 +932,7 @@ export default function TaskManager() {
                                 </label>
                                 <div className="flex flex-wrap gap-2">
                                     {activeFormData.attachments.map(attachment => (
-                                        <div 
+                                        <div
                                             key={attachment.id}
                                             className="group relative flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
                                         >
@@ -942,9 +941,9 @@ export default function TaskManager() {
                                             ) : (
                                                 <FileIcon size={14} className="text-gray-500" />
                                             )}
-                                            <a 
-                                                href={attachment.url} 
-                                                target="_blank" 
+                                            <a
+                                                href={attachment.url}
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[150px]"
                                                 title={attachment.filename}
@@ -1061,7 +1060,7 @@ export default function TaskManager() {
                                     Delete
                                 </Button>
                             )}
-                            
+
                             <button
                                 onClick={() => handleSaveCard(activeCardId)}
                                 disabled={isSubmitting || !activeFormData.title.trim()}
@@ -1137,8 +1136,8 @@ export default function TaskManager() {
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
                             <div className="mb-3">
                                 <h4 className="text-xs font-bold text-gray-500 uppercase mb-1">
-                                    {selectedDate === toDateString() 
-                                        ? 'Today' 
+                                    {selectedDate === toDateString()
+                                        ? 'Today'
                                         : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                                 </h4>
                                 {currentClass && (
@@ -1202,7 +1201,7 @@ export default function TaskManager() {
                                                     <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
                                                         {task.title}
                                                     </h5>
-                                                    
+
                                                     {/* Breadcrumb */}
                                                     {breadcrumb && (
                                                         <p className="text-xs text-gray-400 truncate mt-0.5">
@@ -1214,7 +1213,7 @@ export default function TaskManager() {
                                                     {progress && progress.total > 0 && (
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                                <div 
+                                                                <div
                                                                     className="h-full bg-brand-accent rounded-full transition-all"
                                                                     style={{ width: `${(progress.completed / progress.total) * 100}%` }}
                                                                 />

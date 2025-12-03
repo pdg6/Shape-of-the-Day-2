@@ -33,7 +33,10 @@ declare global {
       createClassroom(name: string, subject?: string): Chainable<string>;
       
       /**
-       * Create a task hierarchy (project -> assignment -> task -> subtask)
+       * Create a task hierarchy:
+       * - Project with Task under it
+       * - Assignment (standalone) with Task under it
+       * - Subtask under one of the tasks
        */
       createTaskHierarchy(classroomId: string): Chainable<TaskHierarchy>;
       
@@ -299,19 +302,19 @@ Cypress.Commands.add('createTaskHierarchy', (classroomId: string) => {
   cy.get('[data-testid="save-task-btn"]').click();
   cy.waitForFirebase();
   
-  // Store project ID and create assignment as child
+  // Store project ID and create assignment as standalone (not under project)
   cy.get('[data-testid="task-list"]').contains('Test Project')
     .parents('[data-testid="task-item"]')
     .invoke('attr', 'data-task-id')
     .then((projectId) => {
       hierarchy.projectId = projectId as string;
       
-      // Create Assignment under Project
+      // Create Assignment as standalone (assignments no longer nest under projects)
       cy.get('[data-testid="create-task-btn"]').click();
       cy.get('[data-testid="type-selector"]').select('assignment');
-      cy.get('[data-testid="parent-selector"]').select(projectId as string);
       cy.get('[data-testid="title-input"]').type('Test Assignment');
       cy.get('[data-testid="description-input"]').type('A test assignment');
+      cy.get(`[data-testid="class-toggle-${classroomId}"]`).click();
       cy.get('[data-testid="save-task-btn"]').click();
       cy.waitForFirebase();
     });

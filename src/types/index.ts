@@ -18,7 +18,7 @@ export type ItemType = 'project' | 'assignment' | 'task' | 'subtask';
 
 // Helper to get allowed child types for each item type
 export const ALLOWED_CHILD_TYPES: Record<ItemType, ItemType[]> = {
-    project: ['assignment', 'task'],
+    project: ['task'],
     assignment: ['task'],
     task: ['subtask'],
     subtask: [], // Subtasks cannot have children
@@ -27,7 +27,7 @@ export const ALLOWED_CHILD_TYPES: Record<ItemType, ItemType[]> = {
 // Helper to get allowed parent types for each item type
 export const ALLOWED_PARENT_TYPES: Record<ItemType, ItemType[]> = {
     project: [], // Projects cannot have parents
-    assignment: ['project'],
+    assignment: [], // Assignments are standalone (cannot have parents)
     task: ['project', 'assignment'],
     subtask: ['task'],
 };

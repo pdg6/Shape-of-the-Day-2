@@ -192,24 +192,24 @@ export const getStudentProfile = async (studentId) => {
  */
 export const getTaskWithChildren = async (taskId) => {
     const tasksRef = collection(db, 'tasks');
-    
+
     // Get the root task
     const taskDoc = await getDoc(doc(db, 'tasks', taskId));
     if (!taskDoc.exists()) {
         return { task: null, descendants: [] };
     }
-    
+
     const rootTask = { id: taskDoc.id, ...taskDoc.data() };
-    
+
     // Get all descendants using rootId or path
     const q = query(
         tasksRef,
         where('rootId', '==', taskId)
     );
-    
+
     const snapshot = await getDocs(q);
     const descendants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
+
     return { task: rootTask, descendants };
 };
 
@@ -224,27 +224,27 @@ export const getTaskWithChildren = async (taskId) => {
  */
 export const duplicateTask = async (taskId, options = {}) => {
     const { includeChildren = true, newParentId = null, newAssignedRooms = null } = options;
-    
+
     // Get the task and its children if needed
     const { task, descendants } = await getTaskWithChildren(taskId);
-    
+
     if (!task) {
         throw new Error('Task not found');
     }
-    
+
     // Create mapping from old IDs to new IDs
     const idMap = {};
-    
+
     // Helper to create a duplicate task
     const createDuplicate = async (original, parentId, rootId) => {
         const newTaskRef = doc(collection(db, 'tasks'));
         const newId = newTaskRef.id;
         idMap[original.id] = newId;
-        
+
         // Build path and pathTitles for the new task
         let path = [];
         let pathTitles = [];
-        
+
         if (parentId && idMap[original.parentId]) {
             // Find the parent in our duplicated items
             const duplicatedParent = descendants.find(d => d.id === original.parentId);
@@ -253,7 +253,7 @@ export const duplicateTask = async (taskId, options = {}) => {
                 pathTitles = [...(duplicatedParent.pathTitles || []), duplicatedParent.title];
             }
         }
-        
+
         const newTaskData = {
             ...original,
             id: undefined, // Remove old id
@@ -266,33 +266,33 @@ export const duplicateTask = async (taskId, options = {}) => {
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
         };
-        
+
         // Remove undefined fields
         Object.keys(newTaskData).forEach(key => {
             if (newTaskData[key] === undefined) {
                 delete newTaskData[key];
             }
         });
-        
+
         await setDoc(newTaskRef, newTaskData);
         return newId;
     };
-    
+
     // Duplicate the root task
     const newRootId = await createDuplicate(task, newParentId, null);
-    
+
     // Duplicate children if requested
     if (includeChildren && descendants.length > 0) {
         // Sort by depth (path length) to ensure parents are created before children
-        const sortedDescendants = [...descendants].sort((a, b) => 
+        const sortedDescendants = [...descendants].sort((a, b) =>
             (a.path?.length || 0) - (b.path?.length || 0)
         );
-        
+
         for (const child of sortedDescendants) {
             const newParent = idMap[child.parentId] || newRootId;
             await createDuplicate(child, newParent, newRootId);
         }
-        
+
         // Update childIds for all duplicated tasks
         for (const original of [task, ...descendants]) {
             if (original.childIds && original.childIds.length > 0) {
@@ -300,7 +300,7 @@ export const duplicateTask = async (taskId, options = {}) => {
                 const newChildIds = original.childIds
                     .map(oldChildId => idMap[oldChildId])
                     .filter(Boolean);
-                
+
                 if (newChildIds.length > 0) {
                     await updateDoc(doc(db, 'tasks', newTaskId), {
                         childIds: newChildIds,
@@ -310,7 +310,7 @@ export const duplicateTask = async (taskId, options = {}) => {
             }
         }
     }
-    
+
     return { newTaskId: newRootId, childMap: idMap };
 };
 
@@ -324,25 +324,25 @@ export const duplicateTask = async (taskId, options = {}) => {
 export const moveTaskToParent = async (taskId, newParentId, newParent = null) => {
     const taskRef = doc(db, 'tasks', taskId);
     const taskDoc = await getDoc(taskRef);
-    
+
     if (!taskDoc.exists()) {
         throw new Error('Task not found');
     }
-    
+
     const task = taskDoc.data();
     const oldParentId = task.parentId;
-    
+
     // Build new path and pathTitles
     let newPath = [];
     let newPathTitles = [];
     let newRootId = taskId;
-    
+
     if (newParent) {
         newPath = [...(newParent.path || []), newParentId];
         newPathTitles = [...(newParent.pathTitles || []), newParent.title];
         newRootId = newParent.rootId || newParentId;
     }
-    
+
     // Update the moved task
     await updateDoc(taskRef, {
         parentId: newParentId,
@@ -351,7 +351,7 @@ export const moveTaskToParent = async (taskId, newParentId, newParent = null) =>
         pathTitles: newPathTitles,
         updatedAt: serverTimestamp()
     });
-    
+
     // Remove from old parent's childIds
     if (oldParentId) {
         const oldParentRef = doc(db, 'tasks', oldParentId);
@@ -365,7 +365,7 @@ export const moveTaskToParent = async (taskId, newParentId, newParent = null) =>
             });
         }
     }
-    
+
     // Add to new parent's childIds
     if (newParentId) {
         const newParentRef = doc(db, 'tasks', newParentId);
@@ -379,19 +379,19 @@ export const moveTaskToParent = async (taskId, newParentId, newParent = null) =>
             });
         }
     }
-    
+
     // Update all descendants' paths and rootIds
     const { descendants } = await getTaskWithChildren(taskId);
     for (const descendant of descendants) {
         // Recalculate path for this descendant
         const descendantRef = doc(db, 'tasks', descendant.id);
-        
+
         // Find the descendant's immediate parent in our list
         const parentInDescendants = descendants.find(d => d.id === descendant.parentId);
         const isDirectChild = descendant.parentId === taskId;
-        
+
         let descendantPath, descendantPathTitles;
-        
+
         if (isDirectChild) {
             descendantPath = [...newPath, taskId];
             descendantPathTitles = [...newPathTitles, task.title];
@@ -399,7 +399,7 @@ export const moveTaskToParent = async (taskId, newParentId, newParent = null) =>
             // This will be updated in a subsequent iteration
             continue; // Skip for now, will be handled by cascading updates
         }
-        
+
         await updateDoc(descendantRef, {
             rootId: newRootId,
             path: descendantPath,
@@ -418,29 +418,29 @@ export const moveTaskToParent = async (taskId, newParentId, newParent = null) =>
 export const deleteTaskWithChildren = async (taskId, deleteChildren = true) => {
     const taskRef = doc(db, 'tasks', taskId);
     const taskDoc = await getDoc(taskRef);
-    
+
     if (!taskDoc.exists()) {
         return 0;
     }
-    
+
     const task = taskDoc.data();
     let deletedCount = 0;
-    
+
     // Delete children first if requested
     if (deleteChildren) {
         const { descendants } = await getTaskWithChildren(taskId);
-        
+
         // Delete in reverse order (deepest first)
-        const sortedDescendants = [...descendants].sort((a, b) => 
+        const sortedDescendants = [...descendants].sort((a, b) =>
             (b.path?.length || 0) - (a.path?.length || 0)
         );
-        
+
         for (const descendant of sortedDescendants) {
             await deleteDoc(doc(db, 'tasks', descendant.id));
             deletedCount++;
         }
     }
-    
+
     // Remove from parent's childIds
     if (task.parentId) {
         const parentRef = doc(db, 'tasks', task.parentId);
@@ -454,11 +454,11 @@ export const deleteTaskWithChildren = async (taskId, deleteChildren = true) => {
             });
         }
     }
-    
+
     // Delete the task itself
     await deleteDoc(taskRef);
     deletedCount++;
-    
+
     return deletedCount;
 };
 
@@ -480,14 +480,14 @@ export const deleteTaskWithChildren = async (taskId, deleteChildren = true) => {
 export const addQuestionToTask = async (taskId, questionData) => {
     const taskRef = doc(db, 'tasks', taskId);
     const taskDoc = await getDoc(taskRef);
-    
+
     if (!taskDoc.exists()) {
         throw new Error('Task not found');
     }
-    
+
     const task = taskDoc.data();
     const questionHistory = task.questionHistory || [];
-    
+
     const questionId = `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const newQuestion = {
         id: questionId,
@@ -498,12 +498,12 @@ export const addQuestionToTask = async (taskId, questionData) => {
         askedAt: serverTimestamp(),
         resolved: false,
     };
-    
+
     await updateDoc(taskRef, {
         questionHistory: [...questionHistory, newQuestion],
         updatedAt: serverTimestamp(),
     });
-    
+
     return questionId;
 };
 
@@ -517,11 +517,11 @@ export const addQuestionToTask = async (taskId, questionData) => {
 export const resolveQuestion = async (taskId, questionId, teacherResponse = '') => {
     const taskRef = doc(db, 'tasks', taskId);
     const taskDoc = await getDoc(taskRef);
-    
+
     if (!taskDoc.exists()) {
         throw new Error('Task not found');
     }
-    
+
     const task = taskDoc.data();
     const questionHistory = (task.questionHistory || []).map(q => {
         if (q.id === questionId) {
@@ -534,7 +534,7 @@ export const resolveQuestion = async (taskId, questionId, teacherResponse = '') 
         }
         return q;
     });
-    
+
     await updateDoc(taskRef, {
         questionHistory,
         updatedAt: serverTimestamp(),
@@ -550,17 +550,96 @@ export const resolveQuestion = async (taskId, questionId, teacherResponse = '') 
 export const getTaskQuestions = async (taskId, classroomId = null) => {
     const taskRef = doc(db, 'tasks', taskId);
     const taskDoc = await getDoc(taskRef);
-    
+
     if (!taskDoc.exists()) {
         return [];
     }
-    
+
     const task = taskDoc.data();
     let questions = task.questionHistory || [];
-    
+
     if (classroomId) {
         questions = questions.filter(q => q.classroomId === classroomId);
     }
-    
+
     return questions;
+};
+
+/**
+ * Migration: Un-nest all assignments from projects
+ * This converts assignments that are children of projects to standalone items.
+ * - Sets parentId, rootId to null
+ * - Clears path and pathTitles arrays
+ * - Removes assignment IDs from parent project's childIds array
+ * @returns {Promise<{updated: number, errors: string[]}>} Migration result
+ */
+export const unNestAssignmentsFromProjects = async () => {
+    const result = { updated: 0, errors: [] };
+    
+    try {
+        // Find all assignments that have a parent
+        const tasksRef = collection(db, 'tasks');
+        const q = query(
+            tasksRef,
+            where('type', '==', 'assignment')
+        );
+        
+        const snapshot = await getDocs(q);
+        const nestedAssignments = snapshot.docs.filter(doc => {
+            const data = doc.data();
+            return data.parentId !== null && data.parentId !== undefined;
+        });
+        
+        console.log(`Found ${nestedAssignments.length} nested assignments to migrate`);
+        
+        for (const assignmentDoc of nestedAssignments) {
+            try {
+                const assignment = assignmentDoc.data();
+                const assignmentId = assignmentDoc.id;
+                const oldParentId = assignment.parentId;
+                
+                // Update the assignment to be standalone
+                const assignmentRef = doc(db, 'tasks', assignmentId);
+                await updateDoc(assignmentRef, {
+                    parentId: null,
+                    rootId: null,
+                    path: [],
+                    pathTitles: [],
+                    updatedAt: serverTimestamp(),
+                });
+                
+                // Remove assignment from parent's childIds
+                if (oldParentId) {
+                    const parentRef = doc(db, 'tasks', oldParentId);
+                    const parentDoc = await getDoc(parentRef);
+                    
+                    if (parentDoc.exists()) {
+                        const parentData = parentDoc.data();
+                        const updatedChildIds = (parentData.childIds || []).filter(
+                            id => id !== assignmentId
+                        );
+                        
+                        await updateDoc(parentRef, {
+                            childIds: updatedChildIds,
+                            updatedAt: serverTimestamp(),
+                        });
+                    }
+                }
+                
+                result.updated++;
+                console.log(`Migrated assignment: ${assignment.title} (${assignmentId})`);
+            } catch (err) {
+                const errorMsg = `Failed to migrate assignment ${assignmentDoc.id}: ${err.message}`;
+                result.errors.push(errorMsg);
+                console.error(errorMsg);
+            }
+        }
+        
+        console.log(`Migration complete: ${result.updated} assignments updated, ${result.errors.length} errors`);
+    } catch (err) {
+        result.errors.push(`Migration failed: ${err.message}`);
+        console.error('Migration failed:', err);
+    }
+    
+    return result;
 };
