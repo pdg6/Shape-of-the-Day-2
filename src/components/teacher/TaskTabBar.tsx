@@ -88,8 +88,7 @@ export function TaskTabBar({
                                     className={`
                                         w-32 sm:w-40 px-2 py-2.5 bg-transparent text-center
                                         outline-none border-none ring-0 shadow-none
-                                        focus:outline-none focus:border-none focus:ring-0 focus:shadow-none
-                                        focus-visible:outline-none focus-visible:ring-0 focus-visible:border-none
+                                        caret-current
                                         text-sm font-medium transition-colors
                                         ${!tab.title ? '' : 'ml-3'}
                                         ${isActive 

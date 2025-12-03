@@ -1157,11 +1157,11 @@ export default function TaskManager() {
 
                             {/* Action Row: AI Generate | Upload | Link | Save */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
-                                {/* AI Generate Button - Purple dashed */}
+                                {/* AI Generate Button - Purple solid */}
                                 <button
                                     type="button"
                                     onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
-                                    className="relative py-2.5 px-4 rounded-lg border-[2px] border-dashed border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 hover:shadow-[0_0_12px_rgba(168,85,247,0.15)] transition-all duration-200 group cursor-pointer select-none"
+                                    className="relative py-2.5 px-4 rounded-lg border-[2px] border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 hover:shadow-[0_0_12px_rgba(168,85,247,0.15)] transition-all duration-200 group cursor-pointer select-none"
                                 >
                                     <div className="flex items-center justify-center gap-2 text-purple-400 group-hover:text-purple-500 transition-colors">
                                         <Sparkles size={16} />
@@ -1169,8 +1169,8 @@ export default function TaskManager() {
                                     </div>
                                 </button>
 
-                                {/* Upload File Button - Gray dashed */}
-                                <div className="relative py-2.5 px-4 rounded-lg border-[2px] border-dashed border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
+                                {/* Upload File Button - Gray solid */}
+                                <div className="relative py-2.5 px-4 rounded-lg border-[2px] border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
                                     <input
                                         ref={fileInputRef}
                                         type="file"
@@ -1193,7 +1193,7 @@ export default function TaskManager() {
                                     </div>
                                 </div>
 
-                                {/* Add Link Button - Secondary outlined */}
+                                {/* Add Link Button - Gray solid */}
                                 <div className="relative py-2.5 px-4 rounded-lg border-[2px] border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
                                     <LinkIcon size={14} className="text-gray-400 flex-shrink-0" />
                                     <input
@@ -1206,12 +1206,12 @@ export default function TaskManager() {
                                     />
                                 </div>
 
-                                {/* Save Button - Primary with glow */}
+                                {/* Save Button - Green like Task button */}
                                 <button
                                     type="button"
                                     onClick={() => handleSaveCard(activeCardId)}
                                     disabled={isSubmitting || !activeFormData.title.trim()}
-                                    className="py-2.5 px-4 rounded-lg border-[2px] border-transparent transition-all duration-200 bg-brand-accent text-white font-medium shadow-[0_0_15px_rgba(37,99,235,0.25)] hover:shadow-[0_0_20px_rgba(37,99,235,0.35)] hover:bg-brand-accent/90 focus:outline-none focus:ring-2 focus:ring-brand-accent/30 focus:ring-offset-2 focus:ring-offset-brand-lightSurface dark:focus:ring-offset-brand-darkSurface disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 select-none active:scale-[0.98]"
+                                    className="py-2.5 px-4 rounded-lg border-[2px] border-green-500 bg-brand-lightSurface dark:bg-brand-darkSurface text-green-500 font-bold transition-all duration-200 hover:bg-green-500/10 hover:shadow-[0_0_12px_rgba(74,222,128,0.15)] focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 select-none active:scale-[0.98]"
                                 >
                                     {isSubmitting ? (
                                         <Loader size={16} className="animate-spin" />
@@ -1219,7 +1219,7 @@ export default function TaskManager() {
                                         <Check size={16} />
                                     )}
                                     <span className="text-sm font-medium">
-                                        {isSubmitting ? 'Saving...' : 'Save'}
+                                        {isSubmitting ? 'Saving...' : 'Save/Add to Class'}
                                     </span>
                                 </button>
                             </div>

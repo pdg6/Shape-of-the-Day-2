@@ -120,7 +120,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 /* ============================================
    Focus-Visible Accessibility
    ============================================ */
-*:focus-visible {
+*:focus-visible:not(input):not(textarea) {
     outline: 2px solid var(--color-brand-accent);
     outline-offset: 2px;
     border-radius: var(--radius-sm);
