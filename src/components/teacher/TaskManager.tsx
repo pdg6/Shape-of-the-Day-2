@@ -87,7 +87,12 @@ const getTypeColorClasses = (type: ItemType): string => {
     }
 };
 
-export default function TaskManager() {
+interface TaskManagerProps {
+    duplicateFromTask?: Task | null;
+    onDuplicateConsumed?: () => void;
+}
+
+export default function TaskManager({ duplicateFromTask, onDuplicateConsumed }: TaskManagerProps = {}) {
     // --- Store ---
     const { currentClassId, classrooms: storeClassrooms } = useClassStore();
     const currentClass = storeClassrooms.find(c => c.id === currentClassId);
@@ -124,6 +129,37 @@ export default function TaskManager() {
     // --- Computed ---
     const activeCard = openCards.find(c => c.id === activeCardId) || openCards[0];
     const activeFormData = activeCard?.formData || INITIAL_FORM_STATE;
+
+    // --- Handle duplicate task from browse view ---
+    useEffect(() => {
+        if (duplicateFromTask) {
+            // Create a new card pre-filled with the duplicate task's data
+            const newCard: TaskCardState = {
+                id: generateCardId(),
+                formData: {
+                    title: `${duplicateFromTask.title} (Copy)`,
+                    description: duplicateFromTask.description || '',
+                    type: duplicateFromTask.type,
+                    parentId: null, // Duplicates start as standalone
+                    linkURL: duplicateFromTask.linkURL || '',
+                    startDate: toDateString(),
+                    endDate: toDateString(),
+                    selectedRoomIds: duplicateFromTask.selectedRoomIds || [],
+                    attachments: duplicateFromTask.attachments || [],
+                },
+                isNew: true,
+                isDirty: true,
+            };
+
+            setOpenCards([newCard]);
+            setActiveCardId(newCard.id);
+            
+            // Notify parent that duplicate has been consumed
+            if (onDuplicateConsumed) {
+                onDuplicateConsumed();
+            }
+        }
+    }, [duplicateFromTask, onDuplicateConsumed]);
 
     // --- Effects ---
 
@@ -807,72 +843,46 @@ export default function TaskManager() {
                             onNavigate={navigateCards}
                         />
 
-                        {/* Type Selector + Parent Selector Row */}
-                        <div className="flex items-center gap-4 flex-wrap">
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                                <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Type</label>
-                                <div className="flex gap-2">
-                                    {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
-                                        const Icon = getTypeIcon(type);
-                                        const isSelected = activeFormData.type === type;
-                                        const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
-                                            tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
-                                        ].includes(type);
-
-                                        return (
-                                            <button
-                                                key={type}
-                                                onClick={() => updateActiveCard('type', type)}
-                                                disabled={!!isDisabled}
-                                                className={`
-                                                    flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase
-                                                    border-[2px] transition-all duration-200
-                                                    ${isSelected 
-                                                        ? getTypeColorClasses(type) 
-                                                        : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'}
-                                                    ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
-                                                `}
-                                            >
-                                                <Icon size={14} />
-                                                {getTypeLabel(type)}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                        {/* ═══════════════════════════════════════════════════════════════
+                           STEP 1: IDENTITY - What am I creating?
+                           ═══════════════════════════════════════════════════════════════ */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold">1</span>
+                                <h3 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">What are you creating?</h3>
                             </div>
 
-                            {/* Parent Selector (inline with type) */}
-                            {availableParents.length > 0 && (
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                    <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase whitespace-nowrap">
-                                        Linked to
-                                    </label>
-                                    <select
-                                        value={activeFormData.parentId || ''}
-                                        onChange={e => updateActiveCard('parentId', e.target.value || null)}
-                                        className="flex-1 min-w-0 px-3 py-1.5 pr-8 rounded-lg border-[2px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500 appearance-none cursor-pointer"
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1rem'
-                                        }}
-                                    >
-                                        <option value="" className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">None (standalone)</option>
-                                        {availableParents.map(parent => (
-                                            <option key={parent.id} value={parent.id} className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                                {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
-                                                {parent.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
+                            {/* Type Selector */}
+                            <div className="flex gap-2 flex-wrap">
+                                {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
+                                    const Icon = getTypeIcon(type);
+                                    const isSelected = activeFormData.type === type;
+                                    const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
+                                        tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
+                                    ].includes(type);
 
-                        {/* Title */}
-                        <div>
-                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Title</label>
+                                    return (
+                                        <button
+                                            key={type}
+                                            onClick={() => updateActiveCard('type', type)}
+                                            disabled={!!isDisabled}
+                                            className={`
+                                                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase
+                                                border-[2px] transition-all duration-200
+                                                ${isSelected 
+                                                    ? getTypeColorClasses(type) 
+                                                    : 'border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'}
+                                                ${isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
+                                            `}
+                                        >
+                                            <Icon size={14} />
+                                            {getTypeLabel(type)}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Title */}
                             <div className="relative">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
                                     <TypeIcon size={16} className={getTypeColorClasses(activeFormData.type).split(' ')[0]} />
@@ -881,56 +891,105 @@ export default function TaskManager() {
                                     type="text"
                                     value={activeFormData.title}
                                     onChange={e => updateActiveCard('title', e.target.value)}
-                                    className="w-full pl-10 pr-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                    placeholder={`e.g. ${activeFormData.type === 'project' ? 'Math Unit 3' : activeFormData.type === 'assignment' ? 'Exponents Practice' : 'Read Chapter 4'}`}
+                                    className="w-full pl-10 pr-3 py-2.5 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
+                                    placeholder={`${getTypeLabel(activeFormData.type)} title, e.g. ${activeFormData.type === 'project' ? 'Math Unit 3' : activeFormData.type === 'assignment' ? 'Exponents Practice' : 'Read Chapter 4'}`}
                                 />
                             </div>
                         </div>
 
-                        {/* Dates */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div>
-                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Start Date</label>
-                                <input
-                                    type="date"
-                                    value={activeFormData.startDate}
-                                    onChange={e => updateActiveCard('startDate', e.target.value)}
-                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100 [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                                />
+                        {/* ═══════════════════════════════════════════════════════════════
+                           STEP 2: SCHEDULE - When is it due?
+                           ═══════════════════════════════════════════════════════════════ */}
+                        <div className="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold">2</span>
+                                <h3 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">When is it scheduled?</h3>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">Due Date</label>
-                                <input
-                                    type="date"
-                                    value={activeFormData.endDate}
-                                    onChange={e => updateActiveCard('endDate', e.target.value)}
-                                    className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100 [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                                />
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Start Date</label>
+                                    <input
+                                        type="date"
+                                        value={activeFormData.startDate}
+                                        onChange={e => updateActiveCard('startDate', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100 [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Due Date</label>
+                                    <input
+                                        type="date"
+                                        value={activeFormData.endDate}
+                                        onChange={e => updateActiveCard('endDate', e.target.value)}
+                                        className="w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100 [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:brightness-0 dark:[&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-70 [&::-webkit-calendar-picker-indicator]:hover:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* Description */}
-                        <div className="flex-1 flex flex-col min-h-0">
-                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-1">
-                                Description 
-                                <span className="font-normal text-gray-400 ml-1">(paste images here)</span>
-                            </label>
+                        {/* ═══════════════════════════════════════════════════════════════
+                           STEP 3: CONTENT - What's the content?
+                           ═══════════════════════════════════════════════════════════════ */}
+                        <div className="flex-1 flex flex-col min-h-0 space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold">3</span>
+                                <h3 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Add content</h3>
+                                <span className="text-xs text-gray-400">(optional)</span>
+                            </div>
+
+                            {/* Description */}
                             <textarea
                                 ref={descriptionRef}
                                 value={activeFormData.description}
                                 onChange={e => updateActiveCard('description', e.target.value)}
                                 onPaste={handlePaste}
                                 className="w-full flex-1 min-h-[80px] px-3 py-2 rounded-xl border-[3px] transition-all duration-200 bg-transparent text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-500 text-sm resize-y hover:border-gray-400 dark:hover:border-gray-100 focus:outline-none focus:border-gray-300 dark:focus:border-gray-100"
-                                placeholder="Instructions... (you can paste images directly here)"
+                                placeholder="Instructions or description... (you can paste images directly here)"
                             />
-                        </div>
 
-                        {/* Attachments Display */}
-                        {activeFormData.attachments && activeFormData.attachments.length > 0 && (
-                            <div className="flex-shrink-0">
-                                <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">
-                                    Attachments ({activeFormData.attachments.length})
-                                </label>
+                            {/* Attachments & Link Row */}
+                            <div className="grid grid-cols-2 gap-3 flex-shrink-0">
+                                <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-brand-accent dark:hover:border-brand-accent transition-all text-center group cursor-pointer">
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        multiple
+                                        accept={ALLOWED_FILE_TYPES.join(',')}
+                                        onChange={handleFileSelect}
+                                        disabled={isUploading}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
+                                        data-testid="file-upload-input"
+                                    />
+                                    <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-brand-accent'}`}>
+                                        {isUploading ? (
+                                            <Loader size={16} className="animate-spin" />
+                                        ) : (
+                                            <Upload size={16} />
+                                        )}
+                                        <span className="text-xs font-bold">
+                                            {isUploading ? 'Uploading...' : 'Upload File'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
+                                    <div className="pl-3 text-gray-400">
+                                        <LinkIcon size={14} />
+                                    </div>
+                                    <input
+                                        type="url"
+                                        value={activeFormData.linkURL}
+                                        onChange={e => updateActiveCard('linkURL', e.target.value)}
+                                        className="w-full py-2 px-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
+                                        placeholder="Paste URL..."
+                                        data-testid="link-url-input"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Attachments Display */}
+                            {activeFormData.attachments && activeFormData.attachments.length > 0 && (
                                 <div className="flex flex-wrap gap-2">
                                     {activeFormData.attachments.map(attachment => (
                                         <div 
@@ -961,97 +1020,97 @@ export default function TaskManager() {
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Attachments & Link */}
-                        <div className="grid grid-cols-2 gap-3 flex-shrink-0">
-                            <div className="relative border-[3px] border-dashed border-gray-200 dark:border-gray-700 rounded-xl py-2 px-3 bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-brand-accent dark:hover:border-brand-accent transition-all text-center group cursor-pointer">
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    multiple
-                                    accept={ALLOWED_FILE_TYPES.join(',')}
-                                    onChange={handleFileSelect}
-                                    disabled={isUploading}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
-                                    data-testid="file-upload-input"
-                                />
-                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-brand-accent'}`}>
-                                    {isUploading ? (
-                                        <Loader size={16} className="animate-spin" />
-                                    ) : (
-                                        <Upload size={16} />
-                                    )}
-                                    <span className="text-xs font-bold">
-                                        {isUploading ? 'Uploading...' : 'Upload File'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="relative border-[3px] border-gray-200 dark:border-gray-700 rounded-xl flex items-center bg-brand-lightSurface dark:bg-brand-darkSurface hover:border-gray-400 dark:hover:border-gray-100 focus-within:border-gray-300 dark:focus-within:border-gray-100 transition-colors">
-                                <div className="pl-3 text-gray-400">
-                                    <LinkIcon size={14} />
-                                </div>
-                                <input
-                                    type="url"
-                                    value={activeFormData.linkURL}
-                                    onChange={e => updateActiveCard('linkURL', e.target.value)}
-                                    className="w-full py-2 px-2 bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
-                                    placeholder="Paste URL..."
-                                    data-testid="link-url-input"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Class Assignment */}
-                        <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                            <label className="block text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase mb-2">Assign to Classes</label>
-                            {loadingRooms ? (
-                                <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                            ) : (
-                                <div className="flex flex-wrap gap-2">
-                                    {rooms.map(room => {
-                                        const isSelected = activeFormData.selectedRoomIds.includes(room.id);
-                                        return (
-                                            <button
-                                                key={room.id}
-                                                onClick={() => handleRoomToggle(room.id)}
-                                                style={{
-                                                    borderColor: isSelected ? (room.color || '') : '',
-                                                    color: isSelected ? (room.color || '') : ''
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    if (!isSelected && room.color) {
-                                                        e.currentTarget.style.borderColor = room.color;
-                                                        e.currentTarget.style.color = room.color;
-                                                    }
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    if (!isSelected) {
-                                                        e.currentTarget.style.borderColor = '';
-                                                        e.currentTarget.style.color = '';
-                                                    }
-                                                }}
-                                                className={`
-                                                    flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
-                                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
-                                                    ${isSelected
-                                                        ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
-                                                        : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
-                                                `}
-                                            >
-                                                {isSelected && <Check size={12} />}
-                                                {room.name}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
                             )}
                         </div>
 
-                        {/* Action Buttons Footer */}
-                        <div className="pt-3 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3 flex-shrink-0 mt-auto">
+                        {/* ═══════════════════════════════════════════════════════════════
+                           STEP 4: CONTEXT - Where does it belong?
+                           ═══════════════════════════════════════════════════════════════ */}
+                        <div className="space-y-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex-shrink-0">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold">4</span>
+                                <h3 className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Where does it belong?</h3>
+                            </div>
+
+                            {/* Parent Selector */}
+                            {availableParents.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <label className="text-xs font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                        Link to parent:
+                                    </label>
+                                    <select
+                                        value={activeFormData.parentId || ''}
+                                        onChange={e => updateActiveCard('parentId', e.target.value || null)}
+                                        className="flex-1 min-w-0 px-3 py-1.5 pr-8 rounded-lg border-[2px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500 appearance-none cursor-pointer"
+                                        style={{
+                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 0.75rem center',
+                                            backgroundSize: '1rem'
+                                        }}
+                                    >
+                                        <option value="" className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">None (standalone)</option>
+                                        {availableParents.map(parent => (
+                                            <option key={parent.id} value={parent.id} className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
+                                                {parent.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
+                            {/* Class Assignment */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Assign to classes:</label>
+                                {loadingRooms ? (
+                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {rooms.map(room => {
+                                            const isSelected = activeFormData.selectedRoomIds.includes(room.id);
+                                            return (
+                                                <button
+                                                    key={room.id}
+                                                    onClick={() => handleRoomToggle(room.id)}
+                                                    style={{
+                                                        borderColor: isSelected ? (room.color || '') : '',
+                                                        color: isSelected ? (room.color || '') : ''
+                                                    }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!isSelected && room.color) {
+                                                            e.currentTarget.style.borderColor = room.color;
+                                                            e.currentTarget.style.color = room.color;
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!isSelected) {
+                                                            e.currentTarget.style.borderColor = '';
+                                                            e.currentTarget.style.color = '';
+                                                        }
+                                                    }}
+                                                    className={`
+                                                        flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all border-[3px]
+                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
+                                                        ${isSelected
+                                                            ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
+                                                            : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
+                                                    `}
+                                                >
+                                                    {isSelected && <Check size={12} />}
+                                                    {room.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* ═══════════════════════════════════════════════════════════════
+                           STEP 5: ACTIONS - Save or delete
+                           ═══════════════════════════════════════════════════════════════ */}
+                        <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center gap-3 flex-shrink-0 mt-auto">
                             {!activeCard?.isNew && (
                                 <Button
                                     variant="ghost-danger"

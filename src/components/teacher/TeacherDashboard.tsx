@@ -12,6 +12,7 @@ import { ClassFormModal } from './ClassFormModal';
 import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
 import { Modal } from '../shared/Modal';
+import { Task } from '../../types';
 // import { DummyDataControls } from '../shared/DummyDataControls';
 
 interface MenuItem {
@@ -39,6 +40,9 @@ const TeacherDashboard: React.FC = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isJoinCodeOpen, setIsJoinCodeOpen] = useState(false);
+    
+    // State for passing task data to TaskManager for duplication
+    const [pendingDuplicateTask, setPendingDuplicateTask] = useState<Task | null>(null);
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
@@ -113,10 +117,20 @@ const TeacherDashboard: React.FC = () => {
         switch (activeTab) {
             case 'tasks': 
                 return tasksSubTab === 'create' 
-                    ? <TaskManager /> 
-                    : <TaskInventory onEditTask={(task) => {
-                        setTasksSubTab('create');
-                    }} />;
+                    ? <TaskManager 
+                        duplicateFromTask={pendingDuplicateTask}
+                        onDuplicateConsumed={() => setPendingDuplicateTask(null)}
+                      /> 
+                    : <TaskInventory 
+                        onEditTask={() => {
+                            setTasksSubTab('create');
+                        }}
+                        onDuplicateTask={(task) => {
+                            // Set the task to duplicate and switch to create mode
+                            setPendingDuplicateTask(task);
+                            setTasksSubTab('create');
+                        }}
+                      />;
             case 'shape': return <ShapeOfDay />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
             case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} />;

@@ -53,6 +53,7 @@ const getTypeColorClasses = (type: ItemType): string => {
 
 interface TaskInventoryProps {
     onEditTask?: (task: Task) => void;
+    onDuplicateTask?: (task: Task) => void;
 }
 
 // Recursive tree item component
@@ -185,7 +186,7 @@ function TreeItem({
     );
 }
 
-export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
+export default function TaskInventory({ onEditTask, onDuplicateTask }: TaskInventoryProps) {
     // --- Store ---
     const { classrooms: storeClassrooms } = useClassStore();
 
@@ -357,15 +358,24 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         });
     }, [tasks, searchQuery, filterClassroom, filterStatus, filterDate]);
 
-    // Group tasks by type (only top-level items)
+    // Group tasks for the improved browsing view
+    // Two sections: (1) Hierarchical items (projects/assignments as parents), (2) Standalone items
     const groupedTasks = useMemo(() => {
-        const projects = filteredTasks.filter(t => t.type === 'project' && !t.parentId);
-        const assignments = filteredTasks.filter(t => t.type === 'assignment' && !t.parentId);
+        // Hierarchical parents: Projects and standalone assignments (no parent)
+        const hierarchicalRoots = filteredTasks.filter(t => 
+            (t.type === 'project' || t.type === 'assignment') && !t.parentId
+        );
+        
+        // Standalone items: Tasks and subtasks with no parent
         const standaloneTasks = filteredTasks.filter(t => 
             (t.type === 'task' || t.type === 'subtask') && !t.parentId
         );
 
-        return { projects, assignments, standaloneTasks };
+        // For legacy support, also separate projects and assignments
+        const projects = filteredTasks.filter(t => t.type === 'project' && !t.parentId);
+        const assignments = filteredTasks.filter(t => t.type === 'assignment' && !t.parentId);
+
+        return { hierarchicalRoots, standaloneTasks, projects, assignments };
     }, [filteredTasks]);
 
     // --- Handlers ---
@@ -388,40 +398,54 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         }
     }, [onEditTask]);
 
-    const handleDuplicate = useCallback(async (task: Task) => {
+    const handleDuplicate = useCallback((task: Task) => {
+        // If onDuplicateTask prop is provided, use it to open task creation with pre-filled data
+        // This allows the user to modify before saving instead of immediate duplication
+        if (onDuplicateTask) {
+            onDuplicateTask(task);
+            handleSuccess(`Opening ${getTypeLabel(task.type)} for duplication...`);
+            return;
+        }
+        
+        // Fallback: Create a duplicate immediately if no handler provided
+        // This is a legacy behavior for backwards compatibility
         if (!auth.currentUser) return;
 
-        try {
-            const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
+        const duplicateAsync = async () => {
+            try {
+                const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
 
-            // Create a copy with new dates
-            await addDoc(collection(db, 'tasks'), {
-                title: `${task.title} (Copy)`,
-                description: task.description || '',
-                type: task.type,
-                parentId: null, // Duplicates are standalone by default
-                rootId: null,
-                path: [],
-                pathTitles: [],
-                linkURL: task.linkURL || '',
-                startDate: toDateString(),
-                endDate: toDateString(),
-                selectedRoomIds: task.selectedRoomIds || [],
-                teacherId: auth.currentUser.uid,
-                presentationOrder: maxOrder + 1,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                imageURL: task.imageURL || '',
-                status: 'todo',
-                childIds: [],
-            });
+                // Create a copy with new dates
+                await addDoc(collection(db, 'tasks'), {
+                    title: `${task.title} (Copy)`,
+                    description: task.description || '',
+                    type: task.type,
+                    parentId: null, // Duplicates are standalone by default
+                    rootId: null,
+                    path: [],
+                    pathTitles: [],
+                    linkURL: task.linkURL || '',
+                    startDate: toDateString(),
+                    endDate: toDateString(),
+                    selectedRoomIds: task.selectedRoomIds || [],
+                    teacherId: auth.currentUser!.uid,
+                    presentationOrder: maxOrder + 1,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    imageURL: task.imageURL || '',
+                    status: 'todo',
+                    childIds: [],
+                });
 
-            handleSuccess(`${getTypeLabel(task.type)} duplicated!`);
-        } catch (error) {
-            console.error("Error duplicating:", error);
-            handleError("Failed to duplicate item.");
-        }
-    }, [tasks]);
+                handleSuccess(`${getTypeLabel(task.type)} duplicated!`);
+            } catch (error) {
+                console.error("Error duplicating:", error);
+                handleError("Failed to duplicate item.");
+            }
+        };
+        
+        duplicateAsync();
+    }, [tasks, onDuplicateTask]);
 
     // Calendar scroll handlers
     const scrollCalendar = (direction: 'left' | 'right') => {
@@ -685,58 +709,67 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                 </div>
             </div>
 
-            {/* Content - Three Columns */}
+            {/* Content - Two Columns: Hierarchical Tree + Standalone Tasks */}
             <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full max-w-full">
                     
-                    {/* Projects Column */}
+                    {/* LEFT: Hierarchical Tree - Projects & Assignments with all nested children */}
                     <div className="card-base p-4 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4">
-                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('project')}`}>
-                                <FolderOpen size={16} />
-                            </span>
+                            <div className="flex items-center gap-1">
+                                <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses('project')}`}>
+                                    <FolderOpen size={12} />
+                                </span>
+                                <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
+                                    <FileText size={12} />
+                                </span>
+                            </div>
                             <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Projects
+                                Projects & Assignments
                             </h3>
                             <span className="text-xs text-gray-400 font-medium">
-                                {groupedTasks.projects.length}
+                                {groupedTasks.hierarchicalRoots.length}
                             </span>
-                            {groupedTasks.projects.some(p => p.childIds?.length > 0) && (
+                            {groupedTasks.hierarchicalRoots.some(t => t.childIds?.length > 0) && (
                                 <button
                                     onClick={() => {
-                                        const projectIds = groupedTasks.projects.filter(p => p.childIds?.length > 0).map(p => p.id);
-                                        const allExpanded = projectIds.every(id => expandedIds.has(id));
+                                        const parentIds = groupedTasks.hierarchicalRoots.filter(t => t.childIds?.length > 0).map(t => t.id);
+                                        const allExpanded = parentIds.every(id => expandedIds.has(id));
                                         if (allExpanded) {
                                             setExpandedIds(prev => {
                                                 const next = new Set(prev);
-                                                projectIds.forEach(id => next.delete(id));
+                                                parentIds.forEach(id => next.delete(id));
                                                 return next;
                                             });
                                         } else {
-                                            setExpandedIds(prev => new Set([...prev, ...projectIds]));
+                                            setExpandedIds(prev => new Set([...prev, ...parentIds]));
                                         }
                                     }}
                                     className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                 >
-                                    {groupedTasks.projects.filter(p => p.childIds?.length > 0).every(p => expandedIds.has(p.id)) ? (
-                                        <><span>Collapse</span><ChevronUp size={14} /></>
+                                    {groupedTasks.hierarchicalRoots.filter(t => t.childIds?.length > 0).every(t => expandedIds.has(t.id)) ? (
+                                        <><span>Collapse All</span><ChevronUp size={14} /></>
                                     ) : (
-                                        <><span>Expand</span><ChevronDown size={14} /></>
+                                        <><span>Expand All</span><ChevronDown size={14} /></>
                                     )}
                                 </button>
                             )}
                         </div>
 
-                        {groupedTasks.projects.length === 0 ? (
+                        <p className="text-xs text-gray-400 mb-3">
+                            Projects and assignments with all their nested tasks and subtasks
+                        </p>
+
+                        {groupedTasks.hierarchicalRoots.length === 0 ? (
                             <p className="text-center text-sm text-gray-400 py-8 italic">
-                                No projects found
+                                No projects or assignments found
                             </p>
                         ) : (
                             <div className="space-y-1">
-                                {groupedTasks.projects.map(project => (
+                                {groupedTasks.hierarchicalRoots.map(item => (
                                     <TreeItem
-                                        key={project.id}
-                                        task={project}
+                                        key={item.id}
+                                        task={item}
                                         allTasks={filteredTasks}
                                         depth={0}
                                         expandedIds={expandedIds}
@@ -750,75 +783,19 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         )}
                     </div>
 
-                    {/* Assignments Column */}
+                    {/* RIGHT: Standalone Tasks - Tasks without a parent */}
                     <div className="card-base p-4 min-w-0 overflow-hidden">
                         <div className="flex items-center gap-2 mb-4">
-                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
-                                <FileText size={16} />
-                            </span>
-                            <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Assignments
-                            </h3>
-                            <span className="text-xs text-gray-400 font-medium">
-                                {groupedTasks.assignments.length}
-                            </span>
-                            {groupedTasks.assignments.some(a => a.childIds?.length > 0) && (
-                                <button
-                                    onClick={() => {
-                                        const assignmentIds = groupedTasks.assignments.filter(a => a.childIds?.length > 0).map(a => a.id);
-                                        const allExpanded = assignmentIds.every(id => expandedIds.has(id));
-                                        if (allExpanded) {
-                                            setExpandedIds(prev => {
-                                                const next = new Set(prev);
-                                                assignmentIds.forEach(id => next.delete(id));
-                                                return next;
-                                            });
-                                        } else {
-                                            setExpandedIds(prev => new Set([...prev, ...assignmentIds]));
-                                        }
-                                    }}
-                                    className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                >
-                                    {groupedTasks.assignments.filter(a => a.childIds?.length > 0).every(a => expandedIds.has(a.id)) ? (
-                                        <><span>Collapse</span><ChevronUp size={14} /></>
-                                    ) : (
-                                        <><span>Expand</span><ChevronDown size={14} /></>
-                                    )}
-                                </button>
-                            )}
-                        </div>
-
-                        {groupedTasks.assignments.length === 0 ? (
-                            <p className="text-center text-sm text-gray-400 py-8 italic">
-                                No standalone assignments
-                            </p>
-                        ) : (
-                            <div className="space-y-1">
-                                {groupedTasks.assignments.map(assignment => (
-                                    <TreeItem
-                                        key={assignment.id}
-                                        task={assignment}
-                                        allTasks={filteredTasks}
-                                        depth={0}
-                                        expandedIds={expandedIds}
-                                        onToggleExpand={toggleExpand}
-                                        onEdit={handleEdit}
-                                        onDuplicate={handleDuplicate}
-                                        getProgress={getProgress}
-                                    />
-                                ))}
+                            <div className="flex items-center gap-1">
+                                <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses('task')}`}>
+                                    <ListChecks size={12} />
+                                </span>
+                                <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses('subtask')}`}>
+                                    <CheckSquare size={12} />
+                                </span>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Tasks Column */}
-                    <div className="card-base p-4 min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-2 mb-4">
-                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('task')}`}>
-                                <ListChecks size={16} />
-                            </span>
                             <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Tasks
+                                Standalone Tasks
                             </h3>
                             <span className="text-xs text-gray-400 font-medium">
                                 {groupedTasks.standaloneTasks.length}
@@ -841,17 +818,21 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                     className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                 >
                                     {groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).every(t => expandedIds.has(t.id)) ? (
-                                        <><span>Collapse</span><ChevronUp size={14} /></>
+                                        <><span>Collapse All</span><ChevronUp size={14} /></>
                                     ) : (
-                                        <><span>Expand</span><ChevronDown size={14} /></>
+                                        <><span>Expand All</span><ChevronDown size={14} /></>
                                     )}
                                 </button>
                             )}
                         </div>
 
+                        <p className="text-xs text-gray-400 mb-3">
+                            Individual tasks not linked to any project or assignment
+                        </p>
+
                         {groupedTasks.standaloneTasks.length === 0 ? (
                             <p className="text-center text-sm text-gray-400 py-8 italic">
-                                No tasks found
+                                No standalone tasks found
                             </p>
                         ) : (
                             <div className="space-y-1">
