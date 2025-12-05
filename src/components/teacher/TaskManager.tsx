@@ -139,6 +139,7 @@ export default function TaskManager() {
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [showClassSelector, setShowClassSelector] = useState(false); // Toggles class buttons visibility
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -246,6 +247,8 @@ export default function TaskManager() {
     useEffect(() => {
         try {
             sessionStorage.setItem('taskManager.activeCardId', activeCardId);
+            // Reset class selector when switching cards
+            setShowClassSelector(false);
         } catch (e) {
             console.warn('Failed to persist active card ID to sessionStorage:', e);
         }
@@ -618,6 +621,11 @@ export default function TaskManager() {
                 // For now, we don't support editing via cards (that's in handleEditClick)
                 handleSuccess(`${getTypeLabel(formData.type)} updated!`);
             }
+
+            // Mark card as not dirty before closing (prevents "unsaved changes" prompt)
+            setOpenCards(prev => prev.map(c => 
+                c.id === cardId ? { ...c, isDirty: false } : c
+            ));
 
             // Remove the card after saving
             closeCard(cardId);
@@ -1092,20 +1100,20 @@ export default function TaskManager() {
                         </div>
 
                         {/* Description & Attachments Section */}
-                        <div className="flex-1 flex flex-col space-y-4">
-                            {/* Description */}
-                            <div className="flex-1 flex flex-col min-h-0">
-                                <div className="relative flex-1 group">
+                        <div className="flex-1 flex flex-col space-y-4 min-h-0 overflow-hidden">
+                            {/* Description - Always expands to fill available space */}
+                            <div className="flex-1 min-h-[100px] relative">
+                                <div className="absolute inset-0">
                                     <textarea
                                         ref={descriptionRef}
                                         value={activeFormData.description}
                                         onChange={e => updateActiveCard('description', e.target.value)}
                                         onPaste={handlePaste}
-                                        className="w-full h-full min-h-[180px] px-5 py-4 rounded-lg border-[2px] transition-all duration-200 bg-gray-50/50 dark:bg-gray-900/30 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-600 text-sm resize-none leading-relaxed hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-200/50 dark:focus:ring-gray-700/50"
+                                        className="w-full h-full px-5 py-4 rounded-lg border-[2px] transition-all duration-300 bg-gray-50/50 dark:bg-gray-900/30 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-600 text-sm resize-none leading-relaxed hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-200/50 dark:focus:ring-gray-700/50"
                                         placeholder="Describe this task..."
                                     />
                                     {/* Empty state placeholder - centered */}
-                                    {!activeFormData.description && (
+                                    {!activeFormData.description && !showClassSelector && (
                                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 text-sm flex flex-col items-center gap-2 opacity-60">
                                             <svg className="w-6 h-6 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
@@ -1206,24 +1214,119 @@ export default function TaskManager() {
                                     />
                                 </div>
 
-                                {/* Save Button - Green like Task button */}
+                                {/* Save Button - Expands to show class options */}
                                 <button
                                     type="button"
-                                    onClick={() => handleSaveCard(activeCardId)}
-                                    disabled={isSubmitting || !activeFormData.title.trim()}
-                                    className="py-2.5 px-4 rounded-lg border-[2px] border-green-500 bg-brand-lightSurface dark:bg-brand-darkSurface text-green-500 font-bold transition-all duration-200 hover:bg-green-500/10 hover:shadow-[0_0_12px_rgba(74,222,128,0.15)] focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 select-none active:scale-[0.98]"
+                                    onClick={() => {
+                                        if (!activeFormData.title.trim()) {
+                                            handleError("Please include a title before saving.");
+                                            return;
+                                        }
+                                        setShowClassSelector(!showClassSelector);
+                                    }}
+                                    disabled={isSubmitting}
+                                    className={`relative py-2.5 px-4 rounded-lg border-[2px] transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                                        showClassSelector 
+                                            ? 'border-green-500 bg-green-500/10 shadow-[0_0_12px_rgba(74,222,128,0.25)]' 
+                                            : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500 hover:shadow-[0_0_12px_rgba(74,222,128,0.15)]'
+                                    }`}
                                 >
-                                    {isSubmitting ? (
-                                        <Loader size={16} className="animate-spin" />
-                                    ) : (
-                                        <Check size={16} />
-                                    )}
-                                    <span className="text-sm font-medium">
-                                        {isSubmitting ? 'Saving...' : 'Save/Add to Class'}
-                                    </span>
+                                    <div className={`flex items-center justify-center gap-2 transition-colors ${
+                                        showClassSelector 
+                                            ? 'text-green-500' 
+                                            : 'text-green-400 group-hover:text-green-500'
+                                    }`}>
+                                        {isSubmitting ? (
+                                            <Loader size={16} className="animate-spin" />
+                                        ) : showClassSelector ? (
+                                            <ChevronDown size={16} className="rotate-180 transition-transform" />
+                                        ) : (
+                                            <Check size={16} />
+                                        )}
+                                        <span className="text-sm font-medium">
+                                            {isSubmitting ? 'Saving...' : 'Save/Add to Class'}
+                                        </span>
+                                    </div>
                                 </button>
                             </div>
                         </div>
+
+                        {/* Expandable Class Selector - Shows when Save button is clicked */}
+                        {showClassSelector && (
+                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700 animate-fade-in flex-shrink-0">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Select classes to add this task:</span>
+                                </div>
+                                {loadingRooms ? (
+                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                ) : rooms.length === 0 ? (
+                                    <p className="text-sm text-gray-500">No classes created yet. Create a class first.</p>
+                                ) : (
+                                    <div className="flex flex-wrap gap-2">
+                                        {rooms.map(room => {
+                                            const isSelected = activeFormData.selectedRoomIds.includes(room.id);
+                                            const roomColor = room.color || '#3B82F6';
+                                            return (
+                                                <button
+                                                    key={room.id}
+                                                    type="button"
+                                                    onClick={() => handleRoomToggle(room.id)}
+                                                    style={{
+                                                        '--room-color': roomColor,
+                                                        '--room-color-bg': `${roomColor}15`,
+                                                        '--room-color-hover': `${roomColor}25`,
+                                                        '--room-color-glow': `${roomColor}35`,
+                                                        borderColor: roomColor,
+                                                        backgroundColor: isSelected ? `${roomColor}15` : 'transparent',
+                                                        color: roomColor,
+                                                        boxShadow: isSelected ? `0 0 12px ${roomColor}25` : 'none',
+                                                    } as React.CSSProperties}
+                                                    className={`
+                                                        flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all border-[2px]
+                                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
+                                                        hover:shadow-lg active:scale-[0.98]
+                                                        min-h-[44px]
+                                                        [&:hover]:!bg-[var(--room-color-hover)]
+                                                        [&:focus-visible]:!bg-[var(--room-color-glow)]
+                                                        [&:focus-visible]:!shadow-[0_0_16px_var(--room-color-hover)]
+                                                    `}
+                                                >
+                                                    {isSelected && <Check size={14} />}
+                                                    {room.name}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                                
+                                {/* Save & Close button */}
+                                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            await handleSaveCard(activeCardId);
+                                            setShowClassSelector(false);
+                                        }}
+                                        disabled={isSubmitting || activeFormData.selectedRoomIds.length === 0}
+                                        className="flex-1 py-2.5 px-4 rounded-lg border-[2px] border-green-500 bg-green-500/10 text-green-500 font-bold transition-all hover:bg-green-500/20 hover:shadow-[0_0_12px_rgba(74,222,128,0.25)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                    >
+                                        {isSubmitting ? (
+                                            <Loader size={16} className="animate-spin" />
+                                        ) : (
+                                            <Check size={16} />
+                                        )}
+                                        Save to {activeFormData.selectedRoomIds.length} Class{activeFormData.selectedRoomIds.length !== 1 ? 'es' : ''}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowClassSelector(false)}
+                                        className="py-2.5 px-4 rounded-lg border-[2px] border-gray-300 dark:border-gray-600 text-gray-500 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Class Assignment - Only shown after task is saved (not new) */}
                         {!activeCard?.isNew && (
@@ -1323,13 +1426,24 @@ export default function TaskManager() {
                                         <button
                                             key={dateStr}
                                             onClick={() => setSelectedDate(dateStr)}
-                                            className="flex flex-col items-center justify-center p-2 rounded-lg transition-all hover:bg-gray-50 dark:hover:bg-gray-800"
+                                            className={`
+                                                flex flex-col items-center justify-center p-2 rounded-lg transition-all
+                                                hover:bg-gray-50 dark:hover:bg-gray-800
+                                                focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50
+                                                ${isSelected ? 'bg-brand-accent/10' : ''}
+                                            `}
                                         >
-                                            <span className={`text-xs font-medium ${isToday ? 'text-brand-accent' : 'text-gray-500'}`}>
+                                            <span className={`text-xs font-medium transition-colors ${
+                                                isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-2' : ''
+                                            } ${
+                                                isSelected
+                                                    ? 'text-brand-accent' 
+                                                    : 'text-gray-500'
+                                            }`}>
                                                 {date.toLocaleDateString('en-US', { weekday: 'short' })}
                                             </span>
                                             <span className={`
-                                                text-sm font-bold mt-1 px-2 py-0.5
+                                                text-sm font-bold mt-1 px-2 py-0.5 transition-colors
                                                 ${isSelected
                                                     ? 'text-brand-accent'
                                                     : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}

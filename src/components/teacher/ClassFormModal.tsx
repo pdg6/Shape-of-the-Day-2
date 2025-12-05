@@ -115,38 +115,49 @@ export const ClassFormModal: React.FC = () => {
                     <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
                     <button onClick={() => setIsClassModalOpen(false)}><X className="w-6 h-6 text-gray-500" /></button>
                 </div>
+                {/* Law of Common Region: Group related fields visually */}
                 <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Class Name</label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={e => setFormData({ ...formData, name: e.target.value })}
-                            className="input-base input-focus"
-                            placeholder="e.g. Period 1 - Math"
-                        />
+                    {/* Basic Info Section - Grouped with border */}
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 space-y-4">
+                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Basic Information</h4>
+                        <div>
+                            <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Class Name <span className="text-red-500">*</span></label>
+                            <input
+                                type="text"
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                className="input-base input-focus"
+                                placeholder="e.g. Period 1 - Math"
+                                required
+                            />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Subject</label>
+                                <input
+                                    type="text"
+                                    value={formData.subject}
+                                    onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                                    className="input-base input-focus"
+                                    placeholder="e.g. Math"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Grade Level</label>
+                                <input
+                                    type="text"
+                                    value={formData.gradeLevel}
+                                    onChange={e => setFormData({ ...formData, gradeLevel: e.target.value })}
+                                    className="input-base input-focus"
+                                    placeholder="e.g. 10th"
+                                />
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Subject</label>
-                        <input
-                            type="text"
-                            value={formData.subject}
-                            onChange={e => setFormData({ ...formData, subject: e.target.value })}
-                            className="input-base input-focus"
-                            placeholder="e.g. Mathematics"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Grade Level</label>
-                        <input
-                            type="text"
-                            value={formData.gradeLevel}
-                            onChange={e => setFormData({ ...formData, gradeLevel: e.target.value })}
-                            className="input-base input-focus"
-                            placeholder="e.g. 10th Grade"
-                        />
-                    </div>
-                    <div>
+                    
+                    {/* Appearance Section - Separate visual group */}
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700">
+                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Appearance</h4>
                         <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Theme Color</label>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">This color will accent both teacher and student views</p>
                         <div className="flex flex-wrap gap-2">
@@ -154,13 +165,18 @@ export const ClassFormModal: React.FC = () => {
                                 <button
                                     key={color}
                                     onClick={() => setFormData({ ...formData, color })}
-                                    className={`w-8 h-8 rounded-full border-[3px] transition-all ${formData.color === color ? 'border-brand-textDarkPrimary dark:border-white scale-110 ring-2 ring-offset-2 ring-offset-brand-lightSurface dark:ring-offset-brand-darkSurface' : 'border-transparent hover:scale-105'}`}
+                                    /* Fitts's Law: Larger touch targets (44x44px) for color selection */
+                                    className={`w-11 h-11 rounded-full border-[3px] transition-all ${formData.color === color ? 'border-brand-textDarkPrimary dark:border-white scale-110 ring-2 ring-offset-2 ring-offset-brand-lightSurface dark:ring-offset-brand-darkSurface' : 'border-transparent hover:scale-105'}`}
                                     style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 0 2px ${color}40` : undefined }}
                                     title={`Select ${color} as theme color`}
+                                    aria-label={`Select theme color ${color}`}
+                                    aria-pressed={formData.color === color}
                                 />
                             ))}
                         </div>
                     </div>
+                    
+                    {/* Primary action button - Large touch target */}
                     <button
                         onClick={handleSaveClass}
                         className="w-full py-3 bg-brand-accent text-white font-bold rounded-xl mt-4 hover:opacity-90 transition-all"

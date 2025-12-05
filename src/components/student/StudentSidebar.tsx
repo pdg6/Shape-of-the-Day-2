@@ -1,5 +1,6 @@
 import React from 'react';
 import { LogOut, UserCircle, ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings, FolderOpen } from 'lucide-react';
+import { ProgressBar } from '../shared/ProgressIndicator';
 
 interface StudentSidebarProps {
     studentName: string;
@@ -18,13 +19,15 @@ interface StudentSidebarProps {
 /**
  * StudentSidebar - Desktop sidebar for student view
  *
- * Contains navigation (Tasks, Schedule) and student info:
+ * Implements Serial Position Effect: Most important items (Tasks, Sign Out)
+ * are placed at first and last positions for better recall.
+ * 
+ * Contains navigation (Tasks, Projects, Schedule) and student info:
  * 1. Student Name (personalization)
  * 2. Class Name (context)
- * 3. Current Date (temporal context)
- * 4. Tasks Progress (status)
- * 5. Dark/Light Mode Toggle (preference)
- * 6. Sign Out Button (exit action)
+ * 3. Tasks Progress (Goal-Gradient Effect)
+ * 4. Dark/Light Mode Toggle (preference)
+ * 5. Sign Out Button (exit action)
  */
 const StudentSidebar: React.FC<StudentSidebarProps> = ({
     studentName,
@@ -39,10 +42,11 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
     onToggleCollapse,
     onOpenSettings
 }) => {
+    // Serial Position Effect: Primary action (Tasks) first, secondary items middle, important action (Schedule) last
     const navItems = [
-        { id: 'tasks' as const, label: 'Tasks', icon: ListTodo },
-        { id: 'projects' as const, label: 'Projects', icon: FolderOpen },
-        { id: 'schedule' as const, label: 'Schedule', icon: CalendarDays },
+        { id: 'tasks' as const, label: 'Tasks', icon: ListTodo, priority: 'primary' },
+        { id: 'projects' as const, label: 'Projects', icon: FolderOpen, priority: 'secondary' },
+        { id: 'schedule' as const, label: 'Schedule', icon: CalendarDays, priority: 'primary' },
     ];
 
     return (
@@ -107,7 +111,23 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
 
             {/* Info Cards - Removed as requested */}
             <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-3 ${isCollapsed ? 'hidden' : ''}`}>
-                {/* Content removed to reduce redundancy */}
+                {/* Goal-Gradient Effect: Show progress to motivate completion */}
+                {totalTasks > 0 && (
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border-2 border-gray-100 dark:border-gray-700">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Today's Progress</span>
+                            {tasksCompleted === totalTasks && (
+                                <span className="text-xs font-bold text-green-500">🎉 Complete!</span>
+                            )}
+                        </div>
+                        <ProgressBar 
+                            current={tasksCompleted} 
+                            total={totalTasks}
+                            variant="success"
+                            size="md"
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Bottom Actions - Always visible at bottom */}

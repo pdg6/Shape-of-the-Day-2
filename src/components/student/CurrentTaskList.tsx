@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle } from 'lucide-react';
+import { AlertCircle, HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, Sparkles } from 'lucide-react';
 import { Task, TaskStatus, QuestionEntry } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { sanitizeComment, filterProfanity, escapeHtml } from '../../utils/security';
 import { addQuestionToTask } from '../../services/firestoreService';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
+import { ProgressBar } from '../shared/ProgressIndicator';
+import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
 
 /**
  * Configuration for the different task status actions.
@@ -388,8 +390,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                         </div>
                     )}
 
-                    {/* Status Action Buttons */}
-                    <div className="flex items-center gap-1 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 mt-auto">
+                    {/* Status Action Buttons - Fitts's Law: 44px minimum touch targets */}
+                    <div className="flex items-center gap-1.5 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 mt-auto">
                         {mainStatusActions.map((action) => {
                             const Icon = action.icon;
                             const isActive = task.status === action.id;
@@ -402,7 +404,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                                     aria-label={action.label}
                                     className={`
                                         p-2.5 rounded-lg transition-all duration-200 relative group
-                                        min-w-[40px] min-h-[40px] flex items-center justify-center
+                                        min-w-[44px] min-h-[44px] flex items-center justify-center
                                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface
                                         ${isActive
                                             ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm ring-1 ring-black/5 dark:ring-white/10`
@@ -495,6 +497,21 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
     classroomId 
 }) => {
     const [overlayTask, setOverlayTask] = useState<Task | null>(null);
+    const [showCelebration, setShowCelebration] = useState(false);
+    const [previousProgress, setPreviousProgress] = useState(0);
+
+    // Track task completion for celebrations (Peak-End Rule)
+    const completedCount = tasks.filter(t => t.status === 'done').length;
+    const currentProgress = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+    const allComplete = completedCount === tasks.length && tasks.length > 0;
+
+    // Detect when all tasks are completed
+    useEffect(() => {
+        if (allComplete && previousProgress < 100) {
+            setShowCelebration(true);
+        }
+        setPreviousProgress(currentProgress);
+    }, [allComplete, currentProgress, previousProgress]);
 
     // Helper function to format a single date
     const formatSingleDate = (dateString: string): string => {
@@ -590,6 +607,18 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
 
     return (
         <div className="flex flex-col gap-4 w-full">
+            {/* Goal-Gradient Effect: Progress bar at top motivates completion */}
+            {tasks.length > 0 && (
+                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+                    <ProgressBar 
+                        current={completedCount} 
+                        total={tasks.length}
+                        variant="success"
+                        showLabel={true}
+                    />
+                </div>
+            )}
+            
             {sortedTasks.map((task) => (
                 <TaskCard
                     key={task.id}
@@ -610,6 +639,19 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
                     classroomId={classroomId}
                 />
             )}
+            
+            {/* Peak-End Rule: Celebration when all tasks complete */}
+            <CelebrationModal
+                isOpen={showCelebration}
+                onClose={() => setShowCelebration(false)}
+                type="all-tasks"
+            />
+            
+            {/* Progress milestones (25%, 50%, 75%) */}
+            <ProgressCelebration 
+                progress={currentProgress} 
+                previousProgress={previousProgress} 
+            />
         </div>
     );
 };

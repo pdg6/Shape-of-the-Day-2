@@ -4,6 +4,45 @@ This document outlines the standard UI patterns, animations, color themes, and r
 
 ---
 
+## Laws of UX Implementation
+
+This application follows research-backed UX principles from [Laws of UX](https://lawsofux.com/). Key implementations:
+
+### Performance & Perception
+- **Doherty Threshold (<400ms):** Skeleton loaders provide instant feedback during data loading
+- **Perceived Performance:** Progress indicators and animations keep users engaged during waits
+
+### Cognitive Load Reduction  
+- **Hick's Law:** Progressive disclosure reduces choices; smart defaults minimize decisions
+- **Miller's Law:** Navigation limited to 3-5 primary items; content chunked appropriately
+- **Choice Overload:** Forms use categorized sections and sensible defaults
+
+### Touch & Interaction
+- **Fitts's Law:** All interactive elements minimum 44×44px; adequate spacing between targets
+- **Touch Targets:** Buttons, color pickers, status icons all meet accessibility guidelines
+
+### Motivation & Completion
+- **Goal-Gradient Effect:** Progress bars show completion status, motivating users near the finish
+- **Zeigarnik Effect:** Incomplete task counts visible; "continue where you left off" patterns
+- **Peak-End Rule:** Celebration animations on task completion create memorable positive endings
+
+### Navigation & Memory
+- **Serial Position Effect:** Most important nav items (Tasks, Sign Out) at first/last positions
+- **Jakob's Law:** UI patterns follow established conventions users already know
+
+### Familiarity & Guidance
+- **Paradox of Active User:** Contextual tooltips and inline help instead of manuals
+- **Tesler's Law:** System absorbs complexity; smart defaults reduce user burden
+
+### Input Handling
+- **Postel's Law:** Liberal input acceptance (spaces, dashes auto-stripped from codes)
+
+### Visual Grouping (Gestalt)
+- **Law of Common Region:** Related form fields grouped with borders/backgrounds
+- **Law of Proximity:** Proper spacing creates visual groupings
+
+---
+
 ## Core Design Principles
 
 - **Solid Surfaces:** Cards and tiles use solid backgrounds (`bg-brand-lightSurface` / `dark:bg-brand-darkSurface`) to ensure readability.
