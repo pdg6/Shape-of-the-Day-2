@@ -42,14 +42,17 @@
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     
-    /* Border Radius */
-    --radius-sm: 0.5rem;
-    --radius-md: 0.75rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
+    /* Border Radius - Standardized hierarchy:
+       - rounded-xl (12px): Container/Card level (outermost)
+       - rounded-lg (8px): Nested elements within cards
+       - rounded-md (6px): Buttons, icons, interactive elements */
+    --radius-sm: 0.375rem;  /* 6px - rounded-md */
+    --radius-md: 0.5rem;    /* 8px - rounded-lg */
+    --radius-lg: 0.75rem;   /* 12px - rounded-xl */
+    --radius-xl: 1rem;      /* 16px - rounded-2xl (legacy, avoid) */
     
-    /* Border Width */
-    --border-width: 3px;
+    /* Border Width - Standardized to 2px */
+    --border-width: 2px;
     
     /* Transitions */
     --transition-fast: 150ms;
@@ -144,7 +147,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        Reusable Input Classes
        ============================================ */
     .input-field {
-        @apply w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200;
+        @apply w-full px-3 py-2 rounded-lg border-2 transition-all duration-200;
         @apply bg-transparent font-medium;
         @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
         @apply border-gray-200 dark:border-gray-700;
@@ -154,7 +157,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
     
     .input-field-sm {
-        @apply w-full px-3 py-2 rounded-xl border-[3px] transition-all duration-200;
+        @apply w-full px-3 py-2 rounded-lg border-2 transition-all duration-200;
         @apply bg-transparent font-medium text-sm;
         @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
         @apply border-gray-200 dark:border-gray-700;
@@ -167,7 +170,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        Card Interactive States
        ============================================ */
     .card-interactive {
-        @apply rounded-xl border-[3px] transition-all cursor-pointer;
+        @apply rounded-xl border-2 transition-all cursor-pointer;
         @apply border-gray-200 dark:border-gray-700;
         @apply hover:border-gray-300 dark:hover:border-gray-600;
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
@@ -181,18 +184,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        Button Ghost/Outline Variants
        ============================================ */
     .btn-ghost {
-        @apply flex items-center justify-center gap-2 h-12 px-4 rounded-xl;
+        @apply flex items-center justify-center gap-2 h-12 px-4 rounded-md;
         @apply font-bold transition-all duration-200;
-        @apply border-[3px] border-transparent;
+        @apply border-2 border-transparent;
         @apply hover:border-brand-accent text-brand-accent hover:bg-brand-accent/5;
         @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/20;
         @apply disabled:opacity-50 disabled:cursor-not-allowed;
     }
     
     .btn-ghost-danger {
-        @apply flex items-center justify-center gap-2 h-12 px-4 rounded-xl;
+        @apply flex items-center justify-center gap-2 h-12 px-4 rounded-md;
         @apply font-bold transition-all duration-200;
-        @apply border-[3px] border-transparent;
+        @apply border-2 border-transparent;
         @apply text-red-500;
         @apply hover:border-red-500 hover:bg-red-500/5;
         @apply focus:outline-none focus:ring-2 focus:ring-red-500/20;
@@ -315,7 +318,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .input-base {
-        @apply w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200;
+        @apply w-full px-4 py-2.5 rounded-lg border-2 transition-all duration-200;
         @apply bg-transparent;
         @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
         @apply border-gray-200 dark:border-gray-700;
@@ -339,7 +342,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .btn-primary-green {
-        @apply w-full py-2.5 px-4 rounded-xl border-[3px] transition-all duration-200;
+        @apply w-full py-2.5 px-4 rounded-md border-2 transition-all duration-200;
         @apply bg-transparent;
         @apply text-brand-accent font-bold;
         @apply border-brand-accent;
@@ -350,7 +353,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     .card-base {
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
-        @apply border-[3px] border-gray-200 dark:border-gray-700;
+        @apply border-2 border-gray-200 dark:border-gray-700;
         @apply rounded-xl transition-colors;
     }
 

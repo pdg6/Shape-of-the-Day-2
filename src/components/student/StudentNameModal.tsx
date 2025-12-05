@@ -64,7 +64,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
             onClick={onClose}
         >
             <div
-                className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl w-full max-w-md p-8 transition-all duration-300 border-[3px] border-gray-200 dark:border-gray-700 relative"
+                className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-xl shadow-2xl w-full max-w-md p-8 transition-all duration-300 border-2 border-gray-200 dark:border-gray-700 relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button (only shown if onClose prop is provided) */}

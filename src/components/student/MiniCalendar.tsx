@@ -134,7 +134,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-xl border-[3px] transition-all duration-200 outline-none
+                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-lg border-2 transition-all duration-200 outline-none
                 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20
                 ${isSelected
                                     ? 'bg-brand-lightSurface dark:bg-brand-darkSurface border-brand-accent shadow-sm scale-105 z-10'

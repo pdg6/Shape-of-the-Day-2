@@ -50,7 +50,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
 
     return (
         <div
-            className="group relative flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl cursor-pointer"
+            className="group relative flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl cursor-pointer"
             style={{
                 borderColor: isHovered ? cardColor : undefined
             }}
@@ -78,7 +78,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         e.stopPropagation();
                         onEdit(classroom);
                     }}
-                    className={`flex items-center gap-2 p-2 -mr-2 rounded-lg text-sm font-bold text-gray-400 transition-colors ${isSelected ? 'hover:text-brand-accent hover:bg-brand-accent/10' : ''}`}
+                    className={`flex items-center gap-2 p-2 -mr-2 rounded-md text-sm font-bold text-gray-400 transition-colors ${isSelected ? 'hover:text-brand-accent hover:bg-brand-accent/10' : ''}`}
                     title="Edit Class"
                 >
                     <Edit2 size={14} />
@@ -96,7 +96,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             if (onViewStudents) onViewStudents(classroom.id);
                         }}
-                        className={`flex-1 text-left group/stats -m-2 p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
+                        className={`flex-1 text-left group/stats -m-2 p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
                     >
                         <p className={`text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Students</p>
                         <div className="flex items-baseline gap-2">
@@ -123,7 +123,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             if (onViewTasks) onViewTasks(classroom.id);
                         }}
-                        className={`flex-1 text-left group/stats -m-2 p-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
+                        className={`flex-1 text-left group/stats -m-2 p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
                     >
                         <p className={`text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Tasks</p>
                         <div className="flex items-baseline gap-2">
@@ -140,7 +140,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                 {/* Join Code - Premium Token Style */}
                 <button
                     onClick={handleCopyCode}
-                    className={`w-full group/code relative flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 transition-all duration-200 ${isSelected ? 'hover:border-brand-accent hover:bg-brand-accent/5' : ''}`}
+                    className={`w-full group/code relative flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 transition-all duration-200 ${isSelected ? 'hover:border-brand-accent hover:bg-brand-accent/5' : ''}`}
                     title="Click to copy join code"
                 >
                     <div className="flex flex-col items-start">
@@ -149,7 +149,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             {classroom.joinCode}
                         </span>
                     </div>
-                    <div className={`w-8 h-8 flex items-center justify-center rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 transition-transform ${isSelected ? 'group-hover/code:scale-110' : ''}`}>
+                    <div className={`w-8 h-8 flex items-center justify-center rounded-md bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 transition-transform ${isSelected ? 'group-hover/code:scale-110' : ''}`}>
                         {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className={`w-4 h-4 text-gray-400 ${isSelected ? 'group-hover/code:text-brand-accent' : ''}`} />}
                     </div>
                 </button>
@@ -164,7 +164,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             if (onManageTasks) onManageTasks(classroom.id);
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
                         title="Task Manager"
                     >
                         <ListTodo className="w-5 h-5" />
@@ -177,7 +177,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             if (onViewShape) onViewShape(classroom.id);
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
                         title="Shape of the Day"
                     >
                         <Presentation className="w-5 h-5" />
@@ -190,7 +190,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             if (onViewCalendar) onViewCalendar(classroom.id);
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
                         title="Class Calendar"
                     >
                         <Calendar className="w-5 h-5" />
@@ -203,7 +203,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             if (onViewData) onViewData(classroom.id);
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
+                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
                         title="Analytics"
                     >
                         <BarChart2 className="w-5 h-5" />

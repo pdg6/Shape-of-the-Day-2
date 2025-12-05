@@ -55,7 +55,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         onEditName();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
@@ -74,7 +74,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                 </button>
 
                 {/* Class Name */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
                             <BookOpen size={20} />
@@ -89,7 +89,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                 </div>
 
                 {/* Dark/Light Mode Toggle - Near top */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
                             {darkMode ? <Moon size={20} /> : <Sun size={20} />}
@@ -118,7 +118,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                 </div>
 
                 {/* Date */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
+                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
                             <Calendar size={20} />
@@ -133,7 +133,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                 </div>
 
                 {/* Tasks Progress */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3">
+                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
@@ -165,7 +165,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         onSignOut();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-[3px] border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">

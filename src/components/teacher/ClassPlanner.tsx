@@ -61,13 +61,13 @@ const ClassPlanner: React.FC = () => {
 
             <div className="grid gap-4">
                 {logs.length === 0 ? (
-                    <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
+                    <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
                         <p className="text-gray-500 dark:text-gray-400">No analytics logs found yet.</p>
                         <p className="text-sm text-gray-400 mt-2">Sign out a student to generate a log.</p>
                     </div>
                 ) : (
                     logs.map((log) => (
-                        <div key={log.id} className="bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 hover:border-brand-accent/30 transition-colors">
+                        <div key={log.id} className="bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-brand-accent/30 transition-colors">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">

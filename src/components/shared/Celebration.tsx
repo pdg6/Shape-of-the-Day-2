@@ -160,7 +160,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
                 
                 {/* Modal */}
                 <div 
-                    className="relative bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-2xl p-8 text-center max-w-sm w-full animate-celebration-pop"
+                    className="relative bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-2xl p-8 text-center max-w-sm w-full animate-celebration-pop"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Animated icon */}
@@ -180,7 +180,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
                     {type === 'milestone' && (
                         <button
                             onClick={onClose}
-                            className="mt-6 px-6 py-2 bg-brand-accent text-white font-bold rounded-xl hover:bg-brand-accent/90 transition-colors"
+                            className="mt-6 px-6 py-2 bg-brand-accent text-white font-bold rounded-md hover:bg-brand-accent/90 transition-colors"
                         >
                             Awesome!
                         </button>

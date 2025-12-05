@@ -250,8 +250,8 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     ${isParentType && hasChildren ? `
                         rounded-xl overflow-hidden
                         ${isExpanded 
-                            ? 'border-[3px] border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20' 
-                            : 'border-[3px] border-transparent hover:border-gray-200 dark:hover:border-gray-700'}
+                            ? 'border-2 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20' 
+                            : 'border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-700'}
                     ` : ''}
                     transition-all duration-200
                 `}
@@ -261,9 +261,9 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     className={`
                         flex items-center gap-3 py-3 px-4
                         ${!isParentType || !hasChildren ? `
-                            rounded-xl
+                            rounded-lg
                             ${isNested ? 'mx-2 my-1' : ''}
-                            border-[3px] border-transparent
+                            border-2 border-transparent
                             hover:border-gray-200 dark:hover:border-gray-700
                             hover:bg-gray-50 dark:hover:bg-gray-800/30
                         ` : `
@@ -321,7 +321,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                                 onClick={() => handleImport(task)}
                                 disabled={isImported}
                                 className={`
-                                    p-2 rounded-xl border-[3px] transition-all duration-200 text-sm font-medium
+                                    p-2 rounded-md border-2 transition-all duration-200 text-sm font-medium
                                     ${isImported
                                         ? 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
                                         : 'border-transparent bg-gray-100 dark:bg-gray-800 text-brand-accent hover:border-brand-accent hover:bg-brand-accent/10'
@@ -337,7 +337,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                         {hasChildren && isParentType && (
                             <button
                                 onClick={() => importAllChildren(node)}
-                                className="px-3 py-1.5 text-xs font-semibold bg-brand-accent text-white rounded-xl border-[3px] border-transparent hover:border-brand-accent/70 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-200"
+                                className="px-3 py-1.5 text-xs font-semibold bg-brand-accent text-white rounded-md border-2 border-transparent hover:border-brand-accent/70 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-200"
                                 title="Import all tasks"
                             >
                                 Import All
@@ -371,7 +371,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-1">
                     {title}
                 </h3>
-                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden p-1">
+                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden p-1">
                     {nodes.map((node, idx) => renderNode(node, `${title}-${idx}`, false))}
                 </div>
             </div>
@@ -400,13 +400,13 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search projects, assignments, tasks..."
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none hover:border-brand-accent/70 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none hover:border-brand-accent/70 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all duration-200"
                 />
             </div>
 
             {/* Empty State */}
             {isEmpty ? (
-                <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-600">
+                <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
                     <Inbox className="w-14 h-14 mx-auto text-gray-400 mb-4" />
                     <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary text-base">
                         {searchQuery 

@@ -185,7 +185,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="question-overlay-title"
-                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-[3px] ${borderColor} transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col`}
+                className={`bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-2 ${borderColor} transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col`}
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -255,7 +255,7 @@ const QuestionOverlay: React.FC<QuestionOverlayProps> = ({ task, onClose, onUpda
                             maxLength={maxChars}
                             autoComplete="off"
                             spellCheck={true}
-                            className="w-full h-32 p-3 rounded-xl bg-brand-light dark:bg-brand-dark border-[3px] border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-brand-accent resize-none transition-all outline-none"
+                            className="w-full h-32 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-2 border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent dark:focus:ring-offset-brand-darkSurface focus:border-brand-accent resize-none transition-all outline-none"
                             autoFocus
                             data-testid="question-input"
                         />
@@ -373,7 +373,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
     const mainStatusActions = STATUS_ACTIONS.filter(a => a.id !== 'todo');
 
     return (
-        <div className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-2xl hover:shadow-lg dark:hover:shadow-black/30 transition-all duration-300 border-[3px] ${cardBorderClass} w-full max-w-full min-h-[160px]`}>
+        <div className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-xl hover:shadow-lg dark:hover:shadow-black/30 transition-all duration-300 border-2 ${cardBorderClass} w-full max-w-full min-h-[160px]`}>
             {/* Main Content - Two Column Layout */}
             <div className="flex gap-6">
                 {/* Left Column - Title, Dates, Status Buttons */}
@@ -391,7 +391,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onUpdateStatus, onOpenOverlay
                     )}
 
                     {/* Status Action Buttons - Fitts's Law: 44px minimum touch targets */}
-                    <div className="flex items-center gap-1.5 bg-brand-light dark:bg-brand-dark p-1.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 mt-auto">
+                    <div className="flex items-center gap-1.5 bg-brand-light dark:bg-brand-dark p-1.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 mt-auto">
                         {mainStatusActions.map((action) => {
                             const Icon = action.icon;
                             const isActive = task.status === action.id;
@@ -583,7 +583,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
 
     if (tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl border-[3px] border-dashed border-gray-300 dark:border-gray-700 w-full text-center">
+            <div className="flex flex-col items-center justify-center py-16 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 w-full text-center">
                 <div className="w-16 h-16 bg-brand-light dark:bg-brand-dark rounded-full flex items-center justify-center mb-4">
                     <CheckCircle className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                 </div>
@@ -609,7 +609,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
         <div className="flex flex-col gap-4 w-full">
             {/* Goal-Gradient Effect: Progress bar at top motivates completion */}
             {tasks.length > 0 && (
-                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700">
                     <ProgressBar 
                         current={completedCount} 
                         total={tasks.length}

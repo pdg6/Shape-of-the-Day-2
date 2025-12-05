@@ -87,7 +87,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                     <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-gray-50/50 dark:bg-gray-900/20">
 
                         {/* Join URL */}
-                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-[3px] border-brand-accent/20 bg-brand-accent/5">
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-lg border-2 border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-fluid-xs text-brand-accent uppercase tracking-wider font-semibold mb-1">Join at</span>
                             <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 shape-of-the-day.com
@@ -95,14 +95,14 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                         </div>
 
                         {/* Class Code */}
-                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-xl border-[3px] border-brand-accent/20 bg-brand-accent/5">
+                        <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-lg border-2 border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-fluid-xs text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
                             <span className="text-xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
                             </span>
                         </div>
 
-                        <div className="w-48 aspect-square bg-white p-3 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm mt-2">
+                        <div className="w-48 aspect-square bg-white p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-sm mt-2">
                             <QRCodeSVG
                                 value={joinUrl}
                                 style={{ width: '100%', height: '100%' }}
@@ -130,7 +130,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border-2 border-gray-200 dark:border-gray-800 hover:border-brand-accent/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
                                         tabIndex={0}
                                         role="listitem"
                                     >

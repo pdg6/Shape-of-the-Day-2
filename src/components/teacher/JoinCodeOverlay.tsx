@@ -48,7 +48,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, classCode, cl
                     {/* Left: QR Code and Join Info */}
                     <div className="flex-1 flex flex-col items-center space-y-4">
                         {/* Join URL */}
-                        <div className="w-full flex flex-col items-center justify-center px-4 py-3 rounded-xl border-[3px] border-green-500/20 bg-green-500/5">
+                        <div className="w-full flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 border-green-500/20 bg-green-500/5">
                             <span className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider font-semibold mb-1">Join at</span>
                             <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 shape-of-the-day.com
@@ -56,7 +56,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, classCode, cl
                         </div>
 
                         {/* Class Code */}
-                        <div className="w-full flex flex-col items-center justify-center px-4 py-3 rounded-xl border-[3px] border-green-500/20 bg-green-500/5">
+                        <div className="w-full flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 border-green-500/20 bg-green-500/5">
                             <span className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider font-semibold mb-1">Class Code</span>
                             <span className="text-2xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
@@ -64,7 +64,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, classCode, cl
                         </div>
 
                         {/* QR Code */}
-                        <div className="w-56 h-56 bg-white p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-sm">
+                        <div className="w-56 h-56 bg-white p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-sm">
                             <QRCodeSVG
                                 value={joinUrl}
                                 style={{ width: '100%', height: '100%' }}
@@ -92,7 +92,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, classCode, cl
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 border-[3px] border-gray-200 dark:border-gray-800 hover:border-green-500/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        className="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border-2 border-gray-200 dark:border-gray-800 hover:border-green-500/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-green-500"
                                         tabIndex={0}
                                         role="listitem"
                                     >

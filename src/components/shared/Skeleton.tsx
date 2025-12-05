@@ -51,7 +51,7 @@ export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
  * Skeleton for task cards - matches TaskCard layout
  */
 export const SkeletonTaskCard: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-2xl border-[3px] border-gray-200 dark:border-gray-700 min-h-[160px]">
+    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 min-h-[160px]">
         <div className="flex gap-6">
             {/* Left Column */}
             <div className="flex flex-col gap-3 w-48 shrink-0">
@@ -59,7 +59,7 @@ export const SkeletonTaskCard: React.FC = () => (
                 <Skeleton className="h-4 w-24" />
                 <div className="flex gap-1 mt-auto">
                     {[1, 2, 3, 4].map(i => (
-                        <Skeleton key={i} className="w-10 h-10 rounded-lg" />
+                        <Skeleton key={i} className="w-10 h-10 rounded-md" />
                     ))}
                 </div>
             </div>
@@ -92,7 +92,7 @@ export const SkeletonTaskList: React.FC<{ count?: number }> = ({ count = 3 }) =>
 export const SkeletonSidebar: React.FC = () => (
     <div className="space-y-2 p-4">
         {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-12 w-full rounded-xl" />
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
         ))}
     </div>
 );
@@ -101,19 +101,19 @@ export const SkeletonSidebar: React.FC = () => (
  * Skeleton for calendar/schedule view
  */
 export const SkeletonCalendar: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
             <Skeleton className="h-6 w-32" />
             <div className="flex gap-2">
-                <Skeleton className="h-8 w-8 rounded-lg" />
-                <Skeleton className="h-8 w-8 rounded-lg" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
             </div>
         </div>
         {/* Days grid */}
         <div className="grid grid-cols-7 gap-2">
             {Array.from({ length: 35 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-10 rounded-lg" />
+                <Skeleton key={i} className="h-10 w-10 rounded-md" />
             ))}
         </div>
     </div>
@@ -123,7 +123,7 @@ export const SkeletonCalendar: React.FC = () => (
  * Skeleton for class cards in teacher view
  */
 export const SkeletonClassCard: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700">
         <div className="flex items-start gap-4">
             <Skeleton className="w-12 h-12 rounded-full" />
             <div className="flex-1">
@@ -146,7 +146,7 @@ export const SkeletonPage: React.FC = () => (
         {/* Sidebar skeleton */}
         <aside className="hidden md:flex flex-col w-72 bg-brand-lightSurface dark:bg-brand-darkSurface border-r border-gray-200 dark:border-gray-700">
             <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
-                <Skeleton className="h-8 w-8 rounded-lg mr-2" />
+                <Skeleton className="h-8 w-8 rounded-md mr-2" />
                 <Skeleton className="h-6 w-32" />
             </div>
             <SkeletonSidebar />

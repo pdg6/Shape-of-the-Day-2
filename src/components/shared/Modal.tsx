@@ -88,7 +88,7 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 shadow-2xl transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
+                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-2xl transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
                 onClick={e => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between px-6 pt-6 pb-4">
@@ -97,7 +97,7 @@ export const Modal: React.FC<ModalProps> = ({
                     </h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none"
+                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none"
                         aria-label="Close"
                     >
                         <X className="w-5 h-5" />

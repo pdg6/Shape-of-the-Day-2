@@ -226,7 +226,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             ))}
 
                             {/* Summary / Create Card - Moved to end */}
-                            <div className="flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
                                 {/* Header */}
                                 <div className="h-24 p-6 flex items-start justify-between bg-gray-50/50 dark:bg-gray-900/20">
                                     <div>
@@ -274,10 +274,10 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </div>
 
                                 {/* Footer Action */}
-                                <div className="p-4 border-t-[3px] border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+                                <div className="p-4 border-t-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
                                     <button
                                         onClick={openCreateModal}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
                                     >
                                         <Plus className="w-5 h-5" />
                                         <span>Create New Class</span>
@@ -291,7 +291,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 {internalTab === 'history' && (
                     <div className="h-full flex flex-col">
                         {/* History Toolbar */}
-                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <Button
@@ -313,7 +313,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                         {/* Calendar Grid */}
                         <div className="flex-1 card-base overflow-hidden flex flex-col">
-                            <div className="grid grid-cols-7 border-b-[3px] border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                            <div className="grid grid-cols-7 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                                     <div key={day} className="p-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
                                         {day}
@@ -518,14 +518,11 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {/* Daily Summary Modal */}
             {showDaySummary && selectedDate && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl border-[3px] border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-200">
-                        <div className="p-6 border-b-[3px] border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-t-xl">
-                            <div>
-                                <h3 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                    {format(selectedDate, 'EEEE, MMMM do, yyyy')}
-                                </h3>
-                                <p className="text-gray-500">Daily Summary</p>
-                            </div>
+                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-200">
+                        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-t-xl">
+                            <h3 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                {classrooms.find(c => c.id === currentClassId)?.name || 'Class'}'s schedule for {format(selectedDate, 'EEEE, MMMM do, yyyy')}
+                            </h3>
                             <Button
                                 variant="icon"
                                 onClick={() => setShowDaySummary(false)}
@@ -544,19 +541,19 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 <div className="space-y-6">
                                     {/* Stats Cards */}
                                     <div className="grid grid-cols-3 gap-4">
-                                        <div className="p-4 bg-brand-accent/10 rounded-xl border-[3px] border-brand-accent/20">
+                                        <div className="p-4 bg-brand-accent/10 rounded-xl border-2 border-brand-accent/20">
                                             <span className="text-xs font-bold text-brand-accent uppercase">Students Present</span>
                                             <p className="text-2xl font-bold text-brand-accent">
                                                 {new Set(getLogsForDate(selectedDate).map(l => l.studentId)).size}
                                             </p>
                                         </div>
-                                        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border-[3px] border-green-100 dark:border-green-800">
+                                        <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border-2 border-green-100 dark:border-green-800">
                                             <span className="text-xs font-bold text-green-600 dark:text-green-400 uppercase">Tasks Completed</span>
                                             <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                                                 {getLogsForDate(selectedDate).reduce((acc, l) => acc + l.taskPerformance.length, 0)}
                                             </p>
                                         </div>
-                                        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border-[3px] border-amber-100 dark:border-amber-800">
+                                        <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border-2 border-amber-100 dark:border-amber-800">
                                             <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase">Stuck Incidents</span>
                                             <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">
                                                 {getLogsForDate(selectedDate).reduce((acc, l) => acc + l.taskPerformance.filter(t => t.statusWasStuck).length, 0)}
@@ -565,9 +562,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
 
                                     {/* Student List Table */}
-                                    <div className="border-[3px] border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                                    <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                                         <table className="w-full text-left">
-                                            <thead className="bg-gray-100 dark:bg-gray-800 border-b-[3px] border-gray-200 dark:border-gray-700">
+                                            <thead className="bg-gray-100 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                                                 <tr>
                                                     <th className="p-4 text-xs font-bold text-gray-500 uppercase">Student Name</th>
                                                     <th className="p-4 text-xs font-bold text-gray-500 uppercase">Session Duration</th>
@@ -587,7 +584,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                         <td className="p-4">
                                                             <div className="flex flex-wrap gap-2">
                                                                 {log.taskPerformance.map((t, i) => (
-                                                                    <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs border-[3px] border-gray-200 dark:border-gray-700" title={t.title}>
+                                                                    <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs border-2 border-gray-200 dark:border-gray-700" title={t.title}>
                                                                         {t.title.substring(0, 15)}{t.title.length > 15 ? '...' : ''}
                                                                         {t.statusWasStuck && <span className="ml-1 text-amber-500">⚠️</span>}
                                                                     </span>

@@ -56,8 +56,8 @@ export function TaskTabBar({
                                 transition-all duration-200 ease-out
                                 rounded-t-lg
                                 ${isActive 
-                                    ? 'border-[2px] border-b-0 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-[0_-2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.3)]'
-                                    : 'border-[2px] border-b-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer -mb-[1px]'
+                                    ? 'border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-[0_-2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_-2px_8px_rgba(0,0,0,0.3)]'
+                                    : 'border-2 border-b-0 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer -mb-[1px]'
                                 }
                             `}
                             onClick={() => !isActive && onTabClick(tab.id)}
@@ -142,7 +142,7 @@ export function TaskTabBar({
                     className="
                         group relative flex items-center justify-center gap-1.5
                         px-4 py-2.5 rounded-t-lg -mb-[1px]
-                        border-[2px] border-b-0 border-gray-300 dark:border-gray-600
+                        border-2 border-b-0 border-gray-300 dark:border-gray-600
                         bg-gray-50 dark:bg-gray-800
                         hover:bg-gray-100 dark:hover:bg-gray-700
                         transition-all duration-200

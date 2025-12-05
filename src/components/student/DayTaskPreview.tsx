@@ -52,7 +52,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
     // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
-            <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-[3px] border-gray-200 dark:border-gray-700 text-center mb-6">
+            <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-center mb-6">
                 <p className="text-gray-400 dark:text-gray-500">No tasks scheduled for this day.</p>
             </div>
         );
@@ -66,7 +66,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                 </h3>
                 {!hideImportButtons && (
                     allTasksImported ? (
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent/10 text-brand-accent border-[3px] border-brand-accent/30">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent/10 text-brand-accent border-2 border-brand-accent/30">
                             <Check className="w-4 h-4" />
                             <span className="font-medium hidden sm:inline">All Added</span>
                             <span className="font-medium sm:hidden">Added</span>
@@ -74,7 +74,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     ) : (
                         <button
                             onClick={onImport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10"
                         >
                             <Download className="w-4 h-4" />
                             <span className="font-medium hidden sm:inline">
@@ -112,13 +112,13 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     return (
                         <div
                             key={task.id}
-                            className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-[3px] ${borderClass} transition-all duration-200 hover:brightness-95 dark:hover:brightness-110`}
+                            className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-lg border-2 ${borderClass} transition-all duration-200 hover:brightness-95 dark:hover:brightness-110`}
                         >
                             {/* Import Button - Top Right */}
                             {onImportTask && !hideImportButtons && (
                                 importedTaskIds.has(task.id) ? (
                                     <div
-                                        className="absolute top-3 right-3 p-2 rounded-lg bg-brand-accent/10 text-brand-accent border-[3px] border-brand-accent/30"
+                                        className="absolute top-3 right-3 p-2 rounded-lg bg-brand-accent/10 text-brand-accent border-2 border-brand-accent/30"
                                         title="Already added"
                                         aria-label={`${task.title} already added`}
                                     >
@@ -127,7 +127,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                                 ) : (
                                     <button
                                         onClick={() => onImportTask(task)}
-                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-[3px] border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10 active:text-brand-accent"
+                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10 active:text-brand-accent"
                                         title="Import this task"
                                         aria-label={`Import ${task.title}`}
                                     >

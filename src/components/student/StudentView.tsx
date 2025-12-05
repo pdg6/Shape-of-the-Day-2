@@ -374,7 +374,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         classroomId={classId}
                                     />
                                 ) : (
-                                    <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
+                                    <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
                                         <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                             {previewTasks.length > 0
                                                 ? "Import these tasks to start working on them."
@@ -447,7 +447,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     classroomId={classId}
                                 />
                             ) : (
-                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-300 dark:border-gray-700">
+                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
                                     <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                         {previewTasks.length > 0
                                             ? "Import these tasks to start working on them."
@@ -537,7 +537,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setShowMenuModal(true)}
-                            className="flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                            className="flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Menu"
                         >
                             <Menu className="w-5 h-5" />
@@ -547,7 +547,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setMobileTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
+                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -560,7 +560,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setMobileTab('projects')}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'projects'
+                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'projects'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -573,7 +573,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setMobileTab('schedule')}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
+                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}

@@ -4,15 +4,25 @@ export const spacing = {
     macro: '1.5rem',  // 24px
 }
 
+/**
+ * Border Radius Hierarchy:
+ * - rounded-xl (0.75rem/12px): Container/Card level (outermost)
+ * - rounded-lg (0.5rem/8px): Nested elements within cards
+ * - rounded-md (0.375rem/6px): Buttons, icons, interactive elements
+ * - rounded-full: Pills, badges, avatars
+ */
 export const borderRadius = {
-    base: '0.75rem',  // 12px - rounded-xl
-    card: '0.75rem',
-    button: '0.75rem',
+    container: '0.75rem',  // 12px - rounded-xl - Cards, modals, major surfaces
+    nested: '0.5rem',      // 8px - rounded-lg - Elements inside cards
+    interactive: '0.375rem', // 6px - rounded-md - Buttons, icons
 }
 
+/**
+ * Border Width:
+ * - Standardized to 2px across all elements
+ */
 export const borderWidth = {
-    surface: '3px',   // Cards, major surfaces
-    element: '2px',   // Interactive elements
+    default: '2px',   // Standard border width for all elements
 }
 
 export const zIndex = {

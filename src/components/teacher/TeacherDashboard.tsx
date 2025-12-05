@@ -174,7 +174,7 @@ const TeacherDashboard: React.FC = () => {
                                 <button
                                     onClick={() => handleTabChange(item.id)}
                                     className={`
-                                    group relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px] overflow-hidden
+                                    group relative flex items-center rounded-lg transition-all duration-200 font-bold border-2 overflow-hidden
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
                                     focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
@@ -223,7 +223,7 @@ const TeacherDashboard: React.FC = () => {
                                                     <button
                                                         onClick={() => handleClassSelect(cls.id)}
                                                         className={`
-                                                        w-full text-left p-2 text-sm rounded-lg font-medium transition-colors
+                                                        w-full text-left p-2 text-sm rounded-md font-medium transition-colors
                                                         ${currentClassId === cls.id ? 'text-brand-accent' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}
                                                     `}
                                                     >
@@ -234,7 +234,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setIsClassModalOpen(true)}
-                                                    className="w-full text-left p-2 text-sm rounded-lg font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:text-brand-accent transition-colors flex items-center gap-2 mt-2"
+                                                    className="w-full text-left p-2 text-sm rounded-md font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:text-brand-accent transition-colors flex items-center gap-2 mt-2"
                                                 >
                                                     <Plus size={14} />
                                                     Add Class
@@ -349,7 +349,7 @@ const TeacherDashboard: React.FC = () => {
                         }}
                         aria-expanded={!isCollapsed}
                         aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
-                        className={`hidden md:flex group relative items-center h-12 rounded-xl transition-all duration-200 font-bold overflow-hidden border-[3px] border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
+                        className={`hidden md:flex group relative items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
                         <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-colors">
@@ -370,7 +370,7 @@ const TeacherDashboard: React.FC = () => {
                     <div className={`hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2 mx-1 transition-all duration-300 ${isCollapsed ? 'w-10' : 'w-auto'}`} />
                     <button
                         onClick={() => setIsJoinCodeOpen(true)}
-                        className={`group relative flex items-center h-12 rounded-xl transition-all duration-200 font-bold overflow-hidden border-[3px] border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'
+                        className={`group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'
                             }`}
                         title={isCollapsed ? 'Join Code' : undefined}
                     >
@@ -388,7 +388,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className={`group relative flex items-center h-12 rounded-xl transition-all duration-200 font-bold overflow-hidden border-[3px] border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12' : 'w-full'
+                        className={`group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12' : 'w-full'
                             }`}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
@@ -405,7 +405,7 @@ const TeacherDashboard: React.FC = () => {
                     </button>
                     <button
                         onClick={logout}
-                        className="group relative flex items-center h-12 rounded-xl transition-all duration-200 font-bold overflow-hidden w-full border-[3px] border-transparent hover:border-red-200 dark:hover:border-red-900/50 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900/50"
+                        className="group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden w-full border-2 border-transparent hover:border-red-200 dark:hover:border-red-900/50 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900/50"
                         title={isCollapsed ? 'Sign Out' : undefined}
                     >
                         <div className="flex items-center justify-center w-12 flex-shrink-0 text-red-500 transition-colors">
@@ -512,7 +512,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('classrooms')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -526,7 +526,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -540,7 +540,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('shape')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -554,7 +554,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('live')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -568,7 +568,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setIsSettingsOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-[3px] transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Settings & More"
                         >
                             <Home className="w-6 h-6" />

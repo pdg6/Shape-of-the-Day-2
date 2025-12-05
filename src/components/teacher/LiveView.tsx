@@ -105,7 +105,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
 
             {/* Content */}
             {students.length === 0 ? (
-                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700">
+                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-gray-400" />
                     </div>
@@ -116,7 +116,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
 
                     {/* Join Code Section */}
                     {currentClass && (
-                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl border-[3px] border-dashed border-gray-200 dark:border-gray-700">
+                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                             <div className="flex items-center gap-6">
                                 {/* QR Code */}
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
@@ -174,9 +174,9 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
 
 const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[] }> = ({ students, totalTasks, tasks }) => {
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
             <table className="w-full text-left">
-                <thead className="bg-gray-50 dark:bg-gray-800 border-b-[3px] border-gray-200 dark:border-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                     <tr>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Student Name</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
@@ -265,7 +265,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                 }
 
                 return (
-                    <div key={task.id} className={`rounded-xl border-[3px] shadow-sm p-5 transition-all duration-300 ${borderColor} ${bgColor} ${opacity}`}>
+                    <div key={task.id} className={`rounded-xl border-2 shadow-sm p-5 transition-all duration-300 ${borderColor} ${bgColor} ${opacity}`}>
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-2">
                                 {task.title}

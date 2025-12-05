@@ -119,7 +119,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, has
         <div
             className={`
                 group w-full bg-brand-lightSurface dark:bg-brand-darkSurface 
-                border-[3px] border-gray-200 dark:border-gray-700 rounded-xl p-4 
+                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 
                 transition-all hover:border-brand-accent/50
                 ${indentClass}
             `}
@@ -128,7 +128,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, has
             <div className="flex items-start gap-4">
                 {/* Number Badge with Type Color */}
                 <div className={`
-                    flex-shrink-0 w-12 h-12 rounded-xl border-[3px] 
+                    flex-shrink-0 w-12 h-12 rounded-lg border-2 
                     flex items-center justify-center text-xl font-bold
                     ${typeColors}
                 `}>
@@ -291,7 +291,7 @@ const ShapeOfDay: React.FC = () => {
         <div className="h-full flex flex-col gap-4 overflow-y-auto custom-scrollbar p-1">
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl px-4 md:px-6 flex-shrink-0">
+            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl px-4 md:px-6 flex-shrink-0">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -343,7 +343,7 @@ const ShapeOfDay: React.FC = () => {
                 {loading ? (
                     <div className="text-center py-12 text-gray-400">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-[3px] border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="text-center py-12 text-gray-400 italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                         No tasks scheduled for today.
                     </div>
                 ) : (

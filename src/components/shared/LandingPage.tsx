@@ -41,7 +41,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </p>
             </div>
 
-            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-2xl shadow-lg border-[3px] border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
                 {/* Tabs for switching modes */}
                 <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-xl m-2">
                     <div

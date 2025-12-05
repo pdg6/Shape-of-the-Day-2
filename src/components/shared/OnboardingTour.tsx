@@ -292,7 +292,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
             {/* Spotlight on target element */}
             {targetRect && !isCentered && (
                 <div
-                    className="absolute border-4 border-brand-accent rounded-xl shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-300"
+                    className="absolute border-2 border-brand-accent rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-300"
                     style={{
                         top: targetRect.top - 8,
                         left: targetRect.left - 8,
@@ -306,7 +306,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
             <div
                 className={`
                     absolute bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-2xl
-                    border-[3px] border-brand-accent p-5 w-80 max-w-[90vw]
+                    border-2 border-brand-accent p-5 w-80 max-w-[90vw]
                     transition-all duration-300 ease-out
                     ${isCentered ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}
                 `}
@@ -368,7 +368,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                         {!isFirstStep && (
                             <button
                                 onClick={onPrev}
-                                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors"
+                                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-brand-accent hover:bg-brand-accent/10 rounded-md transition-colors"
                             >
                                 <ChevronLeft className="w-4 h-4" />
                                 Back
@@ -376,7 +376,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                         )}
                         <button
                             onClick={onNext}
-                            className="flex items-center gap-1 px-4 py-2 text-sm font-bold bg-brand-accent text-white rounded-lg hover:bg-brand-accent/90 transition-colors"
+                            className="flex items-center gap-1 px-4 py-2 text-sm font-bold bg-brand-accent text-white rounded-md hover:bg-brand-accent/90 transition-colors"
                         >
                             {isLastStep ? (
                                 <>
@@ -422,7 +422,7 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }
             <button
                 onClick={handleClick}
                 className={`
-                    p-2 rounded-lg text-gray-500 hover:text-brand-accent hover:bg-gray-100 
+                    p-2 rounded-md text-gray-500 hover:text-brand-accent hover:bg-gray-100 
                     dark:hover:bg-gray-800 transition-all
                     ${className}
                 `}
@@ -436,7 +436,7 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }
             </button>
             
             {showMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-lg border-[2px] border-gray-200 dark:border-gray-700 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 py-2 z-50">
                     <button
                         onClick={() => { startTour('teacher-welcome'); setShowMenu(false); }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

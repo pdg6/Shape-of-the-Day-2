@@ -82,7 +82,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                             <button
                                 onClick={() => onTabChange(item.id)}
                                 className={`
-                                    flex-1 relative flex items-center rounded-xl transition-all duration-200 font-bold border-[3px]
+                                    flex-1 relative flex items-center rounded-lg transition-all duration-200 font-bold border-2
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
                                     focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
@@ -113,7 +113,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-3 ${isCollapsed ? 'hidden' : ''}`}>
                 {/* Goal-Gradient Effect: Show progress to motivate completion */}
                 {totalTasks > 0 && (
-                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border-2 border-gray-100 dark:border-gray-700">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border-2 border-gray-100 dark:border-gray-700">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Today's Progress</span>
                             {tasksCompleted === totalTasks && (
@@ -139,7 +139,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     aria-controls="student-sidebar-nav"
                     aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                     className={`
-                        group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
+                        group flex items-center h-10 rounded-lg transition-all duration-200 font-bold
                         focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                     `}
@@ -163,7 +163,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 <button
                     onClick={onOpenSettings}
                     className={`
-                        group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
+                        group flex items-center h-10 rounded-lg transition-all duration-200 font-bold
                         focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                     `}
@@ -185,7 +185,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 <button
                     onClick={onSignOut}
                     className={`
-                        group flex items-center h-10 rounded-xl transition-all duration-200 font-bold
+                        group flex items-center h-10 rounded-lg transition-all duration-200 font-bold
                         focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30
                         ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                     `}
