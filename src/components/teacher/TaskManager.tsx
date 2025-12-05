@@ -957,7 +957,7 @@ export default function TaskManager() {
                                 <button
                                     type="button"
                                     onClick={() => startDateMobileInputRef.current?.showPicker()}
-                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 flex items-center justify-center gap-1.5 ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 flex items-center justify-center gap-1.5 ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                 >
                                     <input
                                         ref={startDateMobileInputRef}
@@ -977,7 +977,7 @@ export default function TaskManager() {
                                 <button
                                     type="button"
                                     onClick={() => dueDateMobileInputRef.current?.showPicker()}
-                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 flex items-center justify-center gap-1.5 ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 flex items-center justify-center gap-1.5 ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                 >
                                     <input
                                         ref={dueDateMobileInputRef}
@@ -1073,7 +1073,7 @@ export default function TaskManager() {
                                     <button
                                         type="button"
                                         onClick={() => startDateInputRef.current?.showPicker()}
-                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                     >
                                         <input
                                             ref={startDateInputRef}
@@ -1098,7 +1098,7 @@ export default function TaskManager() {
                                     <button
                                         type="button"
                                         onClick={() => dueDateInputRef.current?.showPicker()}
-                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                     >
                                         <input
                                             ref={dueDateInputRef}
@@ -1196,7 +1196,7 @@ export default function TaskManager() {
                                 </button>
 
                                 {/* Upload File Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 group cursor-pointer">
+                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
                                     <input
                                         ref={fileInputRef}
                                         type="file"
@@ -1220,7 +1220,7 @@ export default function TaskManager() {
                                 </div>
 
                                 {/* Add Link Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
+                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
                                     <LinkIcon size={14} className="text-gray-400 flex-shrink-0" />
                                     <input
                                         type="url"
@@ -1338,7 +1338,7 @@ export default function TaskManager() {
                                     <button
                                         type="button"
                                         onClick={() => setShowClassSelector(false)}
-                                        className="py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 text-gray-500 font-medium hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
+                                        className="py-2.5 px-4 rounded-md border-2 border-gray-300 dark:border-gray-600 text-gray-500 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
                                     >
                                         Cancel
                                     </button>
@@ -1425,10 +1425,10 @@ export default function TaskManager() {
                                     {calendarBaseDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
                                 </h3>
                                 <div className="flex gap-1">
-                                    <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-lg border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
+                                    <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                         <ChevronLeft size={20} />
                                     </button>
-                                    <button onClick={() => handleWeekNav('next')} className="p-2 rounded-lg border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
+                                    <button onClick={() => handleWeekNav('next')} className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                         <ChevronRight size={20} />
                                     </button>
                                 </div>
