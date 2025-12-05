@@ -21,6 +21,8 @@ import {
     Sparkles
 } from 'lucide-react';
 import { Button } from '../shared/Button';
+import { Select, SelectOption } from '../shared/Select';
+import { DateRangePicker } from '../shared/DateRangePicker';
 import { TaskTabBar } from './TaskTabBar';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -88,6 +90,24 @@ const getTypeColorClasses = (type: ItemType): string => {
     }
 };
 
+// Get type hex color for icons
+const getTypeHexColor = (type: ItemType): string => {
+    switch (type) {
+        case 'project': return '#a855f7';
+        case 'assignment': return '#3b82f6';
+        case 'task': return '#22c55e';
+        case 'subtask': return '#f97316';
+    }
+};
+
+// Build type options for Select component
+const TYPE_OPTIONS: SelectOption<ItemType>[] = [
+    { value: 'project', label: 'Project', icon: FolderOpen, iconColor: '#a855f7' },
+    { value: 'assignment', label: 'Assignment', icon: FileText, iconColor: '#3b82f6' },
+    { value: 'task', label: 'Task', icon: ListChecks, iconColor: '#22c55e' },
+    { value: 'subtask', label: 'Subtask', icon: CheckSquare, iconColor: '#f97316' },
+];
+
 export default function TaskManager() {
     // --- Store ---
     const { currentClassId, classrooms: storeClassrooms } = useClassStore();
@@ -144,10 +164,6 @@ export default function TaskManager() {
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
     const descriptionRef = useRef<HTMLTextAreaElement>(null);
-    const startDateInputRef = useRef<HTMLInputElement>(null);
-    const dueDateInputRef = useRef<HTMLInputElement>(null);
-    const startDateMobileInputRef = useRef<HTMLInputElement>(null);
-    const dueDateMobileInputRef = useRef<HTMLInputElement>(null);
 
     // Calendar State
     const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
@@ -841,7 +857,6 @@ export default function TaskManager() {
 
     // --- Render ---
 
-    const TypeIcon = getTypeIcon(activeFormData.type);
     const availableParents = getAvailableParents(activeFormData.type);
     const _hasDirtyCards = openCards.some(c => c.isDirty && c.formData.title.trim());
 
@@ -879,242 +894,54 @@ export default function TaskManager() {
                     {/* Main Card - connects to tabs above */}
                     <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-b-lg rounded-tr-lg p-4 space-y-4 flex-1 flex flex-col -mt-[2px] relative z-40">
 
-                        {/* Type, Linked To, Start Date, Due Date - 4 equal columns on desktop, 2 rows on mobile */}
-                        <div className="space-y-3 sm:space-y-0">
-                            {/* Mobile: Type + Linked To row */}
-                            <div className="grid grid-cols-2 gap-3 sm:hidden">
+                        {/* Type, Linked To, Start Date, Due Date - Responsive grid */}
+                        <div className="space-y-3">
+                            {/* Row 1: Type + Linked To */}
+                            <div className="grid grid-cols-2 gap-3">
                                 {/* Type Selector */}
-                                <div className="relative z-10">
-                                    <select
-                                        value={activeFormData.type}
-                                        onChange={e => updateActiveCard('type', e.target.value as ItemType)}
-                                        className={`
-                                            appearance-none cursor-pointer w-full
-                                            pl-10 pr-8 py-2.5 rounded-lg text-sm font-bold
-                                            border-2 transition-all duration-200
-                                            ${getTypeColorClasses(activeFormData.type)}
-                                            bg-brand-lightSurface dark:bg-brand-darkSurface
-                                            focus:outline-none focus:ring-2 focus:ring-brand-accent/20
-                                        `}
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1rem'
-                                        }}
-                                    >
-                                        {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
-                                            const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
-                                                tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
-                                            ].includes(type);
-                                            return (
-                                                <option 
-                                                    key={type} 
-                                                    value={type}
-                                                    disabled={!!isDisabled}
-                                                    className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary"
-                                                >
-                                                    {getTypeLabel(type)}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${getTypeColorClasses(activeFormData.type).split(' ')[0]}`}>
-                                        <TypeIcon size={18} />
-                                    </div>
-                                </div>
+                                <Select<ItemType>
+                                    value={activeFormData.type}
+                                    onChange={(value) => updateActiveCard('type', value || 'task')}
+                                    options={TYPE_OPTIONS.map(opt => ({
+                                        ...opt,
+                                        disabled: activeFormData.parentId 
+                                            ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
+                                            : false
+                                    }))}
+                                    icon={getTypeIcon(activeFormData.type)}
+                                    iconColor={getTypeHexColor(activeFormData.type)}
+                                    colorClasses={getTypeColorClasses(activeFormData.type)}
+                                    buttonClassName="font-bold"
+                                />
 
-                                {/* Linked To - Mobile */}
-                                <div className="relative">
-                                    <select
-                                        value={activeFormData.parentId || ''}
-                                        onChange={e => updateActiveCard('parentId', e.target.value || null)}
-                                        className={`w-full pl-10 pr-8 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500 appearance-none cursor-pointer ${activeFormData.parentId ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1rem'
-                                        }}
-                                    >
-                                        <option value="" className="bg-brand-lightSurface dark:bg-gray-800 text-gray-400 dark:text-gray-500">Linked to...</option>
-                                        {availableParents.map(parent => (
-                                            <option key={parent.id} value={parent.id} className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                                {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
-                                                {parent.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
-                                        <LinkIcon size={18} />
-                                    </div>
-                                </div>
+                                {/* Linked To */}
+                                <Select<string>
+                                    value={activeFormData.parentId}
+                                    onChange={(value) => updateActiveCard('parentId', value)}
+                                    options={availableParents.map(parent => ({
+                                        value: parent.id,
+                                        label: parent.pathTitles?.length 
+                                            ? `${parent.pathTitles.join(' → ')} → ${parent.title}`
+                                            : parent.title,
+                                        icon: getTypeIcon(parent.type),
+                                        iconColor: getTypeHexColor(parent.type),
+                                    }))}
+                                    placeholder="Linked to..."
+                                    icon={LinkIcon}
+                                    nullable
+                                    searchable
+                                />
                             </div>
 
-                            {/* Mobile: Dates row */}
-                            <div className="grid grid-cols-2 gap-3 sm:hidden">
-                                {/* Start Date - Mobile */}
-                                <button
-                                    type="button"
-                                    onClick={() => startDateMobileInputRef.current?.showPicker()}
-                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 flex items-center justify-center gap-1.5 ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
-                                >
-                                    <input
-                                        ref={startDateMobileInputRef}
-                                        type="date"
-                                        value={activeFormData.startDate}
-                                        onChange={e => updateActiveCard('startDate', e.target.value)}
-                                        className="sr-only"
-                                    />
-                                    <span>Start Date:</span>
-                                    {activeFormData.startDate ? (
-                                        <span>{new Date(activeFormData.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                    ) : (
-                                        <CalendarIcon size={16} />
-                                    )}
-                                </button>
-                                {/* Due Date - Mobile */}
-                                <button
-                                    type="button"
-                                    onClick={() => dueDateMobileInputRef.current?.showPicker()}
-                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 flex items-center justify-center gap-1.5 ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
-                                >
-                                    <input
-                                        ref={dueDateMobileInputRef}
-                                        type="date"
-                                        value={activeFormData.endDate}
-                                        onChange={e => updateActiveCard('endDate', e.target.value)}
-                                        className="sr-only"
-                                    />
-                                    <span>Due Date:</span>
-                                    {activeFormData.endDate ? (
-                                        <span>{new Date(activeFormData.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                    ) : (
-                                        <CalendarIcon size={16} />
-                                    )}
-                                </button>
-                            </div>
-
-                            {/* Desktop: All 4 equal columns in one row */}
-                            <div className="hidden sm:grid sm:grid-cols-4 sm:gap-4">
-                                {/* Type Selector - Pill shape */}
-                                <div className="relative z-10">
-                                    <select
-                                        value={activeFormData.type}
-                                        onChange={e => updateActiveCard('type', e.target.value as ItemType)}
-                                        className={`
-                                            appearance-none cursor-pointer w-full
-                                            pl-10 pr-8 py-2.5 rounded-lg text-sm font-bold
-                                            border-2 transition-all duration-200
-                                            ${getTypeColorClasses(activeFormData.type)}
-                                            bg-brand-lightSurface dark:bg-brand-darkSurface
-                                            hover:opacity-80
-                                            focus:outline-none focus:ring-2 focus:ring-brand-accent/20
-                                        `}
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1rem'
-                                        }}
-                                    >
-                                        {(['project', 'assignment', 'task', 'subtask'] as ItemType[]).map(type => {
-                                            const isDisabled = activeFormData.parentId && !ALLOWED_CHILD_TYPES[
-                                                tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'
-                                            ].includes(type);
-                                            return (
-                                                <option 
-                                                    key={type} 
-                                                    value={type}
-                                                    disabled={!!isDisabled}
-                                                    className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary"
-                                                >
-                                                    {getTypeLabel(type)}
-                                                </option>
-                                            );
-                                        })}
-                                    </select>
-                                    <div className={`absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${getTypeColorClasses(activeFormData.type).split(' ')[0]}`}>
-                                        <TypeIcon size={18} />
-                                    </div>
-                                </div>
-
-                                {/* Linked To - Pill shape */}
-                                <div className="relative group">
-                                    <select
-                                        value={activeFormData.parentId || ''}
-                                        onChange={e => updateActiveCard('parentId', e.target.value || null)}
-                                        className={`w-full pl-10 pr-8 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 appearance-none cursor-pointer group-hover:border-gray-300 dark:group-hover:border-gray-600 ${activeFormData.parentId ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
-                                        style={{
-                                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                                            backgroundRepeat: 'no-repeat',
-                                            backgroundPosition: 'right 0.75rem center',
-                                            backgroundSize: '1rem'
-                                        }}
-                                    >
-                                        <option value="" className="bg-brand-lightSurface dark:bg-gray-800 text-gray-400 dark:text-gray-500">Linked to...</option>
-                                        {availableParents.map(parent => (
-                                            <option key={parent.id} value={parent.id} className="bg-brand-lightSurface dark:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                                {parent.pathTitles?.length ? `${parent.pathTitles.join(' → ')} → ` : ''}
-                                                {parent.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
-                                        <LinkIcon size={18} />
-                                    </div>
-                                </div>
-
-                                {/* Start Date - Pill shape with left icon */}
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                                        <CalendarIcon size={14} />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => startDateInputRef.current?.showPicker()}
-                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
-                                    >
-                                        <input
-                                            ref={startDateInputRef}
-                                            type="date"
-                                            value={activeFormData.startDate}
-                                            onChange={e => updateActiveCard('startDate', e.target.value)}
-                                            className="sr-only"
-                                        />
-                                        {activeFormData.startDate ? (
-                                            <span>Start: {new Date(activeFormData.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                        ) : (
-                                            <span>Start Date</span>
-                                        )}
-                                    </button>
-                                </div>
-
-                                {/* Due Date - Pill shape with left icon */}
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                                        <CalendarIcon size={14} />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => dueDateInputRef.current?.showPicker()}
-                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
-                                    >
-                                        <input
-                                            ref={dueDateInputRef}
-                                            type="date"
-                                            value={activeFormData.endDate}
-                                            onChange={e => updateActiveCard('endDate', e.target.value)}
-                                            className="sr-only"
-                                        />
-                                        {activeFormData.endDate ? (
-                                            <span>Due: {new Date(activeFormData.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                        ) : (
-                                            <span>Due Date</span>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
+                            {/* Row 2: Date Range Picker */}
+                            <DateRangePicker
+                                startDate={activeFormData.startDate}
+                                endDate={activeFormData.endDate}
+                                onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                startPlaceholder="Start date"
+                                endPlaceholder="Due date"
+                            />
                         </div>
 
                         {/* Description & Attachments Section */}

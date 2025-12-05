@@ -17,6 +17,7 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.9",
     "@tailwindcss/vite": "^4.1.17",
     "autoprefixer": "^10.4.22",
     "clsx": "^2.1.1",
@@ -27,6 +28,7 @@
     "postcss": "^8.5.6",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
+    "react-day-picker": "^9.11.3",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dnd-multi-backend": "^9.0.0",

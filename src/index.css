@@ -141,6 +141,59 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     overflow-y: auto; /* Changed from scroll to auto */
 }
 
+/* ============================================
+   React Day Picker Overrides (UI.md aligned)
+   ============================================ */
+.rdp-custom {
+    /* Override default accent color to use our brand accent */
+    --rdp-accent-color: var(--color-brand-accent);
+    --rdp-accent-background-color: var(--color-brand-accent);
+    
+    /* Override day button sizing for proper alignment */
+    --rdp-day-width: 36px;
+    --rdp-day-height: 36px;
+    --rdp-day_button-width: 36px;
+    --rdp-day_button-height: 36px;
+    
+    /* Selected state border (aligned with UI.md 3px interactive borders) */
+    --rdp-selected-border: 3px solid var(--color-brand-accent);
+}
+
+/* Ensure selected days have proper border styling per UI.md */
+.rdp-custom .rdp-selected .rdp-day_button {
+    border: 3px solid var(--color-brand-accent) !important;
+    background-color: var(--color-brand-accent) !important;
+    color: white !important;
+    border-radius: var(--radius-md) !important; /* 8px - rounded-lg */
+}
+
+/* All day buttons should have consistent border-radius */
+.rdp-custom .rdp-day_button {
+    border-radius: var(--radius-md) !important; /* 8px - rounded-lg */
+}
+
+/* Today indicator uses subtle ring per UI.md focus rings */
+.rdp-custom .rdp-today .rdp-day_button {
+    box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Dark mode text colors */
+.dark .rdp-custom {
+    color: var(--color-brand-textPrimary);
+}
+
+.dark .rdp-custom .rdp-day_button {
+    color: var(--color-brand-textPrimary);
+}
+
+.dark .rdp-custom .rdp-weekday {
+    color: #9ca3af; /* gray-400 */
+}
+
+.dark .rdp-custom .rdp-caption_label {
+    color: var(--color-brand-textPrimary);
+}
+
 @layer components {
 
     /* ============================================
