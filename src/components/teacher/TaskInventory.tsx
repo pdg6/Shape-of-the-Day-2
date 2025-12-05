@@ -12,7 +12,6 @@ import {
     Filter,
     Search,
     Loader,
-    Calendar,
     Plus
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -21,6 +20,7 @@ import { Classroom, ItemType, Task, ALLOWED_CHILD_TYPES } from '../../types';
 import { useClassStore } from '../../store/classStore';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
+import { DatePicker } from '../shared/DatePicker';
 
 // Get type-specific icon
 const getTypeIcon = (type: ItemType) => {
@@ -379,7 +379,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     // Type for calendar items (day or weekend spanner)
     type CalendarItem = { type: 'day'; date: Date } | { type: 'weekend' };
 
-    // Generate calendar items: weekdays only with weekend spanners (4 weeks = 20 weekdays)
+    // Generate calendar items: weekdays only with weekend spanners (3 weeks = 15 weekdays)
     const calendarItems = useMemo((): CalendarItem[] => {
         const items: CalendarItem[] = [];
         let today = new Date();
@@ -398,8 +398,8 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         const daysFromMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
         startDate.setDate(startDate.getDate() - daysFromMonday - 7); // Go back one more week
         
-        // Generate 4 weeks of weekdays (20 days total)
-        for (let week = 0; week < 4; week++) {
+        // Generate 3 weeks of weekdays (15 days total)
+        for (let week = 0; week < 3; week++) {
             // Add weekend spanner between weeks
             if (week > 0) {
                 items.push({ type: 'weekend' });
@@ -713,7 +713,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         <div className="h-full w-full min-w-0 overflow-hidden">
             <div className="h-full w-full flex flex-col overflow-y-auto lg:overflow-hidden">
             {/* Header with Filters */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+            <div className="p-4 flex-shrink-0">
                 {/* Search & Filters */}
                 <div className="flex flex-wrap gap-3">
                     {/* Search */}
@@ -758,13 +758,13 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
 
             {/* Date Filter Calendar Strip */}
             <div className="px-4 pb-4 w-full flex-shrink-0">
-                <div className="card-base p-3 w-full overflow-hidden">
+                <div className="card-base border-0 rounded-md p-3 w-full overflow-hidden">
                     <div className="flex items-center gap-3 w-full overflow-hidden">
                         {/* All Dates Button */}
                         <button
                             onClick={() => setFilterDate(null)}
                             className={`
-                                flex-shrink-0 px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all select-none cursor-pointer
+                                flex-shrink-0 px-4 py-2 rounded-md border-2 font-bold text-sm transition-all select-none cursor-pointer
                                 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95
                                 ${filterDate === null
                                     ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
@@ -778,7 +778,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         {/* Left Arrow */}
                         <button
                             onClick={() => scrollCalendar('left')}
-                            className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                            className="flex-shrink-0 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -790,7 +790,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                             onMouseMove={handleCalendarMouseMove}
                             onMouseUp={handleCalendarMouseUp}
                             onMouseLeave={handleCalendarMouseLeave}
-                            className="flex-1 min-w-0 overflow-x-auto flex items-center gap-1 scrollbar-hide cursor-grab active:cursor-grabbing select-none"
+                            className="flex-1 min-w-0 overflow-x-auto flex items-center justify-between scrollbar-hide cursor-grab active:cursor-grabbing select-none"
                         >
                             {calendarItems.map((item, index) => {
                                 // Weekend spanner (subtle gap)
@@ -812,7 +812,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                         onClick={() => !isDragging && setFilterDate(dateStr)}
                                         className={`
                                             flex flex-col items-center justify-center flex-shrink-0
-                                            w-14 h-16 rounded-xl transition-all
+                                            w-14 h-16 rounded-md transition-all
                                             ${isSelected
                                                 ? 'bg-brand-accent/20'
                                                 : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}
@@ -846,24 +846,18 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                         {/* Right Arrow */}
                         <button
                             onClick={() => scrollCalendar('right')}
-                            className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                            className="flex-shrink-0 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
                         >
                             <ChevronRight size={18} />
                         </button>
 
-                        {/* Date Picker - Direct Input with Calendar Icon */}
-                        <div className="relative flex-shrink-0">
-                            <input
-                                type="date"
-                                value={filterDate || ''}
-                                onChange={(e) => setFilterDate(e.target.value || null)}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                style={{ colorScheme: 'dark' }}
-                            />
-                            <div className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-gray-400 hover:border-gray-300 dark:hover:border-gray-600 hover:text-gray-600 dark:hover:text-gray-300 transition-all pointer-events-none">
-                                <Calendar size={18} />
-                            </div>
-                        </div>
+                        {/* Date Picker - Using shared component */}
+                        <DatePicker
+                            value={filterDate || ''}
+                            onChange={(value) => setFilterDate(value || null)}
+                            placeholder="Jump to date"
+                            className="flex-shrink-0 w-36"
+                        />
                     </div>
                 </div>
             </div>

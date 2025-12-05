@@ -316,7 +316,7 @@ export function DateRangePicker({
             {typeof document !== 'undefined' && activeField && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,
@@ -347,7 +347,7 @@ export function DateRangePicker({
 
                     {/* Selected Range Display */}
                     {(isStartValid || isEndValid) && (
-                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-gray-50 dark:bg-gray-800/50 rounded text-xs">
+                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-xs">
                             <span className={activeField === 'start' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
                                 {startDisplay || '—'}
                             </span>
@@ -375,8 +375,8 @@ export function DateRangePicker({
                             } : undefined,
                         }}
                         modifiersClassNames={{
-                            range_start: 'bg-brand-accent text-white rounded-l-lg',
-                            range_end: 'bg-brand-accent text-white rounded-r-lg',
+                            range_start: 'bg-brand-accent text-white rounded-l-xl',
+                            range_end: 'bg-brand-accent text-white rounded-r-xl',
                             in_range: 'bg-brand-accent/10',
                         }}
                         components={{
@@ -388,8 +388,6 @@ export function DateRangePicker({
                         classNames={{
                             ...getDefaultClassNames(),
                             root: `${getDefaultClassNames().root} rdp-custom`,
-                            today: 'ring-2 ring-brand-accent/20 ring-inset',
-                            selected: 'bg-brand-accent text-white border-[3px] border-brand-accent',
                             disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
                             outside: 'text-gray-300 dark:text-gray-600 opacity-50',
                             chevron: 'fill-gray-500 dark:fill-gray-400',

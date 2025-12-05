@@ -229,7 +229,7 @@ export function DatePicker({
             {typeof document !== 'undefined' && isOpen && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,
@@ -275,8 +275,6 @@ export function DatePicker({
                         classNames={{
                             ...getDefaultClassNames(),
                             root: `${getDefaultClassNames().root} rdp-custom`,
-                            today: 'ring-2 ring-brand-accent/20 ring-inset',
-                            selected: 'bg-brand-accent text-white border-[3px] border-brand-accent',
                             disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
                             outside: 'text-gray-300 dark:text-gray-600 opacity-50',
                             chevron: 'fill-gray-500 dark:fill-gray-400',

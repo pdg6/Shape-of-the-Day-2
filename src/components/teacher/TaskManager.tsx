@@ -894,54 +894,56 @@ export default function TaskManager() {
                     {/* Main Card - connects to tabs above */}
                     <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-b-lg rounded-tr-lg p-4 space-y-4 flex-1 flex flex-col -mt-[2px] relative z-40">
 
-                        {/* Type, Linked To, Start Date, Due Date - Responsive grid */}
-                        <div className="space-y-3">
-                            {/* Row 1: Type + Linked To */}
-                            <div className="grid grid-cols-2 gap-3">
-                                {/* Type Selector */}
-                                <Select<ItemType>
-                                    value={activeFormData.type}
-                                    onChange={(value) => updateActiveCard('type', value || 'task')}
-                                    options={TYPE_OPTIONS.map(opt => ({
-                                        ...opt,
-                                        disabled: activeFormData.parentId 
-                                            ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
-                                            : false
-                                    }))}
-                                    icon={getTypeIcon(activeFormData.type)}
-                                    iconColor={getTypeHexColor(activeFormData.type)}
-                                    colorClasses={getTypeColorClasses(activeFormData.type)}
-                                    buttonClassName="font-bold"
-                                />
+                        {/* Type, Linked To, Start Date, Due Date - 5-column grid */}
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 items-center">
+                            {/* Col 1: Type Selector */}
+                            <Select<ItemType>
+                                value={activeFormData.type}
+                                onChange={(value) => updateActiveCard('type', value || 'task')}
+                                options={TYPE_OPTIONS.map(opt => ({
+                                    ...opt,
+                                    disabled: activeFormData.parentId 
+                                        ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
+                                        : false
+                                }))}
+                                icon={getTypeIcon(activeFormData.type)}
+                                iconColor={getTypeHexColor(activeFormData.type)}
+                                colorClasses={getTypeColorClasses(activeFormData.type)}
+                                buttonClassName="font-bold"
+                            />
 
-                                {/* Linked To */}
-                                <Select<string>
-                                    value={activeFormData.parentId}
-                                    onChange={(value) => updateActiveCard('parentId', value)}
-                                    options={availableParents.map(parent => ({
-                                        value: parent.id,
-                                        label: parent.pathTitles?.length 
-                                            ? `${parent.pathTitles.join(' → ')} → ${parent.title}`
-                                            : parent.title,
-                                        icon: getTypeIcon(parent.type),
-                                        iconColor: getTypeHexColor(parent.type),
-                                    }))}
-                                    placeholder="Linked to..."
-                                    icon={LinkIcon}
-                                    nullable
-                                    searchable
+                            {/* Col 2: Linked To */}
+                            <Select<string>
+                                value={activeFormData.parentId}
+                                onChange={(value) => updateActiveCard('parentId', value)}
+                                options={availableParents.map(parent => ({
+                                    value: parent.id,
+                                    label: parent.pathTitles?.length 
+                                        ? `${parent.pathTitles.join(' → ')} → ${parent.title}`
+                                        : parent.title,
+                                    icon: getTypeIcon(parent.type),
+                                    iconColor: getTypeHexColor(parent.type),
+                                }))}
+                                placeholder="Linked to..."
+                                icon={LinkIcon}
+                                nullable
+                                searchable
+                            />
+
+                            {/* Col 3: Empty spacer */}
+                            <div className="hidden lg:block" />
+
+                            {/* Cols 4-5: Date Range Picker */}
+                            <div className="col-span-2">
+                                <DateRangePicker
+                                    startDate={activeFormData.startDate}
+                                    endDate={activeFormData.endDate}
+                                    onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                    onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                    startPlaceholder="Start date"
+                                    endPlaceholder="Due date"
                                 />
                             </div>
-
-                            {/* Row 2: Date Range Picker */}
-                            <DateRangePicker
-                                startDate={activeFormData.startDate}
-                                endDate={activeFormData.endDate}
-                                onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                startPlaceholder="Start date"
-                                endPlaceholder="Due date"
-                            />
                         </div>
 
                         {/* Description & Attachments Section */}
@@ -1008,22 +1010,10 @@ export default function TaskManager() {
                                 </div>
                             )}
 
-                            {/* Action Row: AI Generate | Upload | Link | Save */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
-                                {/* AI Generate Button - Purple solid */}
-                                <button
-                                    type="button"
-                                    onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
-                                    className="relative py-2.5 px-4 rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 transition-all duration-200 group cursor-pointer select-none"
-                                >
-                                    <div className="flex items-center justify-center gap-2 text-purple-400 group-hover:text-purple-500 transition-colors">
-                                        <Sparkles size={16} />
-                                        <span className="text-sm font-medium">Use AI</span>
-                                    </div>
-                                </button>
-
-                                {/* Upload File Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
+                            {/* Action Row: Upload | Link | (spacer) | AI | Save - 5-column grid */}
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 items-center pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
+                                {/* Col 1: Upload File Button - Gray solid */}
+                                <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
                                     <input
                                         ref={fileInputRef}
                                         type="file"
@@ -1046,8 +1036,8 @@ export default function TaskManager() {
                                     </div>
                                 </div>
 
-                                {/* Add Link Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
+                                {/* Col 2: Add Link Button - Gray solid */}
+                                <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
                                     <LinkIcon size={14} className="text-gray-400 flex-shrink-0" />
                                     <input
                                         type="url"
@@ -1059,7 +1049,22 @@ export default function TaskManager() {
                                     />
                                 </div>
 
-                                {/* Save Button - Expands to show class options */}
+                                {/* Col 3: Empty spacer */}
+                                <div className="hidden lg:block" />
+
+                                {/* Col 4: AI Generate Button - Purple solid */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
+                                    className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 transition-all duration-200 group cursor-pointer select-none"
+                                >
+                                    <div className="flex items-center justify-center gap-2 text-purple-400 group-hover:text-purple-500 transition-colors">
+                                        <Sparkles size={16} />
+                                        <span className="text-sm font-medium">Use AI</span>
+                                    </div>
+                                </button>
+
+                                {/* Col 5: Save Button - Expands to show class options */}
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -1070,7 +1075,7 @@ export default function TaskManager() {
                                         setShowClassSelector(!showClassSelector);
                                     }}
                                     disabled={isSubmitting}
-                                    className={`relative py-2.5 px-4 rounded-md border-2 transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    className={`relative py-2.5 px-4 min-h-[44px] rounded-md border-2 transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
                                         showClassSelector 
                                             ? 'border-green-500 bg-green-500/10' 
                                             : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500'
@@ -1089,7 +1094,7 @@ export default function TaskManager() {
                                             <Check size={16} />
                                         )}
                                         <span className="text-sm font-medium">
-                                            {isSubmitting ? 'Saving...' : 'Save/Add to Class'}
+                                            {isSubmitting ? 'Saving...' : 'Add to Class'}
                                         </span>
                                     </div>
                                 </button>
@@ -1242,25 +1247,26 @@ export default function TaskManager() {
 
                 {/* RIGHT PANEL: Calendar & List */}
                 <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
-                    <div className="card-base h-auto lg:h-full flex flex-col justify-between overflow-hidden">
+                    <div className="h-auto lg:h-full flex flex-col justify-between overflow-hidden">
 
-                        {/* Calendar Header */}
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
-                                    <CalendarIcon size={18} className="text-brand-accent" />
-                                    {calendarBaseDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                                </h3>
-                                <div className="flex gap-1">
-                                    <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
-                                        <ChevronLeft size={20} />
-                                    </button>
-                                    <button onClick={() => handleWeekNav('next')} className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
-                                        <ChevronRight size={20} />
-                                    </button>
-                                </div>
+                        {/* Calendar Header - aligned with top row */}
+                        <div className="min-h-[44px] flex items-center justify-between mb-4">
+                            <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
+                                <CalendarIcon size={18} className="text-brand-accent" />
+                                {calendarBaseDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                            </h3>
+                            <div className="flex gap-1">
+                                <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button onClick={() => handleWeekNav('next')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
+                                    <ChevronRight size={20} />
+                                </button>
                             </div>
+                        </div>
 
+                        {/* Week Day Selector */}
+                        <div className="pb-4 border-b border-gray-200 dark:border-gray-800">
                             <div className="grid grid-cols-5 gap-1">
                                 {weekDays.map(date => {
                                     const dateStr = toDateString(date);
