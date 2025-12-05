@@ -639,7 +639,7 @@ export default function TaskManager() {
             }
 
             // Mark card as not dirty before closing (prevents "unsaved changes" prompt)
-            setOpenCards(prev => prev.map(c => 
+            setOpenCards(prev => prev.map(c =>
                 c.id === cardId ? { ...c, isDirty: false } : c
             ));
 
@@ -833,16 +833,16 @@ export default function TaskManager() {
     // Remove task from the current date/class (doesn't delete the task)
     const handleRemoveFromSchedule = async (task: Task) => {
         if (!currentClassId) return;
-        
+
         try {
             // Remove current class from selectedRoomIds
             const updatedRoomIds = (task.selectedRoomIds || []).filter(id => id !== currentClassId);
-            
-            await updateDoc(doc(db, 'tasks', task.id), { 
+
+            await updateDoc(doc(db, 'tasks', task.id), {
                 selectedRoomIds: updatedRoomIds,
                 updatedAt: serverTimestamp()
             });
-            
+
             handleSuccess('Task removed from this class schedule');
         } catch (error) {
             handleError(error, 'Failed to remove task from schedule');
@@ -890,7 +890,7 @@ export default function TaskManager() {
                             }));
                         }}
                     />
-                    
+
                     {/* Main Card - connects to tabs above */}
                     <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-b-lg rounded-tr-lg p-4 space-y-4 flex-1 flex flex-col -mt-[2px] relative z-40">
 
@@ -902,7 +902,7 @@ export default function TaskManager() {
                                 onChange={(value) => updateActiveCard('type', value || 'task')}
                                 options={TYPE_OPTIONS.map(opt => ({
                                     ...opt,
-                                    disabled: activeFormData.parentId 
+                                    disabled: activeFormData.parentId
                                         ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
                                         : false
                                 }))}
@@ -918,7 +918,7 @@ export default function TaskManager() {
                                 onChange={(value) => updateActiveCard('parentId', value)}
                                 options={availableParents.map(parent => ({
                                     value: parent.id,
-                                    label: parent.pathTitles?.length 
+                                    label: parent.pathTitles?.length
                                         ? `${parent.pathTitles.join(' → ')} → ${parent.title}`
                                         : parent.title,
                                     icon: getTypeIcon(parent.type),
@@ -1064,44 +1064,68 @@ export default function TaskManager() {
                                     </div>
                                 </button>
 
-                                {/* Col 5: Save Button - Expands to show class options */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (!activeFormData.title.trim()) {
-                                            handleError(new Error("⚠️ Please include a title before saving."));
-                                            return;
-                                        }
-                                        setShowClassSelector(!showClassSelector);
-                                    }}
-                                    disabled={isSubmitting}
-                                    className={`relative py-2.5 px-4 min-h-[44px] rounded-md border-2 transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                                        showClassSelector 
-                                            ? 'border-green-500 bg-green-500/10' 
+                                {/* Col 5: Save Button - Split design: main save + dropdown for more classes */}
+                                <div className="flex items-center w-full">
+                                    {/* Main Save Button */}
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (!activeFormData.title.trim()) {
+                                                handleError(new Error("⚠️ Please include a title before saving."));
+                                                return;
+                                            }
+                                            if (activeFormData.selectedRoomIds.length > 0) {
+                                                await handleSaveCard(activeCardId);
+                                            } else {
+                                                setShowClassSelector(true);
+                                            }
+                                        }}
+                                        disabled={isSubmitting}
+                                        className={`relative py-2.5 px-4 min-h-[44px] rounded-l-md border-2 border-r-0 transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed flex-1 ${showClassSelector
+                                            ? 'border-green-500 bg-green-500/10'
                                             : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500'
-                                    }`}
-                                >
-                                    <div className={`flex items-center justify-center gap-2 transition-colors ${
-                                        showClassSelector 
-                                            ? 'text-green-500' 
-                                            : 'text-green-400 group-hover:text-green-500'
-                                    }`}>
-                                        {isSubmitting ? (
-                                            <Loader size={16} className="animate-spin" />
-                                        ) : showClassSelector ? (
-                                            <ChevronDown size={16} className="rotate-180 transition-transform" />
-                                        ) : (
-                                            <Check size={16} />
-                                        )}
-                                        <span className="text-sm font-medium">
-                                            {isSubmitting ? 'Saving...' : 'Add to Class'}
-                                        </span>
-                                    </div>
-                                </button>
+                                            }`}
+                                    >
+                                        <div className={`flex items-center justify-center gap-2 transition-colors ${showClassSelector ? 'text-green-500' : 'text-green-400 group-hover:text-green-500'
+                                            }`}>
+                                            {isSubmitting ? (
+                                                <Loader size={16} className="animate-spin" />
+                                            ) : (
+                                                <Check size={16} />
+                                            )}
+                                            <span className="text-sm font-medium">
+                                                {isSubmitting ? 'Saving...' : 'Save'}
+                                            </span>
+                                        </div>
+                                    </button>
+
+                                    {/* Dropdown Toggle */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!activeFormData.title.trim()) {
+                                                handleError(new Error("⚠️ Please include a title before saving."));
+                                                return;
+                                            }
+                                            setShowClassSelector(!showClassSelector);
+                                        }}
+                                        disabled={isSubmitting}
+                                        className={`py-2.5 px-2 min-h-[44px] rounded-r-md border-2 transition-all duration-200 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${showClassSelector
+                                            ? 'border-green-500 bg-green-500/10 text-green-500'
+                                            : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500 text-green-400 hover:text-green-500'
+                                            }`}
+                                        title="Choose classes"
+                                    >
+                                        <ChevronDown
+                                            size={16}
+                                            className={`transition-transform duration-200 ${showClassSelector ? 'rotate-180' : ''}`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Expandable Class Selector - Shows when Save button is clicked */}
+                        {/* Expandable Class Selector - Shows when dropdown is clicked */}
                         {showClassSelector && (
                             <div className="pt-4 border-t border-gray-200 dark:border-gray-700 animate-fade-in flex-shrink-0">
                                 <div className="flex items-center gap-2 mb-3">
@@ -1148,7 +1172,7 @@ export default function TaskManager() {
                                         })}
                                     </div>
                                 )}
-                                
+
                                 {/* Save & Close button */}
                                 <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
                                     <button
@@ -1284,13 +1308,11 @@ export default function TaskManager() {
                                                 ${isSelected ? 'bg-brand-accent/10' : ''}
                                             `}
                                         >
-                                            <span className={`text-xs font-medium transition-colors ${
-                                                isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-2' : ''
-                                            } ${
-                                                isSelected
-                                                    ? 'text-brand-accent' 
+                                            <span className={`text-xs font-medium transition-colors ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-2' : ''
+                                                } ${isSelected
+                                                    ? 'text-brand-accent'
                                                     : 'text-gray-500'
-                                            }`}>
+                                                }`}>
                                                 {date.toLocaleDateString('en-US', { weekday: 'short' })}
                                             </span>
                                             <span className={`
