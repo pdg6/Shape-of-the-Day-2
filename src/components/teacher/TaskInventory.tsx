@@ -21,6 +21,7 @@ import { useClassStore } from '../../store/classStore';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
 import { DatePicker } from '../shared/DatePicker';
+import { Select } from '../shared/Select';
 
 // Get type-specific icon
 const getTypeIcon = (type: ItemType) => {
@@ -317,6 +318,9 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     // Date filter
     const [filterDate, setFilterDate] = useState<string | null>(null);
     
+    // Calendar navigation - offset in weeks (negative = past, positive = future)
+    const [calendarOffset, setCalendarOffset] = useState(0);
+    
     // Calendar refs
     const calendarRef = useRef<HTMLDivElement>(null);
     const todayRef = useRef<HTMLButtonElement>(null);
@@ -380,6 +384,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     type CalendarItem = { type: 'day'; date: Date } | { type: 'weekend' };
 
     // Generate calendar items: weekdays only with weekend spanners (3 weeks = 15 weekdays)
+    // Uses calendarOffset to shift the visible date range
     const calendarItems = useMemo((): CalendarItem[] => {
         const items: CalendarItem[] = [];
         let today = new Date();
@@ -398,6 +403,9 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         const daysFromMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
         startDate.setDate(startDate.getDate() - daysFromMonday - 7); // Go back one more week
         
+        // Apply calendar offset (shift by weeks)
+        startDate.setDate(startDate.getDate() + (calendarOffset * 7));
+        
         // Generate 3 weeks of weekdays (15 days total)
         for (let week = 0; week < 3; week++) {
             // Add weekend spanner between weeks
@@ -414,7 +422,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         }
         
         return items;
-    }, []);
+    }, [calendarOffset]);
 
     // Helper to format date for display
     const formatCalendarDate = (date: Date) => ({
@@ -608,14 +616,14 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         setQuickAddTitle('');
     }, []);
 
-    // Calendar scroll handlers
-    const scrollCalendar = (direction: 'left' | 'right') => {
-        if (calendarRef.current) {
-            calendarRef.current.scrollBy({
-                left: direction === 'left' ? -200 : 200,
-                behavior: 'smooth'
-            });
-        }
+    // Calendar navigation - shift visible date range by 1 week
+    const navigateCalendar = (direction: 'left' | 'right') => {
+        setCalendarOffset(prev => prev + (direction === 'left' ? -1 : 1));
+    };
+    
+    // Reset calendar to show today
+    const resetCalendarToToday = () => {
+        setCalendarOffset(0);
     };
 
     const handleCalendarMouseDown = (e: React.MouseEvent) => {
@@ -729,30 +737,30 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                     </div>
 
                     {/* Classroom Filter */}
-                    <div className="flex items-center gap-2">
-                        <Filter size={16} className="text-gray-400" />
-                        <select
-                            value={filterClassroom}
-                            onChange={e => setFilterClassroom(e.target.value)}
-                            className="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all cursor-pointer"
-                        >
-                            <option value="all">All Classes</option>
-                            {rooms.map(room => (
-                                <option key={room.id} value={room.id}>{room.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    <Select<string>
+                        value={filterClassroom === 'all' ? null : filterClassroom}
+                        onChange={(value) => setFilterClassroom(value || 'all')}
+                        options={rooms.map(room => ({
+                            value: room.id,
+                            label: room.name,
+                            iconColor: room.color || '#6B7280',
+                        }))}
+                        placeholder="All Classes"
+                        icon={Filter}
+                        nullable
+                    />
 
                     {/* Status Filter */}
-                    <select
-                        value={filterStatus}
-                        onChange={e => setFilterStatus(e.target.value as 'all' | 'active' | 'completed')}
-                        className="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all cursor-pointer"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="completed">Completed</option>
-                    </select>
+                    <Select<string>
+                        value={filterStatus === 'all' ? null : filterStatus}
+                        onChange={(value) => setFilterStatus((value || 'all') as 'all' | 'active' | 'completed')}
+                        options={[
+                            { value: 'active', label: 'Active' },
+                            { value: 'completed', label: 'Completed' },
+                        ]}
+                        placeholder="All Status"
+                        nullable
+                    />
                 </div>
             </div>
 
@@ -777,8 +785,9 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
 
                         {/* Left Arrow */}
                         <button
-                            onClick={() => scrollCalendar('left')}
+                            onClick={() => navigateCalendar('left')}
                             className="flex-shrink-0 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                            title="Previous week"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -845,8 +854,9 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
 
                         {/* Right Arrow */}
                         <button
-                            onClick={() => scrollCalendar('right')}
+                            onClick={() => navigateCalendar('right')}
                             className="flex-shrink-0 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                            title="Next week"
                         >
                             <ChevronRight size={18} />
                         </button>

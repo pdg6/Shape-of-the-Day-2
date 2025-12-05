@@ -1069,7 +1069,7 @@ export default function TaskManager() {
                                     type="button"
                                     onClick={() => {
                                         if (!activeFormData.title.trim()) {
-                                            handleError("Please include a title before saving.");
+                                            handleError(new Error("⚠️ Please include a title before saving."));
                                             return;
                                         }
                                         setShowClassSelector(!showClassSelector);
@@ -1224,31 +1224,19 @@ export default function TaskManager() {
                                                 </button>
                                             );
                                         })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Delete Button - Only for existing tasks */}
-                        {!activeCard?.isNew && (
-                            <div className="pt-3 flex-shrink-0">
-                                <Button
-                                    variant="ghost-danger"
-                                    onClick={() => handleDelete(activeCardId)}
-                                    disabled={isSubmitting}
                                     className="w-full"
-                                >
+                                >}
                                     Delete {getTypeLabel(activeFormData.type)}
                                 </Button>
                             </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* RIGHT PANEL: Calendar & List */}
+                        )}* Delete Button - Only for existing tasks */}
+                    </div>activeCard?.isNew && (
+                </div>      <div className="pt-3 flex-shrink-0">
+                                <Button
+                {/* RIGHT PANEL: Calendar & List */}anger"
                 <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
                     <div className="h-auto lg:h-full flex flex-col justify-between overflow-hidden">
-
+                                    className="w-full"
                         {/* Calendar Header - aligned with top row */}
                         <div className="min-h-[44px] flex items-center justify-between mb-4">
                             <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
@@ -1258,21 +1246,21 @@ export default function TaskManager() {
                             <div className="flex gap-1">
                                 <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                     <ChevronLeft size={20} />
-                                </button>
+                                </button>an-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
                                 <button onClick={() => handleWeekNav('next')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                     <ChevronRight size={20} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Week Day Selector */}
+                                </button>er - aligned with top row */}
+                            </div>Name="min-h-[44px] flex items-center justify-between mb-4">
+                        </div>3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
+                                <CalendarIcon size={18} className="text-brand-accent" />
+                        {/* Week Day Selector */}.toLocaleString('default', { month: 'long', year: 'numeric' })}
                         <div className="pb-4 border-b border-gray-200 dark:border-gray-800">
                             <div className="grid grid-cols-5 gap-1">
-                                {weekDays.map(date => {
+                                {weekDays.map(date => {handleWeekNav('prev')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
                                     const dateStr = toDateString(date);
                                     const isSelected = selectedDate === dateStr;
-                                    const isToday = dateStr === toDateString(new Date());
-
+                                    const isToday = dateStr === toDateString(new Date());p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
+                                    <ChevronRight size={20} />
                                     return (
                                         <button
                                             key={dateStr}
@@ -1282,130 +1270,142 @@ export default function TaskManager() {
                                                 hover:bg-gray-50 dark:hover:bg-gray-800
                                                 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50
                                                 ${isSelected ? 'bg-brand-accent/10' : ''}
-                                            `}
-                                        >
+                                            `}lected = selectedDate === dateStr;
+                                        > isToday = dateStr === toDateString(new Date());
                                             <span className={`text-xs font-medium transition-colors ${
                                                 isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-2' : ''
                                             } ${
                                                 isSelected
-                                                    ? 'text-brand-accent' 
+                                                    ? 'text-brand-accent' (dateStr)}
                                                     : 'text-gray-500'
-                                            }`}>
+                                            }`}>flex flex-col items-center justify-center p-2 rounded-lg transition-all
                                                 {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                                            </span>
-                                            <span className={`
+                                            </span>us:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50
+                                            <span className={` 'bg-brand-accent/10' : ''}
                                                 text-sm font-bold mt-1 px-2 py-0.5 transition-colors
                                                 ${isSelected
-                                                    ? 'text-brand-accent'
-                                                    : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}
-                                            `}>
+                                                    ? 'text-brand-accent't-medium transition-colors ${
+                                                    : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}line-offset-2' : ''
+                                            `}>{
                                                 {date.getDate()}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Task List */}
+                                            </span> ? 'text-brand-accent' 
+                                        </button>   : 'text-gray-500'
+                                    );      }`}>
+                                })}             {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                            </div>          </span>
+                        </div>              <span className={`
+                                                text-sm font-bold mt-1 px-2 py-0.5 transition-colors
+                        {/* Task List */}       ${isSelected
                         <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
-                            <div className="mb-3">
+                            <div className="mb-3">  : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}
                                 <h4 className="text-sm font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                     <span style={{ color: currentClass?.color }}>{currentClass?.name || 'Class'}:</span> Shape of the Day <span className="text-gray-400">—</span> {selectedDate === toDateString()
-                                        ? 'Today'
+                                        ? 'Today'n>
                                         : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                </h4>
+                                </h4>;
+                            </div>}
                             </div>
-
                             {!currentClassId ? (
                                 <div className="text-center py-8 text-gray-400 italic text-sm">
                                     Select a class to view schedule.
-                                </div>
+                                </div>="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
                             ) : filteredTasks.length === 0 ? (
-                                <div className="text-center py-8 text-gray-400 italic text-sm">
-                                    No tasks scheduled.
-                                </div>
-                            ) : (
+                                <div className="text-center py-8 text-gray-400 italic text-sm"> dark:text-brand-textPrimary">
+                                    No tasks scheduled.r: currentClass?.color }}>{currentClass?.name || 'Class'}:</span> Shape of the Day <span className="text-gray-400">—</span> {selectedDate === toDateString()
+                                </div>  ? 'Today'
+                            ) : (       : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                 filteredTasks.map((task, index) => {
                                     const TypeIconSmall = getTypeIcon(task.type);
                                     const breadcrumb = getBreadcrumb(task);
                                     const progress = task.childIds?.length ? getProgress(task.id) : null;
-                                    const isEditing = openCards.some(c => c.id === task.id);
-
+                                    const isEditing = openCards.some(c => c.id === task.id);m">
+                                    Select a class to view schedule.
                                     return (
-                                        <div
-                                            key={task.id}
+                                        <divs.length === 0 ? (
+                                            key={task.id}er py-8 text-gray-400 italic text-sm">
                                             onClick={() => handleEditClick(task)}
                                             className={`
                                                 group relative p-3 rounded-lg border-2 transition-all cursor-pointer
-                                                ${isEditing
+                                                ${isEditingdex) => {
                                                     ? 'border-brand-accent bg-brand-accent/5'
                                                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
-                                            `}
-                                        >
+                                            `}ress = task.childIds?.length ? getProgress(task.id) : null;
+                                        > isEditing = openCards.some(c => c.id === task.id);
                                             {/* Remove from schedule button */}
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     handleRemoveFromSchedule(task);
-                                                }}
+                                                }}ame={`
                                                 className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all"
                                                 title="Remove from this class schedule"
-                                            >
-                                                <X size={14} />
+                                            >       ? 'border-brand-accent bg-brand-accent/5'
+                                                <X size={14} />ray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
                                             </button>
-
+                                        >
                                             <div className="flex items-start gap-2">
                                                 {/* Reorder Controls */}
                                                 <div className="flex flex-col" onClick={e => e.stopPropagation()}>
-                                                    <button
+                                                    <buttonropagation();
                                                         onClick={() => handleReorder(task.id, 'up')}
                                                         disabled={index === 0}
                                                         className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
-                                                    >
+                                                    >="Remove from this class schedule"
                                                         <ArrowUp size={14} />
-                                                    </button>
+                                                    </button>/>
                                                     <button
                                                         onClick={() => handleReorder(task.id, 'down')}
                                                         disabled={index === filteredTasks.length - 1}
                                                         className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
-                                                    >
+                                                    >className="flex flex-col" onClick={e => e.stopPropagation()}>
                                                         <ArrowDown size={14} />
-                                                    </button>
-                                                </div>
-
+                                                    </button>ck={() => handleReorder(task.id, 'up')}
+                                                </div>  disabled={index === 0}
+                                                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                 {/* Type Badge */}
                                                 <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
                                                     <TypeIconSmall size={12} />
-                                                </span>
-
-                                                <div className="flex-1 min-w-0">
-                                                    <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
+                                                </span>tton
+                                                        onClick={() => handleReorder(task.id, 'down')}
+                                                <div className="flex-1 min-w-0">eredTasks.length - 1}
+                                                    <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">ent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                         {task.title}
-                                                    </h5>
-
+                                                    </h5>ArrowDown size={14} />
+                                                    </button>
                                                     {/* Breadcrumb */}
                                                     {breadcrumb && (
                                                         <p className="text-xs text-gray-400 truncate mt-0.5">
-                                                            {breadcrumb}
-                                                        </p>
-                                                    )}
+                                                            {breadcrumb}hrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                        </p>nSmall size={12} />
+                                                    )}>
 
-                                                    {/* Progress indicator */}
-                                                    {progress && progress.total > 0 && (
+                                                    {/* Progress indicator */}">
+                                                    {progress && progress.total > 0 && (t-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
                                                         <div className="flex items-center gap-2 mt-1">
                                                             <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                                                 <div
                                                                     className="h-full bg-brand-accent rounded-full transition-all"
                                                                     style={{ width: `${(progress.completed / progress.total) * 100}%` }}
-                                                                />
-                                                            </div>
+                                                                />me="text-xs text-gray-400 truncate mt-0.5">
+                                                            </div>crumb}
                                                             <span className="text-xs text-gray-400">
                                                                 {progress.completed}/{progress.total}
                                                             </span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                        </div>ss indicator */}
+                                                    )}rogress && progress.total > 0 && (
+                                                </div>  <div className="flex items-center gap-2 mt-1">
+                                            </div>          <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        </div>                  <div
+                                    );                              className="h-full bg-brand-accent rounded-full transition-all"
+                                })                                  style={{ width: `${(progress.completed / progress.total) * 100}%` }}
+                            )}                                  />
+                        </div>                              </div>
+                    </div>                                  <span className="text-xs text-gray-400">
+                </div>                                          {progress.completed}/{progress.total}
+            </div>                                          </span>
+        </div>                                          </div>
+    );                                              )}
+}                                               </div>
                                             </div>
                                         </div>
                                     );

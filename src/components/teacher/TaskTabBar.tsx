@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Plus, X, Pencil } from 'lucide-react';
 
 interface TabInfo {
@@ -25,6 +26,14 @@ export function TaskTabBar({
     onAddNew,
     onTitleChange,
 }: TaskTabBarProps) {
+    // Pulse animation state - pulses for 2 seconds on load
+    const [isPulsing, setIsPulsing] = useState(true);
+    
+    useEffect(() => {
+        const timer = setTimeout(() => setIsPulsing(false), 2000);
+        return () => clearTimeout(timer);
+    }, []);
+    
     // Find the active tab index
     const activeIndex = tabs.findIndex(tab => tab.id === activeTabId);
 
@@ -67,37 +76,40 @@ export function TaskTabBar({
                                 relative flex items-center
                                 ${isActive ? 'pb-[2px]' : 'pb-[1px]'}
                             `}>
-                                {/* Edit Icon - only show when no title (placeholder state) */}
-                                {!tab.title && (
-                                    <Pencil 
-                                        size={14} 
-                                        className={`ml-3 flex-shrink-0 transition-colors ${isActive ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'}`} 
+                                {/* Editable Title Input with Icon */}
+                                <div className="relative flex items-center ml-3">
+                                    {/* Edit Icon - positioned inside input area, only show when no title */}
+                                    {!tab.title && (
+                                        <Pencil 
+                                            size={14} 
+                                            className={`absolute left-2 flex-shrink-0 transition-colors pointer-events-none ${isActive ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'} ${isPulsing && isActive ? 'animate-pulse' : ''}`} 
+                                        />
+                                    )}
+                                    
+                                    <input
+                                        type="text"
+                                        value={tab.title}
+                                        onChange={(e) => onTitleChange(tab.id, e.target.value)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!isActive) onTabClick(tab.id);
+                                        }}
+                                        placeholder="Title"
+                                        className={`
+                                            w-32 sm:w-40 py-2.5 bg-transparent
+                                            outline-none border-none ring-0 shadow-none
+                                            caret-current
+                                            text-sm font-medium transition-colors
+                                            ${!tab.title ? 'pl-7 pr-2 text-left' : 'px-2 text-center'}
+                                            ${isActive 
+                                                ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' 
+                                                : 'text-gray-500 dark:text-gray-400'}
+                                            placeholder-gray-400 dark:placeholder-gray-500
+                                            ${!isActive ? 'cursor-pointer' : ''}
+                                            ${isPulsing && isActive && !tab.title ? 'animate-pulse' : ''}
+                                        `}
                                     />
-                                )}
-                                
-                                {/* Editable Title Input */}
-                                <input
-                                    type="text"
-                                    value={tab.title}
-                                    onChange={(e) => onTitleChange(tab.id, e.target.value)}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!isActive) onTabClick(tab.id);
-                                    }}
-                                    placeholder="Title"
-                                    className={`
-                                        w-32 sm:w-40 px-2 py-2.5 bg-transparent text-center
-                                        outline-none border-none ring-0 shadow-none
-                                        caret-current
-                                        text-sm font-medium transition-colors
-                                        ${!tab.title ? '' : 'ml-3'}
-                                        ${isActive 
-                                            ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' 
-                                            : 'text-gray-500 dark:text-gray-400'}
-                                        placeholder-gray-400 dark:placeholder-gray-500
-                                        ${!isActive ? 'cursor-pointer' : ''}
-                                    `}
-                                />
+                                </div>
 
                                 {/* Close Button - Only show if more than 1 tab */}
                                 {tabs.length > 1 && (
