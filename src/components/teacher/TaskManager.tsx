@@ -884,7 +884,7 @@ export default function TaskManager() {
                             {/* Mobile: Type + Linked To row */}
                             <div className="grid grid-cols-2 gap-3 sm:hidden">
                                 {/* Type Selector */}
-                                <div className="relative">
+                                <div className="relative z-10">
                                     <select
                                         value={activeFormData.type}
                                         onChange={e => updateActiveCard('type', e.target.value as ItemType)}
@@ -894,7 +894,7 @@ export default function TaskManager() {
                                             border-2 transition-all duration-200
                                             ${getTypeColorClasses(activeFormData.type)}
                                             bg-brand-lightSurface dark:bg-brand-darkSurface
-                                            focus:outline-none focus:ring-2 focus:ring-brand-accent/30
+                                            focus:outline-none focus:ring-2 focus:ring-brand-accent/20
                                         `}
                                         style={{
                                             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
@@ -929,7 +929,7 @@ export default function TaskManager() {
                                     <select
                                         value={activeFormData.parentId || ''}
                                         onChange={e => updateActiveCard('parentId', e.target.value || null)}
-                                        className={`w-full pl-10 pr-8 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500 appearance-none cursor-pointer ${activeFormData.parentId ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                        className={`w-full pl-10 pr-8 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-300 dark:focus:border-gray-500 appearance-none cursor-pointer ${activeFormData.parentId ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                         style={{
                                             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                                             backgroundRepeat: 'no-repeat',
@@ -957,7 +957,7 @@ export default function TaskManager() {
                                 <button
                                     type="button"
                                     onClick={() => startDateMobileInputRef.current?.showPicker()}
-                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 flex items-center justify-center gap-1.5 ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 flex items-center justify-center gap-1.5 ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                 >
                                     <input
                                         ref={startDateMobileInputRef}
@@ -977,7 +977,7 @@ export default function TaskManager() {
                                 <button
                                     type="button"
                                     onClick={() => dueDateMobileInputRef.current?.showPicker()}
-                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 flex items-center justify-center gap-1.5 ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                    className={`relative w-full px-3 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 flex items-center justify-center gap-1.5 ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                 >
                                     <input
                                         ref={dueDateMobileInputRef}
@@ -997,19 +997,18 @@ export default function TaskManager() {
 
                             {/* Desktop: All 4 equal columns in one row */}
                             <div className="hidden sm:grid sm:grid-cols-4 sm:gap-4">
-                                {/* Type Selector - Pill shape with glow */}
-                                <div className="relative group">
-                                    <div className={`absolute inset-0 rounded-lg blur-sm opacity-0 group-hover:opacity-100 transition-opacity ${activeFormData.type === 'project' ? 'bg-purple-500/10' : activeFormData.type === 'assignment' ? 'bg-blue-500/10' : activeFormData.type === 'task' ? 'bg-green-500/10' : 'bg-orange-500/10'}`}></div>
+                                {/* Type Selector - Pill shape */}
+                                <div className="relative z-10">
                                     <select
                                         value={activeFormData.type}
                                         onChange={e => updateActiveCard('type', e.target.value as ItemType)}
                                         className={`
-                                            relative appearance-none cursor-pointer w-full
+                                            appearance-none cursor-pointer w-full
                                             pl-10 pr-8 py-2.5 rounded-lg text-sm font-bold
                                             border-2 transition-all duration-200
                                             ${getTypeColorClasses(activeFormData.type)}
                                             bg-brand-lightSurface dark:bg-brand-darkSurface
-                                            hover:shadow-[0_0_12px_rgba(74,222,128,0.15)]
+                                            hover:opacity-80
                                             focus:outline-none focus:ring-2 focus:ring-brand-accent/20
                                         `}
                                         style={{
@@ -1045,7 +1044,7 @@ export default function TaskManager() {
                                     <select
                                         value={activeFormData.parentId || ''}
                                         onChange={e => updateActiveCard('parentId', e.target.value || null)}
-                                        className={`w-full pl-10 pr-8 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 appearance-none cursor-pointer group-hover:border-gray-400 dark:group-hover:border-gray-500 ${activeFormData.parentId ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                        className={`w-full pl-10 pr-8 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 appearance-none cursor-pointer group-hover:border-gray-300 dark:group-hover:border-gray-600 ${activeFormData.parentId ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                         style={{
                                             backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
                                             backgroundRepeat: 'no-repeat',
@@ -1074,7 +1073,7 @@ export default function TaskManager() {
                                     <button
                                         type="button"
                                         onClick={() => startDateInputRef.current?.showPicker()}
-                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                     >
                                         <input
                                             ref={startDateInputRef}
@@ -1099,7 +1098,7 @@ export default function TaskManager() {
                                     <button
                                         type="button"
                                         onClick={() => dueDateInputRef.current?.showPicker()}
-                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
+                                        className={`w-full pl-9 pr-4 py-2.5 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-gray-200 dark:border-gray-700 font-medium text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 text-left ${activeFormData.endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}`}
                                     >
                                         <input
                                             ref={dueDateInputRef}
@@ -1188,7 +1187,7 @@ export default function TaskManager() {
                                 <button
                                     type="button"
                                     onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
-                                    className="relative py-2.5 px-4 rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 hover:shadow-[0_0_12px_rgba(168,85,247,0.15)] transition-all duration-200 group cursor-pointer select-none"
+                                    className="relative py-2.5 px-4 rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 transition-all duration-200 group cursor-pointer select-none"
                                 >
                                     <div className="flex items-center justify-center gap-2 text-purple-400 group-hover:text-purple-500 transition-colors">
                                         <Sparkles size={16} />
@@ -1197,7 +1196,7 @@ export default function TaskManager() {
                                 </button>
 
                                 {/* Upload File Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
+                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 group cursor-pointer">
                                     <input
                                         ref={fileInputRef}
                                         type="file"
@@ -1221,7 +1220,7 @@ export default function TaskManager() {
                                 </div>
 
                                 {/* Add Link Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
+                                <div className="relative py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
                                     <LinkIcon size={14} className="text-gray-400 flex-shrink-0" />
                                     <input
                                         type="url"
@@ -1246,8 +1245,8 @@ export default function TaskManager() {
                                     disabled={isSubmitting}
                                     className={`relative py-2.5 px-4 rounded-md border-2 transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${
                                         showClassSelector 
-                                            ? 'border-green-500 bg-green-500/10 shadow-[0_0_12px_rgba(74,222,128,0.25)]' 
-                                            : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500 hover:shadow-[0_0_12px_rgba(74,222,128,0.15)]'
+                                            ? 'border-green-500 bg-green-500/10' 
+                                            : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500'
                                     }`}
                                 >
                                     <div className={`flex items-center justify-center gap-2 transition-colors ${
@@ -1327,7 +1326,7 @@ export default function TaskManager() {
                                             setShowClassSelector(false);
                                         }}
                                         disabled={isSubmitting || activeFormData.selectedRoomIds.length === 0}
-                                        className="flex-1 py-2.5 px-4 rounded-md border-2 border-green-500 bg-green-500/10 text-green-500 font-bold transition-all hover:bg-green-500/20 hover:shadow-[0_0_12px_rgba(74,222,128,0.25)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="flex-1 py-2.5 px-4 rounded-md border-2 border-green-500 bg-green-500/10 text-green-500 font-bold transition-all hover:bg-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? (
                                             <Loader size={16} className="animate-spin" />
@@ -1339,7 +1338,7 @@ export default function TaskManager() {
                                     <button
                                         type="button"
                                         onClick={() => setShowClassSelector(false)}
-                                        className="py-2.5 px-4 rounded-md border-2 border-gray-300 dark:border-gray-600 text-gray-500 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+                                        className="py-2.5 px-4 rounded-md border-2 border-gray-200 dark:border-gray-700 text-gray-500 font-medium hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
                                     >
                                         Cancel
                                     </button>
@@ -1382,7 +1381,7 @@ export default function TaskManager() {
                                                     }}
                                                     className={`
                                                         flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all border-2
-                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent
+                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent/20
                                                         ${isSelected
                                                             ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
                                                             : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}

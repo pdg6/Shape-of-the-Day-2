@@ -812,19 +812,16 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                         onClick={() => !isDragging && setFilterDate(dateStr)}
                                         className={`
                                             flex flex-col items-center justify-center flex-shrink-0
-                                            w-14 h-16 rounded-xl border-2 transition-all
-                                            ${isToday && !isSelected
-                                                ? 'bg-brand-accent/10 border-brand-accent/30'
-                                                : ''}
+                                            w-14 h-16 rounded-xl transition-all
                                             ${isSelected
-                                                ? 'border-brand-accent bg-brand-accent/20 ring-2 ring-brand-accent/30'
-                                                : !isToday ? 'border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800/50' : 'hover:bg-brand-accent/20'}
+                                                ? 'bg-brand-accent/20'
+                                                : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}
                                         `}
                                     >
-                                        <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-brand-accent' : 'text-gray-400'}`}>
+                                        <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2' : 'text-gray-400'}`}>
                                             {dayName}
                                         </span>
-                                        <span className={`text-lg font-bold ${isSelected ? 'text-brand-accent' : isToday ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                        <span className={`text-xl font-bold ${isSelected ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                                             {dayNum}
                                         </span>
                                         {/* Task counts - colored dots */}
