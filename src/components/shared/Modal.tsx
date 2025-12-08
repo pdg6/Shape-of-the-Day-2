@@ -59,8 +59,8 @@ export const Modal: React.FC<ModalProps> = ({
 
         document.addEventListener('keydown', handleKeyDown);
 
-        // Focus the first element when modal opens
-        setTimeout(() => {
+        // Focus the first focusable element when modal opens
+        requestAnimationFrame(() => {
             if (modalRef.current) {
                 const focusableElements = modalRef.current.querySelectorAll(
                     'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -69,7 +69,7 @@ export const Modal: React.FC<ModalProps> = ({
                     (focusableElements[0] as HTMLElement).focus();
                 }
             }
-        }, 50);
+        });
 
         return () => {
             document.removeEventListener('keydown', handleKeyDown);

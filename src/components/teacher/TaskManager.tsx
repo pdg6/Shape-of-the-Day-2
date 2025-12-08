@@ -160,6 +160,7 @@ export default function TaskManager() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [showClassSelector, setShowClassSelector] = useState(false); // Toggles class buttons visibility
+    const [isDescriptionActive, setIsDescriptionActive] = useState(false); // Tracks hover/focus on description
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -945,23 +946,111 @@ export default function TaskManager() {
                                 />
                             </div>
                         </div>
-
                         {/* Description & Attachments Section */}
                         <div className="flex-1 flex flex-col space-y-4 min-h-0 overflow-hidden">
-                            {/* Description - Always expands to fill available space */}
-                            <div className="flex-1 min-h-[100px] relative">
-                                <div className="absolute inset-0">
+                            {/* Description Container with embedded Upload/Link buttons */}
+                            <div
+                                className="flex-1 min-h-[100px] relative"
+                                onMouseEnter={() => setIsDescriptionActive(true)}
+                                onMouseLeave={() => setIsDescriptionActive(false)}
+                            >
+                                <div className="absolute inset-0 flex flex-col">
                                     <textarea
                                         ref={descriptionRef}
                                         value={activeFormData.description}
                                         onChange={e => updateActiveCard('description', e.target.value)}
                                         onPaste={handlePaste}
-                                        className="w-full h-full px-5 py-4 rounded-md border-2 transition-all duration-300 bg-gray-50/50 dark:bg-gray-900/30 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-600 text-sm resize-none leading-relaxed hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 focus:ring-1 focus:ring-gray-200/50 dark:focus:ring-gray-700/50"
+                                        onFocus={() => setIsDescriptionActive(true)}
+                                        onBlur={() => setIsDescriptionActive(false)}
+                                        className="flex-1 w-full px-5 py-4 rounded-t-md border-2 border-b-0 transition-all duration-300 bg-gray-50/50 dark:bg-gray-900/30 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-600 text-sm resize-none leading-relaxed hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500"
                                         placeholder="Describe this task..."
                                     />
-                                    {/* Empty state placeholder - centered */}
-                                    {!activeFormData.description && !showClassSelector && (
-                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 text-sm flex flex-col items-center gap-2 opacity-60">
+                                    {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
+                                    <div className="px-4 py-3 rounded-b-md border-2 border-t-0 border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex flex-wrap items-center gap-2 min-h-[44px]">
+                                        {/* Inline attachments */}
+                                        {activeFormData.attachments && activeFormData.attachments.map(attachment => (
+                                            <div
+                                                key={attachment.id}
+                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs"
+                                            >
+                                                {attachment.mimeType.startsWith('image/') ? (
+                                                    <ImageIcon size={12} className="text-blue-500" />
+                                                ) : (
+                                                    <FileIcon size={12} className="text-gray-500" />
+                                                )}
+                                                <a
+                                                    href={attachment.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
+                                                >
+                                                    {attachment.filename}
+                                                </a>
+                                                <button
+                                                    onClick={() => removeAttachment(attachment.id)}
+                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
+                                                >
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {/* Inline link display */}
+                                        {activeFormData.linkURL && (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs">
+                                                <LinkIcon size={12} className="text-blue-500" />
+                                                <a
+                                                    href={activeFormData.linkURL}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[120px]"
+                                                >
+                                                    {(() => { try { return new URL(activeFormData.linkURL).hostname; } catch { return activeFormData.linkURL; } })()}
+                                                </a>
+                                                <button
+                                                    onClick={() => updateActiveCard('linkURL', '')}
+                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
+                                                >
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
+                                        )}
+                                        {/* Upload & Link buttons - show on hover/focus */}
+                                        <div className={`flex items-center gap-3 transition-opacity duration-200 ${isDescriptionActive || isUploading ? 'opacity-100' : 'opacity-0'}`}>
+                                            <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    multiple
+                                                    accept={ALLOWED_FILE_TYPES.join(',')}
+                                                    onChange={handleFileSelect}
+                                                    disabled={isUploading}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                                                    {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
+                                                    <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
+                                                </div>
+                                            </div>
+                                            {!activeFormData.linkURL && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const url = prompt('Enter URL:');
+                                                        if (url) updateActiveCard('linkURL', url);
+                                                    }}
+                                                    className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group"
+                                                >
+                                                    <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                                                        <LinkIcon size={16} />
+                                                        <span className="text-sm font-medium">Add Link</span>
+                                                    </div>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {/* Empty state placeholder */}
+                                    {!activeFormData.description && !activeFormData.attachments?.length && !activeFormData.linkURL && !isDescriptionActive && (
+                                        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 text-sm flex flex-col items-center gap-2 opacity-60">
                                             <svg className="w-6 h-6 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
                                             </svg>
@@ -971,88 +1060,9 @@ export default function TaskManager() {
                                 </div>
                             </div>
 
-                            {/* Attachments Display */}
-                            {activeFormData.attachments && activeFormData.attachments.length > 0 && (
-                                <div className="flex-shrink-0 pt-2">
-                                    <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
-                                        Attachments ({activeFormData.attachments.length})
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {activeFormData.attachments.map(attachment => (
-                                            <div
-                                                key={attachment.id}
-                                                className="group relative flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700"
-                                            >
-                                                {attachment.mimeType.startsWith('image/') ? (
-                                                    <ImageIcon size={14} className="text-blue-500" />
-                                                ) : (
-                                                    <FileIcon size={14} className="text-gray-500" />
-                                                )}
-                                                <a
-                                                    href={attachment.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[150px]"
-                                                    title={attachment.filename}
-                                                >
-                                                    {attachment.filename}
-                                                </a>
-                                                <button
-                                                    onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-colors"
-                                                    title="Remove attachment"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Action Row: Upload | Link | (spacer) | AI | Save - 5-column grid */}
+                            {/* Action Row: AI | (spacer) | (spacer) | (spacer) | Save - 5-column grid */}
                             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 items-center pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
-                                {/* Col 1: Upload File Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        multiple
-                                        accept={ALLOWED_FILE_TYPES.join(',')}
-                                        onChange={handleFileSelect}
-                                        disabled={isUploading}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
-                                        data-testid="file-upload-input"
-                                    />
-                                    <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
-                                        {isUploading ? (
-                                            <Loader size={16} className="animate-spin" />
-                                        ) : (
-                                            <Upload size={16} />
-                                        )}
-                                        <span className="text-sm font-medium">
-                                            {isUploading ? 'Uploading...' : 'Upload'}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Col 2: Add Link Button - Gray solid */}
-                                <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-200 dark:border-gray-700 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 focus-within:border-brand-accent focus-within:ring-2 focus-within:ring-brand-accent/20 transition-all duration-200 flex items-center gap-2">
-                                    <LinkIcon size={14} className="text-gray-400 flex-shrink-0" />
-                                    <input
-                                        type="url"
-                                        value={activeFormData.linkURL}
-                                        onChange={e => updateActiveCard('linkURL', e.target.value)}
-                                        className="w-full bg-transparent outline-none text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 font-medium"
-                                        placeholder="Add Link..."
-                                        data-testid="link-url-input"
-                                    />
-                                </div>
-
-                                {/* Col 3: Empty spacer */}
-                                <div className="hidden lg:block" />
-
-                                {/* Col 4: AI Generate Button - Purple solid */}
+                                {/* Col 1: AI Generate Button - Purple solid (moved to left) */}
                                 <button
                                     type="button"
                                     onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
@@ -1063,6 +1073,15 @@ export default function TaskManager() {
                                         <span className="text-sm font-medium">Use AI</span>
                                     </div>
                                 </button>
+
+                                {/* Col 2: Empty spacer */}
+                                <div className="hidden lg:block" />
+
+                                {/* Col 3: Empty spacer */}
+                                <div className="hidden lg:block" />
+
+                                {/* Col 4: Empty spacer */}
+                                <div className="hidden lg:block" />
 
                                 {/* Col 5: Save Button - Split design: main save + dropdown for more classes */}
                                 <div className="flex items-center w-full">

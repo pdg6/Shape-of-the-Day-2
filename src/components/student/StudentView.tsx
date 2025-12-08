@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import MiniCalendar from './MiniCalendar';
 import CurrentTaskList from './CurrentTaskList';
 import DayTaskPreview from './DayTaskPreview';
@@ -8,11 +8,10 @@ import StudentSidebar from './StudentSidebar';
 import StudentProjectsView from './StudentProjectsView';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
-import { doc, updateDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { Calendar, ListTodo, Menu, FolderOpen } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
-import { throttle } from '../../utils/security';
 
 /**
  * Props for the StudentView component.
@@ -96,8 +95,36 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     // State for the tasks currently in the student's "My Day" view
     const [currentTasks, setCurrentTasks] = useState<Task[]>([
-        { id: '1', title: 'Morning Check-in', description: 'Say hello to the class!', status: 'todo', dueDate: today },
-        { id: '2', title: 'Math Worksheet', description: 'Complete pages 10-12', status: 'in_progress', dueDate: today },
+        {
+            id: '1',
+            title: 'Morning Check-in',
+            description: 'Say hello to the class!',
+            status: 'todo',
+            dueDate: today,
+            type: 'task',
+            parentId: null,
+            rootId: null,
+            path: [],
+            pathTitles: [],
+            childIds: [],
+            selectedRoomIds: [],
+            presentationOrder: 0
+        },
+        {
+            id: '2',
+            title: 'Math Worksheet',
+            description: 'Complete pages 10-12',
+            status: 'in_progress',
+            dueDate: today,
+            type: 'task',
+            parentId: null,
+            rootId: null,
+            path: [],
+            pathTitles: [],
+            childIds: [],
+            selectedRoomIds: [],
+            presentationOrder: 1
+        },
     ]);
 
     // Mock database of tasks available for future dates
@@ -107,24 +134,57 @@ const StudentView: React.FC<StudentViewProps> = ({
         [today]: [], // Already imported
         // Tomorrow's tasks
         [tomorrow]: [
-            { id: '3', title: 'Reading Time', description: 'Read for 20 minutes', status: 'todo', dueDate: tomorrow },
-            { id: '4', title: 'Art Project', description: 'Draw your favorite animal', status: 'todo', dueDate: tomorrow },
+            {
+                id: '3',
+                title: 'Reading Time',
+                description: 'Read for 20 minutes',
+                status: 'todo',
+                dueDate: tomorrow,
+                type: 'task',
+                parentId: null,
+                rootId: null,
+                path: [],
+                pathTitles: [],
+                childIds: [],
+                selectedRoomIds: [],
+                presentationOrder: 0
+            },
+            {
+                id: '4',
+                title: 'Art Project',
+                description: 'Draw your favorite animal',
+                status: 'todo',
+                dueDate: tomorrow,
+                type: 'task',
+                parentId: null,
+                rootId: null,
+                path: [],
+                pathTitles: [],
+                childIds: [],
+                selectedRoomIds: [],
+                presentationOrder: 1
+            },
         ]
     });
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
-     * Throttled to prevent excessive writes from rapid status changes.
+     * Accepts tasks as parameter to avoid stale closure issues.
      */
-    const syncToTeacher = async (taskId: string, status: TaskStatus, comment: string = '') => {
-        if (!auth.currentUser || !classId) return;
+    const syncToTeacher = async (
+        taskId: string,
+        status: TaskStatus,
+        updatedTasks: Task[],
+        comment: string = ''
+    ) => {
+        const currentUser = auth.currentUser;
+        if (!currentUser || !classId) return;
 
-        // const task = currentTasks.find(t => t.id === taskId);
-        const completedCount = currentTasks.filter(t => t.status === 'done').length;
-        const activeTasks = currentTasks.filter(t => t.status === 'in_progress').map(t => t.id);
+        const completedCount = updatedTasks.filter(t => t.status === 'done').length;
+        const activeTasks = updatedTasks.filter(t => t.status === 'in_progress').map(t => t.id);
 
         try {
-            const studentRef = doc(db, 'classrooms', classId, 'live_students', auth.currentUser.uid);
+            const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
 
             await updateDoc(studentRef, {
                 currentStatus: status,
@@ -132,13 +192,12 @@ const StudentView: React.FC<StudentViewProps> = ({
                 'metrics.tasksCompleted': completedCount,
                 'metrics.activeTasks': activeTasks,
                 currentMessage: comment,
-                lastActive: serverTimestamp() // Server timestamp for accurate heartbeat
+                lastActive: serverTimestamp()
             });
 
-            console.log('[SYNC] Updated Firestore for student:', auth.currentUser.uid);
+            console.log('[SYNC] Updated Firestore for student:', currentUser.uid);
         } catch (error) {
             console.error("Failed to sync student state:", error);
-            // Don't show toast for background sync errors to avoid spamming the user
         }
     };
 
@@ -148,14 +207,14 @@ const StudentView: React.FC<StudentViewProps> = ({
      * Can be used for session cleanup (students inactive >5min can be removed)
      */
     useEffect(() => {
-        if (!auth.currentUser || !classId) return;
+        const currentUser = auth.currentUser;
+        if (!currentUser || !classId) return;
 
         const sendHeartbeat = async () => {
             try {
-                const studentRef = doc(db, 'classrooms', classId, 'live_students', auth.currentUser!.uid);
+                const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
                 await updateDoc(studentRef, {
                     lastSeen: serverTimestamp(),
-                    // Also update lastActive if they're actively on the page
                     lastActive: serverTimestamp()
                 });
                 console.log('[HEARTBEAT] Updated lastSeen timestamp');
@@ -181,14 +240,16 @@ const StudentView: React.FC<StudentViewProps> = ({
      * Also triggers toast notifications and syncs to backend.
      */
     const handleUpdateStatus = (taskId: string, newStatus: TaskStatus) => {
-        // Optimistic update: Update UI immediately before server confirms
-        setCurrentTasks((prev) =>
-            prev.map((task) =>
-                task.id === taskId ? { ...task, status: newStatus } : task
-            )
+        // Calculate updated tasks for sync (avoids stale closure)
+        const updatedTasks = currentTasks.map((task) =>
+            task.id === taskId ? { ...task, status: newStatus } : task
         );
 
-        syncToTeacher(taskId, newStatus);
+        // Optimistic update: Update UI immediately before server confirms
+        setCurrentTasks(updatedTasks);
+
+        // Sync with the updated tasks array
+        syncToTeacher(taskId, newStatus, updatedTasks);
 
         // Show feedback to the student
         if (newStatus === 'stuck') {
@@ -204,15 +265,15 @@ const StudentView: React.FC<StudentViewProps> = ({
      * Updates the comment for a specific task.
      */
     const handleUpdateComment = (taskId: string, comment: string) => {
-        setCurrentTasks((prev) =>
-            prev.map((task) =>
-                task.id === taskId ? { ...task, comment } : task
-            )
+        const updatedTasks = currentTasks.map((task) =>
+            task.id === taskId ? { ...task, comment } : task
         );
 
-        const task = currentTasks.find(t => t.id === taskId);
+        setCurrentTasks(updatedTasks);
+
+        const task = updatedTasks.find(t => t.id === taskId);
         if (task) {
-            syncToTeacher(taskId, task.status, comment);
+            syncToTeacher(taskId, task.status, updatedTasks, comment);
         }
     };
 
@@ -261,15 +322,20 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     /**
      * Handles the student signing out.
-     * Scrubs session data before logging out.
+     * Cleans up live_students document and scrubs session data before logging out.
      */
     const handleSignOut = async () => {
-        if (auth.currentUser && classId) {
+        const currentUser = auth.currentUser;
+        if (currentUser && classId) {
             try {
-                await scrubAndSaveSession(classId, auth.currentUser.uid);
+                // Remove from live_students so teacher sees student as disconnected
+                const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
+                await deleteDoc(studentRef);
+
+                await scrubAndSaveSession(classId, currentUser.uid);
                 toast.success('Session saved. Goodbye!');
             } catch (error) {
-                console.error("Error saving session:", error);
+                console.error("Error during sign-out cleanup:", error);
                 toast.error('Error saving session data.');
             }
         }

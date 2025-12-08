@@ -41,11 +41,18 @@ function App() {
     // View state: controls which main component is rendered
     const [view, setView] = useState<'landing' | 'teacher' | 'student'>('landing');
 
-    // Student specific state
+    // Student specific state - restored from sessionStorage if available
     const [showNameModal, setShowNameModal] = useState(false);
-    const [studentName, setStudentName] = useState('');
-    const [classId, setClassId] = useState('');
-    const [studentClassroomColor, setStudentClassroomColor] = useState<string | undefined>(undefined);
+    const [studentName, setStudentName] = useState(() => {
+        return sessionStorage.getItem('studentName') || '';
+    });
+    const [classId, setClassId] = useState(() => {
+        return sessionStorage.getItem('studentClassId') || '';
+    });
+    const [studentClassroomColor, setStudentClassroomColor] = useState<string | undefined>(() => {
+        return sessionStorage.getItem('studentClassroomColor') || undefined;
+    });
+    const [isJoining, setIsJoining] = useState(false);
 
     // Determine user role for theming
     const userRole: UserRole = view === 'student' ? 'student' : 'teacher';
@@ -77,16 +84,38 @@ function App() {
                 setView('teacher');
             } else if (view === 'teacher') {
                 setView('landing');
+            } else if (classId && studentName) {
+                // Restore student session from sessionStorage
+                setView('student');
             }
         }
-    }, [user, loading]);
+    }, [user, loading, view, classId, studentName]);
+
+    // Effect to persist student session to sessionStorage
+    useEffect(() => {
+        if (studentName) {
+            sessionStorage.setItem('studentName', studentName);
+        } else {
+            sessionStorage.removeItem('studentName');
+        }
+        if (classId) {
+            sessionStorage.setItem('studentClassId', classId);
+        } else {
+            sessionStorage.removeItem('studentClassId');
+        }
+        if (studentClassroomColor) {
+            sessionStorage.setItem('studentClassroomColor', studentClassroomColor);
+        } else {
+            sessionStorage.removeItem('studentClassroomColor');
+        }
+    }, [studentName, classId, studentClassroomColor]);
 
     // Developer Mode: Keyboard shortcut to load dummy data (Ctrl+Shift+D)
     // SECURITY: Only enabled in development mode to prevent production abuse
     useEffect(() => {
         // Skip in production builds
         if (!import.meta.env.DEV) return;
-        
+
         const handleKeyPress = async (event: KeyboardEvent) => {
             // Check for Ctrl+Shift+D (or Cmd+Shift+D on Mac)
             if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'D') {
@@ -184,6 +213,11 @@ function App() {
         setShowNameModal(false);
         setCurrentClassId(null);
         setClassrooms([]);
+
+        // Clear student session storage
+        sessionStorage.removeItem('studentName');
+        sessionStorage.removeItem('studentClassId');
+        sessionStorage.removeItem('studentClassroomColor');
     };
 
     /**
@@ -191,9 +225,11 @@ function App() {
      */
     const handleJoinRoom = async (code: string, name: string, joinedClassId: string) => {
         console.log('Joining room:', code, 'as', name, 'ID:', joinedClassId);
+        setIsJoining(true);
+
         setStudentName(name);
         setClassId(joinedClassId);
-        
+
         // Fetch classroom color for theme
         try {
             const classDoc = await getDoc(doc(db, 'classrooms', joinedClassId));
@@ -203,8 +239,11 @@ function App() {
             }
         } catch (error) {
             console.error('Error fetching classroom color:', error);
+            toast.error('Could not load classroom theme. Using default.');
+        } finally {
+            setIsJoining(false);
         }
-        
+
         setView('student');
     };
 
