@@ -19,7 +19,7 @@ import { ClassCard } from './ClassCard';
  */
 interface ClassroomManagerProps {
     activeView?: 'classes' | 'history' | 'analytics';
-    onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'data' | 'classrooms', subTab?: string) => void;
+    onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms', subTab?: string) => void;
 }
 
 const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'classes', onNavigate }) => {
@@ -216,11 +216,11 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     }}
                                     onViewCalendar={(id) => {
                                         setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('data', 'history');
+                                        if (onNavigate) onNavigate('reports', 'history');
                                     }}
                                     onViewData={(id) => {
                                         setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('data', 'analytics');
+                                        if (onNavigate) onNavigate('reports', 'analytics');
                                     }}
                                 />
                             ))}

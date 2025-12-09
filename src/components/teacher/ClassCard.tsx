@@ -50,7 +50,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
 
     return (
         <div
-            className="group relative flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl cursor-pointer"
+            className="group relative flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden"
             style={{
                 borderColor: isHovered ? cardColor : undefined
             }}
@@ -58,159 +58,158 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
             onMouseLeave={() => setIsHovered(false)}
             onClick={() => onSelect(classroom.id)}
         >
-            {/* Header / Banner */}
-            <div
-                className="h-24 p-6 relative flex justify-between items-start"
-            >
-                <div className="z-10 w-full">
-                    <h3 className={`text-xl font-bold leading-tight mb-1 truncate pr-4 ${isSelected ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
-                        {classroom.name}
-                    </h3>
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                        <span className="opacity-75">{classroom.subject}</span>
-                        <span className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
-                        <span className="opacity-75">{classroom.gradeLevel}</span>
-                    </p>
+            {/* Main Content (Left Side) */}
+            <div className="flex-1 flex flex-col min-w-0">
+                {/* Header / Banner */}
+                <div className="h-20 p-5 relative flex justify-between items-start border-b border-gray-100 dark:border-gray-800">
+                    <div className="z-10 w-full min-w-0">
+                        <h3 className={`text-xl font-bold leading-tight mb-1 truncate pr-2 ${isSelected ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                            {classroom.name}
+                        </h3>
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                            <span className="opacity-75 truncate">{classroom.subject}</span>
+                            <span className="w-1 h-1 flex-none rounded-full bg-gray-300 dark:bg-gray-600" />
+                            <span className="opacity-75">{classroom.gradeLevel}</span>
+                        </p>
+                    </div>
+                    {/* Edit button moved to actions usually? Or keep here? User didn't specify, but "buttons stack" implies the main actions. logic: keep Edit here for context or move to stack? 
+                        The user said "buttons... stack... right side". "Actions Footer" buttons are the main candidates. 
+                        I'll keep Edit in header for now to avoid confusion, or maybe the user wants ALL actions there.
+                        Given "orientation in summary view", I'll stick to the "Action Footer" buttons being the ones moved.
+                    */}
+                    <button
+                        onClick={(e) => {
+                            if (!isSelected) return;
+                            e.stopPropagation();
+                            onEdit(classroom);
+                        }}
+                        className={`flex items-center gap-2 p-1.5 rounded-md text-sm font-bold text-gray-400 transition-colors ${isSelected ? 'hover:text-brand-accent hover:bg-brand-accent/10' : ''}`}
+                        title="Edit Class"
+                    >
+                        <Edit2 size={16} />
+                    </button>
                 </div>
+
+                {/* Body Content */}
+                <div className="flex-1 p-5 flex flex-col justify-center gap-4">
+                    {/* Stats Row */}
+                    <div className="flex items-start gap-4">
+                        <button
+                            onClick={(e) => {
+                                if (!isSelected) return;
+                                e.stopPropagation();
+                                if (onViewStudents) onViewStudents(classroom.id);
+                            }}
+                            className={`flex-1 text-left group/stats -m-2 p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
+                        >
+                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Students</p>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                    {activeStudentCount ?? '-'}
+                                </span>
+                                {isActive ? (
+                                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" title="Online" />
+                                ) : (
+                                    <span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600" title="Offline" />
+                                )}
+                            </div>
+                        </button>
+
+                        <div className="w-px bg-gray-200 dark:bg-gray-700 self-stretch" />
+
+                        <button
+                            onClick={(e) => {
+                                if (!isSelected) return;
+                                e.stopPropagation();
+                                if (onViewTasks) onViewTasks(classroom.id);
+                            }}
+                            className={`flex-1 text-left group/stats -m-2 p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
+                        >
+                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Tasks</p>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                    {classroom.contentLibrary?.length || 0}
+                                </span>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Join Code - Simplified */}
+                    <button
+                        onClick={handleCopyCode}
+                        className={`w-full group/code relative flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 transition-all duration-200 ${isSelected ? 'hover:border-brand-accent hover:bg-brand-accent/5' : ''}`}
+                        title="Click to copy join code"
+                    >
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Code</span>
+                        <div className="flex items-center gap-2">
+                            <span className={`font-mono font-bold text-lg tracking-widest text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors ${isSelected ? 'group-hover/code:text-brand-accent' : ''}`}>
+                                {classroom.joinCode}
+                            </span>
+                            {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className={`w-3.5 h-3.5 text-gray-400 ${isSelected ? 'group-hover/code:text-brand-accent' : ''}`} />}
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            {/* Actions Sidebar (Right Side) */}
+            <div className="flex flex-col w-[72px] border-l-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
                 <button
                     onClick={(e) => {
                         if (!isSelected) return;
                         e.stopPropagation();
-                        onEdit(classroom);
+                        if (onManageTasks) onManageTasks(classroom.id);
                     }}
-                    className={`flex items-center gap-2 p-2 -mr-2 rounded-md text-sm font-bold text-gray-400 transition-colors ${isSelected ? 'hover:text-brand-accent hover:bg-brand-accent/10' : ''}`}
-                    title="Edit Class"
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 p-1 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    title="Tasks"
                 >
-                    <Edit2 size={14} />
-                    <span>Edit</span>
+                    <ListTodo className="w-5 h-5" />
+                    <span className="text-[9px] font-bold uppercase">Tasks</span>
                 </button>
-            </div>
 
-            {/* Body Content */}
-            <div className="flex-1 p-6 pt-2 flex flex-col gap-6">
-                {/* Stats Row */}
-                <div className="flex items-start gap-4 mt-2">
-                    <button
-                        onClick={(e) => {
-                            if (!isSelected) return;
-                            e.stopPropagation();
-                            if (onViewStudents) onViewStudents(classroom.id);
-                        }}
-                        className={`flex-1 text-left group/stats -m-2 p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
-                    >
-                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Students</p>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {activeStudentCount ?? '-'}
-                            </span>
-                            {isActive ? (
-                                <span className="text-sm font-medium text-green-600 dark:text-green-400 animate-pulse">
-                                    online
-                                </span>
-                            ) : (
-                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500">
-                                    offline
-                                </span>
-                            )}
-                        </div>
-                    </button>
+                <div className="h-px w-8 bg-gray-200 dark:bg-gray-700 mx-auto" />
 
-                    <div className="w-px bg-gray-200 dark:bg-gray-700 self-stretch" />
-
-                    <button
-                        onClick={(e) => {
-                            if (!isSelected) return;
-                            e.stopPropagation();
-                            if (onViewTasks) onViewTasks(classroom.id);
-                        }}
-                        className={`flex-1 text-left group/stats -m-2 p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
-                    >
-                        <p className={`text-xs font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Tasks</p>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                {classroom.contentLibrary?.length || 0}
-                            </span>
-                            <span className="text-sm font-medium text-gray-400 dark:text-gray-500">
-                                assigned
-                            </span>
-                        </div>
-                    </button>
-                </div>
-
-                {/* Join Code - Premium Token Style */}
                 <button
-                    onClick={handleCopyCode}
-                    className={`w-full group/code relative flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 transition-all duration-200 ${isSelected ? 'hover:border-brand-accent hover:bg-brand-accent/5' : ''}`}
-                    title="Click to copy join code"
+                    onClick={(e) => {
+                        if (!isSelected) return;
+                        e.stopPropagation();
+                        if (onViewShape) onViewShape(classroom.id);
+                    }}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 p-1 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    title="Shape"
                 >
-                    <div className="flex flex-col items-start">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Join Code</span>
-                        <span className={`font-mono font-bold text-xl tracking-widest text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors ${isSelected ? 'group-hover/code:text-brand-accent' : ''}`}>
-                            {classroom.joinCode}
-                        </span>
-                    </div>
-                    <div className={`w-8 h-8 flex items-center justify-center rounded-md bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 transition-transform ${isSelected ? 'group-hover/code:scale-110' : ''}`}>
-                        {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className={`w-4 h-4 text-gray-400 ${isSelected ? 'group-hover/code:text-brand-accent' : ''}`} />}
-                    </div>
+                    <Presentation className="w-5 h-5" />
+                    <span className="text-[9px] font-bold uppercase">Shape</span>
                 </button>
-            </div>
 
-            {/* Actions Footer */}
-            <div className="p-4">
-                <div className="grid grid-cols-4 gap-2">
-                    <button
-                        onClick={(e) => {
-                            if (!isSelected) return;
-                            e.stopPropagation();
-                            if (onManageTasks) onManageTasks(classroom.id);
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
-                        title="Task Manager"
-                    >
-                        <ListTodo className="w-5 h-5" />
-                        <span className="text-[10px] font-bold uppercase">Tasks</span>
-                    </button>
+                <div className="h-px w-8 bg-gray-200 dark:bg-gray-700 mx-auto" />
 
-                    <button
-                        onClick={(e) => {
-                            if (!isSelected) return;
-                            e.stopPropagation();
-                            if (onViewShape) onViewShape(classroom.id);
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
-                        title="Shape of the Day"
-                    >
-                        <Presentation className="w-5 h-5" />
-                        <span className="text-[10px] font-bold uppercase">Shape</span>
-                    </button>
+                <button
+                    onClick={(e) => {
+                        if (!isSelected) return;
+                        e.stopPropagation();
+                        if (onViewCalendar) onViewCalendar(classroom.id);
+                    }}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 p-1 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    title="Calendar"
+                >
+                    <Calendar className="w-5 h-5" />
+                    <span className="text-[9px] font-bold uppercase">Cal</span>
+                </button>
 
-                    <button
-                        onClick={(e) => {
-                            if (!isSelected) return;
-                            e.stopPropagation();
-                            if (onViewCalendar) onViewCalendar(classroom.id);
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
-                        title="Class Calendar"
-                    >
-                        <Calendar className="w-5 h-5" />
-                        <span className="text-[10px] font-bold uppercase">Calendar</span>
-                    </button>
+                <div className="h-px w-8 bg-gray-200 dark:bg-gray-700 mx-auto" />
 
-                    <button
-                        onClick={(e) => {
-                            if (!isSelected) return;
-                            e.stopPropagation();
-                            if (onViewData) onViewData(classroom.id);
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-md text-gray-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:text-brand-accent hover:bg-white dark:hover:bg-gray-800' : ''}`}
-                        title="Analytics"
-                    >
-                        <BarChart2 className="w-5 h-5" />
-                        <span className="text-[10px] font-bold uppercase">Data</span>
-                    </button>
-
-                </div>
+                <button
+                    onClick={(e) => {
+                        if (!isSelected) return;
+                        e.stopPropagation();
+                        if (onViewData) onViewData(classroom.id);
+                    }}
+                    className={`flex-1 flex flex-col items-center justify-center gap-1 p-1 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    title="Analytics"
+                >
+                    <BarChart2 className="w-5 h-5" />
+                    <span className="text-[9px] font-bold uppercase">Data</span>
+                </button>
             </div>
         </div>
     );

@@ -31,6 +31,17 @@ const TeacherDashboard: React.FC = () => {
         setIsClassModalOpen
     } = useClassStore();
 
+    // Import Task type locally or assume it's available via module augmentation or just use any if strictly needed to avoid circular deps, 
+    // but better to import it efficiently. 
+    // Since we don't have the import line in the view, I'll add it to the top.
+
+    // Actually, I should check the imports at the top.
+    // I can't see the top imports well enough to know if "Task" is already imported from '../../types'. 
+    // I'll add it to the existing TaskManager import logic or similar.
+    // Wait, the previous tool call showed the imports. Task is not imported.
+
+    // Let's add the import.
+
     const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
     const [tasksSubTab, setTasksSubTab] = useState<'create' | 'browse'>('create');
     const [liveViewSubTab, setLiveViewSubTab] = useState<'tasks' | 'students'>('tasks');
@@ -98,6 +109,8 @@ const TeacherDashboard: React.FC = () => {
         }
     };
 
+    const [editingTask, setEditingTask] = useState<any>(null); // Using any to avoid complex Task import for now, or update import
+
     const handleDeepNavigation = (tab: MenuItem['id'], subTab?: string) => {
         setActiveTab(tab);
         if (tab === 'tasks' && subTab) {
@@ -111,10 +124,16 @@ const TeacherDashboard: React.FC = () => {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'tasks': 
-                return tasksSubTab === 'create' 
-                    ? <TaskManager /> 
+            case 'tasks':
+                return tasksSubTab === 'create'
+                    ? <TaskManager
+                        initialTask={editingTask}
+                    // clear initial task after it's consumed so we don't re-open it blindly if we switch tabs back and forth?
+                    // Actually, TaskManager will likely handle the "on load" effect. 
+                    // Pass a key if we want to force re-mount, or just rely on prop change.
+                    />
                     : <TaskInventory onEditTask={(task) => {
+                        setEditingTask(task);
                         setTasksSubTab('create');
                     }} />;
             case 'shape': return <ShapeOfDay />;
@@ -187,17 +206,17 @@ const TeacherDashboard: React.FC = () => {
                                     aria-label={item.label}
                                     aria-expanded={
                                         item.id === 'classrooms' ? (isClassroomsMenuOpen && !isCollapsed) :
-                                        item.id === 'tasks' ? (activeTab === 'tasks' && !isCollapsed) :
-                                        item.id === 'live' ? (activeTab === 'live' && !isCollapsed) :
-                                        item.id === 'reports' ? (activeTab === 'reports' && !isCollapsed) :
-                                        undefined
+                                            item.id === 'tasks' ? (activeTab === 'tasks' && !isCollapsed) :
+                                                item.id === 'live' ? (activeTab === 'live' && !isCollapsed) :
+                                                    item.id === 'reports' ? (activeTab === 'reports' && !isCollapsed) :
+                                                        undefined
                                     }
                                     aria-controls={
                                         item.id === 'classrooms' ? 'submenu-classrooms' :
-                                        item.id === 'tasks' ? 'submenu-tasks' :
-                                        item.id === 'live' ? 'submenu-live' :
-                                        item.id === 'reports' ? 'submenu-reports' :
-                                        undefined
+                                            item.id === 'tasks' ? 'submenu-tasks' :
+                                                item.id === 'live' ? 'submenu-live' :
+                                                    item.id === 'reports' ? 'submenu-reports' :
+                                                        undefined
                                     }
                                 >
                                     <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'}`}>

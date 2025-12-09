@@ -18,7 +18,8 @@ import {
     X,
     Image as ImageIcon,
     File as FileIcon,
-    Sparkles
+    Sparkles,
+    CornerDownRight
 } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { Select, SelectOption } from '../shared/Select';
@@ -108,7 +109,11 @@ const TYPE_OPTIONS: SelectOption<ItemType>[] = [
     { value: 'subtask', label: 'Subtask', icon: CheckSquare, iconColor: '#f97316' },
 ];
 
-export default function TaskManager() {
+interface TaskManagerProps {
+    initialTask?: Task;
+}
+
+export default function TaskManager({ initialTask }: TaskManagerProps) {
     // --- Store ---
     const { currentClassId, classrooms: storeClassrooms } = useClassStore();
     const currentClass = storeClassrooms.find(c => c.id === currentClassId);
@@ -271,6 +276,54 @@ export default function TaskManager() {
         }
     }, [activeCardId]);
 
+    // Handle initialTask prop - open it if provided
+    useEffect(() => {
+        if (initialTask) {
+            // We need to use a timeout or ensure tasks are loaded, but for now let's just push it to state
+            // Re-using the logic from handleEditClick would be ideal, but that function relies on 'tasks' state which might not be loaded yet?
+            // Actually, handleEditClick uses 'tasks' to find ancestors. 
+            // If we just want to open *this* task, we can do it directly.
+            // But we want ancestors too.
+            // Let's assume tasks might be loaded shortly.
+
+            // However, since 'tasks' is loaded async, we might not find ancestors immediately.
+            // But 'initialTask' object itself is available.
+            // Let's defer this to when tasks are loaded IF we want ancestors.
+            // For now, let's just try to call handleEditClick if tasks are available, or just open the single card.
+
+            // Actually, simpler: define handleEditClick inside the component scope (it is).
+            // Call it if tasks are loaded.
+            if (tasks.length > 0) {
+                handleEditClick(initialTask);
+            } else {
+                // If tasks aren't loaded, at least open the target task so the user sees something
+                // But ideally we wait for tasks.
+                // Let's add 'tasks' to dependency? No, that might trigger unwanted edits.
+                // We only want to trigger when initialTask CHANGES.
+            }
+        }
+    }, [initialTask, tasks.length > 0]); // Trigger when initialTask changes OR tasks load (if initialTask is present)
+    // Note: This might re-trigger if tasks updates. We should probably only do it once per initialTask reference.
+    // But initialTask comes from parent state, typically set on click.
+
+    // Better implementation:
+    // If we have initialTask, we want to open it. Check if it's already open?
+    // handleEditClick handles "already open" logic (sort of, strictly it just sets openCards).
+    // We should make sure we don't overwrite user work if they are doing something else.
+    // The parent sets 'editingTask' then likely clears it? No, we didn't add clear logic.
+    // The user clicks "Edit" -> parent sets editingTask -> TaskManager mounts/updates -> effect runs.
+
+    // Let's refine the effect to be safe.
+
+    const processedInitialTaskRef = useRef<string | null>(null);
+
+    useEffect(() => {
+        if (initialTask && initialTask.id !== processedInitialTaskRef.current && tasks.length > 0) {
+            handleEditClick(initialTask);
+            processedInitialTaskRef.current = initialTask.id;
+        }
+    }, [initialTask, tasks]);
+
     // --- Helpers ---
 
     const getWeekDays = (baseDate: Date) => {
@@ -419,6 +472,39 @@ export default function TaskManager() {
             isDirty: false,
         };
         setOpenCards([newCard]);
+        setActiveCardId(newCard.id);
+    }, [currentClassId]);
+
+    const handleAddSubtask = useCallback((parentTask: Task | { id: string, type: ItemType, title: string, path: string[], pathTitles: string[], rootId: string | null, selectedRoomIds: string[], startDate?: string, endDate?: string }) => {
+        const allowedChildren = ALLOWED_CHILD_TYPES[parentTask.type];
+        if (allowedChildren.length === 0) {
+            handleError(`Cannot add subtasks to a ${getTypeLabel(parentTask.type)}`);
+            return;
+        }
+
+        const childType = allowedChildren[0]; // Default to first allowed type
+
+        // Inherit path and titles
+        const path = [...(parentTask.path || []), parentTask.id];
+        const pathTitles = [...(parentTask.pathTitles || []), parentTask.title];
+        const rootId = parentTask.rootId || parentTask.id;
+
+        const newCard: TaskCardState = {
+            id: generateCardId(),
+            formData: {
+                ...INITIAL_FORM_STATE,
+                type: childType,
+                parentId: parentTask.id,
+                startDate: parentTask.startDate || INITIAL_FORM_STATE.startDate,
+                endDate: parentTask.endDate || INITIAL_FORM_STATE.endDate,
+                selectedRoomIds: parentTask.selectedRoomIds || [],
+            },
+            isNew: true,
+            isDirty: false,
+            parentCardId: 'id' in parentTask ? parentTask.id : undefined // Useful if we wanted to visually link cards in editor
+        };
+
+        setOpenCards(prev => [...prev, newCard]);
         setActiveCardId(newCard.id);
     }, [currentClassId]);
 
@@ -850,6 +936,8 @@ export default function TaskManager() {
         }
     };
 
+
+
     const handleWeekNav = (direction: 'prev' | 'next') => {
         const newDate = new Date(calendarBaseDate);
         newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
@@ -860,6 +948,12 @@ export default function TaskManager() {
 
     const availableParents = getAvailableParents(activeFormData.type);
     const _hasDirtyCards = openCards.some(c => c.isDirty && c.formData.title.trim());
+
+    // Determine if we can add a subtask to the current active card
+    const canAddSubtaskToActive = activeFormData.type !== 'subtask' && !activeCard.isNew;
+    // We can't easily check for saved status of the *current* form data vs DB, 
+    // but we can check if it's new. If it's existing, we assume it's safe to add a child.
+
 
     return (
         <div className="flex-1 h-full overflow-y-auto lg:overflow-hidden">
@@ -1074,8 +1168,33 @@ export default function TaskManager() {
                                     </div>
                                 </button>
 
-                                {/* Col 2: Empty spacer */}
-                                <div className="hidden lg:block" />
+                                {/* Col 2: Add Subtask Button (only for existing items) */}
+                                <div className="flex justify-center">
+                                    {canAddSubtaskToActive && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                // We need to construct a "parent object" from the active form data
+                                                // ID is required, so this only works for existing tasks (which have an ID in activeCardId if not new)
+                                                if (activeCard.isNew) return;
+
+                                                // Find the task object to get path info if possible, or construct it
+                                                const currentTask = tasks.find(t => t.id === activeCardId);
+
+                                                if (currentTask) {
+                                                    handleAddSubtask(currentTask);
+                                                } else {
+                                                    // Fallback if not found in list (shouldn't happen for existing)
+                                                    handleError("Please save the task first.");
+                                                }
+                                            }}
+                                            className="p-2.5 rounded-md border-2 border-brand-accent/30 text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent transition-all duration-200 group"
+                                            title="Add related task"
+                                        >
+                                            <Plus size={20} />
+                                        </button>
+                                    )}
+                                </div>
 
                                 {/* Col 3: Empty spacer */}
                                 <div className="hidden lg:block" />
@@ -1192,32 +1311,7 @@ export default function TaskManager() {
                                     </div>
                                 )}
 
-                                {/* Save & Close button */}
-                                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            await handleSaveCard(activeCardId);
-                                            setShowClassSelector(false);
-                                        }}
-                                        disabled={isSubmitting || activeFormData.selectedRoomIds.length === 0}
-                                        className="flex-1 py-2.5 px-4 rounded-md border-2 border-green-500 bg-green-500/10 text-green-500 font-bold transition-all hover:bg-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                                    >
-                                        {isSubmitting ? (
-                                            <Loader size={16} className="animate-spin" />
-                                        ) : (
-                                            <Check size={16} />
-                                        )}
-                                        Save to {activeFormData.selectedRoomIds.length} Class{activeFormData.selectedRoomIds.length !== 1 ? 'es' : ''}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowClassSelector(false)}
-                                        className="py-2.5 px-4 rounded-md border-2 border-gray-300 dark:border-gray-600 text-gray-500 font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
+                                {/* Save & Close button removed to avoid double logic. Use the main split button. */}
                             </div>
                         )}
 
@@ -1384,6 +1478,14 @@ export default function TaskManager() {
                                                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
                                             `}
                                         >
+                                            <div
+                                                className="absolute inset-0 border-l-4 rounded-l-lg transition-colors"
+                                                style={{
+                                                    borderLeftColor: getTypeHexColor(task.type),
+                                                    opacity: isEditing ? 1 : 0
+                                                }}
+                                            />
+
                                             {/* Remove from schedule button */}
                                             <button
                                                 onClick={(e) => {
@@ -1447,7 +1549,29 @@ export default function TaskManager() {
                                                         </div>
                                                     )}
                                                 </div>
+
+                                                {/* Add Subtask Button - Right side */}
+                                                {!['subtask'].includes(task.type) && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleAddSubtask(task);
+                                                        }}
+                                                        className="p-1.5 rounded hover:bg-brand-accent/10 text-gray-400 hover:text-brand-accent transition-colors self-center"
+                                                        title="Add related task"
+                                                    >
+                                                        <Plus size={16} />
+                                                    </button>
+                                                )}
                                             </div>
+
+                                            {/* Hierarchy Indicator (if child) */}
+                                            {(task.path?.length || 0) > 0 && (
+                                                <div
+                                                    className="absolute left-[-12px] top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600"
+                                                    style={{ marginLeft: `${(task.path?.length || 0) * 4}px` }}
+                                                />
+                                            )}
                                         </div>
                                     );
                                 })

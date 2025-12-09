@@ -113,8 +113,7 @@ function App() {
     // Developer Mode: Keyboard shortcut to load dummy data (Ctrl+Shift+D)
     // SECURITY: Only enabled in development mode to prevent production abuse
     useEffect(() => {
-        // Skip in production builds
-        if (!import.meta.env.DEV) return;
+
 
         const handleKeyPress = async (event: KeyboardEvent) => {
             // Check for Ctrl+Shift+D (or Cmd+Shift+D on Mac)
