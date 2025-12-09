@@ -18,6 +18,7 @@ interface DateRangePickerProps {
     endPlaceholder?: string;
     disabled?: boolean;
     className?: string;
+    buttonClassName?: string;
 }
 
 // Detect touch device for native fallback
@@ -46,11 +47,12 @@ export function DateRangePicker({
     endPlaceholder = 'Due date',
     disabled = false,
     className = '',
+    buttonClassName = '',
 }: DateRangePickerProps) {
     const [activeField, setActiveField] = useState<'start' | 'end' | null>(null);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const [calendarMonth, setCalendarMonth] = useState(new Date());
-    
+
     const startButtonRef = useRef<HTMLButtonElement>(null);
     const endButtonRef = useRef<HTMLButtonElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
@@ -74,21 +76,21 @@ export function DateRangePicker({
             const rect = buttonRef.current.getBoundingClientRect();
             const popoverHeight = 380;
             const popoverWidth = 300;
-            
+
             const spaceBelow = window.innerHeight - rect.bottom;
             const spaceRight = window.innerWidth - rect.left;
-            
+
             let top = rect.bottom + window.scrollY + 4;
             let left = rect.left + window.scrollX;
-            
+
             if (spaceBelow < popoverHeight && rect.top > popoverHeight) {
                 top = rect.top + window.scrollY - popoverHeight - 4;
             }
-            
+
             if (spaceRight < popoverWidth) {
                 left = Math.max(8, rect.right + window.scrollX - popoverWidth);
             }
-            
+
             setPosition({ top, left });
         }
     }, []);
@@ -99,7 +101,7 @@ export function DateRangePicker({
 
         const handleClickOutside = (e: MouseEvent) => {
             if (
-                popoverRef.current && 
+                popoverRef.current &&
                 !popoverRef.current.contains(e.target as Node) &&
                 !startButtonRef.current?.contains(e.target as Node) &&
                 !endButtonRef.current?.contains(e.target as Node)
@@ -116,7 +118,7 @@ export function DateRangePicker({
 
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('keydown', handleEscape);
-        
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
@@ -139,17 +141,17 @@ export function DateRangePicker({
     // Handle date selection
     const handleSelect = (date: Date | undefined) => {
         if (!date) return;
-        
+
         const dateStr = format(date, 'yyyy-MM-dd');
-        
+
         if (activeField === 'start') {
             onStartDateChange(dateStr);
-            
+
             // If end date is before new start date, update it
             if (isEndValid && isBefore(startOfDay(endDateObj), startOfDay(date))) {
                 onEndDateChange(dateStr);
             }
-            
+
             // Auto-open end date picker after short delay
             setTimeout(() => {
                 if (isTouchDevice() && endNativeRef.current) {
@@ -168,7 +170,7 @@ export function DateRangePicker({
     // Handle "Today" button
     const handleToday = () => {
         const today = format(new Date(), 'yyyy-MM-dd');
-        
+
         if (activeField === 'start') {
             onStartDateChange(today);
             // Auto-open end picker
@@ -189,7 +191,7 @@ export function DateRangePicker({
     // Handle button clicks
     const handleButtonClick = (field: 'start' | 'end') => {
         if (disabled) return;
-        
+
         // On touch devices, use native picker
         if (isTouchDevice()) {
             const nativeRef = field === 'start' ? startNativeRef : endNativeRef;
@@ -198,7 +200,7 @@ export function DateRangePicker({
             }
             return;
         }
-        
+
         if (activeField === field) {
             setActiveField(null);
         } else {
@@ -265,10 +267,11 @@ export function DateRangePicker({
                     hover:bg-gray-50 dark:hover:bg-gray-800/50
                     focus:outline-none focus:ring-2 focus:ring-brand-accent/20
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    ${activeField === 'start' 
-                        ? 'border-brand-accent' 
+                    ${activeField === 'start'
+                        ? 'border-brand-accent'
                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}
                     ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                    ${buttonClassName || 'py-2.5 text-sm'}
                 `}
             >
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
@@ -298,10 +301,11 @@ export function DateRangePicker({
                     hover:bg-gray-50 dark:hover:bg-gray-800/50
                     focus:outline-none focus:ring-2 focus:ring-brand-accent/20
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    ${activeField === 'end' 
-                        ? 'border-brand-accent' 
+                    ${activeField === 'end'
+                        ? 'border-brand-accent'
                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}
                     ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                    ${buttonClassName || 'py-2.5 text-sm'}
                 `}
             >
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
@@ -369,9 +373,9 @@ export function DateRangePicker({
                         modifiers={{
                             range_start: isStartValid ? startDateObj : undefined,
                             range_end: isEndValid ? endDateObj : undefined,
-                            in_range: isStartValid && isEndValid ? { 
-                                from: startDateObj, 
-                                to: endDateObj 
+                            in_range: isStartValid && isEndValid ? {
+                                from: startDateObj,
+                                to: endDateObj
                             } : undefined,
                         }}
                         modifiersClassNames={{
@@ -380,9 +384,9 @@ export function DateRangePicker({
                             in_range: 'bg-brand-accent/10',
                         }}
                         components={{
-                            Chevron: ({ orientation }) => 
-                                orientation === 'left' 
-                                    ? <ChevronLeft size={16} /> 
+                            Chevron: ({ orientation }) =>
+                                orientation === 'left'
+                                    ? <ChevronLeft size={16} />
                                     : <ChevronRight size={16} />,
                         }}
                         classNames={{

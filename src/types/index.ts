@@ -10,7 +10,7 @@ import { Timestamp } from 'firebase/firestore';
 
 // Define the possible statuses for a task.
 // Using a "Union Type" (the | symbol) restricts the values to ONLY these strings.
-export type TaskStatus = 'todo' | 'in_progress' | 'stuck' | 'question' | 'done';
+export type TaskStatus = 'todo' | 'in_progress' | 'stuck' | 'question' | 'done' | 'draft';
 
 // Define the hierarchy level for tasks
 // Project → Assignment → Task → Subtask (4 levels max)
@@ -69,7 +69,7 @@ export interface Task {
     completedAt?: number;   // Timestamp when task was completed
     wasStuck?: boolean;     // Flag if student was ever stuck
     questions?: string[];   // Array of questions asked during this task (deprecated, use questionHistory)
-    
+
     // --- Hierarchy Fields ---
     type: ItemType;         // The hierarchy level of this item
     parentId: string | null; // ID of the parent item (null for top-level)
@@ -77,14 +77,14 @@ export interface Task {
     path: string[];          // Array of ancestor IDs for breadcrumb display [rootId, ..., parentId]
     pathTitles: string[];    // Array of ancestor titles for breadcrumb display
     childIds: string[];      // Array of direct child IDs (for progress tracking)
-    
+
     // --- Attachments ---
     attachments?: Attachment[]; // Array of file/image attachments
-    
+
     // --- Question History ---
     // Note: This is stored separately and NOT copied when duplicating tasks
     questionHistory?: QuestionEntry[]; // Array of student questions for this task
-    
+
     // --- Teacher-side scheduling fields ---
     linkURL?: string;        // Resource link
     imageURL?: string;       // Attachment URL (legacy, prefer attachments array)

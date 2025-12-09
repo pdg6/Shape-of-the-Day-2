@@ -1,4 +1,9 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { DayPicker, getDefaultClassNames } from 'react-day-picker';
+
+import { createPortal } from 'react-dom';
+import 'react-day-picker/style.css';
+
 import {
     Calendar as CalendarIcon,
     Link as LinkIcon,
@@ -15,21 +20,19 @@ import {
     ListChecks,
     CheckSquare,
     X,
-    Image as ImageIcon,
     File as FileIcon,
-    Sparkles,
-    CornerDownRight
+    Trash2
 } from 'lucide-react';
-import { Button } from '../shared/Button';
 import { Select, SelectOption } from '../shared/Select';
 import { DateRangePicker } from '../shared/DateRangePicker';
-import { TaskTabBar } from './TaskTabBar';
+import { RichTextEditor } from '../shared/RichTextEditor';
+
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, auth, storage } from '../../firebase';
-import { Classroom, ItemType, Task, TaskFormData, TaskCardState, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
+import { Classroom, ItemType, Task, TaskFormData, TaskStatus, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
 import { useClassStore } from '../../store/classStore';
 
 // --- Constants ---
@@ -58,7 +61,7 @@ const ALLOWED_FILE_TYPES = [
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Generate unique ID for cards
-const generateCardId = () => `card_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
 
 // Get type-specific icon
 const getTypeIcon = (type: ItemType) => {
@@ -112,12 +115,88 @@ interface TaskManagerProps {
     initialTask?: Task;
 }
 
+// HMR refresh timestamp: 2025-12-08T19:30
 export default function TaskManager({ initialTask }: TaskManagerProps) {
     // --- Store ---
-    const { currentClassId, classrooms: storeClassrooms } = useClassStore();
-    const currentClass = storeClassrooms.find(c => c.id === currentClassId);
+    const { currentClassId } = useClassStore();
 
     // --- State ---
+    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+    const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0, origin: 'top left' });
+    const calendarButtonRef = useRef<HTMLButtonElement>(null);
+    const calendarPopoverRef = useRef<HTMLDivElement>(null);
+
+    // Update calendar position
+    const updateCalendarPosition = useCallback(() => {
+        if (calendarButtonRef.current) {
+            const rect = calendarButtonRef.current.getBoundingClientRect();
+            // Estimate size (captured from typical rendering)
+            const popoverHeight = 320;
+            const popoverWidth = 280;
+
+            // Default: Bottom-left aligned (viewport coordinates because position: fixed)
+            let top = rect.bottom + 4;
+            let left = rect.left;
+            let origin = 'top left';
+
+            // Vertical positioning
+            const spaceBelow = window.innerHeight - rect.bottom;
+            // If not enough space below AND more space above, flip up
+            if (spaceBelow < popoverHeight && rect.top > popoverHeight) {
+                top = rect.top - popoverHeight - 4;
+                origin = 'bottom left';
+            }
+
+            // Horizontal positioning (keep on screen)
+            if (left + popoverWidth > window.innerWidth) {
+                // If overflows right, align to right edge of window with padding
+                left = window.innerWidth - popoverWidth - 16;
+
+                // If flipping alignment, update origin to pivot from right
+                if (origin === 'top left') origin = 'top right';
+                else origin = 'bottom right';
+            }
+
+            // Ensure strictly non-negative
+            if (left < 4) left = 4;
+
+            // Ensure top is on screen (clamping)
+            if (top < 4) top = 4;
+
+            setCalendarPosition({ top, left, origin });
+        }
+    }, []);
+
+    // Handle click outside for calendar
+    useEffect(() => {
+        if (!isCalendarOpen) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                calendarPopoverRef.current &&
+                !calendarPopoverRef.current.contains(e.target as Node) &&
+                calendarButtonRef.current &&
+                !calendarButtonRef.current.contains(e.target as Node)
+            ) {
+                setIsCalendarOpen(false);
+            }
+        };
+
+        const handleResize = () => {
+            if (isCalendarOpen) updateCalendarPosition();
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleResize, true);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleResize, true);
+        };
+    }, [isCalendarOpen, updateCalendarPosition]);
+
     const [rooms, setRooms] = useState<Classroom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
 
@@ -125,56 +204,47 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [_loadingTasks, setLoadingTasks] = useState(true);
 
-    // Multi-card editor state - persisted to sessionStorage to survive navigation
-    const [openCards, setOpenCards] = useState<TaskCardState[]>(() => {
+    // Single form editor state (replaces multi-card system)
+    const [formData, setFormData] = useState<TaskFormData>(() => {
         try {
-            const stored = sessionStorage.getItem('taskManager.openCards');
+            const stored = sessionStorage.getItem('taskManager.formData');
             if (stored) {
-                const parsed = JSON.parse(stored) as TaskCardState[];
-                // Validate that we have at least one card
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    return parsed;
-                }
+                return JSON.parse(stored) as TaskFormData;
             }
         } catch (e) {
-            console.warn('Failed to restore task cards from sessionStorage:', e);
+            console.warn('Failed to restore form data from sessionStorage:', e);
         }
-        // Default: one empty card
-        return [{
-            id: generateCardId(),
-            formData: { ...INITIAL_FORM_STATE },
-            isNew: true,
-            isDirty: false,
-        }];
+        return { ...INITIAL_FORM_STATE };
     });
-    const [activeCardId, setActiveCardId] = useState<string>(() => {
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(() => {
         try {
-            const stored = sessionStorage.getItem('taskManager.activeCardId');
+            const stored = sessionStorage.getItem('taskManager.editingTaskId');
             if (stored) {
-                return stored;
+                return stored === 'null' ? null : stored;
             }
         } catch (e) {
-            console.warn('Failed to restore active card ID from sessionStorage:', e);
+            console.warn('Failed to restore editing task ID from sessionStorage:', e);
         }
-        return openCards[0]?.id || '';
+        return null;
     });
+    const [isDirty, setIsDirty] = useState(false);
 
     // UI State
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [isDescriptionActive, setIsDescriptionActive] = useState(false); // Tracks hover/focus on description
+    const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle'); // Auto-save feedback
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
     // Calendar State
-    const [calendarBaseDate, setCalendarBaseDate] = useState(new Date());
+
 
     // --- Computed ---
-    const activeCard = openCards.find(c => c.id === activeCardId) || openCards[0];
-    const activeFormData = activeCard?.formData || INITIAL_FORM_STATE;
+    // For compatibility with existing code, create an activeFormData alias
+    const activeFormData = formData;
+    const isNewTask = editingTaskId === null;
 
     // --- Effects ---
 
@@ -236,41 +306,33 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         return () => unsubscribe();
     }, []);
 
-    // Auto-select current class for new cards (without marking as dirty)
+    // Auto-select current class for new tasks (without marking as dirty)
     useEffect(() => {
-        if (currentClassId && activeCard?.isNew) {
-            setOpenCards(prev => prev.map(card => {
-                if (card.id !== activeCardId || !card.isNew) return card;
-                if (card.formData.selectedRoomIds.includes(currentClassId)) return card;
-                return {
-                    ...card,
-                    formData: {
-                        ...card.formData,
-                        selectedRoomIds: [currentClassId, ...card.formData.selectedRoomIds]
-                    },
-                    // Don't mark as dirty for auto-population
-                };
+        if (currentClassId && isNewTask && !formData.selectedRoomIds.includes(currentClassId)) {
+            setFormData(prev => ({
+                ...prev,
+                selectedRoomIds: [currentClassId, ...prev.selectedRoomIds]
             }));
         }
-    }, [currentClassId, activeCardId, activeCard?.isNew]);
+    }, [currentClassId, isNewTask]);
 
-    // Persist openCards to sessionStorage on changes (survives navigation, cleared on sign-out)
+    // Persist formData to sessionStorage on changes
     useEffect(() => {
         try {
-            sessionStorage.setItem('taskManager.openCards', JSON.stringify(openCards));
+            sessionStorage.setItem('taskManager.formData', JSON.stringify(formData));
         } catch (e) {
-            console.warn('Failed to persist task cards to sessionStorage:', e);
+            console.warn('Failed to persist form data to sessionStorage:', e);
         }
-    }, [openCards]);
+    }, [formData]);
 
-    // Persist activeCardId to sessionStorage on changes
+    // Persist editingTaskId to sessionStorage on changes
     useEffect(() => {
         try {
-            sessionStorage.setItem('taskManager.activeCardId', activeCardId);
+            sessionStorage.setItem('taskManager.editingTaskId', editingTaskId || 'null');
         } catch (e) {
-            console.warn('Failed to persist active card ID to sessionStorage:', e);
+            console.warn('Failed to persist editing task ID to sessionStorage:', e);
         }
-    }, [activeCardId]);
+    }, [editingTaskId]);
 
     // Handle initialTask prop - open it if provided
     useEffect(() => {
@@ -322,22 +384,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
     // --- Helpers ---
 
-    const getWeekDays = (baseDate: Date) => {
-        const days = [];
-        const day = baseDate.getDay();
-        const diff = baseDate.getDate() - day + (day === 0 ? -6 : 1);
-        const monday = new Date(baseDate);
-        monday.setDate(diff);
 
-        for (let i = 0; i < 5; i++) {
-            const d = new Date(monday);
-            d.setDate(monday.getDate() + i);
-            days.push(d);
-        }
-        return days;
-    };
 
-    const weekDays = useMemo(() => getWeekDays(calendarBaseDate), [calendarBaseDate]);
+
 
     // Filter tasks by date and class, then build hierarchy
     const filteredTasks = useMemo(() => {
@@ -360,11 +409,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         return tasks.filter(t => allowedParentTypes.includes(t.type));
     }, [tasks]);
 
-    // Build breadcrumb for a task
-    const getBreadcrumb = useCallback((task: Task): string => {
-        if (!task.pathTitles || task.pathTitles.length === 0) return '';
-        return task.pathTitles.join(' → ');
-    }, []);
+
 
     // Calculate progress for a parent item
     const getProgress = useCallback((parentId: string): { completed: number; total: number } => {
@@ -374,102 +419,82 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         return { completed, total };
     }, [tasks]);
 
-    // --- Card Management ---
+    // Calculate hierarchical number for display (1, 2, 2.1, 2.2, etc.)
+    // When forDate is provided, root-level tasks are numbered relative to that day
+    const getHierarchicalNumber = useCallback((task: Task, allTasks: Task[], forDate?: string): string => {
+        // For root tasks with date filter, only count siblings on the same day
+        const siblings = task.parentId
+            ? allTasks.filter(t => t.parentId === task.parentId)
+            : forDate
+                ? allTasks.filter(t => !t.parentId && t.endDate === forDate)
+                : allTasks.filter(t => !t.parentId);
 
-    const updateActiveCard = useCallback(<K extends keyof TaskFormData>(
+        // Sort by presentation order
+        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
+
+        if (!task.parentId) return String(myIndex);
+
+        const parent = allTasks.find(t => t.id === task.parentId);
+        if (!parent) return String(myIndex);
+
+        return `${getHierarchicalNumber(parent, allTasks, forDate)}.${myIndex}`;
+    }, []);
+
+    // --- Form Management (simplified - single form instead of multi-card) ---
+
+    const updateField = useCallback(<K extends keyof TaskFormData>(
         field: K,
         value: TaskFormData[K] | ((prev: TaskFormData[K]) => TaskFormData[K])
     ) => {
-        setOpenCards(prev => prev.map(card => {
-            if (card.id !== activeCardId) return card;
+        setFormData(prev => {
             const newValue = typeof value === 'function'
-                ? (value as (prev: TaskFormData[K]) => TaskFormData[K])(card.formData[field])
+                ? (value as (prev: TaskFormData[K]) => TaskFormData[K])(prev[field])
                 : value;
-            return {
-                ...card,
-                formData: { ...card.formData, [field]: newValue },
-                isDirty: true,
-            };
-        }));
-    }, [activeCardId]);
-
-    const addNewCard = useCallback(() => {
-        // Create a standalone new task - no auto-linking
-        // User can link to a parent via the "Linked to..." dropdown in the task card
-        const newCard: TaskCardState = {
-            id: generateCardId(),
-            formData: {
-                ...INITIAL_FORM_STATE,
-                type: 'task',
-                parentId: null,
-                selectedRoomIds: currentClassId ? [currentClassId] : [],
-            },
-            isNew: true,
-            isDirty: false,
-        };
-
-        setOpenCards(prev => [newCard, ...prev]);
-        setActiveCardId(newCard.id);
-    }, [currentClassId]);
-
-    const closeCard = useCallback((cardId: string) => {
-        const card = openCards.find(c => c.id === cardId);
-        if (card?.isDirty) {
-            if (!window.confirm('You have unsaved changes. Close anyway?')) return;
-        }
-
-        setOpenCards(prev => {
-            const filtered = prev.filter(c => c.id !== cardId);
-            if (filtered.length === 0) {
-                // Always keep at least one card
-                const newCard: TaskCardState = {
-                    id: generateCardId(),
-                    formData: { ...INITIAL_FORM_STATE, selectedRoomIds: currentClassId ? [currentClassId] : [] },
-                    isNew: true,
-                    isDirty: false,
-                };
-                return [newCard];
-            }
-            return filtered;
+            return { ...prev, [field]: newValue };
         });
+        setIsDirty(true);
+    }, []);
 
-        // If closing active card, switch to another
-        if (cardId === activeCardId) {
-            setOpenCards(prev => {
-                const remaining = prev.filter(c => c.id !== cardId);
-                const lastCard = remaining[remaining.length - 1];
-                if (remaining.length > 0 && lastCard) {
-                    setActiveCardId(lastCard.id);
-                }
-                return prev;
-            });
-        }
-    }, [openCards, activeCardId, currentClassId]);
+    // Alias for compatibility with existing code
+    const updateActiveCard = updateField;
 
-    const _navigateCards = useCallback((direction: 'prev' | 'next') => {
-        const currentIndex = openCards.findIndex(c => c.id === activeCardId);
-        const newIndex = direction === 'prev'
-            ? Math.max(0, currentIndex - 1)
-            : Math.min(openCards.length - 1, currentIndex + 1);
-        const targetCard = openCards[newIndex];
-        if (targetCard) {
-            setActiveCardId(targetCard.id);
-        }
-    }, [openCards, activeCardId]);
-
-    const resetToNewCard = useCallback(() => {
-        const newCard: TaskCardState = {
-            id: generateCardId(),
-            formData: {
-                ...INITIAL_FORM_STATE,
-                selectedRoomIds: currentClassId ? [currentClassId] : []
-            },
-            isNew: true,
-            isDirty: false,
-        };
-        setOpenCards([newCard]);
-        setActiveCardId(newCard.id);
+    const resetForm = useCallback(() => {
+        setFormData({
+            ...INITIAL_FORM_STATE,
+            selectedRoomIds: currentClassId ? [currentClassId] : []
+        });
+        setEditingTaskId(null);
+        setIsDirty(false);
     }, [currentClassId]);
+
+
+
+    const loadTask = useCallback((task: Task) => {
+        setFormData({
+            title: task.title,
+            description: task.description || '',
+            type: task.type,
+            parentId: task.parentId,
+            linkURL: task.linkURL || '',
+            startDate: task.startDate || toDateString(),
+            endDate: task.endDate || toDateString(),
+            selectedRoomIds: task.selectedRoomIds || [],
+            attachments: task.attachments || [],
+        });
+        setEditingTaskId(task.id);
+        setIsDirty(false);
+    }, []);
+
+    // Called when clicking a task in the summary
+    const handleEditClick = useCallback((task: Task) => {
+        if (isDirty) {
+            if (!window.confirm('You have unsaved changes. Discard and switch tasks?')) {
+                return;
+            }
+        }
+        loadTask(task);
+    }, [isDirty, loadTask]);
 
     const handleAddSubtask = useCallback((parentTask: Task | { id: string, type: ItemType, title: string, path: string[], pathTitles: string[], rootId: string | null, selectedRoomIds: string[], startDate?: string, endDate?: string }) => {
         const allowedChildren = ALLOWED_CHILD_TYPES[parentTask.type];
@@ -478,31 +503,67 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             return;
         }
 
-        const childType = allowedChildren[0] as ItemType; // Safe: we checked length > 0 above
+        if (isDirty) {
+            if (!window.confirm('You have unsaved changes. Discard and create subtask?')) {
+                return;
+            }
+        }
 
-        // Inherit path and titles
-        const path = [...(parentTask.path || []), parentTask.id];
-        const pathTitles = [...(parentTask.pathTitles || []), parentTask.title];
-        const rootId = parentTask.rootId || parentTask.id;
+        const childType = allowedChildren[0] as ItemType;
 
-        const newCard: TaskCardState = {
-            id: generateCardId(),
-            formData: {
-                ...INITIAL_FORM_STATE,
-                type: childType,
-                parentId: parentTask.id,
-                startDate: parentTask.startDate || INITIAL_FORM_STATE.startDate,
-                endDate: parentTask.endDate || INITIAL_FORM_STATE.endDate,
-                selectedRoomIds: parentTask.selectedRoomIds || [],
-            },
-            isNew: true,
-            isDirty: false,
-            parentCardId: 'id' in parentTask ? parentTask.id : undefined // Useful if we wanted to visually link cards in editor
-        };
+        setFormData({
+            ...INITIAL_FORM_STATE,
+            type: childType,
+            parentId: parentTask.id,
+            startDate: parentTask.startDate || INITIAL_FORM_STATE.startDate,
+            endDate: parentTask.endDate || INITIAL_FORM_STATE.endDate,
+            selectedRoomIds: parentTask.selectedRoomIds || [],
+        });
+        setEditingTaskId(null); // It's a new task
+        setIsDirty(false);
+    }, [isDirty]);
 
-        setOpenCards(prev => [newCard, ...prev]);
-        setActiveCardId(newCard.id);
-    }, [currentClassId]);
+    // Quick-create a new Project or Assignment to link to
+    const handleQuickCreateParent = useCallback(async (type: 'project' | 'assignment') => {
+        const title = window.prompt(`Enter ${type} title:`);
+        if (!title?.trim() || !auth.currentUser) return null;
+
+        try {
+            const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
+
+            const docRef = await addDoc(collection(db, 'tasks'), {
+                title: title.trim(),
+                description: '',
+                type,
+                status: 'draft',
+                parentId: null,
+                rootId: null,
+                path: [],
+                pathTitles: [],
+                childIds: [],
+                startDate: toDateString(),
+                endDate: toDateString(),
+                selectedRoomIds: currentClassId ? [currentClassId] : [],
+                teacherId: auth.currentUser.uid,
+                presentationOrder: maxOrder + 1,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                attachments: [],
+                linkURL: '',
+                imageURL: '',
+            });
+
+            handleSuccess(`${type === 'project' ? 'Project' : 'Assignment'} "${title}" created as draft`);
+
+            // Set as parent of current form
+            updateActiveCard('parentId', docRef.id);
+
+            return docRef.id;
+        } catch (error) {
+            handleError(`Failed to create ${type}`);
+            return null;
+        }
+    }, [tasks, currentClassId, updateActiveCard]);
 
     // --- File Upload Handlers ---
 
@@ -583,27 +644,25 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         }
     };
 
-    const handlePaste = async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        const items = event.clipboardData?.items;
-        if (!items) return;
+    // Handle drag-drop file upload from RichTextEditor
+    const handleFileDrop = async (files: File[]) => {
+        if (files.length === 0) return;
 
-        for (let i = 0; i < items.length; i++) {
-            const item = items[i];
-            if (item && item.type.startsWith('image/')) {
-                event.preventDefault();
-                const file = item.getAsFile();
-                if (file) {
-                    const attachment = await uploadFile(file);
-                    if (attachment) {
-                        updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
-                            ...(prev || []),
-                            attachment
-                        ]);
-                        handleSuccess('Image pasted and uploaded');
-                    }
-                }
-                break;
+        const newAttachments: Attachment[] = [];
+
+        for (const file of files) {
+            const attachment = await uploadFile(file);
+            if (attachment) {
+                newAttachments.push(attachment);
             }
+        }
+
+        if (newAttachments.length > 0) {
+            updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
+                ...(prev || []),
+                ...newAttachments
+            ]);
+            handleSuccess(`${newAttachments.length} file(s) uploaded`);
         }
     };
 
@@ -642,24 +701,27 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         });
     };
 
-    const handleSaveCard = async (cardId: string) => {
-        const card = openCards.find(c => c.id === cardId);
-        if (!card || !auth.currentUser) return;
+    const handleSave = async (isAutoSave: boolean = false) => {
+        if (!auth.currentUser) return;
 
-        const { formData } = card;
-
-        if (!formData.title.trim()) {
-            handleError("Please enter a title.");
-            return;
-        }
-        if (formData.selectedRoomIds.length === 0) {
-            handleError("Please assign at least one class.");
-            return;
+        // Validation - stricter for manual save
+        if (!isAutoSave) {
+            if (!formData.title.trim()) {
+                handleError("Please enter a title.");
+                return;
+            }
+            if (formData.selectedRoomIds.length === 0) {
+                handleError("Please assign at least one class.");
+                return;
+            }
+        } else {
+            // Auto-save requirements (looser)
+            if (!formData.title.trim() && formData.selectedRoomIds.length === 0) return; // Nothing to save
         }
 
         setIsSubmitting(true);
         try {
-            // Build path and pathTitles from parent
+            // Build path...
             let path: string[] = [];
             let pathTitles: string[] = [];
             let rootId: string | null = null;
@@ -672,6 +734,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                     rootId = parent.rootId || parent.id;
                 }
             }
+
+            // Determine status
+            const statusToSave: TaskStatus = isAutoSave ? 'draft' : 'todo';
 
             const taskData = {
                 title: formData.title,
@@ -688,11 +753,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 attachments: formData.attachments || [],
                 teacherId: auth.currentUser.uid,
                 updatedAt: serverTimestamp(),
-                status: 'todo',
-                childIds: [],
+                status: statusToSave, // Update status
             };
 
-            if (card.isNew) {
+            if (isNewTask) {
                 // Create new task
                 const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
 
@@ -701,6 +765,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                     presentationOrder: maxOrder + 1,
                     createdAt: serverTimestamp(),
                     imageURL: '',
+                    childIds: [],
                 });
 
                 // Update parent's childIds if applicable
@@ -714,94 +779,39 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                     }
                 }
 
-                handleSuccess(`${getTypeLabel(formData.type)} created successfully!`);
-            } else {
-                // Update existing - card would have a taskId attached
-                // For now, we don't support editing via cards (that's in handleEditClick)
-                handleSuccess(`${getTypeLabel(formData.type)} updated!`);
+                if (!isAutoSave) {
+                    handleSuccess(`${getTypeLabel(formData.type)} created successfully!`);
+                    resetForm();
+                } else {
+                    // Critical: Determine that this is now an existing task so future auto-saves update it
+                    // We must update the editingTaskId to the new ID
+                    // And conceptually it's no longer a "new task" in the UI sense of "unsaved"
+                    // However, our component derives "isNewTask" from editingTaskId being null.
+                    // So we must switch to editing mode.
+                    setEditingTaskId(docRef.id);
+                    // Note: This might effectively "refresh" the component state because editingTaskId changes.
+                    // Ideally we update local state without full reload if possible, but switching mode is safer.
+                }
+
+            } else if (editingTaskId) {
+                // Update existing task
+                await updateDoc(doc(db, 'tasks', editingTaskId), taskData);
+
+                if (!isAutoSave) {
+                    handleSuccess(`${getTypeLabel(formData.type)} updated!`);
+                    setIsDirty(false);
+                    // Optionally reset or keep open depending on user flow. 
+                    // Current flow seems to be keep open or manual reset? 
+                    // Actually existing code only did setIsDirty(false).
+                } else {
+                    // Quiet update
+                    setIsDirty(false); // It's saved now
+                }
             }
-
-            // Mark card as not dirty before closing (prevents "unsaved changes" prompt)
-            setOpenCards(prev => prev.map(c =>
-                c.id === cardId ? { ...c, isDirty: false } : c
-            ));
-
-            // Remove the card after saving
-            closeCard(cardId);
 
         } catch (error) {
             console.error("Error saving:", error);
-            handleError("Failed to save.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const _handleSaveAll = async () => {
-        const dirtyCards = openCards.filter(c => c.isDirty && c.formData.title.trim());
-        if (dirtyCards.length === 0) {
-            handleError("No tasks to save. Please fill out at least one task.");
-            return;
-        }
-
-        setIsSubmitting(true);
-        try {
-            const batch = writeBatch(db);
-            let savedCount = 0;
-
-            for (const card of dirtyCards) {
-                if (!card.formData.title.trim()) continue;
-                if (card.formData.selectedRoomIds.length === 0) continue;
-
-                let path: string[] = [];
-                let pathTitles: string[] = [];
-                let rootId: string | null = null;
-
-                if (card.formData.parentId) {
-                    const parent = tasks.find(t => t.id === card.formData.parentId);
-                    if (parent) {
-                        path = [...(parent.path || []), parent.id];
-                        pathTitles = [...(parent.pathTitles || []), parent.title];
-                        rootId = parent.rootId || parent.id;
-                    }
-                }
-
-                const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
-                const newDocRef = doc(collection(db, 'tasks'));
-
-                batch.set(newDocRef, {
-                    title: card.formData.title,
-                    description: card.formData.description,
-                    type: card.formData.type,
-                    parentId: card.formData.parentId,
-                    rootId,
-                    path,
-                    pathTitles,
-                    linkURL: card.formData.linkURL,
-                    startDate: card.formData.startDate,
-                    endDate: card.formData.endDate,
-                    selectedRoomIds: card.formData.selectedRoomIds,
-                    attachments: card.formData.attachments || [],
-                    teacherId: auth.currentUser!.uid,
-                    presentationOrder: maxOrder + savedCount + 1,
-                    createdAt: serverTimestamp(),
-                    updatedAt: serverTimestamp(),
-                    imageURL: '',
-                    status: 'todo',
-                    childIds: [],
-                    // Note: questionHistory is NOT copied - it belongs to original task only
-                });
-
-                savedCount++;
-            }
-
-            await batch.commit();
-            handleSuccess(`${savedCount} item(s) created successfully!`);
-            resetToNewCard();
-
-        } catch (error) {
-            console.error("Error batch saving:", error);
-            handleError("Failed to save items.");
+            if (!isAutoSave) handleError("Failed to save.");
         } finally {
             setIsSubmitting(false);
         }
@@ -832,62 +842,13 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             // Delete the task
             await deleteDoc(doc(db, 'tasks', taskId));
             handleSuccess("Item deleted.");
-            resetToNewCard();
+            resetForm();
         } catch (error) {
             console.error("Error deleting:", error);
             handleError("Failed to delete.");
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const handleEditClick = (task: Task) => {
-        // Open task and all its ancestors as tabs
-        const cardsToOpen: TaskCardState[] = [];
-
-        // First, add all ancestors
-        if (task.path && task.path.length > 0) {
-            for (const ancestorId of task.path) {
-                const ancestor = tasks.find(t => t.id === ancestorId);
-                if (ancestor) {
-                    cardsToOpen.push({
-                        id: ancestor.id, // Use task ID as card ID for editing
-                        formData: {
-                            title: ancestor.title,
-                            description: ancestor.description || '',
-                            type: ancestor.type,
-                            parentId: ancestor.parentId,
-                            linkURL: ancestor.linkURL || '',
-                            startDate: ancestor.startDate || toDateString(),
-                            endDate: ancestor.endDate || toDateString(),
-                            selectedRoomIds: ancestor.selectedRoomIds || [],
-                        },
-                        isNew: false,
-                        isDirty: false,
-                    });
-                }
-            }
-        }
-
-        // Add the clicked task
-        cardsToOpen.push({
-            id: task.id,
-            formData: {
-                title: task.title,
-                description: task.description || '',
-                type: task.type,
-                parentId: task.parentId,
-                linkURL: task.linkURL || '',
-                startDate: task.startDate || toDateString(),
-                endDate: task.endDate || toDateString(),
-                selectedRoomIds: task.selectedRoomIds || [],
-            },
-            isNew: false,
-            isDirty: false,
-        });
-
-        setOpenCards(cardsToOpen);
-        setActiveCardId(task.id);
     };
 
     const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
@@ -913,43 +874,32 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         }
     };
 
-    // Remove task from the current date/class (doesn't delete the task)
-    const handleRemoveFromSchedule = async (task: Task) => {
-        if (!currentClassId) return;
-
-        try {
-            // Remove current class from selectedRoomIds
-            const updatedRoomIds = (task.selectedRoomIds || []).filter(id => id !== currentClassId);
-
-            await updateDoc(doc(db, 'tasks', task.id), {
-                selectedRoomIds: updatedRoomIds,
-                updatedAt: serverTimestamp()
-            });
-
-            handleSuccess('Task removed from this class schedule');
-        } catch (error) {
-            handleError(error, 'Failed to remove task from schedule');
-        }
-    };
 
 
 
-    const handleWeekNav = (direction: 'prev' | 'next') => {
-        const newDate = new Date(calendarBaseDate);
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-        setCalendarBaseDate(newDate);
-    };
+
+    // --- Auto-Save Effect ---
+    useEffect(() => {
+        // Only auto-save if dirty and has minimal required data
+        if (!isDirty || (!activeFormData.title.trim() && activeFormData.selectedRoomIds.length === 0)) return;
+
+        const timer = setTimeout(async () => {
+            setSaveState('saving');
+            await handleSave(true); // isAutoSave = true
+            setSaveState('saved');
+            // Reset to idle after 2 seconds
+            setTimeout(() => setSaveState('idle'), 2000);
+        }, 2000); // 2 second debounce
+
+        return () => clearTimeout(timer);
+    }, [activeFormData, isDirty]);
 
     // --- Render ---
 
     const availableParents = getAvailableParents(activeFormData.type);
-    const _hasDirtyCards = openCards.some(c => c.isDirty && c.formData.title.trim());
 
-    // Determine if we can add a subtask to the current active card
-    const canAddSubtaskToActive = activeFormData.type !== 'subtask' && !activeCard?.isNew;
-    // We can't easily check for saved status of the *current* form data vs DB, 
-    // but we can check if it's new. If it's existing, we assume it's safe to add a child.
-
+    // Determine if we can add a subtask to the current active task
+    const canAddSubtaskToActive = activeFormData.type !== 'subtask' && editingTaskId !== null;
 
     return (
         <div className="flex-1 h-full overflow-y-auto lg:overflow-hidden">
@@ -957,363 +907,372 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
                 {/* LEFT PANEL: Task Editor */}
                 <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
-                    {/* Tab Bar showing new tasks + summary tasks hierarchically */}
-                    <TaskTabBar
-                        tabs={(() => {
-                            // First: unsaved new cards (appear on the left)
-                            const newCardTabs = openCards
-                                .filter(card => card.isNew)
-                                .map(card => ({
-                                    id: card.id,
-                                    title: card.formData.title,
-                                    parentId: card.formData.parentId,
-                                    isNew: true,
-                                    isDirty: card.isDirty,
-                                    depth: card.formData.parentId ? 1 : 0,
-                                }));
-
-                            // Second: saved tasks from summary, sorted hierarchically
-                            const sortHierarchically = (tasks: Task[]): Task[] => {
-                                const roots = tasks.filter(t => !t.parentId || !tasks.some(other => other.id === t.parentId));
-                                const result: Task[] = [];
-
-                                const addWithChildren = (task: Task) => {
-                                    result.push(task);
-                                    const children = tasks
-                                        .filter(t => t.parentId === task.id)
-                                        .sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-                                    children.forEach(child => addWithChildren(child));
-                                };
-
-                                roots.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-                                roots.forEach(root => addWithChildren(root));
-                                return result;
-                            };
-
-                            const savedTaskTabs = sortHierarchically(filteredTasks).map(task => ({
-                                id: task.id,
-                                title: task.title,
-                                parentId: task.parentId,
-                                isNew: false,
-                                isDirty: openCards.find(c => c.id === task.id)?.isDirty || false,
-                                depth: task.path?.length || 0,
-                            }));
-
-                            // Combine: new cards first, then saved tasks
-                            return [...newCardTabs, ...savedTaskTabs];
+                    {/* Consolidated Drafts Row - serves as navigation + actions */}
+                    <div className="flex items-center gap-2 mb-4 flex-wrap">
+                        {(() => {
+                            const drafts = tasks.filter(t => t.status === 'draft');
+                            return (
+                                <>
+                                    {drafts.length > 0 && (
+                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Drafts:</span>
+                                    )}
+                                    {drafts.slice(0, 6).map(draft => {
+                                        const isActive = editingTaskId === draft.id;
+                                        // Use day-relative numbering based on the draft's due date
+                                        const hierNum = getHierarchicalNumber(draft, tasks, draft.endDate);
+                                        return (
+                                            <button
+                                                key={draft.id}
+                                                onClick={() => loadTask(draft)}
+                                                title={draft.title}
+                                                className={`
+                                                    flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all
+                                                    ${isActive
+                                                        ? 'bg-brand-accent/20 text-brand-accent border border-brand-accent/40'
+                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 border border-transparent'}
+                                                `}
+                                            >
+                                                <span>📝</span>
+                                                <span className="font-bold">{hierNum}.</span>
+                                                <span className="truncate max-w-[80px]">{draft.title || 'Untitled'}</span>
+                                            </button>
+                                        );
+                                    })}
+                                    {drafts.length > 6 && (
+                                        <span className="text-xs text-gray-400">+{drafts.length - 6} more</span>
+                                    )}
+                                </>
+                            );
                         })()}
-                        activeTabId={activeCardId}
-                        onTabClick={(taskId: string) => {
-                            // Check if this is a new unsaved card first
-                            const newCard = openCards.find(c => c.id === taskId && c.isNew);
-                            if (newCard) {
-                                // Just switch to this card
-                                setActiveCardId(taskId);
-                            } else {
-                                // Load the saved task data into the editor
-                                const task = filteredTasks.find(t => t.id === taskId);
-                                if (task) {
-                                    handleEditClick(task);
-                                }
-                            }
-                        }}
-                        onTabClose={(taskId: string) => {
-                            // Check if this is a new unsaved card
-                            const newCard = openCards.find(c => c.id === taskId && c.isNew);
-                            if (newCard) {
-                                // Close the unsaved card
-                                closeCard(taskId);
-                            } else {
-                                // Remove saved task from schedule
-                                const task = filteredTasks.find(t => t.id === taskId);
-                                if (task) {
-                                    handleRemoveFromSchedule(task);
-                                }
-                            }
-                        }}
-                        onAddNew={addNewCard}
-                        onTitleChange={(taskId: string, title: string) => {
-                            // Update the task title in Firestore
-                            const task = tasks.find(t => t.id === taskId);
-                            if (task && auth.currentUser) {
-                                const taskRef = doc(db, 'tasks', taskId);
-                                updateDoc(taskRef, { title, updatedAt: serverTimestamp() });
-                            }
-                            // Also update local openCards if this task is being edited
-                            setOpenCards(prev => prev.map(card => {
-                                if (card.id !== taskId) return card;
-                                return {
-                                    ...card,
-                                    formData: { ...card.formData, title },
-                                    isDirty: true,
-                                };
-                            }));
-                        }}
-                    />
+                        {/* + New Task button */}
+                        <button
+                            onClick={resetForm}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent transition-colors text-xs font-medium border border-brand-accent/30"
+                            title="Create new task"
+                        >
+                            <Plus size={14} />
+                            <span>New Task</span>
+                        </button>
+                        {/* Discard button - only when dirty */}
+                        {isDirty && (
+                            <button
+                                onClick={() => {
+                                    if (window.confirm('Discard unsaved changes?')) {
+                                        sessionStorage.removeItem('taskManager.formData');
+                                        sessionStorage.removeItem('taskManager.editingTaskId');
+                                        resetForm();
+                                    }
+                                }}
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-xs font-medium ml-auto"
+                            >
+                                <X size={14} />
+                                Discard
+                            </button>
+                        )}
+                    </div>
 
-                    {/* Main Card - connects to tabs above */}
-                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-b-lg rounded-tr-lg p-4 space-y-4 flex-1 flex flex-col -mt-[2px] relative z-40">
+                    {/* Main Form Card */}
+                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4 flex-1 flex flex-col relative z-40">
+                        {/* Save State Indicator - top right */}
+                        <div className="absolute top-3 right-3 z-10">
+                            {saveState === 'saving' && (
+                                <div className="flex items-center gap-1.5 text-gray-400" title="Saving...">
+                                    <Loader size={14} className="animate-spin" />
+                                </div>
+                            )}
+                            {saveState === 'saved' && (
+                                <div className="flex items-center gap-1.5 text-green-500" title="Saved">
+                                    <Check size={16} />
+                                </div>
+                            )}
+                        </div>
 
-                        {/* Type, Linked To, Start Date, Due Date - 5-column grid */}
-                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 items-center">
-                            {/* Col 1: Type Selector */}
-                            <Select<ItemType>
-                                value={activeFormData.type}
-                                onChange={(value) => updateActiveCard('type', value || 'task')}
-                                options={TYPE_OPTIONS.map(opt => ({
-                                    ...opt,
-                                    disabled: activeFormData.parentId
-                                        ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
-                                        : false
-                                }))}
-                                icon={getTypeIcon(activeFormData.type)}
-                                iconColor={getTypeHexColor(activeFormData.type)}
-                                colorClasses={getTypeColorClasses(activeFormData.type)}
-                                buttonClassName="font-bold"
-                            />
+                        {/* Title Input */}
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0">Title</span>
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    value={activeFormData.title}
+                                    onChange={(e) => updateActiveCard('title', e.target.value)}
+                                    placeholder="Task Title"
+                                    className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-brand-accent focus:ring-0 px-2 py-1 transition-all placeholder-gray-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
+                                />
+                            </div>
+                        </div>
 
-                            {/* Col 2: Linked To */}
-                            <Select<string>
-                                value={activeFormData.parentId}
-                                onChange={(value) => updateActiveCard('parentId', value)}
-                                options={availableParents.map(parent => ({
-                                    value: parent.id,
-                                    label: parent.pathTitles?.length
-                                        ? `${parent.pathTitles.join(' → ')} → ${parent.title}`
-                                        : parent.title,
-                                    icon: getTypeIcon(parent.type),
-                                    iconColor: getTypeHexColor(parent.type),
-                                }))}
-                                placeholder="Linked to..."
-                                icon={LinkIcon}
-                                nullable
-                                searchable
-                            />
+                        {/* Metadata Row: Type, Connections, Dates */}
+                        <div className="flex items-end gap-4 flex-wrap lg:flex-nowrap">
+                            {/* TYPE */}
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Type</span>
+                                <div className="w-[160px]">
+                                    <Select<ItemType>
+                                        value={activeFormData.type}
+                                        onChange={(value) => updateActiveCard('type', value || 'task')}
+                                        options={TYPE_OPTIONS.map(opt => ({
+                                            ...opt,
+                                            disabled: activeFormData.parentId
+                                                ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
+                                                : false
+                                        }))}
+                                        icon={getTypeIcon(activeFormData.type)}
+                                        iconColor={getTypeHexColor(activeFormData.type)}
+                                        buttonClassName="font-bold py-1 text-sm"
+                                    />
+                                </div>
+                            </div>
 
-                            {/* Col 3: Empty spacer */}
-                            <div className="hidden lg:block" />
+                            {/* CONNECTIONS */}
+                            <div className="flex flex-col gap-1">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Connections</span>
+                                <div className="w-[160px]">
+                                    <Select<string>
+                                        value={activeFormData.parentId}
+                                        onChange={(value) => {
+                                            if (value === '__new_project__') {
+                                                handleQuickCreateParent('project');
+                                            } else if (value === '__new_assignment__') {
+                                                handleQuickCreateParent('assignment');
+                                            } else {
+                                                updateActiveCard('parentId', value);
+                                            }
+                                        }}
+                                        options={[
+                                            ...availableParents.map(parent => ({
+                                                value: parent.id,
+                                                label: parent.pathTitles?.length
+                                                    ? `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`
+                                                    : `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
+                                                icon: getTypeIcon(parent.type),
+                                                iconColor: getTypeHexColor(parent.type),
+                                            })),
+                                            // Divider - only show if there are parents
+                                            ...(availableParents.length > 0 ? [{ value: '__divider__', label: '──────────', disabled: true }] : []),
+                                            // Quick create actions
+                                            { value: '__new_project__', label: '+ Create Project', icon: Plus, iconColor: '#a855f7' },
+                                            { value: '__new_assignment__', label: '+ Create Assignment', icon: Plus, iconColor: '#3b82f6' },
+                                        ]}
+                                        placeholder="Linked to..."
+                                        icon={LinkIcon}
+                                        nullable
+                                        searchable
+                                        buttonClassName="py-1 text-sm"
+                                    />
+                                </div>
+                            </div>
 
-                            {/* Cols 4-5: Date Range Picker */}
-                            <div className="col-span-2">
+                            {/* DATES - pushed to right */}
+                            <div className="flex flex-col gap-1 ml-auto">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Dates</span>
                                 <DateRangePicker
                                     startDate={activeFormData.startDate}
                                     endDate={activeFormData.endDate}
                                     onStartDateChange={(value) => updateActiveCard('startDate', value)}
                                     onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                    startPlaceholder="Start date"
-                                    endPlaceholder="Due date"
+                                    startPlaceholder="Start"
+                                    endPlaceholder="Due"
+                                    buttonClassName="py-1 text-sm"
                                 />
                             </div>
                         </div>
                         {/* Description & Attachments Section */}
-                        <div className="flex-1 flex flex-col space-y-4 min-h-0 overflow-hidden">
-                            {/* Description Container with embedded Upload/Link buttons */}
-                            <div
-                                className="flex-1 min-h-[100px] relative"
-                                onMouseEnter={() => setIsDescriptionActive(true)}
-                                onMouseLeave={() => setIsDescriptionActive(false)}
-                            >
-                                <div className="absolute inset-0 flex flex-col">
-                                    <textarea
-                                        ref={descriptionRef}
+                        {/* Description Container with embedded Upload/Link buttons */}
+                        <div className="flex-1 min-h-[100px] relative">
+                            <div className="absolute inset-0 flex flex-col">
+                                <div className="flex-1 rounded-t-md border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
+                                    <RichTextEditor
                                         value={activeFormData.description}
-                                        onChange={e => updateActiveCard('description', e.target.value)}
-                                        onPaste={handlePaste}
-                                        onFocus={() => setIsDescriptionActive(true)}
-                                        onBlur={() => setIsDescriptionActive(false)}
-                                        className="flex-1 w-full px-5 py-4 rounded-t-md border-2 border-b-0 transition-all duration-300 bg-gray-50/50 dark:bg-gray-900/30 text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700 placeholder-gray-400 dark:placeholder-gray-600 text-sm resize-none leading-relaxed hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500"
+                                        onChange={(value) => updateActiveCard('description', value)}
+                                        onDrop={handleFileDrop}
                                         placeholder="Describe this task..."
+                                        className="h-full text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm"
                                     />
-                                    {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                    <div className="px-4 py-3 rounded-b-md border-2 border-t-0 border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex flex-wrap items-center gap-2 min-h-[44px]">
-                                        {/* Inline attachments */}
-                                        {activeFormData.attachments && activeFormData.attachments.map(attachment => (
-                                            <div
-                                                key={attachment.id}
-                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs"
-                                            >
-                                                {attachment.mimeType.startsWith('image/') ? (
-                                                    <ImageIcon size={12} className="text-blue-500" />
-                                                ) : (
-                                                    <FileIcon size={12} className="text-gray-500" />
-                                                )}
+                                </div>
+                                {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
+                                <div className="px-4 py-3 rounded-b-md border-2 border-t-0 border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex flex-wrap items-center gap-2 min-h-[44px]">
+                                    {/* Inline attachments with image thumbnails */}
+                                    {activeFormData.attachments && activeFormData.attachments.map(attachment => (
+                                        <div
+                                            key={attachment.id}
+                                            className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs group"
+                                        >
+                                            {attachment.mimeType.startsWith('image/') ? (
+                                                /* Image thumbnail preview */
                                                 <a
                                                     href={attachment.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
+                                                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                                                 >
-                                                    {attachment.filename}
+                                                    <img
+                                                        src={attachment.url}
+                                                        alt={attachment.filename}
+                                                        className="w-10 h-10 object-cover rounded border border-gray-200 dark:border-gray-600"
+                                                    />
+                                                    <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[80px]">
+                                                        {attachment.filename}
+                                                    </span>
                                                 </a>
-                                                <button
-                                                    onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
-                                                >
-                                                    <X size={10} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {/* Inline link display */}
-                                        {activeFormData.linkURL && (
-                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs">
-                                                <LinkIcon size={12} className="text-blue-500" />
-                                                <a
-                                                    href={activeFormData.linkURL}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[120px]"
-                                                >
-                                                    {(() => { try { return new URL(activeFormData.linkURL).hostname; } catch { return activeFormData.linkURL; } })()}
-                                                </a>
-                                                <button
-                                                    onClick={() => updateActiveCard('linkURL', '')}
-                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
-                                                >
-                                                    <X size={10} />
-                                                </button>
-                                            </div>
-                                        )}
-                                        {/* Upload & Link buttons - show on hover/focus */}
-                                        <div className={`flex items-center gap-3 transition-opacity duration-200 ${isDescriptionActive || isUploading ? 'opacity-100' : 'opacity-0'}`}>
-                                            <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
-                                                <input
-                                                    ref={fileInputRef}
-                                                    type="file"
-                                                    multiple
-                                                    accept={ALLOWED_FILE_TYPES.join(',')}
-                                                    onChange={handleFileSelect}
-                                                    disabled={isUploading}
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
-                                                    {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
-                                                    <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
-                                                </div>
-                                            </div>
-                                            {!activeFormData.linkURL && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const url = prompt('Enter URL:');
-                                                        if (url) updateActiveCard('linkURL', url);
-                                                    }}
-                                                    className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group"
-                                                >
-                                                    <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                                                        <LinkIcon size={16} />
-                                                        <span className="text-sm font-medium">Add Link</span>
-                                                    </div>
-                                                </button>
+                                            ) : (
+                                                /* Non-image file icon */
+                                                <>
+                                                    <FileIcon size={12} className="text-gray-500" />
+                                                    <a
+                                                        href={attachment.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
+                                                    >
+                                                        {attachment.filename}
+                                                    </a>
+                                                </>
                                             )}
+                                            <button
+                                                onClick={() => removeAttachment(attachment.id)}
+                                                className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                <X size={10} />
+                                            </button>
                                         </div>
-                                    </div>
-                                    {/* Empty state placeholder */}
-                                    {!activeFormData.description && !activeFormData.attachments?.length && !activeFormData.linkURL && !isDescriptionActive && (
-                                        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-600 text-sm flex flex-col items-center gap-2 opacity-60">
-                                            <svg className="w-6 h-6 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
-                                            </svg>
-                                            <span>Type description or paste images</span>
+                                    ))}
+                                    {/* Inline link display */}
+                                    {activeFormData.linkURL && (
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs">
+                                            <LinkIcon size={12} className="text-blue-500" />
+                                            <a
+                                                href={activeFormData.linkURL}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[120px]"
+                                            >
+                                                {(() => { try { return new URL(activeFormData.linkURL).hostname; } catch { return activeFormData.linkURL; } })()}
+                                            </a>
+                                            <button
+                                                onClick={() => updateActiveCard('linkURL', '')}
+                                                className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
+                                            >
+                                                <X size={10} />
+                                            </button>
                                         </div>
                                     )}
+                                    {/* Upload & Link buttons - Always visible now for better UX */}
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                multiple
+                                                accept={ALLOWED_FILE_TYPES.join(',')}
+                                                onChange={handleFileSelect}
+                                                disabled={isUploading}
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            />
+                                            <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                                                {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
+                                                <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
+                                            </div>
+                                        </div>
+                                        {!activeFormData.linkURL && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = prompt('Enter URL:');
+                                                    if (url) updateActiveCard('linkURL', url);
+                                                }}
+                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group"
+                                            >
+                                                <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                                                    <LinkIcon size={16} />
+                                                    <span className="text-sm font-medium">Add Link</span>
+                                                </div>
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Action Row: Class Chips + Save - simplified layout */}
-                            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
-                                {/* Task State Badge */}
-                                <div className="flex items-center gap-2">
-                                    {activeFormData.selectedRoomIds.length === 0 ? (
-                                        <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-md">
-                                            Draft
-                                        </span>
-                                    ) : (
-                                        <div className="flex items-center gap-1">
-                                            {activeFormData.selectedRoomIds.slice(0, 3).map(roomId => {
-                                                const room = rooms.find(r => r.id === roomId);
-                                                return room ? (
-                                                    <span
-                                                        key={roomId}
-                                                        className="w-3 h-3 rounded-full"
-                                                        style={{ backgroundColor: room.color || '#3B82F6' }}
-                                                        title={room.name}
-                                                    />
-                                                ) : null;
-                                            })}
-                                            {activeFormData.selectedRoomIds.length > 3 && (
-                                                <span className="text-[10px] font-bold text-gray-400">+{activeFormData.selectedRoomIds.length - 3}</span>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
+                        {/* Tags Row */}
+                        <div className="pt-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-3">
+                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
 
-                                {/* Inline Class Chips - Always Visible */}
-                                <div className="flex-1 flex flex-wrap items-center gap-2">
-                                    {loadingRooms ? (
-                                        <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                                    ) : rooms.length === 0 ? (
-                                        <span className="text-xs text-gray-400">No classes</span>
-                                    ) : (
-                                        rooms.map(room => {
-                                            const isSelected = activeFormData.selectedRoomIds.includes(room.id);
-                                            const roomColor = room.color || '#3B82F6';
-                                            return (
-                                                <button
-                                                    key={room.id}
-                                                    type="button"
-                                                    onClick={() => handleRoomToggle(room.id)}
-                                                    style={{
-                                                        borderColor: isSelected ? roomColor : undefined,
-                                                        backgroundColor: isSelected ? `${roomColor}15` : undefined,
-                                                        color: isSelected ? roomColor : undefined,
-                                                    }}
-                                                    className={`
-                                                        flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-bold transition-all border-2
-                                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
-                                                        ${isSelected
-                                                            ? 'shadow-sm'
-                                                            : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'}
-                                                    `}
-                                                >
-                                                    {isSelected && <Check size={12} />}
-                                                    {room.name}
-                                                </button>
-                                            );
-                                        })
-                                    )}
-                                </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {loadingRooms ? (
+                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                ) : rooms.length === 0 ? (
+                                    <span className="text-xs text-gray-400">No classes found</span>
+                                ) : (
+                                    rooms.map(room => {
+                                        const isSelected = activeFormData.selectedRoomIds.includes(room.id);
+                                        const roomColor = room.color || '#3B82F6';
+                                        return (
+                                            <button
+                                                key={room.id}
+                                                type="button"
+                                                onClick={() => handleRoomToggle(room.id)}
+                                                style={{
+                                                    borderColor: isSelected ? roomColor : undefined,
+                                                    backgroundColor: isSelected ? `${roomColor}15` : undefined,
+                                                    color: isSelected ? roomColor : undefined,
+                                                }}
+                                                className={`
+                                                            flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border
+                                                            focus:outline-none focus:ring-2 focus:ring-offset-1
+                                                            ${isSelected
+                                                        ? 'shadow-sm'
+                                                        : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/50'}
+                                                        `}
+                                            >
+                                                {isSelected && <Check size={12} />}
+                                                {room.name}
+                                            </button>
+                                        );
+                                    })
+                                )}
+                            </div>
+                        </div>
 
-                                {/* AI Button */}
-                                <button
-                                    type="button"
-                                    onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
-                                    className="p-2.5 rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500 hover:text-purple-500 transition-all"
-                                    title="Use AI"
-                                >
-                                    <Sparkles size={16} />
-                                </button>
+                        {/* Footer Action Bar */}
+                        <div className="pt-6 mt-auto flex items-center justify-between gap-4">
+                            {/* Left: Delete */}
+                            <div>
+                                {!isNewTask && (
+                                    <button
+                                        onClick={() => handleDelete(editingTaskId!)}
+                                        disabled={isSubmitting}
+                                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-xs font-medium"
+                                    >
+                                        <Trash2 size={14} />
+                                        <span>Delete</span>
+                                    </button>
+                                )}
+                            </div>
 
-                                {/* Add Subtask Button (only for existing items) */}
+                            {/* Right: Actions */}
+                            <div className="flex items-center gap-3">
+                                {/* Add Subtask Button */}
                                 {canAddSubtaskToActive && (
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            if (activeCard?.isNew) return;
-                                            const currentTask = tasks.find(t => t.id === activeCardId);
+                                            if (isNewTask) return;
+                                            const currentTask = tasks.find(t => t.id === editingTaskId);
                                             if (currentTask) {
                                                 handleAddSubtask(currentTask);
                                             } else {
                                                 handleError("Please save the task first.");
                                             }
                                         }}
-                                        className="p-2.5 rounded-md border-2 border-brand-accent/30 text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent transition-all"
+                                        className="px-3 py-2 rounded-md border border-brand-accent/30 text-brand-accent hover:bg-brand-accent/5 transition-colors flex items-center gap-2 text-sm font-bold"
                                         title="Add subtask"
                                     >
                                         <Plus size={16} />
+                                        <span>Subtask</span>
                                     </button>
                                 )}
 
-                                {/* Single Save Button */}
+                                {/* Save Button */}
                                 <button
                                     type="button"
                                     onClick={async () => {
@@ -1321,106 +1280,137 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                             handleError(new Error("⚠️ Please include a title before saving."));
                                             return;
                                         }
-                                        await handleSaveCard(activeCardId);
+                                        await handleSave();
                                     }}
                                     disabled={isSubmitting}
-                                    className="py-2.5 px-5 rounded-md border-2 border-green-500 bg-green-500 text-white hover:bg-green-600 hover:border-green-600 transition-all font-bold text-sm flex items-center gap-2 shadow-sm disabled:opacity-50"
+                                    className="px-6 py-2 rounded-md bg-brand-accent text-white hover:bg-brand-accent/90 transition-all font-bold text-sm flex items-center gap-2 shadow-sm disabled:opacity-50"
                                 >
-                                    {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
-                                    <span>Save</span>
+                                    {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={16} />}
+                                    <span>Save Changes</span>
                                 </button>
                             </div>
                         </div>
-
-
-                        {/* Class selectors removed - now handled by inline chips in action row */}
-
-                        {/* Delete Button - Only for existing tasks */}
-                        {!activeCard?.isNew && (
-                            <div className="pt-3 flex-shrink-0">
-                                <Button
-                                    variant="ghost-danger"
-                                    onClick={() => handleDelete(activeCardId)}
-                                    disabled={isSubmitting}
-                                    className="w-full"
-                                >
-                                    Delete {getTypeLabel(activeFormData.type)}
-                                </Button>
-                            </div>
-                        )}
                     </div>
                 </div>
+
 
                 {/* RIGHT PANEL: Calendar & List */}
                 <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
                     <div className="h-auto lg:h-full flex flex-col justify-between overflow-hidden">
 
-                        {/* Calendar Header - aligned with top row */}
-                        <div className="min-h-[44px] flex items-center justify-between mb-4">
-                            <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary flex items-center gap-2">
-                                <CalendarIcon size={18} className="text-brand-accent" />
-                                {calendarBaseDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                            </h3>
-                            <div className="flex gap-1">
-                                <button onClick={() => handleWeekNav('prev')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
-                                    <ChevronLeft size={20} />
-                                </button>
-                                <button onClick={() => handleWeekNav('next')} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20">
-                                    <ChevronRight size={20} />
-                                </button>
-                            </div>
-                        </div>
+                        {/* Simplified Date Header with Chevron Navigation */}
+                        <div className="flex items-center justify-between mb-4">
+                            <button
+                                onClick={() => {
+                                    const prev = new Date(selectedDate + 'T00:00:00');
+                                    prev.setDate(prev.getDate() - 1);
+                                    setSelectedDate(toDateString(prev));
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                                aria-label="Previous day"
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
 
-                        {/* Week Day Selector */}
-                        <div className="pb-4 border-b border-gray-200 dark:border-gray-800">
-                            <div className="grid grid-cols-5 gap-1">
-                                {weekDays.map(date => {
-                                    const dateStr = toDateString(date);
-                                    const isSelected = selectedDate === dateStr;
-                                    const isToday = dateStr === toDateString(new Date());
+                            <div className="flex items-center gap-2 text-center relative">
+                                {/* Clickable calendar icon with custom popover */}
+                                <button
+                                    ref={calendarButtonRef}
+                                    type="button"
+                                    onClick={() => {
+                                        if (!isCalendarOpen) updateCalendarPosition();
+                                        setIsCalendarOpen(!isCalendarOpen);
+                                    }}
+                                    className={`p-1 -m-1 rounded hover:bg-brand-accent/10 transition-colors cursor-pointer ${isCalendarOpen ? 'text-brand-accent bg-brand-accent/10' : 'text-brand-accent'}`}
+                                    title="Jump to date"
+                                >
+                                    <CalendarIcon size={18} className="flex-shrink-0" />
+                                </button>
 
-                                    return (
-                                        <button
-                                            key={dateStr}
-                                            onClick={() => setSelectedDate(dateStr)}
-                                            className={`
-                                                flex flex-col items-center justify-center p-2 rounded-lg transition-all
-                                                hover:bg-gray-50 dark:hover:bg-gray-800
-                                                focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50
-                                                ${isSelected ? 'bg-brand-accent/10' : ''}
-                                            `}
-                                        >
-                                            <span className={`text-xs font-medium transition-colors ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-2' : ''
-                                                } ${isSelected
-                                                    ? 'text-brand-accent'
-                                                    : 'text-gray-500'
-                                                }`}>
-                                                {date.toLocaleDateString('en-US', { weekday: 'short' })}
-                                            </span>
-                                            <span className={`
-                                                text-sm font-bold mt-1 px-2 py-0.5 transition-colors
-                                                ${isSelected
-                                                    ? 'text-brand-accent'
-                                                    : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}
-                                            `}>
-                                                {date.getDate()}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
+                                {isCalendarOpen && createPortal(
+                                    <div
+                                        ref={calendarPopoverRef}
+                                        className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in origin-top-left"
+                                        style={{
+                                            top: calendarPosition.top,
+                                            left: calendarPosition.left,
+                                            transform: 'scale(0.9)', // Make it smaller as requested
+                                            transformOrigin: calendarPosition.origin
+                                        }}
+                                    >
+                                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedDate(toDateString(new Date()));
+                                                    setIsCalendarOpen(false);
+                                                }}
+                                                className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                                            >
+                                                Today
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsCalendarOpen(false)}
+                                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                        <DayPicker
+                                            mode="single"
+                                            selected={new Date(selectedDate + 'T00:00:00')}
+                                            onSelect={(date) => {
+                                                if (date) {
+                                                    setSelectedDate(toDateString(date));
+                                                    setIsCalendarOpen(false);
+                                                }
+                                            }}
+                                            defaultMonth={new Date(selectedDate + 'T00:00:00')}
+                                            components={{
+                                                Chevron: ({ orientation }) =>
+                                                    orientation === 'left'
+                                                        ? <ChevronLeft size={16} />
+                                                        : <ChevronRight size={16} />,
+                                            }}
+                                            classNames={{
+                                                ...getDefaultClassNames(),
+                                                root: `${getDefaultClassNames().root} rdp-custom`,
+                                                disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
+                                                outside: 'text-gray-300 dark:text-gray-600 opacity-50',
+                                                chevron: 'fill-gray-500 dark:fill-gray-400',
+                                            }}
+                                        />
+                                    </div>,
+                                    document.body
+                                )}
+
+                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm sm:text-base">
+                                    Shape of the Day:
+                                    {' '}
+                                    <span className={selectedDate === toDateString() ? 'text-brand-accent' : ''}>
+                                        {selectedDate === toDateString()
+                                            ? 'Today'
+                                            : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                    </span>
+                                </h3>
                             </div>
+
+                            <button
+                                onClick={() => {
+                                    const next = new Date(selectedDate + 'T00:00:00');
+                                    next.setDate(next.getDate() + 1);
+                                    setSelectedDate(toDateString(next));
+                                }}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                                aria-label="Next day"
+                            >
+                                <ChevronRight size={16} />
+                            </button>
                         </div>
 
                         {/* Task List */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
-                            <div className="mb-3">
-                                <h4 className="text-sm font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                    <span style={{ color: currentClass?.color }}>{currentClass?.name || 'Class'}:</span> Shape of the Day <span className="text-gray-400">—</span> {selectedDate === toDateString()
-                                        ? 'Today'
-                                        : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                </h4>
-                            </div>
-
+                        <div className="flex-1 overflow-y-auto px-0 pt-0 pb-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
                             {!currentClassId ? (
                                 <div className="text-center py-8 text-gray-400 italic text-sm">
                                     Select a class to view schedule.
@@ -1433,7 +1423,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 filteredTasks.map((task, index) => {
                                     const TypeIconSmall = getTypeIcon(task.type);
                                     const progress = task.childIds?.length ? getProgress(task.id) : null;
-                                    const isEditing = openCards.some(c => c.id === task.id);
+                                    const isEditing = editingTaskId === task.id;
 
                                     return (
                                         <div
@@ -1447,13 +1437,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
                                             `}
                                         >
-                                            <div
-                                                className="absolute inset-0 border-l-4 rounded-l-lg transition-colors pointer-events-none"
-                                                style={{
-                                                    borderLeftColor: getTypeHexColor(task.type),
-                                                    opacity: isEditing ? 1 : 0
-                                                }}
-                                            />
 
                                             <div className="flex items-start gap-2">
                                                 {/* Reorder Controls */}
@@ -1511,8 +1494,20 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     )}
                                                 </div>
 
-                                                {/* Action Buttons - Stacked Vertically */}
-                                                <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
+                                                {/* Status/Actions - Top Right */}
+                                                <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                                                    {/* Checkmark for published (non-draft) tasks */}
+                                                    {task.status !== 'draft' && (
+                                                        <div className="p-1 text-green-500" title="Published">
+                                                            <Check size={14} />
+                                                        </div>
+                                                    )}
+                                                    {/* Draft indicator for drafts */}
+                                                    {task.status === 'draft' && (
+                                                        <div className="px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+                                                            Draft
+                                                        </div>
+                                                    )}
                                                     {/* Add Subtask Button */}
                                                     {!['subtask'].includes(task.type) && (
                                                         <button
@@ -1522,24 +1517,12 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                                 e.preventDefault();
                                                                 handleAddSubtask(task);
                                                             }}
-                                                            className="p-1.5 rounded border border-brand-accent/30 bg-brand-accent/5 hover:bg-brand-accent/15 text-brand-accent hover:text-brand-accent transition-colors"
+                                                            className="p-1 rounded text-brand-accent hover:bg-brand-accent/10 transition-all opacity-0 group-hover:opacity-100"
                                                             title="Add subtask"
                                                         >
                                                             <Plus size={14} />
                                                         </button>
                                                     )}
-
-                                                    {/* Remove from schedule button */}
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleRemoveFromSchedule(task);
-                                                        }}
-                                                        className="p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all"
-                                                        title="Remove from this class schedule"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

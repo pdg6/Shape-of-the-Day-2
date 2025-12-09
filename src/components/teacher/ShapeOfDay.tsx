@@ -5,7 +5,7 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';
-import { Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare, ChevronDown, ChevronRight } from 'lucide-react';
+import { Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
 import { ItemType } from '../../types';
 
 // --- Types ---
@@ -111,6 +111,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, has
     const TypeIcon = getTypeIcon(task.type || 'task');
     const typeColors = getTypeColorClasses(task.type || 'task');
     const breadcrumb = task.pathTitles?.length > 0 ? task.pathTitles.join(' → ') : null;
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     // Calculate indentation based on depth
     const indentClass = depth > 0 ? `ml-${Math.min(depth * 8, 24)}` : '';
@@ -133,7 +134,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, has
                     ${typeColors}
                 `}>
                     {hasChildren ? (
-                        <button 
+                        <button
                             onClick={onToggle}
                             className="w-full h-full flex items-center justify-center"
                         >
@@ -181,8 +182,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, has
                     </div>
 
                     {task.description && (
-                        <div className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary mt-1 line-clamp-2">
-                            {task.description}
+                        <div>
+                            <div className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary mt-1 ${isDescriptionExpanded ? '' : 'line-clamp-4'}`}>
+                                {task.description}
+                            </div>
+                            {task.description.length > 200 && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsDescriptionExpanded(!isDescriptionExpanded);
+                                    }}
+                                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-accent mt-1 transition-colors"
+                                >
+                                    {isDescriptionExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                    {isDescriptionExpanded ? 'Show less' : 'Read more'}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>
@@ -221,8 +236,8 @@ const ShapeOfDay: React.FC = () => {
                 const data = doc.data();
                 // Filter by date range
                 if (today >= (data.startDate || '') && today <= (data.endDate || today)) {
-                    taskData.push({ 
-                        id: doc.id, 
+                    taskData.push({
+                        id: doc.id,
                         ...data,
                         type: data.type || 'task',
                         parentId: data.parentId || null,
@@ -248,7 +263,7 @@ const ShapeOfDay: React.FC = () => {
 
     // Build hierarchical structure
     const taskTree = useMemo(() => buildTaskTree(tasks), [tasks]);
-    
+
     // Flatten for display, respecting collapsed state
     const displayTasks = useMemo(() => {
         const flatten = (nodes: TaskNode[], depth = 0): TaskNode[] => {
