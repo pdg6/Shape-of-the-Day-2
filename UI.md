@@ -46,7 +46,7 @@ This application follows research-backed UX principles from [Laws of UX](https:/
 ## Core Design Principles
 
 - **Solid Surfaces:** Cards and tiles use solid backgrounds (`bg-brand-lightSurface` / `dark:bg-brand-darkSurface`) to ensure readability.
-- **Interactive Borders:** Interactive elements use a 3px border that changes color on hover and focus.
+- **Interactive Borders:** Interactive elements use a 2px border (`border-2`) that changes color on hover and focus.
 - **Micro-Animations:** Arrows and icons animate on hover (`translate-x-1`) to encourage interaction.
 - **Mobile-First Responsive:** All layouts adapt gracefully from mobile to desktop using fluid utilities.
 - **Accessibility-First:** Skip links, ARIA attributes, and keyboard navigation are built-in.
@@ -107,7 +107,7 @@ className="bg-brand-lightSurface dark:bg-brand-darkSurface"
 #### 30% Secondary (Structure & Text)
 ```jsx
 // Card borders (inactive state)
-className="border-[3px] border-gray-200 dark:border-gray-700"
+className="border-2 border-gray-200 dark:border-gray-700"
 
 // Primary text
 className="text-brand-textDarkPrimary dark:text-brand-textPrimary"
@@ -154,7 +154,7 @@ className="bg-red-500"  // Semantic, not theme-based
 {/* 60% - Card background (dominant) */}
 <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl p-4
                 {/* 30% - Border (secondary) */}
-                border-[3px] border-gray-200 dark:border-gray-700">
+                border-2 border-gray-200 dark:border-gray-700">
   
   {/* 30% - Text (secondary) */}
   <h3 className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">
@@ -166,7 +166,7 @@ className="bg-red-500"  // Semantic, not theme-based
   
   {/* 10% - Interactive accent */}
   <button className="mt-3 px-4 py-2 rounded-lg
-                     border-[3px] border-brand-accent text-brand-accent
+                     border-2 border-brand-accent text-brand-accent
                      hover:bg-brand-accent/10">
     Mark Complete
   </button>
@@ -416,7 +416,7 @@ When a classroom has a theme color, replace emerald classes with `brand-accent`.
 ```css
 /* Base Tile/Input/Button Style */
 .student-tile {
-  @apply w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200;
+  @apply w-full px-4 py-2.5 rounded-xl border-2 transition-all duration-200;
   @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
   @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
   @apply border-gray-200 dark:border-gray-700;
@@ -434,7 +434,7 @@ When a classroom has a theme color, replace emerald classes with `brand-accent`.
 
 /* Ghost Button Style (Nav/Footer) */
 .student-ghost {
-  @apply border-[3px] transition-all duration-200;
+  @apply border-2 transition-all duration-200;
   @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
   @apply border-transparent;
   @apply text-gray-500 dark:text-gray-400;
@@ -467,7 +467,7 @@ but can be overridden by classroom theme color.
 ```css
 /* Base Tile/Input/Button Style */
 .teacher-tile {
-  @apply w-full px-4 py-2.5 rounded-xl border-[3px] transition-all duration-200;
+  @apply w-full px-4 py-2.5 rounded-xl border-2 transition-all duration-200;
   @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
   @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
   @apply border-gray-200 dark:border-gray-700;
@@ -485,7 +485,7 @@ but can be overridden by classroom theme color.
 
 /* Ghost Button Style (Nav/Footer) */
 .teacher-ghost {
-  @apply border-[3px] transition-all duration-200;
+  @apply border-2 transition-all duration-200;
   @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
   @apply border-transparent;
   @apply text-gray-500 dark:text-gray-400;
@@ -586,7 +586,7 @@ Fixed bottom nav bar with square tile buttons (64×64px) and centered icon + tex
       <button
         className={`
           flex flex-col items-center justify-center gap-1 p-2
-          w-16 h-16 rounded-xl border-[3px] transition-all duration-200
+          w-16 h-16 rounded-xl border-2 transition-all duration-200
           bg-brand-lightSurface dark:bg-brand-darkSurface
           focus:outline-none focus:ring-2 focus:ring-brand-accent/20
           ${isActive

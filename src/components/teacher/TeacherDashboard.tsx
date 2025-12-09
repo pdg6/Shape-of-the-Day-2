@@ -531,7 +531,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('classrooms')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -545,7 +545,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -559,7 +559,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('shape')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -573,7 +573,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setActiveTab('live')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
+                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
                                 ? 'border-brand-accent text-brand-accent'
                                 : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
                                 }`}
@@ -587,7 +587,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setIsSettingsOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Settings & More"
                         >
                             <Home className="w-6 h-6" />

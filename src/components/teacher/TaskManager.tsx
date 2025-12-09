@@ -8,7 +8,6 @@ import {
     Loader,
     ChevronLeft,
     ChevronRight,
-    ChevronDown,
     ArrowUp,
     ArrowDown,
     FolderOpen,
@@ -164,7 +163,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [showClassSelector, setShowClassSelector] = useState(false); // Toggles class buttons visibility
     const [isDescriptionActive, setIsDescriptionActive] = useState(false); // Tracks hover/focus on description
 
     // Refs
@@ -269,8 +267,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     useEffect(() => {
         try {
             sessionStorage.setItem('taskManager.activeCardId', activeCardId);
-            // Reset class selector when switching cards
-            setShowClassSelector(false);
         } catch (e) {
             console.warn('Failed to persist active card ID to sessionStorage:', e);
         }
@@ -412,7 +408,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             isDirty: false,
         };
 
-        setOpenCards(prev => [...prev, newCard]);
+        setOpenCards(prev => [newCard, ...prev]);
         setActiveCardId(newCard.id);
     }, [currentClassId]);
 
@@ -482,7 +478,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             return;
         }
 
-        const childType = allowedChildren[0]; // Default to first allowed type
+        const childType = allowedChildren[0] as ItemType; // Safe: we checked length > 0 above
 
         // Inherit path and titles
         const path = [...(parentTask.path || []), parentTask.id];
@@ -504,7 +500,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             parentCardId: 'id' in parentTask ? parentTask.id : undefined // Useful if we wanted to visually link cards in editor
         };
 
-        setOpenCards(prev => [...prev, newCard]);
+        setOpenCards(prev => [newCard, ...prev]);
         setActiveCardId(newCard.id);
     }, [currentClassId]);
 
@@ -961,22 +957,91 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
                 {/* LEFT PANEL: Task Editor */}
                 <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
-                    {/* Tab Bar with Editable Titles - positioned above card */}
+                    {/* Tab Bar showing new tasks + summary tasks hierarchically */}
                     <TaskTabBar
-                        tabs={openCards.map(card => ({
-                            id: card.id,
-                            title: card.formData.title,
-                            parentId: card.formData.parentId,
-                            isNew: card.isNew,
-                            isDirty: card.isDirty,
-                        }))}
+                        tabs={(() => {
+                            // First: unsaved new cards (appear on the left)
+                            const newCardTabs = openCards
+                                .filter(card => card.isNew)
+                                .map(card => ({
+                                    id: card.id,
+                                    title: card.formData.title,
+                                    parentId: card.formData.parentId,
+                                    isNew: true,
+                                    isDirty: card.isDirty,
+                                    depth: card.formData.parentId ? 1 : 0,
+                                }));
+
+                            // Second: saved tasks from summary, sorted hierarchically
+                            const sortHierarchically = (tasks: Task[]): Task[] => {
+                                const roots = tasks.filter(t => !t.parentId || !tasks.some(other => other.id === t.parentId));
+                                const result: Task[] = [];
+
+                                const addWithChildren = (task: Task) => {
+                                    result.push(task);
+                                    const children = tasks
+                                        .filter(t => t.parentId === task.id)
+                                        .sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                                    children.forEach(child => addWithChildren(child));
+                                };
+
+                                roots.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                                roots.forEach(root => addWithChildren(root));
+                                return result;
+                            };
+
+                            const savedTaskTabs = sortHierarchically(filteredTasks).map(task => ({
+                                id: task.id,
+                                title: task.title,
+                                parentId: task.parentId,
+                                isNew: false,
+                                isDirty: openCards.find(c => c.id === task.id)?.isDirty || false,
+                                depth: task.path?.length || 0,
+                            }));
+
+                            // Combine: new cards first, then saved tasks
+                            return [...newCardTabs, ...savedTaskTabs];
+                        })()}
                         activeTabId={activeCardId}
-                        onTabClick={setActiveCardId}
-                        onTabClose={closeCard}
+                        onTabClick={(taskId: string) => {
+                            // Check if this is a new unsaved card first
+                            const newCard = openCards.find(c => c.id === taskId && c.isNew);
+                            if (newCard) {
+                                // Just switch to this card
+                                setActiveCardId(taskId);
+                            } else {
+                                // Load the saved task data into the editor
+                                const task = filteredTasks.find(t => t.id === taskId);
+                                if (task) {
+                                    handleEditClick(task);
+                                }
+                            }
+                        }}
+                        onTabClose={(taskId: string) => {
+                            // Check if this is a new unsaved card
+                            const newCard = openCards.find(c => c.id === taskId && c.isNew);
+                            if (newCard) {
+                                // Close the unsaved card
+                                closeCard(taskId);
+                            } else {
+                                // Remove saved task from schedule
+                                const task = filteredTasks.find(t => t.id === taskId);
+                                if (task) {
+                                    handleRemoveFromSchedule(task);
+                                }
+                            }
+                        }}
                         onAddNew={addNewCard}
-                        onTitleChange={(tabId, title) => {
+                        onTitleChange={(taskId: string, title: string) => {
+                            // Update the task title in Firestore
+                            const task = tasks.find(t => t.id === taskId);
+                            if (task && auth.currentUser) {
+                                const taskRef = doc(db, 'tasks', taskId);
+                                updateDoc(taskRef, { title, updatedAt: serverTimestamp() });
+                            }
+                            // Also update local openCards if this task is being edited
                             setOpenCards(prev => prev.map(card => {
-                                if (card.id !== tabId) return card;
+                                if (card.id !== taskId) return card;
                                 return {
                                     ...card,
                                     formData: { ...card.formData, title },
@@ -1154,112 +1219,42 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 </div>
                             </div>
 
-                            {/* Action Row: AI | (spacer) | (spacer) | (spacer) | Save - 5-column grid */}
-                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 items-center pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
-                                {/* Col 1: AI Generate Button - Purple solid (moved to left) */}
-                                <button
-                                    type="button"
-                                    onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
-                                    className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 bg-transparent hover:bg-purple-500/10 hover:border-purple-500 transition-all duration-200 group cursor-pointer select-none"
-                                >
-                                    <div className="flex items-center justify-center gap-2 text-purple-400 group-hover:text-purple-500 transition-colors">
-                                        <Sparkles size={16} />
-                                        <span className="text-sm font-medium">Use AI</span>
-                                    </div>
-                                </button>
-
-                                {/* Col 2: Add Subtask Button (only for existing items) */}
-                                <div className="flex justify-center">
-                                    {canAddSubtaskToActive && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                // We need to construct a "parent object" from the active form data
-                                                // ID is required, so this only works for existing tasks (which have an ID in activeCardId if not new)
-                                                if (activeCard.isNew) return;
-
-                                                // Find the task object to get path info if possible, or construct it
-                                                const currentTask = tasks.find(t => t.id === activeCardId);
-
-                                                if (currentTask) {
-                                                    handleAddSubtask(currentTask);
-                                                } else {
-                                                    // Fallback if not found in list (shouldn't happen for existing)
-                                                    handleError("Please save the task first.");
-                                                }
-                                            }}
-                                            className="p-2.5 rounded-md border-2 border-brand-accent/30 text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent transition-all duration-200 group"
-                                            title="Add related task"
-                                        >
-                                            <Plus size={20} />
-                                        </button>
+                            {/* Action Row: Class Chips + Save - simplified layout */}
+                            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex-shrink-0">
+                                {/* Task State Badge */}
+                                <div className="flex items-center gap-2">
+                                    {activeFormData.selectedRoomIds.length === 0 ? (
+                                        <span className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-md">
+                                            Draft
+                                        </span>
+                                    ) : (
+                                        <div className="flex items-center gap-1">
+                                            {activeFormData.selectedRoomIds.slice(0, 3).map(roomId => {
+                                                const room = rooms.find(r => r.id === roomId);
+                                                return room ? (
+                                                    <span
+                                                        key={roomId}
+                                                        className="w-3 h-3 rounded-full"
+                                                        style={{ backgroundColor: room.color || '#3B82F6' }}
+                                                        title={room.name}
+                                                    />
+                                                ) : null;
+                                            })}
+                                            {activeFormData.selectedRoomIds.length > 3 && (
+                                                <span className="text-[10px] font-bold text-gray-400">+{activeFormData.selectedRoomIds.length - 3}</span>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
 
-                                {/* Col 3: Empty spacer */}
-                                <div className="hidden lg:block" />
-
-                                {/* Col 4: Empty spacer */}
-                                <div className="hidden lg:block" />
-
-                                {/* Col 5: Actions - Flex container for Draft & Assign */}
-                                <div className="flex items-center gap-2 w-full col-span-2 lg:col-span-1">
-                                    {/* Action 1: Save as Draft */}
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            if (!activeFormData.title.trim()) {
-                                                handleError(new Error("⚠️ Please include a title before saving."));
-                                                return;
-                                            }
-                                            // Save without requiring classes (Draft)
-                                            await handleSaveCard(activeCardId);
-                                        }}
-                                        disabled={isSubmitting}
-                                        className="py-2.5 px-3 rounded-md border-2 border-gray-300 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-medium text-xs whitespace-nowrap flex-1"
-                                        title="Save to list without assigning"
-                                    >
-                                        Save Draft
-                                    </button>
-
-                                    {/* Action 2: Assign / Publish */}
-                                    <button
-                                        type="button"
-                                        onClick={async () => {
-                                            if (!activeFormData.title.trim()) {
-                                                handleError(new Error("⚠️ Please include a title before saving."));
-                                                return;
-                                            }
-                                            if (activeFormData.selectedRoomIds.length > 0) {
-                                                await handleSaveCard(activeCardId);
-                                            } else {
-                                                setShowClassSelector(true);
-                                                // Optional: Scroll to selector or flash it?
-                                            }
-                                        }}
-                                        disabled={isSubmitting}
-                                        className={`py-2.5 px-3 rounded-md border-2 border-green-500 bg-green-500 text-white hover:bg-green-600 hover:border-green-600 transition-all font-bold text-xs whitespace-nowrap flex-[2] flex items-center justify-center gap-2 shadow-sm ${showClassSelector ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
-                                    >
-                                        {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
-                                        <span>Assign</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Expandable Class Selector - Shows when dropdown is clicked */}
-                        {showClassSelector && (
-                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700 animate-fade-in flex-shrink-0">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Select classes to add this task:</span>
-                                </div>
-                                {loadingRooms ? (
-                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                                ) : rooms.length === 0 ? (
-                                    <p className="text-sm text-gray-500">No classes created yet. Create a class first.</p>
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {rooms.map(room => {
+                                {/* Inline Class Chips - Always Visible */}
+                                <div className="flex-1 flex flex-wrap items-center gap-2">
+                                    {loadingRooms ? (
+                                        <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                    ) : rooms.length === 0 ? (
+                                        <span className="text-xs text-gray-400">No classes</span>
+                                    ) : (
+                                        rooms.map(room => {
                                             const isSelected = activeFormData.selectedRoomIds.includes(room.id);
                                             const roomColor = room.color || '#3B82F6';
                                             return (
@@ -1268,87 +1263,77 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     type="button"
                                                     onClick={() => handleRoomToggle(room.id)}
                                                     style={{
-                                                        '--room-color': roomColor,
-                                                        '--room-color-bg': `${roomColor}15`,
-                                                        '--room-color-hover': `${roomColor}25`,
-                                                        '--room-color-glow': `${roomColor}35`,
-                                                        borderColor: roomColor,
-                                                        backgroundColor: isSelected ? `${roomColor}15` : 'transparent',
-                                                        color: roomColor,
-                                                        boxShadow: isSelected ? `0 0 12px ${roomColor}25` : 'none',
-                                                    } as React.CSSProperties}
-                                                    className={`
-                                                        flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-bold transition-all border-2
-                                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-                                                        hover:shadow-lg active:scale-[0.98]
-                                                        min-h-[44px]
-                                                        [&:hover]:!bg-[var(--room-color-hover)]
-                                                        [&:focus-visible]:!bg-[var(--room-color-glow)]
-                                                        [&:focus-visible]:!shadow-[0_0_16px_var(--room-color-hover)]
-                                                    `}
-                                                >
-                                                    {isSelected && <Check size={14} />}
-                                                    {room.name}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* Save & Close button removed to avoid double logic. Use the main split button. */}
-                            </div>
-                        )}
-
-                        {/* Class Assignment - Only shown after task is saved (not new) */}
-                        {!activeCard?.isNew && (
-                            <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <ChevronDown size={14} className="text-brand-accent" />
-                                    <label className="text-xs font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">Assign to Additional Classes</label>
-                                </div>
-                                {loadingRooms ? (
-                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                                ) : (
-                                    <div className="flex flex-wrap gap-2">
-                                        {rooms.map(room => {
-                                            const isSelected = activeFormData.selectedRoomIds.includes(room.id);
-                                            return (
-                                                <button
-                                                    key={room.id}
-                                                    onClick={() => handleRoomToggle(room.id)}
-                                                    style={{
-                                                        borderColor: isSelected ? (room.color || '') : '',
-                                                        color: isSelected ? (room.color || '') : ''
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        if (!isSelected && room.color) {
-                                                            e.currentTarget.style.borderColor = room.color;
-                                                            e.currentTarget.style.color = room.color;
-                                                        }
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        if (!isSelected) {
-                                                            e.currentTarget.style.borderColor = '';
-                                                            e.currentTarget.style.color = '';
-                                                        }
+                                                        borderColor: isSelected ? roomColor : undefined,
+                                                        backgroundColor: isSelected ? `${roomColor}15` : undefined,
+                                                        color: isSelected ? roomColor : undefined,
                                                     }}
                                                     className={`
-                                                        flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all border-2
-                                                        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-accent/20
+                                                        flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-bold transition-all border-2
+                                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1
                                                         ${isSelected
-                                                            ? 'bg-brand-lightSurface dark:bg-brand-darkSurface pr-2 shadow-md'
-                                                            : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary border-gray-200 dark:border-gray-700'}
+                                                            ? 'shadow-sm'
+                                                            : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'}
                                                     `}
                                                 >
                                                     {isSelected && <Check size={12} />}
                                                     {room.name}
                                                 </button>
                                             );
-                                        })}
-                                    </div>
+                                        })
+                                    )}
+                                </div>
+
+                                {/* AI Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSuccess('Coming Soon! AI task generation will be available in a future update.')}
+                                    className="p-2.5 rounded-md border-2 border-purple-400/50 dark:border-purple-500/40 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500 hover:text-purple-500 transition-all"
+                                    title="Use AI"
+                                >
+                                    <Sparkles size={16} />
+                                </button>
+
+                                {/* Add Subtask Button (only for existing items) */}
+                                {canAddSubtaskToActive && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (activeCard?.isNew) return;
+                                            const currentTask = tasks.find(t => t.id === activeCardId);
+                                            if (currentTask) {
+                                                handleAddSubtask(currentTask);
+                                            } else {
+                                                handleError("Please save the task first.");
+                                            }
+                                        }}
+                                        className="p-2.5 rounded-md border-2 border-brand-accent/30 text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent transition-all"
+                                        title="Add subtask"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
                                 )}
+
+                                {/* Single Save Button */}
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        if (!activeFormData.title.trim()) {
+                                            handleError(new Error("⚠️ Please include a title before saving."));
+                                            return;
+                                        }
+                                        await handleSaveCard(activeCardId);
+                                    }}
+                                    disabled={isSubmitting}
+                                    className="py-2.5 px-5 rounded-md border-2 border-green-500 bg-green-500 text-white hover:bg-green-600 hover:border-green-600 transition-all font-bold text-sm flex items-center gap-2 shadow-sm disabled:opacity-50"
+                                >
+                                    {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
+                                    <span>Save</span>
+                                </button>
                             </div>
-                        )}
+                        </div>
+
+
+                        {/* Class selectors removed - now handled by inline chips in action row */}
 
                         {/* Delete Button - Only for existing tasks */}
                         {!activeCard?.isNew && (
@@ -1447,7 +1432,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             ) : (
                                 filteredTasks.map((task, index) => {
                                     const TypeIconSmall = getTypeIcon(task.type);
-                                    const breadcrumb = getBreadcrumb(task);
                                     const progress = task.childIds?.length ? getProgress(task.id) : null;
                                     const isEditing = openCards.some(c => c.id === task.id);
 
@@ -1455,6 +1439,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         <div
                                             key={task.id}
                                             onClick={() => handleEditClick(task)}
+                                            style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
                                             className={`
                                                 group relative p-3 rounded-lg border-2 transition-all cursor-pointer
                                                 ${isEditing
@@ -1463,24 +1448,12 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                             `}
                                         >
                                             <div
-                                                className="absolute inset-0 border-l-4 rounded-l-lg transition-colors"
+                                                className="absolute inset-0 border-l-4 rounded-l-lg transition-colors pointer-events-none"
                                                 style={{
                                                     borderLeftColor: getTypeHexColor(task.type),
                                                     opacity: isEditing ? 1 : 0
                                                 }}
                                             />
-
-                                            {/* Remove from schedule button */}
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleRemoveFromSchedule(task);
-                                                }}
-                                                className="absolute top-2 right-2 p-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all"
-                                                title="Remove from this class schedule"
-                                            >
-                                                <X size={14} />
-                                            </button>
 
                                             <div className="flex items-start gap-2">
                                                 {/* Reorder Controls */}
@@ -1506,15 +1479,19 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     <TypeIconSmall size={12} />
                                                 </span>
 
+                                                {/* Content: Title + Due Date */}
                                                 <div className="flex-1 min-w-0">
                                                     <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
                                                         {task.title}
                                                     </h5>
 
-                                                    {/* Breadcrumb */}
-                                                    {breadcrumb && (
-                                                        <p className="text-xs text-gray-400 truncate mt-0.5">
-                                                            {breadcrumb}
+                                                    {/* Due Date */}
+                                                    {task.endDate && (
+                                                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                                            <CalendarIcon size={10} />
+                                                            {task.endDate === toDateString()
+                                                                ? 'Due today'
+                                                                : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
                                                         </p>
                                                     )}
 
@@ -1534,28 +1511,37 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     )}
                                                 </div>
 
-                                                {/* Add Subtask Button - Right side */}
-                                                {!['subtask'].includes(task.type) && (
+                                                {/* Action Buttons - Stacked Vertically */}
+                                                <div className="flex flex-col gap-1" onClick={e => e.stopPropagation()}>
+                                                    {/* Add Subtask Button */}
+                                                    {!['subtask'].includes(task.type) && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                handleAddSubtask(task);
+                                                            }}
+                                                            className="p-1.5 rounded border border-brand-accent/30 bg-brand-accent/5 hover:bg-brand-accent/15 text-brand-accent hover:text-brand-accent transition-colors"
+                                                            title="Add subtask"
+                                                        >
+                                                            <Plus size={14} />
+                                                        </button>
+                                                    )}
+
+                                                    {/* Remove from schedule button */}
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            handleAddSubtask(task);
+                                                            handleRemoveFromSchedule(task);
                                                         }}
-                                                        className="p-1.5 rounded hover:bg-brand-accent/10 text-gray-400 hover:text-brand-accent transition-colors self-center"
-                                                        title="Add related task"
+                                                        className="p-1.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all"
+                                                        title="Remove from this class schedule"
                                                     >
-                                                        <Plus size={16} />
+                                                        <X size={14} />
                                                     </button>
-                                                )}
+                                                </div>
                                             </div>
-
-                                            {/* Hierarchy Indicator (if child) */}
-                                            {(task.path?.length || 0) > 0 && (
-                                                <div
-                                                    className="absolute left-[-12px] top-1/2 -translate-y-1/2 text-gray-300 dark:text-gray-600"
-                                                    style={{ marginLeft: `${(task.path?.length || 0) * 4}px` }}
-                                                />
-                                            )}
                                         </div>
                                     );
                                 })

@@ -62,7 +62,7 @@ export function DatePicker({
     const maxDateObj = maxDate ? parse(maxDate, 'yyyy-MM-dd', new Date()) : undefined;
 
     // Format for display
-    const displayValue = isValidDate 
+    const displayValue = isValidDate
         ? format(selectedDate, 'MMM d, yyyy')
         : '';
 
@@ -72,24 +72,24 @@ export function DatePicker({
             const rect = buttonRef.current.getBoundingClientRect();
             const popoverHeight = 350;
             const popoverWidth = 300;
-            
+
             // Check if there's room below
             const spaceBelow = window.innerHeight - rect.bottom;
             const spaceRight = window.innerWidth - rect.left;
-            
+
             let top = rect.bottom + window.scrollY + 4;
             let left = rect.left + window.scrollX;
-            
+
             // Position above if not enough space below
             if (spaceBelow < popoverHeight && rect.top > popoverHeight) {
                 top = rect.top + window.scrollY - popoverHeight - 4;
             }
-            
+
             // Adjust left if would overflow right edge
             if (spaceRight < popoverWidth) {
                 left = Math.max(8, rect.right + window.scrollX - popoverWidth);
             }
-            
+
             setPosition({ top, left });
         }
     }, []);
@@ -100,7 +100,7 @@ export function DatePicker({
 
         const handleClickOutside = (e: MouseEvent) => {
             if (
-                popoverRef.current && 
+                popoverRef.current &&
                 !popoverRef.current.contains(e.target as Node) &&
                 buttonRef.current &&
                 !buttonRef.current.contains(e.target as Node)
@@ -119,7 +119,7 @@ export function DatePicker({
 
         document.addEventListener('mousedown', handleClickOutside);
         document.addEventListener('keydown', handleEscape);
-        
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
             document.removeEventListener('keydown', handleEscape);
@@ -151,13 +151,13 @@ export function DatePicker({
     // Toggle open state
     const toggleOpen = () => {
         if (disabled) return;
-        
+
         // On touch devices, use native picker
         if (isTouchDevice() && nativeInputRef.current) {
             nativeInputRef.current.showPicker();
             return;
         }
-        
+
         if (!isOpen) {
             updatePosition();
         }
@@ -192,7 +192,7 @@ export function DatePicker({
                 disabled={disabled}
                 className={`
                     relative w-full cursor-pointer
-                    pl-9 pr-8 py-2.5 rounded-lg text-sm font-medium text-left
+                    pl-9 pr-8 py-2.5 rounded-xl text-sm font-medium text-left
                     border-2 transition-all duration-200
                     bg-brand-lightSurface dark:bg-brand-darkSurface
                     border-gray-200 dark:border-gray-700
@@ -216,7 +216,7 @@ export function DatePicker({
 
                 {/* Clear Button */}
                 {value && !disabled && (
-                    <span 
+                    <span
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
                         onClick={handleClear}
                     >
@@ -267,9 +267,9 @@ export function DatePicker({
                             ...(maxDateObj ? [{ after: maxDateObj }] : []),
                         ]}
                         components={{
-                            Chevron: ({ orientation }) => 
-                                orientation === 'left' 
-                                    ? <ChevronLeft size={16} /> 
+                            Chevron: ({ orientation }) =>
+                                orientation === 'left'
+                                    ? <ChevronLeft size={16} />
                                     : <ChevronRight size={16} />,
                         }}
                         classNames={{

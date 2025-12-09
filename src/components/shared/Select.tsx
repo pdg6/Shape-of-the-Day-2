@@ -70,7 +70,7 @@ export function Select<T extends string | number = string>({
     const filteredOptions = useMemo(() => {
         if (!search.trim()) return options;
         const lowerSearch = search.toLowerCase();
-        return options.filter(opt => 
+        return options.filter(opt =>
             opt.label.toLowerCase().includes(lowerSearch)
         );
     }, [options, search]);
@@ -137,7 +137,7 @@ export function Select<T extends string | number = string>({
                             onClick={updatePosition}
                             className={`
                                 relative w-full cursor-pointer
-                                pl-10 pr-8 py-2.5 rounded-lg text-sm font-medium
+                                pl-10 pr-8 py-2.5 rounded-xl text-sm font-medium
                                 border-2 transition-all duration-200
                                 bg-brand-lightSurface dark:bg-brand-darkSurface
                                 hover:border-gray-300 dark:hover:border-gray-600
@@ -150,7 +150,7 @@ export function Select<T extends string | number = string>({
                         >
                             {/* Left Icon */}
                             {SelectedIcon && (
-                                <span 
+                                <span
                                     className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
                                     style={{ color: displayIconColor }}
                                 >
@@ -165,8 +165,8 @@ export function Select<T extends string | number = string>({
 
                             {/* Chevron */}
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                <ChevronDown 
-                                    size={16} 
+                                <ChevronDown
+                                    size={16}
                                     className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
                                 />
                             </span>
@@ -183,7 +183,7 @@ export function Select<T extends string | number = string>({
                             >
                                 <Listbox.Options
                                     static
-                                    className="fixed z-[9999] overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
+                                    className="fixed z-[9999] overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
                                     style={{
                                         top: dropdownPosition.top,
                                         left: dropdownPosition.left,
@@ -265,14 +265,14 @@ export function Select<T extends string | number = string>({
                                                         <>
                                                             {/* Option Icon */}
                                                             {OptionIcon && (
-                                                                <span 
+                                                                <span
                                                                     className="absolute left-3 top-1/2 -translate-y-1/2"
                                                                     style={{ color: option.iconColor }}
                                                                 >
                                                                     <OptionIcon size={16} />
                                                                 </span>
                                                             )}
-                                                            
+
                                                             {/* Check mark for selected (when no icon) */}
                                                             {selected && !OptionIcon && (
                                                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-accent">
