@@ -806,11 +806,11 @@ useEffect(() => {
 
 ```css
 .btn-primary-accent {
-  @apply w-full py-2.5 px-4 rounded-xl border-[3px] transition-all duration-200;
+  @apply w-full py-2.5 px-4 rounded-md border-2 transition-all duration-200;
   @apply bg-transparent;
   @apply text-brand-accent font-bold;
   @apply border-brand-accent;
-  @apply hover:text-brand-accent/80 hover:border-brand-accent/80 hover:bg-brand-accent/10;
+  @apply hover:bg-brand-accent/10;
   @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/30;
   @apply disabled:opacity-50 disabled:cursor-not-allowed;
 }

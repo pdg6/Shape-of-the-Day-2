@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Classroom } from '../../types';
-import { collection, getCountFromServer } from 'firebase/firestore';
+import { collection, getCountFromServer, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Copy, Edit2, BarChart2, Check, Calendar, ListTodo, Presentation } from 'lucide-react';
+import { toDateString } from '../../utils/dateHelpers';
 
 interface ClassCardProps {
     classroom: Classroom;
@@ -20,6 +21,7 @@ interface ClassCardProps {
 
 export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelect, onViewStudents, onViewTasks, onManageTasks, onViewShape, onViewCalendar, onViewData, isSelected }) => {
     const [activeStudentCount, setActiveStudentCount] = useState<number | null>(null);
+    const [savedTaskCount, setSavedTaskCount] = useState<number>(0);
     const [isHovered, setIsHovered] = useState(false);
     const [copied, setCopied] = useState(false);
 
@@ -35,6 +37,35 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
             }
         };
         fetchActiveCount();
+    }, [classroom.id]);
+
+    // Fetch saved task count for today
+    useEffect(() => {
+        const fetchSavedTaskCount = async () => {
+            try {
+                const today = toDateString();
+                const q = query(
+                    collection(db, 'tasks'),
+                    where('selectedRoomIds', 'array-contains', classroom.id)
+                );
+                const snapshot = await getDocs(q);
+
+                // Filter for today's saved (non-draft) tasks
+                let count = 0;
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const inRange = today >= (data.startDate || '') && today <= (data.endDate || today);
+                    const isSaved = data.status !== 'draft';
+                    if (inRange && isSaved) count++;
+                });
+
+                setSavedTaskCount(count);
+            } catch (error) {
+                console.error("Error fetching saved task count:", error);
+                setSavedTaskCount(0);
+            }
+        };
+        fetchSavedTaskCount();
     }, [classroom.id]);
 
     const handleCopyCode = (e: React.MouseEvent) => {
@@ -123,7 +154,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-accent' : 'text-gray-400' + (isSelected ? ' group-hover/stats:text-brand-accent' : '')}`}>Tasks</p>
                             <div className="flex items-baseline gap-1.5">
                                 <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                    {classroom.contentLibrary?.length || 0}
+                                    {savedTaskCount}
                                 </span>
                             </div>
                         </button>

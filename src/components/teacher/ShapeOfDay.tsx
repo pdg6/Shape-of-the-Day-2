@@ -20,6 +20,7 @@ interface Task {
     selectedRoomIds: string[];
     presentationOrder: number;
     createdAt: any;
+    status?: 'draft' | 'published' | 'done'; // Task status
     // Hierarchy fields
     type: ItemType;
     parentId: string | null;
@@ -234,8 +235,8 @@ const ShapeOfDay: React.FC = () => {
             const taskData: Task[] = [];
             snapshot.forEach(doc => {
                 const data = doc.data();
-                // Filter by date range
-                if (today >= (data.startDate || '') && today <= (data.endDate || today)) {
+                // Filter by date range and exclude drafts
+                if (today >= (data.startDate || '') && today <= (data.endDate || today) && data.status !== 'draft') {
                     taskData.push({
                         id: doc.id,
                         ...data,
@@ -245,6 +246,7 @@ const ShapeOfDay: React.FC = () => {
                         path: data.path || [],
                         pathTitles: data.pathTitles || [],
                         childIds: data.childIds || [],
+                        status: data.status,
                     } as Task);
                 }
             });

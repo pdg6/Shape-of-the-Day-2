@@ -388,9 +388,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
 
 
-    // Filter tasks by date and class, then build hierarchy
+    // Filter tasks by date and class, then build hierarchy with proper ordering
     const filteredTasks = useMemo(() => {
-        return tasks.filter(task => {
+        const filtered = tasks.filter(task => {
             const isInDateRange = task.startDate && task.endDate
                 ? selectedDate >= task.startDate && selectedDate <= task.endDate
                 : true;
@@ -399,6 +399,22 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 : true;
             return isInDateRange && isAssignedToCurrentClass;
         });
+
+        // Sort hierarchically: parent followed by its children
+        const buildHierarchy = (parentId: string | null): Task[] => {
+            const children = filtered
+                .filter(t => t.parentId === parentId)
+                .sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+
+            const result: Task[] = [];
+            for (const child of children) {
+                result.push(child);
+                result.push(...buildHierarchy(child.id)); // Recursively add children
+            }
+            return result;
+        };
+
+        return buildHierarchy(null); // Start from root tasks (no parent)
     }, [tasks, selectedDate, currentClassId]);
 
     // Get available parents for a given type
@@ -852,14 +868,22 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     };
 
     const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
-        const currentIndex = filteredTasks.findIndex(t => t.id === taskId);
+        // Find the task being reordered
+        const task = filteredTasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        // Get siblings (tasks with the same parentId)
+        const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
+        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+
+        const currentIndex = siblings.findIndex(t => t.id === taskId);
         if (currentIndex === -1) return;
 
         const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        if (targetIndex < 0 || targetIndex >= filteredTasks.length) return;
+        if (targetIndex < 0 || targetIndex >= siblings.length) return;
 
-        const currentTask = filteredTasks[currentIndex];
-        const targetTask = filteredTasks[targetIndex];
+        const currentTask = siblings[currentIndex];
+        const targetTask = siblings[targetIndex];
 
         if (!currentTask || !targetTask) return;
 
@@ -908,7 +932,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 {/* LEFT PANEL: Task Editor */}
                 <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
                     {/* Consolidated Drafts Row - serves as navigation + actions */}
-                    <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    <div className="flex items-center gap-2 mb-4 flex-wrap pl-4">
                         {(() => {
                             const drafts = tasks.filter(t => t.status === 'draft');
                             return (
@@ -1030,15 +1054,25 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     <Select<string>
                                         value={activeFormData.parentId}
                                         onChange={(value) => {
-                                            if (value === '__new_project__') {
-                                                handleQuickCreateParent('project');
-                                            } else if (value === '__new_assignment__') {
-                                                handleQuickCreateParent('assignment');
+                                            if (value === '__add_subtask__') {
+                                                // Add a subtask to the current task
+                                                if (editingTaskId) {
+                                                    const currentTask = tasks.find(t => t.id === editingTaskId);
+                                                    if (currentTask) {
+                                                        handleAddSubtask(currentTask);
+                                                    }
+                                                }
                                             } else {
                                                 updateActiveCard('parentId', value);
                                             }
                                         }}
                                         options={[
+                                            // Add subtask option - only show if editing an existing task that can have children
+                                            ...(editingTaskId && !['subtask'].includes(activeFormData.type) ? [
+                                                { value: '__add_subtask__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
+                                                { value: '__divider_top__', label: '──────────', disabled: true },
+                                            ] : []),
+                                            // Available parents
                                             ...availableParents.map(parent => ({
                                                 value: parent.id,
                                                 label: parent.pathTitles?.length
@@ -1047,11 +1081,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                 icon: getTypeIcon(parent.type),
                                                 iconColor: getTypeHexColor(parent.type),
                                             })),
-                                            // Divider - only show if there are parents
-                                            ...(availableParents.length > 0 ? [{ value: '__divider__', label: '──────────', disabled: true }] : []),
-                                            // Quick create actions
-                                            { value: '__new_project__', label: '+ Create Project', icon: Plus, iconColor: '#a855f7' },
-                                            { value: '__new_assignment__', label: '+ Create Assignment', icon: Plus, iconColor: '#3b82f6' },
                                         ]}
                                         placeholder="Linked to..."
                                         icon={LinkIcon}
@@ -1078,14 +1107,14 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                         </div>
                         {/* Description & Attachments Section */}
                         {/* Description Container with embedded Upload/Link buttons */}
-                        <div className="flex-1 min-h-[100px] relative">
+                        <div className="flex-1 min-h-[150px] lg:min-h-[200px] relative">
                             <div className="absolute inset-0 flex flex-col">
                                 <div className="flex-1 rounded-t-md border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
                                     <RichTextEditor
                                         value={activeFormData.description}
                                         onChange={(value) => updateActiveCard('description', value)}
                                         onDrop={handleFileDrop}
-                                        placeholder="Describe this task..."
+                                        placeholder="Create this task using text, video links, or drag and drop photos"
                                         className="h-full text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm"
                                     />
                                 </div>
@@ -1194,7 +1223,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                         </div>
 
                         {/* Tags Row */}
-                        <div className="pt-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-3">
+                        <div className="pt-4 flex flex-col gap-1">
                             <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
 
                             <div className="flex flex-wrap items-center gap-2">
@@ -1241,9 +1270,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     <button
                                         onClick={() => handleDelete(editingTaskId!)}
                                         disabled={isSubmitting}
-                                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-xs font-medium"
+                                        className="min-w-[120px] px-6 py-2.5 rounded-md border-2 border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 transition-all font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500/30"
                                     >
-                                        <Trash2 size={14} />
+                                        <Trash2 size={16} />
                                         <span>Delete</span>
                                     </button>
                                 )}
@@ -1251,26 +1280,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
                             {/* Right: Actions */}
                             <div className="flex items-center gap-3">
-                                {/* Add Subtask Button */}
-                                {canAddSubtaskToActive && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (isNewTask) return;
-                                            const currentTask = tasks.find(t => t.id === editingTaskId);
-                                            if (currentTask) {
-                                                handleAddSubtask(currentTask);
-                                            } else {
-                                                handleError("Please save the task first.");
-                                            }
-                                        }}
-                                        className="px-3 py-2 rounded-md border border-brand-accent/30 text-brand-accent hover:bg-brand-accent/5 transition-colors flex items-center gap-2 text-sm font-bold"
-                                        title="Add subtask"
-                                    >
-                                        <Plus size={16} />
-                                        <span>Subtask</span>
-                                    </button>
-                                )}
 
                                 {/* Save Button */}
                                 <button
@@ -1283,10 +1292,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         await handleSave();
                                     }}
                                     disabled={isSubmitting}
-                                    className="px-6 py-2 rounded-md bg-brand-accent text-white hover:bg-brand-accent/90 transition-all font-bold text-sm flex items-center gap-2 shadow-sm disabled:opacity-50"
+                                    className="min-w-[120px] px-6 py-2.5 rounded-md border-2 border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 transition-all font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
                                 >
                                     {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={16} />}
-                                    <span>Save Changes</span>
+                                    <span>Save</span>
                                 </button>
                             </div>
                         </div>
@@ -1419,11 +1428,16 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 <div className="text-center py-8 text-gray-400 italic text-sm">
                                     No tasks scheduled.
                                 </div>
-                            ) : (
-                                filteredTasks.map((task, index) => {
+                            ) : (() => {
+                                return filteredTasks.map((task) => {
                                     const TypeIconSmall = getTypeIcon(task.type);
                                     const progress = task.childIds?.length ? getProgress(task.id) : null;
                                     const isEditing = editingTaskId === task.id;
+
+                                    // Get siblings (same parentId) for proper disabled state
+                                    const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
+                                    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                                    const siblingIndex = siblings.findIndex(t => t.id === task.id);
 
                                     return (
                                         <div
@@ -1439,28 +1453,33 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         >
 
                                             <div className="flex items-start gap-2">
-                                                {/* Reorder Controls */}
+                                                {/* Reorder Controls - for all tasks within their sibling group */}
                                                 <div className="flex flex-col" onClick={e => e.stopPropagation()}>
                                                     <button
                                                         onClick={() => handleReorder(task.id, 'up')}
-                                                        disabled={index === 0}
+                                                        disabled={siblingIndex === 0}
                                                         className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                     >
                                                         <ArrowUp size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleReorder(task.id, 'down')}
-                                                        disabled={index === filteredTasks.length - 1}
+                                                        disabled={siblingIndex === siblings.length - 1}
                                                         className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                     >
                                                         <ArrowDown size={14} />
                                                     </button>
                                                 </div>
 
-                                                {/* Type Badge */}
-                                                <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
-                                                    <TypeIconSmall size={12} />
-                                                </span>
+                                                {/* Number + Type Icon - stacked vertically, right aligned */}
+                                                <div className="flex flex-col items-end flex-shrink-0 w-8">
+                                                    <span className="text-xs font-bold text-gray-400">
+                                                        {getHierarchicalNumber(task, tasks, selectedDate)}
+                                                    </span>
+                                                    <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                        <TypeIconSmall size={12} />
+                                                    </span>
+                                                </div>
 
                                                 {/* Content: Title + Due Date */}
                                                 <div className="flex-1 min-w-0">
@@ -1478,20 +1497,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                         </p>
                                                     )}
 
-                                                    {/* Progress indicator */}
-                                                    {progress && progress.total > 0 && (
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className="h-full bg-brand-accent rounded-full transition-all"
-                                                                    style={{ width: `${(progress.completed / progress.total) * 100}%` }}
-                                                                />
-                                                            </div>
-                                                            <span className="text-xs text-gray-400">
-                                                                {progress.completed}/{progress.total}
-                                                            </span>
-                                                        </div>
-                                                    )}
+
                                                 </div>
 
                                                 {/* Status/Actions - Top Right */}
@@ -1528,7 +1534,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         </div>
                                     );
                                 })
-                            )}
+                            })()}
                         </div>
                     </div>
                 </div>
