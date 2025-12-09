@@ -226,61 +226,64 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             ))}
 
                             {/* Summary / Create Card - Moved to end */}
-                            <div className="flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
-                                {/* Header */}
-                                <div className="h-24 p-6 flex items-start justify-between bg-gray-50/50 dark:bg-gray-900/20">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight mb-1">
-                                            Overview
-                                        </h3>
-                                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
-                                            Classroom Manager
-                                        </p>
+                            {/* Summary / Create Card - Refactored to match ClassCard */}
+                            <div className="flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden min-h-[160px]">
+                                {/* Main Content (Left Side) */}
+                                <div className="flex-1 flex flex-col min-w-0">
+                                    {/* Header */}
+                                    <div className="h-20 p-5 relative flex justify-between items-start border-b border-gray-100 dark:border-gray-800">
+                                        <div className="z-10 w-full min-w-0">
+                                            <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight mb-1 truncate pr-2">
+                                                Overview
+                                            </h3>
+                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                                Classroom Manager
+                                            </p>
+                                        </div>
+                                        <div className="p-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
+                                            <BookOpen className="w-4 h-4" />
+                                        </div>
                                     </div>
-                                    <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400">
-                                        <BookOpen className="w-5 h-5" />
+
+                                    {/* Body Stats */}
+                                    <div className="flex-1 p-5 flex flex-col justify-center gap-4">
+                                        <div className="flex items-start gap-4">
+                                            <div className="flex-1 text-left -m-2 p-2">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Classes</p>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                        {classrooms.length}
+                                                    </span>
+                                                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500">active</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="w-px bg-gray-200 dark:bg-gray-700 self-stretch my-1" />
+
+                                            <div className="flex-1 text-left -m-2 p-2">
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tasks</p>
+                                                <div className="flex items-baseline gap-1.5">
+                                                    <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                        {totalTasks}
+                                                    </span>
+                                                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500">total</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Body */}
-                                <div className="flex-1 p-6 pt-2 flex flex-col justify-center">
-                                    <div className="flex items-start gap-4">
-                                        <div className="flex-1 text-left p-2 -ml-2">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Classes</p>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                                    {classrooms.length}
-                                                </span>
-                                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500">
-                                                    active
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        <div className="w-px bg-gray-200 dark:bg-gray-700 self-stretch my-2" />
-
-                                        <div className="flex-1 text-left p-2 -mr-2">
-                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Tasks</p>
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                                    {totalTasks}
-                                                </span>
-                                                <span className="text-sm font-medium text-gray-400 dark:text-gray-500">
-                                                    total
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Footer Action */}
-                                <div className="p-4 border-t-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+                                {/* Right Sidebar Action */}
+                                <div className="flex flex-col w-[72px] border-l-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
                                     <button
                                         onClick={openCreateModal}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
+                                        className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/5 hover:text-brand-accent transition-all focus:outline-none"
+                                        title="Create New Class"
                                     >
-                                        <Plus className="w-5 h-5" />
-                                        <span>Create New Class</span>
+                                        <div className="p-2 rounded-full bg-brand-accent/10">
+                                            <Plus className="w-6 h-6" />
+                                        </div>
+                                        <span className="text-[10px] font-bold uppercase text-center leading-tight">Create<br />Class</span>
                                     </button>
                                 </div>
                             </div>

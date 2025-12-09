@@ -950,7 +950,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const _hasDirtyCards = openCards.some(c => c.isDirty && c.formData.title.trim());
 
     // Determine if we can add a subtask to the current active card
-    const canAddSubtaskToActive = activeFormData.type !== 'subtask' && !activeCard.isNew;
+    const canAddSubtaskToActive = activeFormData.type !== 'subtask' && !activeCard?.isNew;
     // We can't easily check for saved status of the *current* form data vs DB, 
     // but we can check if it's new. If it's existing, we assume it's safe to add a child.
 
@@ -1202,9 +1202,27 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 {/* Col 4: Empty spacer */}
                                 <div className="hidden lg:block" />
 
-                                {/* Col 5: Save Button - Split design: main save + dropdown for more classes */}
-                                <div className="flex items-center w-full">
-                                    {/* Main Save Button */}
+                                {/* Col 5: Actions - Flex container for Draft & Assign */}
+                                <div className="flex items-center gap-2 w-full col-span-2 lg:col-span-1">
+                                    {/* Action 1: Save as Draft */}
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (!activeFormData.title.trim()) {
+                                                handleError(new Error("⚠️ Please include a title before saving."));
+                                                return;
+                                            }
+                                            // Save without requiring classes (Draft)
+                                            await handleSaveCard(activeCardId);
+                                        }}
+                                        disabled={isSubmitting}
+                                        className="py-2.5 px-3 rounded-md border-2 border-gray-300 dark:border-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all font-medium text-xs whitespace-nowrap flex-1"
+                                        title="Save to list without assigning"
+                                    >
+                                        Save Draft
+                                    </button>
+
+                                    {/* Action 2: Assign / Publish */}
                                     <button
                                         type="button"
                                         onClick={async () => {
@@ -1216,48 +1234,14 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                 await handleSaveCard(activeCardId);
                                             } else {
                                                 setShowClassSelector(true);
+                                                // Optional: Scroll to selector or flash it?
                                             }
                                         }}
                                         disabled={isSubmitting}
-                                        className={`relative py-2.5 px-4 min-h-[44px] rounded-l-md border-2 border-r-0 transition-all duration-200 group cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed flex-1 ${showClassSelector
-                                            ? 'border-green-500 bg-green-500/10'
-                                            : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500'
-                                            }`}
+                                        className={`py-2.5 px-3 rounded-md border-2 border-green-500 bg-green-500 text-white hover:bg-green-600 hover:border-green-600 transition-all font-bold text-xs whitespace-nowrap flex-[2] flex items-center justify-center gap-2 shadow-sm ${showClassSelector ? 'ring-2 ring-green-500 ring-offset-2' : ''}`}
                                     >
-                                        <div className={`flex items-center justify-center gap-2 transition-colors ${showClassSelector ? 'text-green-500' : 'text-green-400 group-hover:text-green-500'
-                                            }`}>
-                                            {isSubmitting ? (
-                                                <Loader size={16} className="animate-spin" />
-                                            ) : (
-                                                <Check size={16} />
-                                            )}
-                                            <span className="text-sm font-medium">
-                                                {isSubmitting ? 'Saving...' : 'Save'}
-                                            </span>
-                                        </div>
-                                    </button>
-
-                                    {/* Dropdown Toggle */}
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!activeFormData.title.trim()) {
-                                                handleError(new Error("⚠️ Please include a title before saving."));
-                                                return;
-                                            }
-                                            setShowClassSelector(!showClassSelector);
-                                        }}
-                                        disabled={isSubmitting}
-                                        className={`py-2.5 px-2 min-h-[44px] rounded-r-md border-2 transition-all duration-200 cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed ${showClassSelector
-                                            ? 'border-green-500 bg-green-500/10 text-green-500'
-                                            : 'border-green-400/50 dark:border-green-500/40 bg-transparent hover:bg-green-500/10 hover:border-green-500 text-green-400 hover:text-green-500'
-                                            }`}
-                                        title="Choose classes"
-                                    >
-                                        <ChevronDown
-                                            size={16}
-                                            className={`transition-transform duration-200 ${showClassSelector ? 'rotate-180' : ''}`}
-                                        />
+                                        {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={14} />}
+                                        <span>Assign</span>
                                     </button>
                                 </div>
                             </div>
