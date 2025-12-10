@@ -5,8 +5,12 @@ import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';
-import { Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare, ChevronDown, ChevronUp, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { ItemType } from '../../types';
+import {
+    Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare,
+    ChevronDown, ChevronUp, Calendar, ChevronLeft, ChevronRight, X,
+    File, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation, Link2, Image as ImageIcon
+} from 'lucide-react';
+import { ItemType, Attachment } from '../../types';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import { format, parse, isValid } from 'date-fns';
 import { createPortal } from 'react-dom';
@@ -24,7 +28,7 @@ interface Task {
     selectedRoomIds: string[];
     presentationOrder: number;
     createdAt: any;
-    status?: 'draft' | 'published' | 'done'; // Task status
+    status?: 'draft' | 'published' | 'done';
     // Hierarchy fields
     type: ItemType;
     parentId: string | null;
@@ -32,7 +36,54 @@ interface Task {
     path: string[];
     pathTitles: string[];
     childIds: string[];
+    // Attachments
+    attachments?: Attachment[];
 }
+
+// Get file icon based on MIME type
+const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return FileImage;
+    if (mimeType.startsWith('video/')) return FileVideo;
+    if (mimeType.startsWith('audio/')) return FileAudio;
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return FileSpreadsheet;
+    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return Presentation;
+    if (mimeType === 'application/pdf') return FileText;
+    return File;
+};
+
+// Get file icon color based on MIME type
+const getFileIconColor = (mimeType: string): string => {
+    if (mimeType.startsWith('image/')) return 'text-pink-500';
+    if (mimeType.startsWith('video/')) return 'text-purple-500';
+    if (mimeType.startsWith('audio/')) return 'text-cyan-500';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-green-500';
+    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-orange-500';
+    if (mimeType === 'application/pdf') return 'text-red-500';
+    return 'text-gray-500';
+};
+
+// Extract domain from URL for display
+const getUrlDomain = (url: string): string => {
+    try {
+        const hostname = new URL(url).hostname.replace('www.', '');
+        // Special handling for known domains
+        if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'YouTube';
+        if (hostname.includes('google.com')) return 'Google';
+        if (hostname.includes('docs.google.com')) return 'Google Docs';
+        if (hostname.includes('drive.google.com')) return 'Google Drive';
+        if (hostname.includes('github.com')) return 'GitHub';
+        if (hostname.includes('notion.')) return 'Notion';
+        if (hostname.includes('canva.com')) return 'Canva';
+        return hostname;
+    } catch {
+        return 'Link';
+    }
+};
+
+// Check if description contains HTML
+const containsHtml = (str: string): boolean => {
+    return /<[a-z][\s\S]*>/i.test(str);
+};
 
 // Get type-specific icon
 const getTypeIcon = (type: ItemType) => {
@@ -138,80 +189,164 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
     const hierarchicalNumber = getHierarchicalNumber(task, allTasks, today);
     const indent = depth * 24;
 
+    // Separate image attachments from other files
+    const imageAttachments = task.attachments?.filter(a => a.mimeType.startsWith('image/')) || [];
+    const fileAttachments = task.attachments?.filter(a => !a.mimeType.startsWith('image/')) || [];
+    const hasMedia = imageAttachments.length > 0 || fileAttachments.length > 0 || task.linkURL || task.imageURL;
+
     return (
         <div
             className="group bg-brand-lightSurface dark:bg-brand-darkSurface 
-                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 
+                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 
                 transition-all hover:border-brand-accent/50"
             style={{
                 marginLeft: `${indent}px`,
                 width: `calc(100% - ${indent}px)`
             }}
         >
-            <div className="flex items-start gap-3">
-                {/* Number Badge on LEFT - aligned to end like summary */}
-                <div className="flex flex-col items-end gap-1 flex-shrink-0 w-8">
-                    <span className="text-xs font-bold text-gray-400">
-                        {hierarchicalNumber}
-                    </span>
-                    <div className={`
-                        w-8 h-8 rounded-md border-2 
-                        flex items-center justify-center
-                        ${typeColors}
-                    `}>
-                        <TypeIcon size={14} />
+            {/* Three-Column Layout */}
+            <div className="flex gap-4">
+                {/* Column 1: Number + Icon + Title */}
+                <div className="flex-shrink-0 flex gap-3">
+                    {/* Number Badge + Type Icon */}
+                    <div className="flex flex-col items-end gap-1 w-8">
+                        <span className="text-xs font-bold text-gray-400">
+                            {hierarchicalNumber}
+                        </span>
+                        <div className={`
+                            w-8 h-8 rounded-md border-2 
+                            flex items-center justify-center
+                            ${typeColors}
+                        `}>
+                            <TypeIcon size={14} />
+                        </div>
                     </div>
-                </div>
 
-                {/* Task Content - Title/Due Date on left, Description on right */}
-                <div className="flex-1 min-w-0 flex items-start gap-4">
-                    {/* Left: Title + Due Date */}
-                    <div className="flex-shrink-0 min-w-[200px] max-w-[300px]">
-                        <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight truncate">
+                    {/* Title + Due Date */}
+                    <div className="min-w-[180px] max-w-[250px]">
+                        <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight">
                             {task.title}
                         </h3>
-                        {/* Due Date - larger */}
                         {task.endDate && (
                             <p className="text-sm text-gray-500 mt-0.5 font-medium">
                                 {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                             </p>
                         )}
                     </div>
+                </div>
 
-                    {/* Right: Description */}
+                {/* Column 2: Description (fills available space) */}
+                <div className="flex-1 min-w-0">
                     {task.description && (
-                        <div className="flex-1 min-w-0">
-                            <div className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary ${isDescriptionExpanded ? '' : 'line-clamp-2'}`}>
-                                {task.description}
-                            </div>
-                            {task.description.length > 100 && (
+                        <div className="space-y-2">
+                            {/* Description - supports HTML or plain text */}
+                            {containsHtml(task.description) ? (
+                                <div
+                                    className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary prose prose-sm dark:prose-invert max-w-none ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}
+                                    dangerouslySetInnerHTML={{ __html: task.description }}
+                                />
+                            ) : (
+                                <div className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                                    {task.description}
+                                </div>
+                            )}
+                            {task.description.length > 150 && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setIsDescriptionExpanded(!isDescriptionExpanded);
                                     }}
-                                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-accent mt-1 transition-colors"
+                                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-accent transition-colors"
                                 >
                                     {isDescriptionExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                    {isDescriptionExpanded ? 'Less' : 'More'}
+                                    {isDescriptionExpanded ? 'Show less' : 'Show more'}
                                 </button>
                             )}
                         </div>
                     )}
-
-                    {/* Link icon */}
-                    {task.linkURL && (
-                        <a
-                            href={task.linkURL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-accent hover:text-brand-accent/80 transition-colors flex-shrink-0"
-                            title="Open Resource"
-                        >
-                            <ExternalLink size={16} />
-                        </a>
-                    )}
                 </div>
+
+                {/* Column 3: Resources (only shown if media exists) */}
+                {hasMedia && (
+                    <div className="flex-shrink-0 w-48 space-y-2">
+                        {/* Image Thumbnails */}
+                        {(imageAttachments.length > 0 || task.imageURL) && (
+                            <div className="flex flex-wrap gap-1">
+                                {/* Legacy imageURL */}
+                                {task.imageURL && (
+                                    <a
+                                        href={task.imageURL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block"
+                                    >
+                                        <img
+                                            src={task.imageURL}
+                                            alt=""
+                                            className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                            loading="lazy"
+                                        />
+                                    </a>
+                                )}
+                                {/* Image attachments */}
+                                {imageAttachments.map((img) => (
+                                    <a
+                                        key={img.id}
+                                        href={img.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block"
+                                        title={img.filename}
+                                    >
+                                        <img
+                                            src={img.url}
+                                            alt={img.filename}
+                                            className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                            loading="lazy"
+                                        />
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Resource Link */}
+                        {task.linkURL && (
+                            <a
+                                href={task.linkURL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg
+                                    bg-brand-accent/10 text-brand-accent border border-brand-accent/20
+                                    text-xs font-medium hover:bg-brand-accent/20 transition-colors w-full"
+                                title={task.linkURL}
+                            >
+                                <ExternalLink size={12} className="flex-shrink-0" />
+                                <span className="truncate">{getUrlDomain(task.linkURL)}</span>
+                            </a>
+                        )}
+
+                        {/* File Attachments */}
+                        {fileAttachments.map((attachment) => {
+                            const FileIcon = getFileIcon(attachment.mimeType);
+                            const iconColor = getFileIconColor(attachment.mimeType);
+                            return (
+                                <a
+                                    key={attachment.id}
+                                    href={attachment.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg
+                                        bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                                        text-xs font-medium hover:border-brand-accent transition-colors w-full`}
+                                    title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
+                                >
+                                    <FileIcon size={12} className={`flex-shrink-0 ${iconColor}`} />
+                                    <span className="truncate text-gray-700 dark:text-gray-300">{attachment.filename}</span>
+                                </a>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -317,6 +452,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                         pathTitles: data.pathTitles || [],
                         childIds: data.childIds || [],
                         status: data.status,
+                        attachments: data.attachments || [],
                     } as Task);
                 }
             });
