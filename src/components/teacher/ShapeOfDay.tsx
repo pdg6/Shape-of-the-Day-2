@@ -98,96 +98,89 @@ const flattenTree = (nodes: TaskNode[], depth = 0): TaskNode[] => {
     return result;
 };
 
+// Get hierarchical number like "1.2.1" for nested tasks
+const getHierarchicalNumber = (task: Task, allTasks: Task[], forDate?: string): string => {
+    // For root tasks with date filter, only count siblings on the same day
+    const siblings = task.parentId
+        ? allTasks.filter(t => t.parentId === task.parentId)
+        : forDate
+            ? allTasks.filter(t => !t.parentId && t.endDate === forDate)
+            : allTasks.filter(t => !t.parentId);
+
+    // Sort by presentation order
+    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+    const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
+
+    if (!task.parentId) return String(myIndex);
+
+    const parent = allTasks.find(t => t.id === task.parentId);
+    if (!parent) return String(myIndex);
+
+    return `${getHierarchicalNumber(parent, allTasks, forDate)}.${myIndex}`;
+};
+
 // Task card component with indentation and hierarchy info
 interface TaskCardProps {
     task: Task;
-    index: number;
     depth: number;
-    isExpanded?: boolean;
-    hasChildren?: boolean;
-    onToggle?: () => void;
+    allTasks: Task[];
+    today: string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, hasChildren, onToggle }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => {
     const TypeIcon = getTypeIcon(task.type || 'task');
     const typeColors = getTypeColorClasses(task.type || 'task');
-    const breadcrumb = task.pathTitles?.length > 0 ? task.pathTitles.join(' → ') : null;
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
-    // Calculate indentation based on depth
-    const indentClass = depth > 0 ? `ml-${Math.min(depth * 8, 24)}` : '';
+    const hierarchicalNumber = getHierarchicalNumber(task, allTasks, today);
+    const indent = depth * 24;
 
     return (
         <div
-            className={`
-                group w-full bg-brand-lightSurface dark:bg-brand-darkSurface 
-                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 
-                transition-all hover:border-brand-accent/50
-                ${indentClass}
-            `}
-            style={{ marginLeft: depth > 0 ? `${depth * 24}px` : undefined }}
+            className="group bg-brand-lightSurface dark:bg-brand-darkSurface 
+                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 
+                transition-all hover:border-brand-accent/50"
+            style={{
+                marginLeft: `${indent}px`,
+                width: `calc(100% - ${indent}px)`
+            }}
         >
-            <div className="flex items-start gap-4">
-                {/* Number Badge with Type Color */}
-                <div className={`
-                    flex-shrink-0 w-12 h-12 rounded-lg border-2 
-                    flex items-center justify-center text-xl font-bold
-                    ${typeColors}
-                `}>
-                    {hasChildren ? (
-                        <button
-                            onClick={onToggle}
-                            className="w-full h-full flex items-center justify-center"
-                        >
-                            {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                        </button>
-                    ) : (
-                        <TypeIcon size={20} />
-                    )}
+            <div className="flex items-start gap-3">
+                {/* Number Badge on LEFT - aligned to end like summary */}
+                <div className="flex flex-col items-end gap-1 flex-shrink-0 w-8">
+                    <span className="text-xs font-bold text-gray-400">
+                        {hierarchicalNumber}
+                    </span>
+                    <div className={`
+                        w-8 h-8 rounded-md border-2 
+                        flex items-center justify-center
+                        ${typeColors}
+                    `}>
+                        <TypeIcon size={14} />
+                    </div>
                 </div>
 
-                {/* Task Content */}
-                <div className="flex-1 min-w-0">
-                    {/* Breadcrumb */}
-                    {breadcrumb && (
-                        <p className="text-xs text-gray-400 font-medium mb-1 truncate">
-                            {breadcrumb}
-                        </p>
-                    )}
-
-                    <div className="flex justify-between items-start gap-2">
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight truncate">
-                                {task.title}
-                            </h3>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            {/* Task number */}
-                            <span className="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full">
-                                #{index + 1}
-                            </span>
-
-                            {task.linkURL && (
-                                <a
-                                    href={task.linkURL}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-brand-accent hover:text-brand-accent/80 transition-colors"
-                                    title="Open Resource"
-                                >
-                                    <ExternalLink size={20} />
-                                </a>
-                            )}
-                        </div>
+                {/* Task Content - Title/Due Date on left, Description on right */}
+                <div className="flex-1 min-w-0 flex items-start gap-4">
+                    {/* Left: Title + Due Date */}
+                    <div className="flex-shrink-0 min-w-[200px] max-w-[300px]">
+                        <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight truncate">
+                            {task.title}
+                        </h3>
+                        {/* Due Date - larger */}
+                        {task.endDate && (
+                            <p className="text-sm text-gray-500 mt-0.5 font-medium">
+                                {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </p>
+                        )}
                     </div>
 
+                    {/* Right: Description */}
                     {task.description && (
-                        <div>
-                            <div className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary mt-1 ${isDescriptionExpanded ? '' : 'line-clamp-4'}`}>
+                        <div className="flex-1 min-w-0">
+                            <div className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary ${isDescriptionExpanded ? '' : 'line-clamp-2'}`}>
                                 {task.description}
                             </div>
-                            {task.description.length > 200 && (
+                            {task.description.length > 100 && (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -195,11 +188,24 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, depth, isExpanded, has
                                     }}
                                     className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-accent mt-1 transition-colors"
                                 >
-                                    {isDescriptionExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                                    {isDescriptionExpanded ? 'Show less' : 'Read more'}
+                                    {isDescriptionExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                    {isDescriptionExpanded ? 'Less' : 'More'}
                                 </button>
                             )}
                         </div>
+                    )}
+
+                    {/* Link icon */}
+                    {task.linkURL && (
+                        <a
+                            href={task.linkURL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-brand-accent hover:text-brand-accent/80 transition-colors flex-shrink-0"
+                            title="Open Resource"
+                        >
+                            <ExternalLink size={16} />
+                        </a>
                     )}
                 </div>
             </div>
@@ -213,7 +219,6 @@ const ShapeOfDay: React.FC = () => {
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
-    const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
     const today = toDateString();
@@ -266,33 +271,21 @@ const ShapeOfDay: React.FC = () => {
     // Build hierarchical structure
     const taskTree = useMemo(() => buildTaskTree(tasks), [tasks]);
 
-    // Flatten for display, respecting collapsed state
+    // Flatten for display - always show all children (no collapse)
     const displayTasks = useMemo(() => {
         const flatten = (nodes: TaskNode[], depth = 0): TaskNode[] => {
             const result: TaskNode[] = [];
             nodes.forEach(node => {
                 result.push({ ...node, depth });
-                // Only include children if not collapsed
-                if (!collapsedIds.has(node.task.id) && node.children.length > 0) {
+                // Always include children (no collapse)
+                if (node.children.length > 0) {
                     result.push(...flatten(node.children, depth + 1));
                 }
             });
             return result;
         };
         return flatten(taskTree);
-    }, [taskTree, collapsedIds]);
-
-    const toggleCollapse = (taskId: string) => {
-        setCollapsedIds(prev => {
-            const next = new Set(prev);
-            if (next.has(taskId)) {
-                next.delete(taskId);
-            } else {
-                next.add(taskId);
-            }
-            return next;
-        });
-    };
+    }, [taskTree]);
 
     if (!currentClass) {
         return (
@@ -364,19 +357,14 @@ const ShapeOfDay: React.FC = () => {
                         No tasks scheduled for today.
                     </div>
                 ) : (
-                    displayTasks.map((node, index) => {
-                        const hasChildren = tasks.some(t => t.parentId === node.task.id);
-                        const isExpanded = !collapsedIds.has(node.task.id);
-
+                    displayTasks.map((node) => {
                         return (
                             <TaskCard
                                 key={node.task.id}
                                 task={node.task}
-                                index={index}
                                 depth={node.depth}
-                                isExpanded={isExpanded}
-                                hasChildren={hasChildren}
-                                onToggle={() => toggleCollapse(node.task.id)}
+                                allTasks={tasks}
+                                today={today}
                             />
                         );
                     })

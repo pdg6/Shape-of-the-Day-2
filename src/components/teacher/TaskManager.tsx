@@ -1053,10 +1053,23 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 <div className="w-[160px]">
                                     <Select<string>
                                         value={activeFormData.parentId}
-                                        onChange={(value) => {
-                                            if (value === '__add_subtask__') {
-                                                // Add a subtask to the current task
-                                                if (editingTaskId) {
+                                        onChange={async (value) => {
+                                            if (value === '__add_child__') {
+                                                // Need to save first if this is a new task
+                                                if (!editingTaskId) {
+                                                    if (!activeFormData.title.trim()) {
+                                                        handleError(new Error("⚠️ Please add a title before adding children."));
+                                                        return;
+                                                    }
+                                                    // Save the current task first
+                                                    await handleSave();
+                                                    // handleSave sets editingTaskId, so we need to find the saved task
+                                                    // The task should now be in the tasks array
+                                                    const savedTask = tasks.find(t => t.title === activeFormData.title);
+                                                    if (savedTask) {
+                                                        handleAddSubtask(savedTask);
+                                                    }
+                                                } else {
                                                     const currentTask = tasks.find(t => t.id === editingTaskId);
                                                     if (currentTask) {
                                                         handleAddSubtask(currentTask);
@@ -1067,9 +1080,16 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                             }
                                         }}
                                         options={[
-                                            // Add subtask option - only show if editing an existing task that can have children
-                                            ...(editingTaskId && !['subtask'].includes(activeFormData.type) ? [
-                                                { value: '__add_subtask__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
+                                            // Add child option based on type:
+                                            // - Project/Assignment can add Task
+                                            // - Task can add Subtask
+                                            // - Subtask cannot add anything
+                                            ...(['project', 'assignment'].includes(activeFormData.type) ? [
+                                                { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: '#22c55e' },
+                                                { value: '__divider_top__', label: '──────────', disabled: true },
+                                            ] : []),
+                                            ...(activeFormData.type === 'task' ? [
+                                                { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
                                                 { value: '__divider_top__', label: '──────────', disabled: true },
                                             ] : []),
                                             // Available parents
@@ -1471,12 +1491,12 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     </button>
                                                 </div>
 
-                                                {/* Number + Type Icon - stacked vertically, right aligned */}
-                                                <div className="flex flex-col items-end flex-shrink-0 w-8">
-                                                    <span className="text-xs font-bold text-gray-400">
+                                                {/* Number + Type Icon - stacked vertically, left aligned */}
+                                                <div className="flex flex-col items-start flex-shrink-0 w-8">
+                                                    <span className="text-xs font-bold text-gray-400 text-left">
                                                         {getHierarchicalNumber(task, tasks, selectedDate)}
                                                     </span>
-                                                    <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                    <span className={`w-6 h-6 rounded-md flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
                                                         <TypeIconSmall size={12} />
                                                     </span>
                                                 </div>

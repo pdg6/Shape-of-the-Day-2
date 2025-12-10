@@ -81,7 +81,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
 
     return (
         <div
-            className="group relative flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden"
+            className="group relative flex flex-col h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg border-2 border-gray-200 dark:border-gray-700 transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden"
             style={{
                 borderColor: isHovered ? cardColor : undefined
             }}
@@ -178,21 +178,20 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
             </div>
 
             {/* Actions Footer (Bottom Row) */}
-            <div className="flex flex-row h-14 border-t-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+            <div className="flex flex-row h-14 bg-gray-50/50 dark:bg-gray-900/20">
                 <button
                     onClick={(e) => {
                         if (!isSelected) return;
                         e.stopPropagation();
                         if (onManageTasks) onManageTasks(classroom.id);
                     }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
                     title="Tasks"
                 >
                     <ListTodo className="w-5 h-5" />
                     <span className="text-[9px] font-bold uppercase">Tasks</span>
                 </button>
 
-                <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 my-auto" />
 
                 <button
                     onClick={(e) => {
@@ -200,14 +199,13 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         e.stopPropagation();
                         if (onViewShape) onViewShape(classroom.id);
                     }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
                     title="Shape"
                 >
                     <Presentation className="w-5 h-5" />
                     <span className="text-[9px] font-bold uppercase">Shape</span>
                 </button>
 
-                <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 my-auto" />
 
                 <button
                     onClick={(e) => {
@@ -215,14 +213,13 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         e.stopPropagation();
                         if (onViewCalendar) onViewCalendar(classroom.id);
                     }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
                     title="Calendar"
                 >
                     <Calendar className="w-5 h-5" />
                     <span className="text-[9px] font-bold uppercase">Cal</span>
                 </button>
 
-                <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 my-auto" />
 
                 <button
                     onClick={(e) => {
@@ -230,7 +227,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         e.stopPropagation();
                         if (onViewData) onViewData(classroom.id);
                     }}
-                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
+                    className={`flex-1 flex flex-col items-center justify-center gap-0.5 rounded-md text-gray-500 transition-all focus:outline-none hover:bg-white dark:hover:bg-gray-800 ${isSelected ? 'hover:text-brand-accent' : 'opacity-50 cursor-default'}`}
                     title="Analytics"
                 >
                     <BarChart2 className="w-5 h-5" />
