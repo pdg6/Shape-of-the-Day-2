@@ -2,7 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
     Bold,
     Italic,
@@ -21,6 +21,7 @@ interface RichTextEditorProps {
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
+    secondaryPlaceholder?: string;
     onDrop?: (files: File[]) => void;
     className?: string;
 }
@@ -54,10 +55,13 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, title }: Toolbar
 export function RichTextEditor({
     value,
     onChange,
-    placeholder = 'Start typing...',
+    placeholder = 'Describe this task...',
+    secondaryPlaceholder = 'Add text, links, or drag files here',
     onDrop,
     className = '',
 }: RichTextEditorProps) {
+    const [isDragging, setIsDragging] = useState(false);
+
     const editor = useEditor({
         extensions: [
             StarterKit.configure({
@@ -90,6 +94,7 @@ export function RichTextEditor({
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        setIsDragging(false);
 
         const files = Array.from(e.dataTransfer.files);
         if (files.length > 0 && onDrop) {
@@ -102,15 +107,31 @@ export function RichTextEditor({
         e.stopPropagation();
     }, []);
 
+    const handleDragEnter = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    }, []);
+
+    const handleDragLeave = useCallback((e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only set to false if we're actually leaving the container
+        if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+        setIsDragging(false);
+    }, []);
+
     if (!editor) {
         return null;
     }
 
     return (
         <div
-            className={`rich-text-editor flex flex-col h-full ${className}`}
+            className={`rich-text-editor flex flex-col h-full relative ${className}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
         >
             {/* Toolbar */}
             <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 rounded-t-md">
@@ -129,7 +150,7 @@ export function RichTextEditor({
                     <Italic size={16} />
                 </ToolbarButton>
 
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+                <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-1" />
 
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -153,7 +174,7 @@ export function RichTextEditor({
                     <ListOrdered size={16} />
                 </ToolbarButton>
 
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+                <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-1" />
 
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -182,20 +203,35 @@ export function RichTextEditor({
             </div>
 
             {/* Editor Content */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto relative">
                 <EditorContent
                     editor={editor}
                     className="h-full [&_.ProseMirror]:h-full [&_.ProseMirror]:min-h-[100px]"
                 />
-                {/* Placeholder */}
+                {/* Multi-line Placeholder */}
                 {editor.isEmpty && (
-                    <div className="absolute top-[calc(2.5rem+1px)] left-4 text-gray-400 dark:text-gray-600 pointer-events-none text-sm">
-                        {placeholder}
+                    <div className="absolute top-4 left-4 pointer-events-none">
+                        <div className="text-gray-400 dark:text-gray-500 text-sm font-medium">
+                            {placeholder}
+                        </div>
+                        <div className="text-gray-300 dark:text-gray-600 text-xs mt-1">
+                            {secondaryPlaceholder}
+                        </div>
                     </div>
                 )}
             </div>
+
+            {/* Drag-and-Drop Overlay */}
+            {isDragging && (
+                <div className="absolute inset-0 bg-brand-accent/5 border-2 border-dashed border-brand-accent rounded-md flex items-center justify-center z-10 pointer-events-none">
+                    <div className="text-brand-accent font-medium text-sm bg-white dark:bg-gray-900 px-4 py-2 rounded-md shadow-lg">
+                        Drop files here
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
 export default RichTextEditor;
+

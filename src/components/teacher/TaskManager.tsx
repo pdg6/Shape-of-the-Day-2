@@ -1127,13 +1127,14 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                         {/* Description & Attachments Section */}
                         {/* Description Container with embedded Upload/Link buttons */}
                         <div className="flex-1 min-h-[150px] lg:min-h-[200px] relative">
-                            <div className="absolute inset-0 flex flex-col">
+                            <div className="absolute inset-0 flex flex-col transition-all duration-200 focus-within:ring-2 focus-within:ring-brand-accent/30 focus-within:shadow-lg rounded-md">
                                 <div className="flex-1 rounded-t-md border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
                                     <RichTextEditor
                                         value={activeFormData.description}
                                         onChange={(value) => updateActiveCard('description', value)}
                                         onDrop={handleFileDrop}
-                                        placeholder="Create this task using text, video links, or drag and drop photos"
+                                        placeholder="Describe this task..."
+                                        secondaryPlaceholder="Add text, links, or drag files here"
                                         className="h-full text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm"
                                     />
                                 </div>
@@ -1143,7 +1144,8 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     {activeFormData.attachments && activeFormData.attachments.map(attachment => (
                                         <div
                                             key={attachment.id}
-                                            className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs group"
+                                            className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs group hover:scale-[1.02] transition-transform cursor-default"
+                                            title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                         >
                                             {attachment.mimeType.startsWith('image/') ? (
                                                 /* Image thumbnail preview */
@@ -1206,7 +1208,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     )}
                                     {/* Upload & Link buttons - Always visible now for better UX */}
                                     <div className="flex items-center gap-3">
-                                        <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group cursor-pointer">
+                                        <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105 hover:shadow-md transition-all duration-200 group cursor-pointer">
                                             <input
                                                 ref={fileInputRef}
                                                 type="file"
@@ -1228,7 +1230,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     const url = prompt('Enter URL:');
                                                     if (url) updateActiveCard('linkURL', url);
                                                 }}
-                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 transition-all duration-200 group"
+                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105 hover:shadow-md transition-all duration-200 group"
                                             >
                                                 <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
                                                     <LinkIcon size={16} />
