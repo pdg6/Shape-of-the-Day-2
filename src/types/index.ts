@@ -171,14 +171,15 @@ export interface LiveStudent {
 }
 
 // Phase C: The Analytics Vault (Persistent - Stored in 'analytics_logs')
-// Names are now preserved for grading history (Option A).
+// Names are ANONYMIZED for COPPA/FERPA/PIPEDA compliance. TTL auto-deletes after 30 days.
 export interface AnalyticsLog {
     id?: string;
     classroomId: string;
-    studentId: string;      // Preserved ID
-    studentName: string;    // Preserved Name
+    studentId: string;      // Preserved ID (Anonymous Auth UID)
+    studentName: string;    // Anonymized (e.g., "Student a1b2")
     date: string;           // YYYY-MM-DD
     sessionDuration: number;// Milliseconds
+    expireAt?: Date;        // Firestore TTL field - auto-delete after 30 days
     taskPerformance: {
         taskId: string;
         title: string;

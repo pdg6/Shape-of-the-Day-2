@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { LucideIcon, Loader2 } from 'lucide-react';
 
 interface ButtonProps {
-    variant?: 'primary' | 'secondary' | 'tertiary' | 'icon' | 'ghost' | 'ghost-danger';
+    variant?: 'primary' | 'secondary' | 'tertiary' | 'icon' | 'ghost' | 'ghost-danger' | 'outline-primary' | 'outline-danger' | 'soft';
     size?: 'sm' | 'md' | 'lg';
     icon?: LucideIcon;
     iconPosition?: 'left' | 'right';
@@ -38,7 +38,10 @@ export const Button: React.FC<ButtonProps> = ({
         tertiary: 'text-brand-textDarkPrimary dark:text-brand-textPrimary hover:underline decoration-2 focus:ring-gray-500/20',
         icon: 'text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500/20',
         ghost: 'border-2 border-transparent text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 focus:ring-brand-accent/20',
-        'ghost-danger': 'border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 focus:ring-red-500/20'
+        'ghost-danger': 'border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 focus:ring-red-500/20',
+        'outline-primary': 'border-2 border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 focus:ring-brand-accent/30',
+        'outline-danger': 'border-2 border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 focus:ring-red-500/30',
+        'soft': 'border-2 border-brand-accent/30 bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20 focus:ring-brand-accent/20'
     };
 
     // Fitts's Law: Minimum 44x44px touch targets for accessibility

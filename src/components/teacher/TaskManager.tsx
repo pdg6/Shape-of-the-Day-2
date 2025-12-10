@@ -26,6 +26,7 @@ import {
 import { Select, SelectOption } from '../shared/Select';
 import { DateRangePicker } from '../shared/DateRangePicker';
 import { RichTextEditor } from '../shared/RichTextEditor';
+import { Button } from '../shared/Button';
 
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -83,14 +84,9 @@ const getTypeLabel = (type: ItemType): string => {
     }
 };
 
-// Get type color classes
+// Get type color classes (use semantic CSS classes from index.css)
 const getTypeColorClasses = (type: ItemType): string => {
-    switch (type) {
-        case 'project': return 'text-purple-500 border-purple-500';
-        case 'assignment': return 'text-blue-500 border-blue-500';
-        case 'task': return 'text-green-500 border-green-500';
-        case 'subtask': return 'text-orange-500 border-orange-500';
-    }
+    return `type-${type}`;
 };
 
 // Get type hex color for icons
@@ -969,17 +965,21 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             );
                         })()}
                         {/* + New Task button */}
-                        <button
+                        <Button
+                            variant="soft"
+                            size="sm"
+                            icon={Plus}
                             onClick={resetForm}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent transition-colors text-xs font-medium border border-brand-accent/30"
                             title="Create new task"
                         >
-                            <Plus size={14} />
-                            <span>New Task</span>
-                        </button>
+                            New Task
+                        </Button>
                         {/* Discard button - only when dirty */}
                         {isDirty && (
-                            <button
+                            <Button
+                                variant="ghost-danger"
+                                size="sm"
+                                icon={X}
                                 onClick={() => {
                                     if (window.confirm('Discard unsaved changes?')) {
                                         sessionStorage.removeItem('taskManager.formData');
@@ -987,11 +987,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         resetForm();
                                     }
                                 }}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-xs font-medium ml-auto"
+                                className="ml-auto"
                             >
-                                <X size={14} />
                                 Discard
-                            </button>
+                            </Button>
                         )}
                     </div>
 
@@ -1287,14 +1286,15 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             {/* Left: Delete */}
                             <div>
                                 {!isNewTask && (
-                                    <button
+                                    <Button
+                                        variant="outline-danger"
+                                        icon={Trash2}
                                         onClick={() => handleDelete(editingTaskId!)}
                                         disabled={isSubmitting}
-                                        className="min-w-[120px] px-6 py-2.5 rounded-md border-2 border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 transition-all font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+                                        className="min-w-[120px]"
                                     >
-                                        <Trash2 size={16} />
-                                        <span>Delete</span>
-                                    </button>
+                                        Delete
+                                    </Button>
                                 )}
                             </div>
 
@@ -1302,8 +1302,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             <div className="flex items-center gap-3">
 
                                 {/* Save Button */}
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="outline-primary"
+                                    icon={isSubmitting ? Loader : Check}
                                     onClick={async () => {
                                         if (!activeFormData.title.trim()) {
                                             handleError(new Error("⚠️ Please include a title before saving."));
@@ -1312,11 +1313,11 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         await handleSave();
                                     }}
                                     disabled={isSubmitting}
-                                    className="min-w-[120px] px-6 py-2.5 rounded-md border-2 border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 transition-all font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-brand-accent/30"
+                                    loading={isSubmitting}
+                                    className="min-w-[120px]"
                                 >
-                                    {isSubmitting ? <Loader size={14} className="animate-spin" /> : <Check size={16} />}
-                                    <span>Save</span>
-                                </button>
+                                    Save
+                                </Button>
                             </div>
                         </div>
                     </div>

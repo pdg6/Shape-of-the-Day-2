@@ -24,13 +24,20 @@ export const scrubAndSaveSession = async (classId: string, studentId: string) =>
         const joinedAt = studentData.joinedAt.toDate();
         const sessionDuration = now.getTime() - joinedAt.getTime();
 
-        // 1. Transform to Analytics Log (Now with Identity Preserved)
+        // 1. Transform to Analytics Log (PII Anonymized for COPPA/FERPA/PIPEDA compliance)
+        // Use last 4 chars of studentId as anonymous identifier
+        const anonymousId = studentId.slice(-4);
+
+        // TTL: Auto-delete after 30 days via Firestore TTL policy
+        const expireAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         const analyticsData: AnalyticsLog = {
             classroomId: classId,
             studentId: studentId,
-            studentName: studentData.displayName,
+            studentName: `Student ${anonymousId}`, // Anonymized - no PII stored
             date: now.toISOString().split('T')[0] ?? '', // YYYY-MM-DD
             sessionDuration: sessionDuration,
+            expireAt: expireAt, // Firestore TTL field
             taskPerformance: studentData.taskHistory ? studentData.taskHistory.map(task => ({
                 taskId: task.id,
                 title: task.title,

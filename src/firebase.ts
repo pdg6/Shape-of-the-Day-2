@@ -19,7 +19,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 // Analytics is initialized for Firebase but not directly used in app code
 void getAnalytics(app);
 
@@ -55,7 +55,7 @@ if (RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_V3_SITE_KEY') {
 } else if (import.meta.env.DEV) {
     // In development without a key, log instructions
     console.log('ℹ️ Firebase App Check is disabled. Set VITE_RECAPTCHA_SITE_KEY in .env to enable.');
-    
+
     // Enable debug token for local development
     const debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
     if (debugToken) {
