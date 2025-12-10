@@ -136,7 +136,7 @@ const TeacherDashboard: React.FC = () => {
                         setEditingTask(task);
                         setTasksSubTab('create');
                     }} />;
-            case 'shape': return <ShapeOfDay />;
+            case 'shape': return <ShapeOfDay onNavigate={handleDeepNavigation} />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
             case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} />;
             case 'reports': return <ClassroomManager activeView={reportsSubTab === 'calendar' ? 'history' : 'analytics'} onNavigate={handleDeepNavigation} />;
@@ -162,21 +162,26 @@ const TeacherDashboard: React.FC = () => {
                 ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
                 transform transition-all duration-300 ease-in-out flex-col h-full overflow-hidden
             `}>
-                {/* Logo/Branding - Same height as header (h-16) */}
+                {/* Logo/Branding with Date - Constrained to logo height */}
                 <div className="h-16 flex-shrink-0 flex items-center px-4">
-                    <div className={`flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
+                    <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
                         <img
                             src="/shape of the day logo.png"
                             alt="Shape of the Day"
-                            className="w-8 h-8 flex-shrink-0 aspect-square object-contain"
+                            className="w-10 h-10 flex-shrink-0 aspect-square object-contain"
                         />
-                        <span className={`
-                            font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap
+                        <div className={`
+                            flex flex-col justify-center overflow-hidden
                             transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'opacity-100'}
+                            ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                         `}>
-                            Shape of the Day
-                        </span>
+                            <span className="font-bold text-base text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap leading-tight">
+                                Shape of the Day
+                            </span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap leading-tight">
+                                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </span>
+                        </div>
                     </div>
                 </div>
 
@@ -286,7 +291,7 @@ const TeacherDashboard: React.FC = () => {
                                                     onClick={() => setTasksSubTab('browse')}
                                                     className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${tasksSubTab === 'browse' ? 'text-brand-accent' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                                 >
-                                                    Browse
+                                                    Inventory
                                                 </button>
                                             </li>
                                         </ul>
@@ -440,42 +445,14 @@ const TeacherDashboard: React.FC = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 grid grid-rows-[96px_1fr] row-gap-1 min-w-0 relative">
-                {/* Header */}
-                <header className="row-start-1 col-start-1 h-24 header-fade z-50 w-full pointer-events-none">
-                    <div className="h-16 flex items-center justify-between px-4 md:px-6 pointer-events-auto">
-                        {/* Left: Class Name */}
-                        <h2 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
-                            {currentClass?.name || 'No Class Selected'}
-                        </h2>
-                        {/* Right: Current Tab/Sub-tab (blue) + Date (gray) */}
-                        <div className="flex items-baseline gap-3 flex-shrink-0">
-                            <span className="text-fluid-lg font-semibold text-brand-accent">
-                                {activeTab === 'tasks'
-                                    ? `Tasks - ${tasksSubTab === 'create' ? 'Create' : 'Browse'}`
-                                    : activeTab === 'live'
-                                        ? `Live View - ${liveViewSubTab === 'tasks' ? 'By Task' : 'By Student'}`
-                                        : activeTab === 'reports'
-                                            ? `Reports - ${reportsSubTab === 'calendar' ? 'Calendar' : 'Analytics'}`
-                                            : menuItems.find(i => i.id === activeTab)?.label}
-                            </span>
-                            <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">
-                                {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                            </span>
-                        </div>
-                    </div>
-                </header>
-                {/* Content Body with fade gradients */}
-                <div className="row-start-2 min-h-0 min-w-0 relative overflow-hidden">
+            {/* Main Content - No header, content goes to top */}
+            <main className="flex-1 flex flex-col min-w-0 relative">
+                {/* Content Body */}
+                <div className="flex-1 min-h-0 min-w-0 relative overflow-hidden">
                     {/* Scrollable content */}
                     <div className="h-full w-full overflow-y-auto overflow-x-hidden px-6 pb-[84px] md:pb-6">
                         {renderContent()}
                     </div>
-
-
-
-
                 </div>
 
                 {/* Connection Sidebar (Right) */}

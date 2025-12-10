@@ -177,8 +177,36 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
     // Calculate total tasks across all classrooms
     const totalTasks = classrooms.reduce((acc, cls) => acc + (cls.contentLibrary?.length || 0), 0);
 
+    // Get current class name
+    const currentClass = classrooms.find(c => c.id === currentClassId);
+
     return (
-        <div className={`flex flex-col space-y-6 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
+        <div className={`flex flex-col space-y-3 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
+            {/* Content Header - h-16 matches sidebar header height */}
+            <div className="h-16 flex-shrink-0 flex items-center justify-between">
+                {/* Left: Classrooms label + Current Class */}
+                <div className="flex items-baseline gap-3">
+                    <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Classrooms:
+                    </span>
+                    <span className="text-fluid-xl font-black text-brand-accent">
+                        {currentClass?.name || 'None Selected'}
+                    </span>
+                </div>
+
+                {/* Right: Create Class Button */}
+                <Button
+                    variant="ghost"
+                    size="md"
+                    icon={Plus}
+                    onClick={openCreateModal}
+                    title="Create new class"
+                    className="flex-shrink-0 text-brand-accent"
+                >
+                    Create Class
+                </Button>
+            </div>
+
             {/* Content Area */}
             <div className={`${internalTab === 'history' ? 'flex-1 overflow-hidden' : ''}`}>
                 {internalTab === 'classes' && (

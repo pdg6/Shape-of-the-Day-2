@@ -1,12 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useClassStore } from '../../store/classStore';
 import { useAuth } from '../../context/AuthContext';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';
-import { Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
+import { Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare, ChevronDown, ChevronUp, Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { ItemType } from '../../types';
+import { DayPicker, getDefaultClassNames } from 'react-day-picker';
+import { format, parse, isValid } from 'date-fns';
+import { createPortal } from 'react-dom';
+import 'react-day-picker/style.css';
 
 // --- Types ---
 interface Task {
@@ -213,15 +217,76 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
     );
 };
 
-const ShapeOfDay: React.FC = () => {
+interface ShapeOfDayProps {
+    onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms', subTab?: string) => void;
+}
+
+const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     const { currentClassId, classrooms, activeStudentCount } = useClassStore();
     const { user } = useAuth();
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const currentClass = classrooms.find(c => c.id === currentClassId);
+    // Selected date for viewing - defaults to today
     const today = toDateString();
+    const [selectedDate, setSelectedDate] = useState(today);
+
+    // Date picker popover state
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [datePickerPosition, setDatePickerPosition] = useState({ top: 0, left: 0 });
+    const dateButtonRef = useRef<HTMLButtonElement>(null);
+    const datePopoverRef = useRef<HTMLDivElement>(null);
+
+    // Parse selected date for display
+    const parsedDate = parse(selectedDate, 'yyyy-MM-dd', new Date());
+    const displayDateText = isValid(parsedDate) ? format(parsedDate, 'MMM d, yyyy') : selectedDate;
+
+    // Update date picker position
+    const updateDatePickerPosition = useCallback(() => {
+        if (dateButtonRef.current) {
+            const rect = dateButtonRef.current.getBoundingClientRect();
+            setDatePickerPosition({
+                top: rect.bottom + window.scrollY + 4,
+                left: rect.left + window.scrollX
+            });
+        }
+    }, []);
+
+    // Handle click outside date picker
+    useEffect(() => {
+        if (!isDatePickerOpen) return;
+
+        const handleClickOutside = (e: MouseEvent) => {
+            if (
+                datePopoverRef.current &&
+                !datePopoverRef.current.contains(e.target as Node) &&
+                dateButtonRef.current &&
+                !dateButtonRef.current.contains(e.target as Node)
+            ) {
+                setIsDatePickerOpen(false);
+            }
+        };
+
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsDatePickerOpen(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isDatePickerOpen]);
+
+    // Handle date selection
+    const handleDateSelect = (date: Date | undefined) => {
+        if (date) {
+            setSelectedDate(format(date, 'yyyy-MM-dd'));
+            setIsDatePickerOpen(false);
+        }
+    };
 
     // --- Data Fetching ---
     useEffect(() => {
@@ -240,8 +305,8 @@ const ShapeOfDay: React.FC = () => {
             const taskData: Task[] = [];
             snapshot.forEach(doc => {
                 const data = doc.data();
-                // Filter by date range and exclude drafts
-                if (today >= (data.startDate || '') && today <= (data.endDate || today) && data.status !== 'draft') {
+                // Filter by selected date range and exclude drafts
+                if (selectedDate >= (data.startDate || '') && selectedDate <= (data.endDate || selectedDate) && data.status !== 'draft') {
                     taskData.push({
                         id: doc.id,
                         ...data,
@@ -266,7 +331,7 @@ const ShapeOfDay: React.FC = () => {
         });
 
         return () => unsubscribe();
-    }, [currentClassId, user, today]);
+    }, [currentClassId, user, selectedDate]);
 
     // Build hierarchical structure
     const taskTree = useMemo(() => buildTaskTree(tasks), [tasks]);
@@ -287,6 +352,8 @@ const ShapeOfDay: React.FC = () => {
         return flatten(taskTree);
     }, [taskTree]);
 
+    const currentClass = classrooms.find(c => c.id === currentClassId);
+
     if (!currentClass) {
         return (
             <div className="flex items-center justify-center h-full text-gray-500">
@@ -298,22 +365,89 @@ const ShapeOfDay: React.FC = () => {
     const joinUrl = `${window.location.origin}/join`;
 
     return (
-        <div className="h-full flex flex-col gap-4 overflow-y-auto custom-scrollbar p-1">
+        <div className="h-full flex flex-col space-y-3 overflow-y-auto custom-scrollbar p-1 pt-4">
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl px-4 md:px-6 flex-shrink-0">
+            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl flex-shrink-0">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
                     <div className="flex-1 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-1">
-                            <span className="px-2 py-0.5 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold uppercase tracking-wider border border-brand-accent/20">
-                                Current Session
-                            </span>
-                            <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-                                <Users size={16} />
-                                <span className="font-bold text-sm">{activeStudentCount} Active</span>
-                            </div>
+                            {/* Date Picker Button - accent styled */}
+                            <button
+                                ref={dateButtonRef}
+                                onClick={() => {
+                                    updateDatePickerPosition();
+                                    setIsDatePickerOpen(!isDatePickerOpen);
+                                }}
+                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-accent/10 text-brand-accent text-fluid-md font-bold uppercase tracking-wider border border-brand-accent/20 hover:bg-brand-accent/20 transition-colors cursor-pointer"
+                            >
+                                <Calendar size={12} />
+                                {displayDateText}
+                            </button>
+
+                            {/* Date Picker Popover */}
+                            {typeof document !== 'undefined' && isDatePickerOpen && createPortal(
+                                <div
+                                    ref={datePopoverRef}
+                                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
+                                    style={{
+                                        top: datePickerPosition.top,
+                                        left: datePickerPosition.left,
+                                    }}
+                                >
+                                    {/* Today Button */}
+                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+                                                setIsDatePickerOpen(false);
+                                            }}
+                                            className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                                        >
+                                            Today
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsDatePickerOpen(false)}
+                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+
+                                    {/* Calendar */}
+                                    <DayPicker
+                                        mode="single"
+                                        selected={isValid(parsedDate) ? parsedDate : undefined}
+                                        onSelect={handleDateSelect}
+                                        defaultMonth={isValid(parsedDate) ? parsedDate : new Date()}
+                                        components={{
+                                            Chevron: ({ orientation }) =>
+                                                orientation === 'left'
+                                                    ? <ChevronLeft size={16} />
+                                                    : <ChevronRight size={16} />,
+                                        }}
+                                        classNames={{
+                                            ...getDefaultClassNames(),
+                                            root: `${getDefaultClassNames().root} rdp-custom`,
+                                            disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
+                                            outside: 'text-gray-300 dark:text-gray-600 opacity-50',
+                                            chevron: 'fill-gray-500 dark:fill-gray-400',
+                                        }}
+                                    />
+                                </div>,
+                                document.body
+                            )}
+                            <button
+                                onClick={() => onNavigate?.('live', 'students')}
+                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-fluid-md font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                            >
+                                <Users size={12} />
+                                <span>{activeStudentCount} Active</span>
+                            </button>
                         </div>
                         <h1 className="text-fluid-3xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight leading-tight">
                             {currentClass.name}
@@ -354,7 +488,7 @@ const ShapeOfDay: React.FC = () => {
                     <div className="text-center py-12 text-gray-400">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
                     <div className="text-center py-12 text-gray-400 italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-                        No tasks scheduled for today.
+                        No tasks scheduled for this date.
                     </div>
                 ) : (
                     displayTasks.map((node) => {
@@ -364,7 +498,7 @@ const ShapeOfDay: React.FC = () => {
                                 task={node.task}
                                 depth={node.depth}
                                 allTasks={tasks}
-                                today={today}
+                                today={selectedDate}
                             />
                         );
                     })

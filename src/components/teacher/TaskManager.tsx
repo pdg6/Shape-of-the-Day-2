@@ -921,14 +921,26 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     // Determine if we can add a subtask to the current active task
     const canAddSubtaskToActive = activeFormData.type !== 'subtask' && editingTaskId !== null;
 
-    return (
-        <div className="flex-1 h-full overflow-y-auto lg:overflow-hidden">
-            <div className="min-h-full lg:h-full grid grid-cols-1 lg:grid-cols-4 gap-6">
+    // Get current class name from rooms
+    const currentClass = rooms.find(r => r.id === currentClassId);
 
-                {/* LEFT PANEL: Task Editor */}
-                <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
-                    {/* Consolidated Drafts Row - serves as navigation + actions */}
-                    <div className="flex items-center gap-2 mb-4 flex-wrap pl-4">
+    return (
+        <div className="flex-1 h-full flex flex-col space-y-3">
+            {/* Content Header - h-16 matches sidebar header height */}
+            <div className="h-16 flex-shrink-0 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
+                {/* Left 3 columns: Tasks label + Current Class + Drafts + New Task Button */}
+                <div className="lg:col-span-3 flex items-center gap-3">
+                    <div className="flex items-baseline gap-3 flex-shrink-0">
+                        <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Tasks:
+                        </span>
+                        <span className="text-fluid-xl font-black text-brand-accent">
+                            {currentClass?.name || 'All Classes'}
+                        </span>
+                    </div>
+
+                    {/* Drafts - inline between title and New Task */}
+                    <div className="flex items-center gap-2 flex-wrap flex-1">
                         {(() => {
                             const drafts = tasks.filter(t => t.status === 'draft');
                             return (
@@ -936,9 +948,8 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     {drafts.length > 0 && (
                                         <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Drafts:</span>
                                     )}
-                                    {drafts.slice(0, 6).map(draft => {
+                                    {drafts.slice(0, 4).map(draft => {
                                         const isActive = editingTaskId === draft.id;
-                                        // Use day-relative numbering based on the draft's due date
                                         const hierNum = getHierarchicalNumber(draft, tasks, draft.endDate);
                                         return (
                                             <button
@@ -946,7 +957,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                 onClick={() => loadTask(draft)}
                                                 title={draft.title}
                                                 className={`
-                                                    flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all
+                                                    flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
                                                     ${isActive
                                                         ? 'bg-brand-accent/20 text-brand-accent border border-brand-accent/40'
                                                         : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 border border-transparent'}
@@ -954,610 +965,620 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                             >
                                                 <span>📝</span>
                                                 <span className="font-bold">{hierNum}.</span>
-                                                <span className="truncate max-w-[80px]">{draft.title || 'Untitled'}</span>
+                                                <span className="truncate max-w-[60px]">{draft.title || 'Untitled'}</span>
                                             </button>
                                         );
                                     })}
-                                    {drafts.length > 6 && (
-                                        <span className="text-xs text-gray-400">+{drafts.length - 6} more</span>
+                                    {drafts.length > 4 && (
+                                        <span className="text-xs text-gray-400">+{drafts.length - 4} more</span>
                                     )}
                                 </>
                             );
                         })()}
-                        {/* + New Task button */}
-                        <Button
-                            variant="soft"
-                            size="sm"
-                            icon={Plus}
-                            onClick={resetForm}
-                            title="Create new task"
-                        >
-                            New Task
-                        </Button>
-                        {/* Discard button - only when dirty */}
-                        {isDirty && (
-                            <Button
-                                variant="ghost-danger"
-                                size="sm"
-                                icon={X}
-                                onClick={() => {
-                                    if (window.confirm('Discard unsaved changes?')) {
-                                        sessionStorage.removeItem('taskManager.formData');
-                                        sessionStorage.removeItem('taskManager.editingTaskId');
-                                        resetForm();
-                                    }
-                                }}
-                                className="ml-auto"
-                            >
-                                Discard
-                            </Button>
-                        )}
                     </div>
 
-                    {/* Main Form Card */}
-                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4 flex-1 flex flex-col relative z-40">
-                        {/* Save State Indicator - top right */}
-                        <div className="absolute top-3 right-3 z-10">
-                            {saveState === 'saving' && (
-                                <div className="flex items-center gap-1.5 text-gray-400" title="Saving...">
-                                    <Loader size={14} className="animate-spin" />
-                                </div>
-                            )}
-                            {saveState === 'saved' && (
-                                <div className="flex items-center gap-1.5 text-green-500" title="Saved">
-                                    <Check size={16} />
-                                </div>
-                            )}
-                        </div>
+                    {/* New Task Button - pushed to right of left section */}
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        icon={Plus}
+                        onClick={resetForm}
+                        title="Create new task"
+                        className="flex-shrink-0 text-brand-accent"
+                    >
+                        New Task
+                    </Button>
+                </div>
 
-                        {/* Title Input */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0">Title</span>
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    value={activeFormData.title}
-                                    onChange={(e) => updateActiveCard('title', e.target.value)}
-                                    placeholder="Task Title"
-                                    className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-brand-accent focus:ring-0 px-2 py-1 transition-all placeholder-gray-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
-                                />
+                {/* Right column: Shape of the Day Date Navigation */}
+                <div className="lg:col-span-1 flex items-center justify-center gap-2">
+                    <button
+                        onClick={() => {
+                            const prev = new Date(selectedDate + 'T00:00:00');
+                            prev.setDate(prev.getDate() - 1);
+                            setSelectedDate(toDateString(prev));
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                        aria-label="Previous day"
+                    >
+                        <ChevronLeft size={16} />
+                    </button>
+
+                    <div className="flex items-center gap-2 text-center relative">
+                        <button
+                            ref={calendarButtonRef}
+                            type="button"
+                            onClick={() => {
+                                if (!isCalendarOpen) updateCalendarPosition();
+                                setIsCalendarOpen(!isCalendarOpen);
+                            }}
+                            className={`p-1 -m-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors cursor-pointer ${isCalendarOpen ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400'}`}
+                            title="Jump to date"
+                        >
+                            <CalendarIcon size={18} className="flex-shrink-0" />
+                        </button>
+
+                        <span className="text-fluid-base font-bold whitespace-nowrap">
+                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
+                                {selectedDate === toDateString()
+                                    ? 'Today'
+                                    : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </span>
+                            <span className="text-gray-400">{' '}To Do List</span>
+                        </span>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            const next = new Date(selectedDate + 'T00:00:00');
+                            next.setDate(next.getDate() + 1);
+                            setSelectedDate(toDateString(next));
+                        }}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                        aria-label="Next day"
+                    >
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Content - both panels start at same level */}
+            <div className="flex-1 overflow-y-auto lg:overflow-hidden">
+                <div className="min-h-full lg:h-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+
+                    {/* LEFT PANEL: Task Editor */}
+                    <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
+                        {/* Main Form Card */}
+                        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4 flex-1 flex flex-col relative z-40">
+                            {/* Save State Indicator - top right */}
+                            <div className="absolute top-3 right-3 z-10">
+                                {saveState === 'saving' && (
+                                    <div className="flex items-center gap-1.5 text-gray-400" title="Saving...">
+                                        <Loader size={14} className="animate-spin" />
+                                    </div>
+                                )}
+                                {saveState === 'saved' && (
+                                    <div className="flex items-center gap-1.5 text-green-500" title="Saved">
+                                        <Check size={16} />
+                                    </div>
+                                )}
                             </div>
-                        </div>
 
-                        {/* Metadata Row: Type, Connections, Dates */}
-                        <div className="flex items-end gap-4 flex-wrap lg:flex-nowrap">
-                            {/* TYPE */}
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Type</span>
-                                <div className="w-[160px]">
-                                    <Select<ItemType>
-                                        value={activeFormData.type}
-                                        onChange={(value) => updateActiveCard('type', value || 'task')}
-                                        options={TYPE_OPTIONS.map(opt => ({
-                                            ...opt,
-                                            disabled: activeFormData.parentId
-                                                ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
-                                                : false
-                                        }))}
-                                        icon={getTypeIcon(activeFormData.type)}
-                                        iconColor={getTypeHexColor(activeFormData.type)}
-                                        buttonClassName="font-bold py-1 text-sm"
+                            {/* Title Input */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0">Title</span>
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={activeFormData.title}
+                                        onChange={(e) => updateActiveCard('title', e.target.value)}
+                                        placeholder="Task Title"
+                                        className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-brand-accent focus:ring-0 px-2 py-1 transition-all placeholder-gray-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
                                     />
                                 </div>
                             </div>
 
-                            {/* CONNECTIONS */}
-                            <div className="flex flex-col gap-1">
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Connections</span>
-                                <div className="w-[160px]">
-                                    <Select<string>
-                                        value={activeFormData.parentId}
-                                        onChange={async (value) => {
-                                            if (value === '__add_child__') {
-                                                // Need to save first if this is a new task
-                                                if (!editingTaskId) {
-                                                    if (!activeFormData.title.trim()) {
-                                                        handleError(new Error("⚠️ Please add a title before adding children."));
-                                                        return;
-                                                    }
-                                                    // Save the current task first
-                                                    await handleSave();
-                                                    // handleSave sets editingTaskId, so we need to find the saved task
-                                                    // The task should now be in the tasks array
-                                                    const savedTask = tasks.find(t => t.title === activeFormData.title);
-                                                    if (savedTask) {
-                                                        handleAddSubtask(savedTask);
+                            {/* Metadata Row: Type, Connections, Dates */}
+                            <div className="flex items-end gap-4 flex-wrap lg:flex-nowrap">
+                                {/* TYPE */}
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Type</span>
+                                    <div className="w-[160px]">
+                                        <Select<ItemType>
+                                            value={activeFormData.type}
+                                            onChange={(value) => updateActiveCard('type', value || 'task')}
+                                            options={TYPE_OPTIONS.map(opt => ({
+                                                ...opt,
+                                                disabled: activeFormData.parentId
+                                                    ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
+                                                    : false
+                                            }))}
+                                            icon={getTypeIcon(activeFormData.type)}
+                                            iconColor={getTypeHexColor(activeFormData.type)}
+                                            buttonClassName="font-bold py-1 text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* CONNECTIONS */}
+                                <div className="flex flex-col gap-1">
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Connections</span>
+                                    <div className="w-[160px]">
+                                        <Select<string>
+                                            value={activeFormData.parentId}
+                                            onChange={async (value) => {
+                                                if (value === '__add_child__') {
+                                                    // Need to save first if this is a new task
+                                                    if (!editingTaskId) {
+                                                        if (!activeFormData.title.trim()) {
+                                                            handleError(new Error("⚠️ Please add a title before adding children."));
+                                                            return;
+                                                        }
+                                                        // Save the current task first
+                                                        await handleSave();
+                                                        // handleSave sets editingTaskId, so we need to find the saved task
+                                                        // The task should now be in the tasks array
+                                                        const savedTask = tasks.find(t => t.title === activeFormData.title);
+                                                        if (savedTask) {
+                                                            handleAddSubtask(savedTask);
+                                                        }
+                                                    } else {
+                                                        const currentTask = tasks.find(t => t.id === editingTaskId);
+                                                        if (currentTask) {
+                                                            handleAddSubtask(currentTask);
+                                                        }
                                                     }
                                                 } else {
-                                                    const currentTask = tasks.find(t => t.id === editingTaskId);
-                                                    if (currentTask) {
-                                                        handleAddSubtask(currentTask);
-                                                    }
+                                                    updateActiveCard('parentId', value);
                                                 }
-                                            } else {
-                                                updateActiveCard('parentId', value);
-                                            }
-                                        }}
-                                        options={[
-                                            // Add child option based on type:
-                                            // - Project/Assignment can add Task
-                                            // - Task can add Subtask
-                                            // - Subtask cannot add anything
-                                            ...(['project', 'assignment'].includes(activeFormData.type) ? [
-                                                { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: '#22c55e' },
-                                                { value: '__divider_top__', label: '──────────', disabled: true },
-                                            ] : []),
-                                            ...(activeFormData.type === 'task' ? [
-                                                { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
-                                                { value: '__divider_top__', label: '──────────', disabled: true },
-                                            ] : []),
-                                            // Available parents
-                                            ...availableParents.map(parent => ({
-                                                value: parent.id,
-                                                label: parent.pathTitles?.length
-                                                    ? `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`
-                                                    : `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
-                                                icon: getTypeIcon(parent.type),
-                                                iconColor: getTypeHexColor(parent.type),
-                                            })),
-                                        ]}
-                                        placeholder="Linked to..."
-                                        icon={LinkIcon}
-                                        nullable
-                                        searchable
+                                            }}
+                                            options={[
+                                                // Add child option based on type:
+                                                // - Project/Assignment can add Task
+                                                // - Task can add Subtask
+                                                // - Subtask cannot add anything
+                                                ...(['project', 'assignment'].includes(activeFormData.type) ? [
+                                                    { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: '#22c55e' },
+                                                    { value: '__divider_top__', label: '──────────', disabled: true },
+                                                ] : []),
+                                                ...(activeFormData.type === 'task' ? [
+                                                    { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
+                                                    { value: '__divider_top__', label: '──────────', disabled: true },
+                                                ] : []),
+                                                // Available parents
+                                                ...availableParents.map(parent => ({
+                                                    value: parent.id,
+                                                    label: parent.pathTitles?.length
+                                                        ? `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`
+                                                        : `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
+                                                    icon: getTypeIcon(parent.type),
+                                                    iconColor: getTypeHexColor(parent.type),
+                                                })),
+                                            ]}
+                                            placeholder="Linked to..."
+                                            icon={LinkIcon}
+                                            nullable
+                                            searchable
+                                            buttonClassName="py-1 text-sm"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* DATES - pushed to right */}
+                                <div className="flex flex-col gap-1 ml-auto">
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Dates</span>
+                                    <DateRangePicker
+                                        startDate={activeFormData.startDate}
+                                        endDate={activeFormData.endDate}
+                                        onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                        onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                        startPlaceholder="Start"
+                                        endPlaceholder="Due"
                                         buttonClassName="py-1 text-sm"
                                     />
                                 </div>
                             </div>
-
-                            {/* DATES - pushed to right */}
-                            <div className="flex flex-col gap-1 ml-auto">
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Dates</span>
-                                <DateRangePicker
-                                    startDate={activeFormData.startDate}
-                                    endDate={activeFormData.endDate}
-                                    onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                    onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                    startPlaceholder="Start"
-                                    endPlaceholder="Due"
-                                    buttonClassName="py-1 text-sm"
-                                />
-                            </div>
-                        </div>
-                        {/* Description & Attachments Section */}
-                        {/* Description Container with embedded Upload/Link buttons */}
-                        <div className="flex-1 min-h-[150px] lg:min-h-[200px] relative">
-                            <div className="absolute inset-0 flex flex-col transition-all duration-200 focus-within:ring-2 focus-within:ring-brand-accent/30 focus-within:shadow-lg rounded-md">
-                                <div className="flex-1 rounded-t-md border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
-                                    <RichTextEditor
-                                        value={activeFormData.description}
-                                        onChange={(value) => updateActiveCard('description', value)}
-                                        onDrop={handleFileDrop}
-                                        placeholder="Describe this task..."
-                                        secondaryPlaceholder="Add text, links, or drag files here"
-                                        className="h-full text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm"
-                                    />
-                                </div>
-                                {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                <div className="px-4 py-3 rounded-b-md border-2 border-t-0 border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex flex-wrap items-center gap-2 min-h-[44px]">
-                                    {/* Inline attachments with image thumbnails */}
-                                    {activeFormData.attachments && activeFormData.attachments.map(attachment => (
-                                        <div
-                                            key={attachment.id}
-                                            className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs group hover:scale-[1.02] transition-transform cursor-default"
-                                            title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
-                                        >
-                                            {attachment.mimeType.startsWith('image/') ? (
-                                                /* Image thumbnail preview */
-                                                <a
-                                                    href={attachment.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                                                >
-                                                    <img
-                                                        src={attachment.url}
-                                                        alt={attachment.filename}
-                                                        className="w-10 h-10 object-cover rounded border border-gray-200 dark:border-gray-600"
-                                                    />
-                                                    <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[80px]">
-                                                        {attachment.filename}
-                                                    </span>
-                                                </a>
-                                            ) : (
-                                                /* Non-image file icon */
-                                                <>
-                                                    <FileIcon size={12} className="text-gray-500" />
+                            {/* Description & Attachments Section */}
+                            {/* Description Container with embedded Upload/Link buttons */}
+                            <div className="flex-1 min-h-[150px] lg:min-h-[200px] relative">
+                                <div className="absolute inset-0 flex flex-col transition-all duration-200 focus-within:ring-2 focus-within:ring-brand-accent/30 focus-within:shadow-lg rounded-md">
+                                    <div className="flex-1 rounded-t-md border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
+                                        <RichTextEditor
+                                            value={activeFormData.description}
+                                            onChange={(value) => updateActiveCard('description', value)}
+                                            onDrop={handleFileDrop}
+                                            placeholder="Describe this task..."
+                                            secondaryPlaceholder="Add text, links, or drag files here"
+                                            className="h-full text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm"
+                                        />
+                                    </div>
+                                    {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
+                                    <div className="px-4 py-3 rounded-b-md border-2 border-t-0 border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex flex-wrap items-center gap-2 min-h-[44px]">
+                                        {/* Inline attachments with image thumbnails */}
+                                        {activeFormData.attachments && activeFormData.attachments.map(attachment => (
+                                            <div
+                                                key={attachment.id}
+                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs group hover:scale-[1.02] transition-transform cursor-default"
+                                                title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
+                                            >
+                                                {attachment.mimeType.startsWith('image/') ? (
+                                                    /* Image thumbnail preview */
                                                     <a
                                                         href={attachment.url}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
+                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                                                     >
-                                                        {attachment.filename}
+                                                        <img
+                                                            src={attachment.url}
+                                                            alt={attachment.filename}
+                                                            className="w-10 h-10 object-cover rounded border border-gray-200 dark:border-gray-600"
+                                                        />
+                                                        <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[80px]">
+                                                            {attachment.filename}
+                                                        </span>
                                                     </a>
-                                                </>
-                                            )}
-                                            <button
-                                                onClick={() => removeAttachment(attachment.id)}
-                                                className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X size={10} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {/* Inline link display */}
-                                    {activeFormData.linkURL && (
-                                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs">
-                                            <LinkIcon size={12} className="text-blue-500" />
-                                            <a
-                                                href={activeFormData.linkURL}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[120px]"
-                                            >
-                                                {(() => { try { return new URL(activeFormData.linkURL).hostname; } catch { return activeFormData.linkURL; } })()}
-                                            </a>
-                                            <button
-                                                onClick={() => updateActiveCard('linkURL', '')}
-                                                className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
-                                            >
-                                                <X size={10} />
-                                            </button>
-                                        </div>
-                                    )}
-                                    {/* Upload & Link buttons - Always visible now for better UX */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105 hover:shadow-md transition-all duration-200 group cursor-pointer">
-                                            <input
-                                                ref={fileInputRef}
-                                                type="file"
-                                                multiple
-                                                accept={ALLOWED_FILE_TYPES.join(',')}
-                                                onChange={handleFileSelect}
-                                                disabled={isUploading}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                            />
-                                            <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
-                                                {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
-                                                <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
+                                                ) : (
+                                                    /* Non-image file icon */
+                                                    <>
+                                                        <FileIcon size={12} className="text-gray-500" />
+                                                        <a
+                                                            href={attachment.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
+                                                        >
+                                                            {attachment.filename}
+                                                        </a>
+                                                    </>
+                                                )}
+                                                <button
+                                                    onClick={() => removeAttachment(attachment.id)}
+                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                >
+                                                    <X size={10} />
+                                                </button>
                                             </div>
-                                        </div>
-                                        {!activeFormData.linkURL && (
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const url = prompt('Enter URL:');
-                                                    if (url) updateActiveCard('linkURL', url);
-                                                }}
-                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105 hover:shadow-md transition-all duration-200 group"
-                                            >
-                                                <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                                                    <LinkIcon size={16} />
-                                                    <span className="text-sm font-medium">Add Link</span>
-                                                </div>
-                                            </button>
+                                        ))}
+                                        {/* Inline link display */}
+                                        {activeFormData.linkURL && (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-600 text-xs">
+                                                <LinkIcon size={12} className="text-blue-500" />
+                                                <a
+                                                    href={activeFormData.linkURL}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[120px]"
+                                                >
+                                                    {(() => { try { return new URL(activeFormData.linkURL).hostname; } catch { return activeFormData.linkURL; } })()}
+                                                </a>
+                                                <button
+                                                    onClick={() => updateActiveCard('linkURL', '')}
+                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
+                                                >
+                                                    <X size={10} />
+                                                </button>
+                                            </div>
                                         )}
+                                        {/* Upload & Link buttons - Always visible now for better UX */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105 hover:shadow-md transition-all duration-200 group cursor-pointer">
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    multiple
+                                                    accept={ALLOWED_FILE_TYPES.join(',')}
+                                                    onChange={handleFileSelect}
+                                                    disabled={isUploading}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                                                    {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
+                                                    <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
+                                                </div>
+                                            </div>
+                                            {!activeFormData.linkURL && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const url = prompt('Enter URL:');
+                                                        if (url) updateActiveCard('linkURL', url);
+                                                    }}
+                                                    className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-300 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-105 hover:shadow-md transition-all duration-200 group"
+                                                >
+                                                    <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                                                        <LinkIcon size={16} />
+                                                        <span className="text-sm font-medium">Add Link</span>
+                                                    </div>
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Tags Row */}
-                        <div className="pt-4 flex flex-col gap-1">
-                            <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
+                            {/* Tags Row */}
+                            <div className="pt-4 flex flex-col gap-1">
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
 
-                            <div className="flex flex-wrap items-center gap-2">
-                                {loadingRooms ? (
-                                    <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                                ) : rooms.length === 0 ? (
-                                    <span className="text-xs text-gray-400">No classes found</span>
-                                ) : (
-                                    rooms.map(room => {
-                                        const isSelected = activeFormData.selectedRoomIds.includes(room.id);
-                                        const roomColor = room.color || '#3B82F6';
-                                        return (
-                                            <button
-                                                key={room.id}
-                                                type="button"
-                                                onClick={() => handleRoomToggle(room.id)}
-                                                style={{
-                                                    borderColor: isSelected ? roomColor : undefined,
-                                                    backgroundColor: isSelected ? `${roomColor}15` : undefined,
-                                                    color: isSelected ? roomColor : undefined,
-                                                }}
-                                                className={`
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {loadingRooms ? (
+                                        <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                    ) : rooms.length === 0 ? (
+                                        <span className="text-xs text-gray-400">No classes found</span>
+                                    ) : (
+                                        rooms.map(room => {
+                                            const isSelected = activeFormData.selectedRoomIds.includes(room.id);
+                                            const roomColor = room.color || '#3B82F6';
+                                            return (
+                                                <button
+                                                    key={room.id}
+                                                    type="button"
+                                                    onClick={() => handleRoomToggle(room.id)}
+                                                    style={{
+                                                        borderColor: isSelected ? roomColor : undefined,
+                                                        backgroundColor: isSelected ? `${roomColor}15` : undefined,
+                                                        color: isSelected ? roomColor : undefined,
+                                                    }}
+                                                    className={`
                                                             flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border
                                                             focus:outline-none focus:ring-2 focus:ring-offset-1
                                                             ${isSelected
-                                                        ? 'shadow-sm'
-                                                        : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/50'}
+                                                            ? 'shadow-sm'
+                                                            : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/50'}
                                                         `}
-                                            >
-                                                {isSelected && <Check size={12} />}
-                                                {room.name}
-                                            </button>
-                                        );
-                                    })
-                                )}
+                                                >
+                                                    {isSelected && <Check size={12} />}
+                                                    {room.name}
+                                                </button>
+                                            );
+                                        })
+                                    )}
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Footer Action Bar */}
-                        <div className="pt-6 mt-auto flex items-center justify-between gap-4">
-                            {/* Left: Delete */}
-                            <div>
-                                {!isNewTask && (
+                            {/* Footer Action Bar */}
+                            <div className="pt-6 mt-auto flex items-center justify-between gap-4">
+                                {/* Left: Delete */}
+                                <div>
+                                    {!isNewTask && (
+                                        <Button
+                                            variant="outline-danger"
+                                            icon={Trash2}
+                                            onClick={() => handleDelete(editingTaskId!)}
+                                            disabled={isSubmitting}
+                                            className="min-w-[120px]"
+                                        >
+                                            Delete
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {/* Right: Actions */}
+                                <div className="flex items-center gap-3">
+
+                                    {/* Discard Button - only when dirty */}
+                                    {isDirty && (
+                                        <Button
+                                            variant="ghost-danger"
+                                            icon={X}
+                                            onClick={() => {
+                                                if (window.confirm('Discard unsaved changes?')) {
+                                                    sessionStorage.removeItem('taskManager.formData');
+                                                    sessionStorage.removeItem('taskManager.editingTaskId');
+                                                    resetForm();
+                                                }
+                                            }}
+                                            className="min-w-[120px]"
+                                        >
+                                            Discard
+                                        </Button>
+                                    )}
+
+                                    {/* Save Button */}
                                     <Button
-                                        variant="outline-danger"
-                                        icon={Trash2}
-                                        onClick={() => handleDelete(editingTaskId!)}
+                                        variant="outline-primary"
+                                        icon={isSubmitting ? Loader : Check}
+                                        onClick={async () => {
+                                            if (!activeFormData.title.trim()) {
+                                                handleError(new Error("⚠️ Please include a title before saving."));
+                                                return;
+                                            }
+                                            await handleSave();
+                                        }}
                                         disabled={isSubmitting}
+                                        loading={isSubmitting}
                                         className="min-w-[120px]"
                                     >
-                                        Delete
+                                        Save
                                     </Button>
-                                )}
-                            </div>
-
-                            {/* Right: Actions */}
-                            <div className="flex items-center gap-3">
-
-                                {/* Save Button */}
-                                <Button
-                                    variant="outline-primary"
-                                    icon={isSubmitting ? Loader : Check}
-                                    onClick={async () => {
-                                        if (!activeFormData.title.trim()) {
-                                            handleError(new Error("⚠️ Please include a title before saving."));
-                                            return;
-                                        }
-                                        await handleSave();
-                                    }}
-                                    disabled={isSubmitting}
-                                    loading={isSubmitting}
-                                    className="min-w-[120px]"
-                                >
-                                    Save
-                                </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
 
-                {/* RIGHT PANEL: Calendar & List */}
-                <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
-                    <div className="h-auto lg:h-full flex flex-col justify-between overflow-hidden">
+                    {/* RIGHT PANEL: Task List */}
+                    <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
+                        <div className="h-auto lg:h-full flex flex-col justify-between overflow-hidden">
 
-                        {/* Simplified Date Header with Chevron Navigation */}
-                        <div className="flex items-center justify-between mb-4">
-                            <button
-                                onClick={() => {
-                                    const prev = new Date(selectedDate + 'T00:00:00');
-                                    prev.setDate(prev.getDate() - 1);
-                                    setSelectedDate(toDateString(prev));
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                                aria-label="Previous day"
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-
-                            <div className="flex items-center gap-2 text-center relative">
-                                {/* Clickable calendar icon with custom popover */}
-                                <button
-                                    ref={calendarButtonRef}
-                                    type="button"
-                                    onClick={() => {
-                                        if (!isCalendarOpen) updateCalendarPosition();
-                                        setIsCalendarOpen(!isCalendarOpen);
+                            {/* Calendar Portal (rendered when open) */}
+                            {isCalendarOpen && createPortal(
+                                <div
+                                    ref={calendarPopoverRef}
+                                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in origin-top-left"
+                                    style={{
+                                        top: calendarPosition.top,
+                                        left: calendarPosition.left,
+                                        transform: 'scale(0.9)',
+                                        transformOrigin: calendarPosition.origin
                                     }}
-                                    className={`p-1 -m-1 rounded hover:bg-brand-accent/10 transition-colors cursor-pointer ${isCalendarOpen ? 'text-brand-accent bg-brand-accent/10' : 'text-brand-accent'}`}
-                                    title="Jump to date"
                                 >
-                                    <CalendarIcon size={18} className="flex-shrink-0" />
-                                </button>
-
-                                {isCalendarOpen && createPortal(
-                                    <div
-                                        ref={calendarPopoverRef}
-                                        className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in origin-top-left"
-                                        style={{
-                                            top: calendarPosition.top,
-                                            left: calendarPosition.left,
-                                            transform: 'scale(0.9)', // Make it smaller as requested
-                                            transformOrigin: calendarPosition.origin
+                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedDate(toDateString(new Date()));
+                                                setIsCalendarOpen(false);
+                                            }}
+                                            className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                                        >
+                                            Today
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCalendarOpen(false)}
+                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                    <DayPicker
+                                        mode="single"
+                                        selected={new Date(selectedDate + 'T00:00:00')}
+                                        onSelect={(date) => {
+                                            if (date) {
+                                                setSelectedDate(toDateString(date));
+                                                setIsCalendarOpen(false);
+                                            }
                                         }}
-                                    >
-                                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedDate(toDateString(new Date()));
-                                                    setIsCalendarOpen(false);
-                                                }}
-                                                className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
-                                            >
-                                                Today
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setIsCalendarOpen(false)}
-                                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                        <DayPicker
-                                            mode="single"
-                                            selected={new Date(selectedDate + 'T00:00:00')}
-                                            onSelect={(date) => {
-                                                if (date) {
-                                                    setSelectedDate(toDateString(date));
-                                                    setIsCalendarOpen(false);
-                                                }
-                                            }}
-                                            defaultMonth={new Date(selectedDate + 'T00:00:00')}
-                                            components={{
-                                                Chevron: ({ orientation }) =>
-                                                    orientation === 'left'
-                                                        ? <ChevronLeft size={16} />
-                                                        : <ChevronRight size={16} />,
-                                            }}
-                                            classNames={{
-                                                ...getDefaultClassNames(),
-                                                root: `${getDefaultClassNames().root} rdp-custom`,
-                                                disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
-                                                outside: 'text-gray-300 dark:text-gray-600 opacity-50',
-                                                chevron: 'fill-gray-500 dark:fill-gray-400',
-                                            }}
-                                        />
-                                    </div>,
-                                    document.body
-                                )}
+                                        defaultMonth={new Date(selectedDate + 'T00:00:00')}
+                                        components={{
+                                            Chevron: ({ orientation }) =>
+                                                orientation === 'left'
+                                                    ? <ChevronLeft size={16} />
+                                                    : <ChevronRight size={16} />,
+                                        }}
+                                        classNames={{
+                                            ...getDefaultClassNames(),
+                                            root: `${getDefaultClassNames().root} rdp-custom`,
+                                            disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
+                                            outside: 'text-gray-300 dark:text-gray-600 opacity-50',
+                                            chevron: 'fill-gray-500 dark:fill-gray-400',
+                                        }}
+                                    />
+                                </div>,
+                                document.body
+                            )}
 
-                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm sm:text-base">
-                                    Shape of the Day:
-                                    {' '}
-                                    <span className={selectedDate === toDateString() ? 'text-brand-accent' : ''}>
-                                        {selectedDate === toDateString()
-                                            ? 'Today'
-                                            : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                    </span>
-                                </h3>
-                            </div>
+                            {/* Task List */}
+                            <div className="flex-1 overflow-y-auto px-0 pt-0 pb-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
+                                {!currentClassId ? (
+                                    <div className="text-center py-8 text-gray-400 italic text-sm">
+                                        Select a class to view schedule.
+                                    </div>
+                                ) : filteredTasks.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-400 italic text-sm">
+                                        No tasks scheduled.
+                                    </div>
+                                ) : (() => {
+                                    return filteredTasks.map((task) => {
+                                        const TypeIconSmall = getTypeIcon(task.type);
+                                        const progress = task.childIds?.length ? getProgress(task.id) : null;
+                                        const isEditing = editingTaskId === task.id;
 
-                            <button
-                                onClick={() => {
-                                    const next = new Date(selectedDate + 'T00:00:00');
-                                    next.setDate(next.getDate() + 1);
-                                    setSelectedDate(toDateString(next));
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                                aria-label="Next day"
-                            >
-                                <ChevronRight size={16} />
-                            </button>
-                        </div>
+                                        // Get siblings (same parentId) for proper disabled state
+                                        const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
+                                        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                                        const siblingIndex = siblings.findIndex(t => t.id === task.id);
 
-                        {/* Task List */}
-                        <div className="flex-1 overflow-y-auto px-0 pt-0 pb-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
-                            {!currentClassId ? (
-                                <div className="text-center py-8 text-gray-400 italic text-sm">
-                                    Select a class to view schedule.
-                                </div>
-                            ) : filteredTasks.length === 0 ? (
-                                <div className="text-center py-8 text-gray-400 italic text-sm">
-                                    No tasks scheduled.
-                                </div>
-                            ) : (() => {
-                                return filteredTasks.map((task) => {
-                                    const TypeIconSmall = getTypeIcon(task.type);
-                                    const progress = task.childIds?.length ? getProgress(task.id) : null;
-                                    const isEditing = editingTaskId === task.id;
-
-                                    // Get siblings (same parentId) for proper disabled state
-                                    const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
-                                    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-                                    const siblingIndex = siblings.findIndex(t => t.id === task.id);
-
-                                    return (
-                                        <div
-                                            key={task.id}
-                                            onClick={() => handleEditClick(task)}
-                                            style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
-                                            className={`
+                                        return (
+                                            <div
+                                                key={task.id}
+                                                onClick={() => handleEditClick(task)}
+                                                style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
+                                                className={`
                                                 group relative p-3 rounded-lg border-2 transition-all cursor-pointer
                                                 ${isEditing
-                                                    ? 'border-brand-accent bg-brand-accent/5'
-                                                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
+                                                        ? 'border-brand-accent bg-brand-accent/5'
+                                                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
                                             `}
-                                        >
+                                            >
 
-                                            <div className="flex items-start gap-2">
-                                                {/* Reorder Controls - for all tasks within their sibling group */}
-                                                <div className="flex flex-col" onClick={e => e.stopPropagation()}>
-                                                    <button
-                                                        onClick={() => handleReorder(task.id, 'up')}
-                                                        disabled={siblingIndex === 0}
-                                                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
-                                                    >
-                                                        <ArrowUp size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleReorder(task.id, 'down')}
-                                                        disabled={siblingIndex === siblings.length - 1}
-                                                        className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
-                                                    >
-                                                        <ArrowDown size={14} />
-                                                    </button>
-                                                </div>
-
-                                                {/* Number + Type Icon - stacked vertically, left aligned */}
-                                                <div className="flex flex-col items-start flex-shrink-0 w-8">
-                                                    <span className="text-xs font-bold text-gray-400 text-left">
-                                                        {getHierarchicalNumber(task, tasks, selectedDate)}
-                                                    </span>
-                                                    <span className={`w-6 h-6 rounded-md flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
-                                                        <TypeIconSmall size={12} />
-                                                    </span>
-                                                </div>
-
-                                                {/* Content: Title + Due Date */}
-                                                <div className="flex-1 min-w-0">
-                                                    <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
-                                                        {task.title}
-                                                    </h5>
-
-                                                    {/* Due Date */}
-                                                    {task.endDate && (
-                                                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                                                            <CalendarIcon size={10} />
-                                                            {task.endDate === toDateString()
-                                                                ? 'Due today'
-                                                                : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                                                        </p>
-                                                    )}
-
-
-                                                </div>
-
-                                                {/* Status/Actions - Top Right */}
-                                                <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
-                                                    {/* Checkmark for published (non-draft) tasks */}
-                                                    {task.status !== 'draft' && (
-                                                        <div className="p-1 text-green-500" title="Published">
-                                                            <Check size={14} />
-                                                        </div>
-                                                    )}
-                                                    {/* Draft indicator for drafts */}
-                                                    {task.status === 'draft' && (
-                                                        <div className="px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
-                                                            Draft
-                                                        </div>
-                                                    )}
-                                                    {/* Add Subtask Button */}
-                                                    {!['subtask'].includes(task.type) && (
+                                                <div className="flex items-start gap-2">
+                                                    {/* Reorder Controls - for all tasks within their sibling group */}
+                                                    <div className="flex flex-col" onClick={e => e.stopPropagation()}>
                                                         <button
-                                                            type="button"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                e.preventDefault();
-                                                                handleAddSubtask(task);
-                                                            }}
-                                                            className="p-1 rounded text-brand-accent hover:bg-brand-accent/10 transition-all opacity-0 group-hover:opacity-100"
-                                                            title="Add subtask"
+                                                            onClick={() => handleReorder(task.id, 'up')}
+                                                            disabled={siblingIndex === 0}
+                                                            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
                                                         >
-                                                            <Plus size={14} />
+                                                            <ArrowUp size={14} />
                                                         </button>
-                                                    )}
+                                                        <button
+                                                            onClick={() => handleReorder(task.id, 'down')}
+                                                            disabled={siblingIndex === siblings.length - 1}
+                                                            className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-brand-accent disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors"
+                                                        >
+                                                            <ArrowDown size={14} />
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Number + Type Icon - stacked vertically, left aligned */}
+                                                    <div className="flex flex-col items-start flex-shrink-0 w-8">
+                                                        <span className="text-xs font-bold text-gray-400 text-left">
+                                                            {getHierarchicalNumber(task, tasks, selectedDate)}
+                                                        </span>
+                                                        <span className={`w-6 h-6 rounded-md flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
+                                                            <TypeIconSmall size={12} />
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Content: Title + Due Date */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
+                                                            {task.title}
+                                                        </h5>
+
+                                                        {/* Due Date */}
+                                                        {task.endDate && (
+                                                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                                                                <CalendarIcon size={10} />
+                                                                {task.endDate === toDateString()
+                                                                    ? 'Due today'
+                                                                    : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                                                            </p>
+                                                        )}
+
+
+                                                    </div>
+
+                                                    {/* Status/Actions - Top Right */}
+                                                    <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                                                        {/* Checkmark for published (non-draft) tasks */}
+                                                        {task.status !== 'draft' && (
+                                                            <div className="p-1 text-green-500" title="Published">
+                                                                <Check size={14} />
+                                                            </div>
+                                                        )}
+                                                        {/* Draft indicator for drafts */}
+                                                        {task.status === 'draft' && (
+                                                            <div className="px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+                                                                Draft
+                                                            </div>
+                                                        )}
+                                                        {/* Add Subtask Button */}
+                                                        {!['subtask'].includes(task.type) && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    e.preventDefault();
+                                                                    handleAddSubtask(task);
+                                                                }}
+                                                                className="p-1 rounded text-brand-accent hover:bg-brand-accent/10 transition-all opacity-0 group-hover:opacity-100"
+                                                                title="Add subtask"
+                                                            >
+                                                                <Plus size={14} />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    );
-                                })
-                            })()}
+                                        );
+                                    })
+                                })()}
+                            </div>
                         </div>
                     </div>
                 </div>

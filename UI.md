@@ -319,6 +319,68 @@ Text scales smoothly between breakpoints using CSS `clamp()`. The `rem` base ens
 
 ---
 
+## TeacherView Content Page Layout
+
+Each tab in the TeacherView follows a consistent layout pattern with standardized header height and spacing.
+
+### Content Header
+
+All content pages (except LiveView) use a fixed-height header that matches the sidebar header:
+
+```jsx
+{/* Content Header - h-16 matches sidebar header height */}
+<div className="h-16 flex-shrink-0 flex items-center justify-between">
+    <div className="flex items-baseline gap-3">
+        <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+            TabName:
+        </span>
+        <span className="text-fluid-xl font-black text-brand-accent">
+            {currentClass?.name}
+        </span>
+    </div>
+    {/* Optional: Right-side actions */}
+</div>
+```
+
+**Header Specs:**
+| Property | Value | Notes |
+|----------|-------|-------|
+| Height | `h-16` (64px) | Matches sidebar header |
+| Typography | `text-fluid-xl font-black` | Label + accent class name |
+| Vertical align | `items-center` | Centers content vertically |
+| Flex shrink | `flex-shrink-0` | Prevents header from collapsing |
+
+### Page Wrapper Spacing
+
+Content pages use `space-y-3` (12px) between header and content for consistent spacing:
+
+```jsx
+<div className="flex flex-col space-y-3">
+    {/* h-16 header */}
+    {/* Content area */}
+</div>
+```
+
+**Exception:** LiveView uses `space-y-6` due to its different content density.
+
+### Layout Alignment
+
+The content body aligns with the sidebar's navigation buttons:
+
+```
+┌─────────────┬──────────────────────────────────────────┐
+│  Sidebar    │     Main Content Area                    │
+│  h-16       │     h-16 Content Header                  │
+│  Logo/Date  │     [Tab Label: Class Name]              │
+├─────────────┼──────────────────────────────────────────┤
+│  pt-4 nav   │     space-y-3                            │
+│  Classrooms │     Content body ← aligns with nav       │
+│  Tasks...   │                                          │
+└─────────────┴──────────────────────────────────────────┘
+```
+
+---
+
 ## Layout Utilities
 
 ### Dynamic Viewport Height

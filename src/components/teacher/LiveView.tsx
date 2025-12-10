@@ -87,11 +87,15 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header with Toggle */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-fluid-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">Live Classroom</h2>
-                    <p className="text-fluid-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Monitor student progress in real-time</p>
+            {/* Content Header - h-16 matches sidebar header height */}
+            <div className="h-16 flex-shrink-0 flex items-center justify-between">
+                <div className="flex items-baseline gap-3">
+                    <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Live View:
+                    </span>
+                    <span className="text-fluid-xl font-black text-brand-accent">
+                        {currentClass?.name || 'No Class Selected'}
+                    </span>
                 </div>
 
                 <div className="flex items-center gap-4">
