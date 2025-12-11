@@ -107,7 +107,7 @@ className="bg-brand-lightSurface dark:bg-brand-darkSurface"
 #### 30% Secondary (Structure & Text)
 ```jsx
 // Card borders (inactive state)
-className="border-2 border-gray-200 dark:border-gray-700"
+className="border-2 border-gray-400 dark:border-gray-600"
 
 // Primary text
 className="text-brand-textDarkPrimary dark:text-brand-textPrimary"
@@ -118,6 +118,35 @@ className="text-gray-500 dark:text-gray-400"
 // Dividers and separators
 className="border-b border-gray-200 dark:border-gray-800"
 ```
+
+### Interactive Border States
+
+Form inputs, dropdowns, and non-CTA buttons follow this border color pattern:
+
+| Mode | Default Border | Hover/Focus Border |
+|------|----------------|-------------------|
+| **Light** | `gray-400` | `gray-600` |
+| **Dark** | `gray-600` | `gray-400` |
+
+### Interactive Background States
+
+Non-CTA buttons and tiles follow this hover background pattern:
+
+| Mode | Hover Background |
+|------|-----------------|
+| **Light** | `gray-100` |
+| **Dark** | `gray-800/50` (50% opacity) |
+
+**Implementation:**
+```jsx
+// Select, MultiSelect, DatePicker, form buttons
+className="border-2 border-gray-400 dark:border-gray-600 
+           hover:bg-gray-100 dark:hover:bg-gray-800/50
+           hover:border-gray-600 dark:hover:border-gray-400
+           focus:border-brand-accent"
+```
+
+**Exceptions (CTA Buttons):** Save, Delete, New Task buttons use `brand-accent` or semantic colors (red/green) for focus/hover instead of gray borders.
 
 #### 10% Accent (Highlights & CTAs)
 ```jsx
@@ -154,7 +183,7 @@ className="bg-red-500"  // Semantic, not theme-based
 {/* 60% - Card background (dominant) */}
 <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl p-4
                 {/* 30% - Border (secondary) */}
-                border-2 border-gray-200 dark:border-gray-700">
+                border-2 border-gray-400 dark:border-gray-600">
   
   {/* 30% - Text (secondary) */}
   <h3 className="text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold">

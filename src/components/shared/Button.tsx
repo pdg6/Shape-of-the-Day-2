@@ -30,18 +30,18 @@ export const Button: React.FC<ButtonProps> = ({
     title,
     'aria-label': ariaLabel
 }) => {
-    const baseClasses = 'font-bold rounded-lg transition-all duration-200 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer';
+    const baseClasses = 'font-bold rounded-md transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer';
 
     const variantClasses = {
-        primary: 'bg-brand-accent text-white hover:bg-brand-accent/90 focus:ring-brand-accent/20',
-        secondary: 'border-2 border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-brand-accent hover:text-brand-accent focus:ring-brand-accent/10',
-        tertiary: 'text-brand-textDarkPrimary dark:text-brand-textPrimary hover:underline decoration-2 focus:ring-gray-500/20',
-        icon: 'text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500/20',
-        ghost: 'border-2 border-transparent text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 focus:ring-brand-accent/20',
-        'ghost-danger': 'border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 focus:ring-red-500/20',
-        'outline-primary': 'border-2 border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 focus:ring-brand-accent/30',
-        'outline-danger': 'border-2 border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 focus:ring-red-500/30',
-        'soft': 'border-2 border-brand-accent/30 bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20 focus:ring-brand-accent/20'
+        primary: 'bg-brand-accent text-white hover:bg-brand-accent/90 focus:bg-brand-accent/90',
+        secondary: 'border-2 border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-brand-accent hover:text-brand-accent focus:border-brand-accent focus:text-brand-accent',
+        tertiary: 'text-brand-textDarkPrimary dark:text-brand-textPrimary hover:underline decoration-2',
+        icon: 'text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 focus:text-brand-accent',
+        ghost: 'border-2 border-transparent text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 focus:border-brand-accent focus:bg-brand-accent/5',
+        'ghost-danger': 'border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 focus:border-red-500 focus:bg-red-500/5',
+        'outline-primary': 'border-2 border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 focus:bg-brand-accent/10',
+        'outline-danger': 'border-2 border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 focus:bg-red-500/10',
+        'soft': 'border-2 border-brand-accent/30 bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20 focus:bg-brand-accent/20'
     };
 
     // Fitts's Law: Minimum 44x44px touch targets for accessibility

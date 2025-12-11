@@ -192,13 +192,13 @@ export function DatePicker({
                 disabled={disabled}
                 className={`
                     relative w-full cursor-pointer
-                    pl-9 pr-8 py-2.5 rounded-xl text-sm font-medium text-left
+                    pl-9 pr-8 py-2.5 rounded-md text-sm font-medium text-left
                     border-2 transition-all duration-200
                     bg-brand-lightSurface dark:bg-brand-darkSurface
                     border-gray-200 dark:border-gray-700
                     hover:bg-gray-50 dark:hover:bg-gray-800/50
                     hover:border-gray-300 dark:hover:border-gray-600
-                    focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20
+                    focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${value ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                 `}
@@ -229,7 +229,7 @@ export function DatePicker({
             {typeof document !== 'undefined' && isOpen && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,

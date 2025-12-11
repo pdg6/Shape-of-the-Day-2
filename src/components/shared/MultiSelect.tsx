@@ -165,9 +165,9 @@ export function MultiSelect<T extends string | number = string>({
                     pl-10 pr-8 py-2.5 rounded-md text-sm font-medium
                     border-2 transition-all duration-200
                     bg-brand-lightSurface dark:bg-brand-darkSurface
-                    border-gray-200 dark:border-gray-700
-                    hover:border-gray-300 dark:hover:border-gray-600
-                    focus:outline-none focus:ring-2 focus:ring-brand-accent/20
+                    border-gray-400 dark:border-gray-600
+                    hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400
+                    focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${value.length > 0 ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                     ${buttonClassName}
@@ -217,7 +217,7 @@ export function MultiSelect<T extends string | number = string>({
                 >
                     <div
                         data-multiselect-dropdown
-                        className="fixed z-[9999] overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
+                        className="fixed z-[9999] overflow-hidden rounded-md border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,
