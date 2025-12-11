@@ -24,6 +24,7 @@ import {
     Trash2
 } from 'lucide-react';
 import { Select, SelectOption } from '../shared/Select';
+import { MultiSelect } from '../shared/MultiSelect';
 import { DateRangePicker } from '../shared/DateRangePicker';
 import { RichTextEditor } from '../shared/RichTextEditor';
 import { Button } from '../shared/Button';
@@ -705,14 +706,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
     // --- Handlers ---
 
-    const handleRoomToggle = (roomId: string) => {
-        updateActiveCard('selectedRoomIds', prev => {
-            return prev.includes(roomId)
-                ? prev.filter(id => id !== roomId)
-                : [...prev, roomId];
-        });
-    };
-
     const handleSave = async (isAutoSave: boolean = false) => {
         if (!auth.currentUser) return;
 
@@ -959,11 +952,11 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                 className={`
                                                     flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
                                                     ${isActive
-                                                        ? 'bg-brand-accent/20 text-brand-accent border border-brand-accent/40'
-                                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 border border-transparent'}
+                                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-500'
+                                                        : 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'}
                                                 `}
                                             >
-                                                <span>📝</span>
+                                                <span className="opacity-50">📝</span>
                                                 <span className="font-bold">{hierNum}.</span>
                                                 <span className="truncate max-w-[60px]">{draft.title || 'Untitled'}</span>
                                             </button>
@@ -1073,7 +1066,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         value={activeFormData.title}
                                         onChange={(e) => updateActiveCard('title', e.target.value)}
                                         placeholder="Task Title"
-                                        className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-brand-accent focus:ring-0 px-2 py-1 transition-all placeholder-gray-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
+                                        className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-gray-200 focus:border-brand-accent focus:ring-0 focus:outline-none px-2 py-1 transition-all placeholder-gray-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
                                     />
                                 </div>
                             </div>
@@ -1181,8 +1174,8 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             {/* Description & Attachments Section */}
                             {/* Description Container with embedded Upload/Link buttons */}
                             <div className="flex-1 min-h-[150px] lg:min-h-[200px] relative">
-                                <div className="absolute inset-0 flex flex-col transition-all duration-200 focus-within:ring-2 focus-within:ring-brand-accent/30 focus-within:shadow-lg rounded-md">
-                                    <div className="flex-1 rounded-t-md border-2 border-b-0 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden">
+                                <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
+                                    <div className="flex-1 rounded-md border-2 border-gray-200 dark:border-gray-700 focus-within:border-gray-300 dark:focus-within:border-gray-500 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden transition-colors">
                                         <RichTextEditor
                                             value={activeFormData.description}
                                             onChange={(value) => updateActiveCard('description', value)}
@@ -1193,7 +1186,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         />
                                     </div>
                                     {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                    <div className="px-4 py-3 rounded-b-md border-2 border-t-0 border-gray-200 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex flex-wrap items-center gap-2 min-h-[44px]">
+                                    <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
                                         {/* Inline attachments with image thumbnails */}
                                         {activeFormData.attachments && activeFormData.attachments.map(attachment => (
                                             <div
@@ -1297,71 +1290,55 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 </div>
                             </div>
 
-                            {/* Tags Row */}
-                            <div className="pt-4 flex flex-col gap-1">
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
 
-                                <div className="flex flex-wrap items-center gap-2">
-                                    {loadingRooms ? (
-                                        <Loader className="w-4 h-4 animate-spin text-gray-400" />
-                                    ) : rooms.length === 0 ? (
-                                        <span className="text-xs text-gray-400">No classes found</span>
-                                    ) : (
-                                        rooms.map(room => {
-                                            const isSelected = activeFormData.selectedRoomIds.includes(room.id);
-                                            const roomColor = room.color || '#3B82F6';
-                                            return (
-                                                <button
-                                                    key={room.id}
-                                                    type="button"
-                                                    onClick={() => handleRoomToggle(room.id)}
-                                                    style={{
-                                                        borderColor: isSelected ? roomColor : undefined,
-                                                        backgroundColor: isSelected ? `${roomColor}15` : undefined,
-                                                        color: isSelected ? roomColor : undefined,
-                                                    }}
-                                                    className={`
-                                                            flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border
-                                                            focus:outline-none focus:ring-2 focus:ring-offset-1
-                                                            ${isSelected
-                                                            ? 'shadow-sm'
-                                                            : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600 bg-gray-50 dark:bg-gray-800/50'}
-                                                        `}
-                                                >
-                                                    {isSelected && <Check size={12} />}
-                                                    {room.name}
-                                                </button>
-                                            );
-                                        })
-                                    )}
+                            {/* Action Row: Class Selector + Delete/Save buttons */}
+                            <div className="pt-4 flex items-center justify-between gap-4">
+                                {/* Left: Class Selector */}
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">Add to Class:</span>
+                                    <div className="w-[200px]">
+                                        {loadingRooms ? (
+                                            <Loader className="w-4 h-4 animate-spin text-gray-400" />
+                                        ) : rooms.length === 0 ? (
+                                            <span className="text-xs text-gray-400">No classes found</span>
+                                        ) : (
+                                            <MultiSelect<string>
+                                                value={activeFormData.selectedRoomIds}
+                                                onChange={(values) => updateActiveCard('selectedRoomIds', values)}
+                                                options={rooms.map(room => ({
+                                                    value: room.id,
+                                                    label: room.name,
+                                                    color: room.color || '#3B82F6',
+                                                }))}
+                                                placeholder="Select classes..."
+                                                primaryValue={currentClassId || undefined}
+                                                buttonClassName="py-2 text-sm"
+                                            />
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {/* Footer Action Bar */}
-                            <div className="pt-6 mt-auto flex items-center justify-between gap-4">
-                                {/* Left: Delete */}
-                                <div>
+                                {/* Right: Action Buttons */}
+                                <div className="flex items-center gap-2">
+                                    {/* Delete Button - only for existing tasks */}
                                     {!isNewTask && (
-                                        <Button
-                                            variant="outline-danger"
-                                            icon={Trash2}
+                                        <button
+                                            type="button"
                                             onClick={() => handleDelete(editingTaskId!)}
                                             disabled={isSubmitting}
-                                            className="min-w-[120px]"
+                                            className="px-4 py-2 rounded-md text-sm font-medium border-2 border-gray-300 dark:border-gray-600 text-gray-400 hover:text-red-500 hover:border-red-400 transition-all disabled:opacity-50"
                                         >
-                                            Delete
-                                        </Button>
+                                            <span className="flex items-center gap-2">
+                                                <Trash2 size={16} />
+                                                Delete
+                                            </span>
+                                        </button>
                                     )}
-                                </div>
-
-                                {/* Right: Actions */}
-                                <div className="flex items-center gap-3">
 
                                     {/* Discard Button - only when dirty */}
                                     {isDirty && (
-                                        <Button
-                                            variant="ghost-danger"
-                                            icon={X}
+                                        <button
+                                            type="button"
                                             onClick={() => {
                                                 if (window.confirm('Discard unsaved changes?')) {
                                                     sessionStorage.removeItem('taskManager.formData');
@@ -1369,16 +1346,18 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     resetForm();
                                                 }
                                             }}
-                                            className="min-w-[120px]"
+                                            className="px-4 py-2 rounded-md text-sm font-medium border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 transition-all"
                                         >
-                                            Discard
-                                        </Button>
+                                            <span className="flex items-center gap-2">
+                                                <X size={16} />
+                                                Discard
+                                            </span>
+                                        </button>
                                     )}
 
                                     {/* Save Button */}
-                                    <Button
-                                        variant="outline-primary"
-                                        icon={isSubmitting ? Loader : Check}
+                                    <button
+                                        type="button"
                                         onClick={async () => {
                                             if (!activeFormData.title.trim()) {
                                                 handleError(new Error("⚠️ Please include a title before saving."));
@@ -1387,11 +1366,13 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                             await handleSave();
                                         }}
                                         disabled={isSubmitting}
-                                        loading={isSubmitting}
-                                        className="min-w-[120px]"
+                                        className="min-w-[100px] px-4 py-2 rounded-md text-sm font-medium border-2 border-gray-300 dark:border-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary hover:border-brand-accent focus:border-brand-accent transition-all disabled:opacity-50"
                                     >
-                                        Save
-                                    </Button>
+                                        <span className="flex items-center justify-center gap-2">
+                                            {isSubmitting ? <Loader size={16} className="animate-spin" /> : <Check size={16} className="text-brand-accent" />}
+                                            Save
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1490,7 +1471,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                 className={`
                                                 group relative p-3 rounded-lg border-2 transition-all cursor-pointer
                                                 ${isEditing
-                                                        ? 'border-brand-accent bg-brand-accent/5'
+                                                        ? 'border-gray-300 dark:border-gray-500 shadow-md bg-white dark:bg-gray-800'
                                                         : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface'}
                                             `}
                                             >

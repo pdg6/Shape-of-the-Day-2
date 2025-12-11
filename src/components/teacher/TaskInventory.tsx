@@ -314,6 +314,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterClassroom, setFilterClassroom] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed'>('all');
+    const [savedSearches, setSavedSearches] = useState<{ name: string; query: string; filters: { classroom: string; status: string; date: string | null; } }[]>([]);
 
     // Date filter
     const [filterDate, setFilterDate] = useState<string | null>(null);
@@ -748,6 +749,48 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                 className="w-full pl-9 pr-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent transition-all"
                             />
                         </div>
+
+                        {/* Save Search Button */}
+                        <button
+                            onClick={() => {
+                                const searchName = prompt('Enter a name for this search:');
+                                if (searchName) {
+                                    const newSavedSearch = {
+                                        name: searchName,
+                                        query: searchQuery,
+                                        filters: {
+                                            classroom: filterClassroom,
+                                            status: filterStatus,
+                                            date: filterDate,
+                                        },
+                                    };
+                                    setSavedSearches([...savedSearches, newSavedSearch]);
+                                }
+                            }}
+                            className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent transition-all"
+                        >
+                            Save Search
+                        </button>
+
+                        {/* Saved Searches Dropdown */}
+                        <Select<string>
+                            onChange={(value) => {
+                                if (value) {
+                                    const savedSearch = savedSearches.find(search => search.name === value);
+                                    if (savedSearch) {
+                                        setSearchQuery(savedSearch.query);
+                                        setFilterClassroom(savedSearch.filters.classroom);
+                                        setFilterStatus(savedSearch.filters.status as 'all' | 'active' | 'completed');
+                                        setFilterDate(savedSearch.filters.date);
+                                    }
+                                }
+                            }}
+                            options={savedSearches.map(search => ({
+                                value: search.name,
+                                label: search.name,
+                            }))}
+                            placeholder="Saved Searches"
+                        />
 
                         {/* Classroom Filter */}
                         <Select<string>
