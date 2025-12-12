@@ -33,8 +33,9 @@ import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, auth, storage } from '../../firebase';
-import { Classroom, ItemType, Task, TaskFormData, TaskStatus, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
+import { httpsCallable } from 'firebase/functions';
+import { db, auth, storage, functions } from '../../firebase';
+import { Classroom, ItemType, Task, TaskFormData, TaskStatus, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment, LinkAttachment } from '../../types';
 import { useClassStore } from '../../store/classStore';
 
 // --- Constants ---
@@ -44,7 +45,7 @@ const INITIAL_FORM_STATE: TaskFormData = {
     description: '',
     type: 'task',
     parentId: null,
-    linkURL: '',
+    links: [],
     startDate: toDateString(),
     endDate: toDateString(),
     selectedRoomIds: [],
@@ -211,6 +212,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle'); // Auto-save feedback
 
     // Refs
@@ -360,6 +362,71 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         }
     }, [initialTask, tasks]);
 
+    // --- Link Handlers ---
+
+    // Add a new link and fetch its metadata
+    const addLink = useCallback(async (url: string) => {
+        // Validate URL format
+        try {
+            new URL(url);
+        } catch {
+            handleError('Please enter a valid URL');
+            return;
+        }
+
+        // Check for duplicates
+        if (formData.links?.some(link => link.url === url)) {
+            handleError('This link is already added');
+            return;
+        }
+
+        // Create new link with temporary ID
+        const newLink: LinkAttachment = {
+            id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            url,
+            addedAt: new Date(),
+        };
+
+        // Add link immediately (optimistic update)
+        setFormData(prev => ({
+            ...prev,
+            links: [...(prev.links || []), newLink]
+        }));
+        setIsDirty(true);
+
+        // Fetch metadata asynchronously
+        setIsLoadingLinkTitle(true);
+        try {
+            const fetchMetadata = httpsCallable<{ url: string }, { title: string | null; siteName: string; error?: string }>(functions, 'fetchUrlMetadata');
+            const result = await fetchMetadata({ url });
+
+            if (result.data.title) {
+                // Update the link with its title
+                setFormData(prev => ({
+                    ...prev,
+                    links: prev.links?.map(link =>
+                        link.id === newLink.id
+                            ? { ...link, title: result.data.title || undefined }
+                            : link
+                    )
+                }));
+            }
+        } catch (error) {
+            console.warn('Failed to fetch URL metadata:', error);
+        } finally {
+            setIsLoadingLinkTitle(false);
+        }
+    }, [formData.links]);
+
+    // Remove a link by ID
+    const removeLink = useCallback((linkId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            links: prev.links?.filter(link => link.id !== linkId) || []
+        }));
+        setIsDirty(true);
+    }, []);
+
     // --- Helpers ---
 
 
@@ -405,26 +472,40 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
 
 
-    // Calculate progress for a parent item
-    const getProgress = useCallback((parentId: string): { completed: number; total: number } => {
-        const children = tasks.filter(t => t.parentId === parentId);
-        const total = children.length;
-        const completed = children.filter(t => t.status === 'done').length;
-        return { completed, total };
-    }, [tasks]);
+
+
+    // Check if a task is "ongoing" (multi-day and not due on the selected date)
+    const isOngoingTask = useCallback((task: Task, forDate: string): boolean => {
+        if (!task.startDate || !task.endDate) return false;
+        // Multi-day task (spans more than one day) and not due on the selected date
+        return task.startDate !== task.endDate && task.endDate !== forDate;
+    }, []);
 
     // Calculate hierarchical number for display (1, 2, 2.1, 2.2, etc.)
     // When forDate is provided, root-level tasks are numbered relative to that day
+    // Matches ShapeOfDay.tsx behavior: due-today first, then ongoing tasks
     const getHierarchicalNumber = useCallback((task: Task, allTasks: Task[], forDate?: string): string => {
-        // For root tasks with date filter, only count siblings on the same day
+        // For root tasks with date filter, count all siblings active on that day (both due-today and ongoing)
         const siblings = task.parentId
             ? allTasks.filter(t => t.parentId === task.parentId)
             : forDate
-                ? allTasks.filter(t => !t.parentId && t.endDate === forDate)
+                ? allTasks.filter(t => !t.parentId && t.startDate && t.endDate && forDate >= t.startDate && forDate <= t.endDate)
                 : allTasks.filter(t => !t.parentId);
 
-        // Sort by presentation order
-        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        // Sort: due-today first (by presentationOrder), then ongoing (by presentationOrder)
+        if (forDate && !task.parentId) {
+            siblings.sort((a, b) => {
+                const aOngoing = isOngoingTask(a, forDate);
+                const bOngoing = isOngoingTask(b, forDate);
+                // If one is ongoing and one isn't, ongoing goes after
+                if (aOngoing !== bOngoing) return aOngoing ? 1 : -1;
+                // Otherwise sort by presentation order
+                return (a.presentationOrder || 0) - (b.presentationOrder || 0);
+            });
+        } else {
+            siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        }
+
         const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
 
         if (!task.parentId) return String(myIndex);
@@ -433,7 +514,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         if (!parent) return String(myIndex);
 
         return `${getHierarchicalNumber(parent, allTasks, forDate)}.${myIndex}`;
-    }, []);
+    }, [isOngoingTask]);
 
     // --- Form Management (simplified - single form instead of multi-card) ---
 
@@ -465,12 +546,24 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
 
     const loadTask = useCallback((task: Task) => {
+        // Handle backwards compatibility: convert legacy linkURL to links array
+        let links: LinkAttachment[] = task.links || [];
+        if (task.linkURL && links.length === 0) {
+            // Migration from old single-link format
+            links = [{
+                id: `link_legacy_${Date.now()}`,
+                url: task.linkURL,
+                title: task.linkTitle,
+                addedAt: task.createdAt || new Date(),
+            }];
+        }
+
         setFormData({
             title: task.title,
             description: task.description || '',
             type: task.type,
             parentId: task.parentId,
-            linkURL: task.linkURL || '',
+            links,
             startDate: task.startDate || toDateString(),
             endDate: task.endDate || toDateString(),
             selectedRoomIds: task.selectedRoomIds || [],
@@ -517,47 +610,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         setIsDirty(false);
     }, [isDirty]);
 
-    // Quick-create a new Project or Assignment to link to
-    const handleQuickCreateParent = useCallback(async (type: 'project' | 'assignment') => {
-        const title = window.prompt(`Enter ${type} title:`);
-        if (!title?.trim() || !auth.currentUser) return null;
 
-        try {
-            const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
-
-            const docRef = await addDoc(collection(db, 'tasks'), {
-                title: title.trim(),
-                description: '',
-                type,
-                status: 'draft',
-                parentId: null,
-                rootId: null,
-                path: [],
-                pathTitles: [],
-                childIds: [],
-                startDate: toDateString(),
-                endDate: toDateString(),
-                selectedRoomIds: currentClassId ? [currentClassId] : [],
-                teacherId: auth.currentUser.uid,
-                presentationOrder: maxOrder + 1,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                attachments: [],
-                linkURL: '',
-                imageURL: '',
-            });
-
-            handleSuccess(`${type === 'project' ? 'Project' : 'Assignment'} "${title}" created as draft`);
-
-            // Set as parent of current form
-            updateActiveCard('parentId', docRef.id);
-
-            return docRef.id;
-        } catch (error) {
-            handleError(`Failed to create ${type}`);
-            return null;
-        }
-    }, [tasks, currentClassId, updateActiveCard]);
 
     // --- File Upload Handlers ---
 
@@ -732,7 +785,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 rootId,
                 path,
                 pathTitles,
-                linkURL: formData.linkURL,
+                links: formData.links || [],
                 startDate: formData.startDate,
                 endDate: formData.endDate,
                 selectedRoomIds: formData.selectedRoomIds,
@@ -889,8 +942,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
     const availableParents = getAvailableParents(activeFormData.type);
 
-    // Determine if we can add a subtask to the current active task
-    const canAddSubtaskToActive = activeFormData.type !== 'subtask' && editingTaskId !== null;
+
 
     // Get current class name from rooms
     const currentClass = rooms.find(r => r.id === currentClassId);
@@ -898,10 +950,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     return (
         <div className="flex-1 h-full flex flex-col space-y-3">
             {/* Content Header - h-16 matches sidebar header height */}
-            <div className="h-16 flex-shrink-0 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
+            <div className="h-16 shrink-0 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
                 {/* Left 3 columns: Tasks label + Current Class + Drafts + New Task Button */}
                 <div className="lg:col-span-3 flex items-center gap-3">
-                    <div className="flex items-baseline gap-3 flex-shrink-0">
+                    <div className="flex items-baseline gap-3 shrink-0">
                         <span className="text-fluid-lg font-black text-gray-400">
                             Tasks:
                         </span>
@@ -955,7 +1007,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                         icon={Plus}
                         onClick={resetForm}
                         title="Create new task"
-                        className="flex-shrink-0 text-brand-accent"
+                        className="shrink-0 text-brand-accent"
                     >
                         New Task
                     </Button>
@@ -986,7 +1038,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             className={`p-1 -m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 focus:bg-gray-100 dark:focus:bg-gray-800/50 transition-colors cursor-pointer focus:outline-none ${isCalendarOpen ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400'}`}
                             title="Jump to date"
                         >
-                            <CalendarIcon size={18} className="flex-shrink-0" />
+                            <CalendarIcon size={18} className="shrink-0" />
                         </button>
 
                         <span className="text-fluid-base font-bold whitespace-nowrap">
@@ -1037,7 +1089,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
                             {/* Title Input */}
                             <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex-shrink-0">Title</span>
+                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider shrink-0">Title</span>
                                 <div className="flex-1">
                                     <input
                                         type="text"
@@ -1211,24 +1263,35 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                 </button>
                                             </div>
                                         ))}
-                                        {/* Inline link display */}
-                                        {activeFormData.linkURL && (
-                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-400 dark:border-gray-600 text-xs">
-                                                <LinkIcon size={12} className="text-blue-500" />
+                                        {/* Inline links display - Multiple links */}
+                                        {activeFormData.links && activeFormData.links.map((link) => (
+                                            <div
+                                                key={link.id}
+                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-400 dark:border-gray-600 text-xs max-w-[280px]"
+                                            >
+                                                <LinkIcon size={12} className="text-blue-500 shrink-0" />
                                                 <a
-                                                    href={activeFormData.linkURL}
+                                                    href={link.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[120px]"
+                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate"
+                                                    title={link.url}
                                                 >
-                                                    {(() => { try { return new URL(activeFormData.linkURL).hostname; } catch { return activeFormData.linkURL; } })()}
+                                                    {link.title || (() => { try { return new URL(link.url).hostname; } catch { return link.url; } })()}
                                                 </a>
                                                 <button
-                                                    onClick={() => updateActiveCard('linkURL', '')}
-                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded"
+                                                    onClick={() => removeLink(link.id)}
+                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded shrink-0"
                                                 >
                                                     <X size={10} />
                                                 </button>
+                                            </div>
+                                        ))}
+                                        {/* Loading indicator while fetching link metadata */}
+                                        {isLoadingLinkTitle && (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400">
+                                                <Loader size={12} className="animate-spin" />
+                                                <span>Fetching title...</span>
                                             </div>
                                         )}
                                         {/* Upload & Link buttons - Always visible now for better UX */}
@@ -1248,21 +1311,19 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
                                                 </div>
                                             </div>
-                                            {!activeFormData.linkURL && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const url = prompt('Enter URL:');
-                                                        if (url) updateActiveCard('linkURL', url);
-                                                    }}
-                                                    className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-400 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group"
-                                                >
-                                                    <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                                                        <LinkIcon size={16} />
-                                                        <span className="text-sm font-medium">Add Link</span>
-                                                    </div>
-                                                </button>
-                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = prompt('Enter URL:');
+                                                    if (url) addLink(url);
+                                                }}
+                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-400 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group"
+                                            >
+                                                <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                                                    <LinkIcon size={16} />
+                                                    <span className="text-sm font-medium">Add Link</span>
+                                                </div>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1365,7 +1426,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             {isCalendarOpen && createPortal(
                                 <div
                                     ref={calendarPopoverRef}
-                                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-xl shadow-lg p-3 animate-fade-in origin-top-left"
+                                    className="fixed z-9999 bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-xl shadow-lg p-3 animate-fade-in origin-top-left"
                                     style={{
                                         top: calendarPosition.top,
                                         left: calendarPosition.left,
@@ -1433,7 +1494,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 ) : (() => {
                                     return filteredTasks.map((task) => {
                                         const TypeIconSmall = getTypeIcon(task.type);
-                                        const progress = task.childIds?.length ? getProgress(task.id) : null;
+
                                         const isEditing = editingTaskId === task.id;
 
                                         // Get siblings (same parentId) for proper disabled state
@@ -1474,7 +1535,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     </div>
 
                                                     {/* Number + Type Icon - stacked vertically, left aligned */}
-                                                    <div className="flex flex-col items-start flex-shrink-0 w-8">
+                                                    <div className="flex flex-col items-start shrink-0 w-8">
                                                         <span className="text-xs font-bold text-gray-400 text-left">
                                                             {getHierarchicalNumber(task, tasks, selectedDate)}
                                                         </span>

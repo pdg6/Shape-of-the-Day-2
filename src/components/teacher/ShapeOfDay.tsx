@@ -18,11 +18,17 @@ import 'react-day-picker/style.css';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 
 // --- Types ---
+import { LinkAttachment } from '../../types';
+
 interface Task {
     id: string;
     title: string;
     description: string;
-    linkURL: string;
+    // Legacy single link (for backwards compatibility)
+    linkURL?: string;
+    linkTitle?: string;
+    // New multiple links support
+    links?: LinkAttachment[];
     imageURL: string;
     startDate: string;
     endDate: string;
@@ -185,9 +191,35 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdit }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-    const [isSelected, setIsSelected] = useState(false);
+    const [showEditButton, setShowEditButton] = useState(false);
+    const editButtonTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const hierarchicalNumber = getHierarchicalNumber(task, allTasks, today);
     const indent = depth * 32; // Increased from 24 for better hierarchy visualization
+
+    // Handle hover enter on number/title area
+    const handleHoverEnter = () => {
+        if (editButtonTimeoutRef.current) {
+            clearTimeout(editButtonTimeoutRef.current);
+            editButtonTimeoutRef.current = null;
+        }
+        setShowEditButton(true);
+    };
+
+    // Handle hover leave - keep visible for 3 seconds
+    const handleHoverLeave = () => {
+        editButtonTimeoutRef.current = setTimeout(() => {
+            setShowEditButton(false);
+        }, 3000);
+    };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (editButtonTimeoutRef.current) {
+                clearTimeout(editButtonTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // Get type-specific border color for left accent
     const getTypeBorderColor = (type: ItemType): string => {
@@ -217,16 +249,21 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                 border-l-4 ${typeBorderColor}
                 transition-all duration-200
                 hover:border-brand-accent/50 hover:shadow-lg hover:shadow-brand-accent/5
-                hover:-translate-y-0.5 relative cursor-pointer
-                ${task.status === 'done' ? 'opacity-60' : ''}
-                ${isSelected ? 'ring-2 ring-brand-accent/50' : ''}`}
+                hover:-translate-y-0.5 relative select-none
+                ${task.status === 'done' ? 'opacity-60' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
                 width: `calc(100% - ${indent}px)`
             }}
-            onClick={() => setIsSelected(!isSelected)}
-            onDoubleClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-            tabIndex={0}
+            onDoubleClick={(e) => {
+                // Only toggle expand if not clicking on interactive elements
+                const target = e.target as HTMLElement;
+                const isInteractive = target.closest('a, button, input, [role="button"]');
+                if (!isInteractive) {
+                    e.preventDefault(); // Prevent text selection
+                    setIsDescriptionExpanded(!isDescriptionExpanded);
+                }
+            }}
             role="article"
             aria-label={`Task: ${task.title}`}
         >
@@ -243,14 +280,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                     style={{ opacity: isDescriptionExpanded ? 1 : undefined }}
                     title={isDescriptionExpanded ? 'Collapse' : 'Expand'}
                 >
-                    {isDescriptionExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                    {isDescriptionExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                 </button>
             )}
 
             {/* Horizontal Layout: Number + Title + Date */}
             <div className="flex gap-4">
-                {/* Number with Edit Button below */}
-                <div className="flex flex-col items-center gap-1">
+                {/* Number with Edit Button below - hover triggers edit button */}
+                <div
+                    className="flex flex-col items-center gap-1 cursor-pointer"
+                    onMouseEnter={handleHoverEnter}
+                    onMouseLeave={handleHoverLeave}
+                >
                     <span className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
                         underline decoration-2 underline-offset-4
                         ${task.type === 'project' ? 'decoration-purple-500' : ''}
@@ -260,19 +301,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                     `}>
                         {hierarchicalNumber}
                     </span>
-                    {/* Edit button - shows when card is selected */}
-                    {isSelected && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onEdit?.(task.id);
-                            }}
-                            className="p-1 rounded-md text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10 transition-all duration-200"
-                            title="Edit task"
-                        >
-                            <Pencil size={14} />
-                        </button>
-                    )}
+                    {/* Edit button - shows on hover for 3 seconds */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit?.(task.id);
+                        }}
+                        className={`p-1 rounded-md text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10 
+                            transition-all duration-200 ${showEditButton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        title="Edit task"
+                    >
+                        <Pencil size={14} />
+                    </button>
                 </div>
 
                 {/* Title + Description + Resources */}
@@ -284,7 +324,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                             {task.title}
                         </h3>
                         {task.endDate && (
-                            <span className="text-sm text-gray-400 font-medium flex-shrink-0">
+                            <span className="text-sm text-gray-400 font-medium shrink-0">
                                 {task.endDate === today
                                     ? 'Due Today'
                                     : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
@@ -308,9 +348,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                         </div>
                     )}
 
-                    {/* Description */}
+                    {/* Description - text selectable */}
                     {task.description && (
-                        <div className="mt-2">
+                        <div className="mt-2 select-text">
                             {/* Description - supports HTML or plain text */}
                             {containsHtml(task.description) ? (
                                 <CodeBlockRenderer
@@ -338,6 +378,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="block"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         <img
                                             src={task.imageURL}
@@ -355,6 +396,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         rel="noopener noreferrer"
                                         className="block"
                                         title={img.filename}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
                                         <img
                                             src={img.url}
@@ -365,8 +407,35 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                     </a>
                                 ))}
 
-                                {/* Resource Link - Enhanced */}
-                                {task.linkURL && (
+                                {/* Resource Links - Multiple links support */}
+                                {(task.links && task.links.length > 0) ? (
+                                    task.links.map((link) => (
+                                        <a
+                                            key={link.id}
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-3 py-2 rounded-lg
+                                                bg-brand-accent/5 border border-brand-accent/20
+                                                hover:bg-brand-accent/10 transition-colors"
+                                            title={link.url}
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <ExternalLink size={16} className="text-brand-accent shrink-0" />
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                                    {link.title || getUrlDomain(link.url)}
+                                                </span>
+                                                {link.title && (
+                                                    <span className="text-xs text-gray-400">
+                                                        {getUrlDomain(link.url)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </a>
+                                    ))
+                                ) : task.linkURL && (
+                                    /* Legacy single link fallback */
                                     <a
                                         href={task.linkURL}
                                         target="_blank"
@@ -375,15 +444,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                             bg-brand-accent/5 border border-brand-accent/20
                                             hover:bg-brand-accent/10 transition-colors"
                                         title={task.linkURL}
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        <ExternalLink size={16} className="text-brand-accent flex-shrink-0" />
+                                        <ExternalLink size={16} className="text-brand-accent shrink-0" />
                                         <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                                {getUrlDomain(task.linkURL)}
+                                            <span className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                                {task.linkTitle || getUrlDomain(task.linkURL)}
                                             </span>
-                                            <span className="text-xs text-gray-400 truncate max-w-[200px]">
-                                                {task.linkURL}
-                                            </span>
+                                            {task.linkTitle && (
+                                                <span className="text-xs text-gray-400">
+                                                    {getUrlDomain(task.linkURL)}
+                                                </span>
+                                            )}
                                         </div>
                                     </a>
                                 )}
@@ -402,8 +474,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                                 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
                                                 text-sm font-medium hover:border-brand-accent transition-colors"
                                             title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
+                                            onClick={(e) => e.stopPropagation()}
                                         >
-                                            <FileIcon size={16} className={`flex-shrink-0 ${iconColor}`} />
+                                            <FileIcon size={16} className={`shrink-0 ${iconColor}`} />
                                             <span className="truncate max-w-[150px] text-gray-700 dark:text-gray-300">{attachment.filename}</span>
                                         </a>
                                     );
@@ -645,7 +718,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         >
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl flex-shrink-0">
+            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shrink-0">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -668,7 +741,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                             {typeof document !== 'undefined' && isDatePickerOpen && createPortal(
                                 <div
                                     ref={datePopoverRef}
-                                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
+                                    className="fixed z-9999 bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
                                     style={{
                                         top: datePickerPosition.top,
                                         left: datePickerPosition.left,
@@ -741,7 +814,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                     </div>
 
                     {/* Right: Connection Info (Compact) */}
-                    <div className="flex-shrink-0 flex items-center gap-4">
+                    <div className="shrink-0 flex items-center gap-4">
                         <div className="text-right">
                             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Join at</p>
                             <p className="text-base font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2 flex items-center justify-end gap-1">

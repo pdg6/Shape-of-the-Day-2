@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { CheckCircle, Activity, Users, Copy, Check, ListChecks } from 'lucide-react';
+import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../shared/Button';
@@ -38,6 +38,24 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
     const handleViewChange = (view: 'students' | 'tasks') => {
         setInternalView(view);
         onViewChange?.(view);
+    };
+
+    // Handle deleting a student from the live session
+    const handleDeleteStudent = async (studentUid: string, studentName: string) => {
+        if (!currentClassId) return;
+
+        const confirmed = window.confirm(
+            `Are you sure you want to remove "${studentName}" from the class?\n\nThis will remove them from the active session and clear their progress data.`
+        );
+
+        if (confirmed) {
+            try {
+                await deleteDoc(doc(db, 'classrooms', currentClassId, 'live_students', studentUid));
+            } catch (error) {
+                console.error('Error deleting student:', error);
+                alert('Failed to remove student. Please try again.');
+            }
+        }
     };
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
@@ -202,7 +220,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                     )}
                 </div>
             ) : internalView === 'students' ? (
-                <StudentListView students={students} totalTasks={tasks.length} tasks={tasks} />
+                <StudentListView students={students} totalTasks={tasks.length} tasks={tasks} onDelete={handleDeleteStudent} />
             ) : (
                 <TaskListView tasks={tasks} students={students} />
             )}
@@ -212,7 +230,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
 // --- Sub-Components ---
 
-const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[] }> = ({ students, totalTasks, tasks }) => {
+const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, totalTasks, tasks, onDelete }) => {
     return (
         <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
             <table className="w-full text-left">
@@ -222,6 +240,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Current Task</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase w-1/3">Progress</th>
+                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-16 text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -252,6 +271,16 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                             {student.metrics.tasksCompleted} / {totalTasks}
                                         </span>
                                     </div>
+                                </td>
+                                <td className="p-4 text-center">
+                                    <button
+                                        onClick={() => onDelete(student.uid, student.displayName)}
+                                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+                                        title={`Remove ${student.displayName} from class`}
+                                        aria-label={`Remove ${student.displayName} from class`}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 </td>
                             </tr>
                         );

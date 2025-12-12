@@ -88,7 +88,22 @@
 }
 
 body {
-    @apply bg-[#141211] text-[#F2EFEA] antialiased;
+    @apply bg-brand-textDarkPrimary text-brand-textPrimary antialiased;
+    cursor: default;
+    caret-color: transparent;
+}
+
+/* Text cursor only on actual text input elements */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="tel"],
+input[type="number"],
+textarea,
+[contenteditable="true"] {
+    cursor: text;
 }
 
 /* ============================================
@@ -350,7 +365,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .skeleton-card {
-        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-20 w-full rounded-xl;
+        @apply bg-gray-200 dark:bg-gray-700 animate-pulse h-20 w-full rounded-xl;
     }
 
     /* ============================================

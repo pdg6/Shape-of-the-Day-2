@@ -1,45 +1,42 @@
+"use strict";
 /**
  * Firebase Cloud Functions - Shape of the Day AI Agents
- * 
+ *
  * Entry point for all Cloud Functions.
  * Exports:
  * - onTaskAttachmentChange: Ingests new attachments into Vector DB (disabled - needs Genkit setup)
  * - answerStudentQuestion: Callable function for AI Q&A (disabled - needs Genkit setup)
  * - fetchUrlMetadata: Fetches webpage titles for link resources
  */
-
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.fetchUrlMetadata = void 0;
 // Disabled imports - used by AI functions that are currently disabled
 // import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { initializeApp } from 'firebase-admin/app';
+const https_1 = require("firebase-functions/v2/https");
+const app_1 = require("firebase-admin/app");
 // import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 // import { getStorage } from 'firebase-admin/storage';
-
 // Genkit AI imports - disabled until Genkit is properly configured
 // import { configureGenkit } from '@genkit-ai/core';
 // import { googleAI } from '@genkit-ai/googleai';
 // import { textEmbeddingGecko001, gemini15Flash } from '@genkit-ai/googleai';
 // import { embed, generate } from '@genkit-ai/ai';
-
 // Initialize Firebase Admin
-initializeApp();
+(0, app_1.initializeApp)();
 // const db = getFirestore();
 // const storage = getStorage();
-
 // Genkit configuration - disabled until properly set up
 // configureGenkit({
 //     plugins: [googleAI()],
 //     logLevel: 'info',
 //     enableTracingAndMetrics: true,
 // });
-
 // =============================================================================
 // AI FUNCTIONS - DISABLED UNTIL GENKIT IS PROPERLY CONFIGURED
 // =============================================================================
 // The following functions require Genkit AI to be properly set up.
 // Uncomment them once you have configured the Genkit dependencies.
 // =============================================================================
-
 /*
 // Triggered when a task document is updated.
 // If attachments have changed, extract text and generate embeddings.
@@ -186,85 +183,70 @@ Please provide a helpful, age-appropriate answer. If you don't have enough infor
     }
 );
 */
-
 // =============================================================================
 // URL METADATA FUNCTION - ACTIVE
 // =============================================================================
-
 /**
  * Callable function to fetch URL metadata (title, site name).
  * Uses YouTube oEmbed for video URLs, HTML parsing for other sites.
  */
-export const fetchUrlMetadata = onCall(
-    { cors: true },
-    async (request) => {
-        const { url } = request.data;
-
-        if (!url || typeof url !== 'string') {
-            throw new HttpsError('invalid-argument', 'url is required');
-        }
-
-        console.log(`[Metadata] Fetching metadata for: ${url}`);
-
-        try {
-            // Validate URL format
-            let parsedUrl: URL;
-            try {
-                parsedUrl = new URL(url);
-            } catch {
-                throw new HttpsError('invalid-argument', 'Invalid URL format');
-            }
-
-            const hostname = parsedUrl.hostname.toLowerCase();
-
-            // Check if it's a YouTube URL
-            if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
-                return await fetchYouTubeMetadata(url);
-            }
-
-            // For other URLs, fetch and parse HTML
-            return await fetchGenericMetadata(url, hostname);
-        } catch (error: any) {
-            console.error('[Metadata] Error fetching metadata:', error);
-            // Return a graceful fallback instead of throwing
-            return {
-                title: null,
-                siteName: null,
-                error: error.message || 'Failed to fetch metadata',
-            };
-        }
+exports.fetchUrlMetadata = (0, https_1.onCall)({ cors: true }, async (request) => {
+    const { url } = request.data;
+    if (!url || typeof url !== 'string') {
+        throw new https_1.HttpsError('invalid-argument', 'url is required');
     }
-);
-
+    console.log(`[Metadata] Fetching metadata for: ${url}`);
+    try {
+        // Validate URL format
+        let parsedUrl;
+        try {
+            parsedUrl = new URL(url);
+        }
+        catch {
+            throw new https_1.HttpsError('invalid-argument', 'Invalid URL format');
+        }
+        const hostname = parsedUrl.hostname.toLowerCase();
+        // Check if it's a YouTube URL
+        if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
+            return await fetchYouTubeMetadata(url);
+        }
+        // For other URLs, fetch and parse HTML
+        return await fetchGenericMetadata(url, hostname);
+    }
+    catch (error) {
+        console.error('[Metadata] Error fetching metadata:', error);
+        // Return a graceful fallback instead of throwing
+        return {
+            title: null,
+            siteName: null,
+            error: error.message || 'Failed to fetch metadata',
+        };
+    }
+});
 /**
  * Fetch YouTube video metadata using oEmbed API
  */
-async function fetchYouTubeMetadata(url: string): Promise<{ title: string | null; siteName: string }> {
+async function fetchYouTubeMetadata(url) {
     const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
-
     const response = await fetch(oembedUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ShapeOfTheDay/1.0)' },
     });
-
     if (!response.ok) {
         console.log(`[Metadata] YouTube oEmbed failed with status ${response.status}`);
         return { title: null, siteName: 'YouTube' };
     }
-
     const data = await response.json();
     return {
         title: data.title || null,
         siteName: 'YouTube',
     };
 }
-
 /**
  * Fetch generic webpage metadata by parsing HTML
  */
-async function fetchGenericMetadata(url: string, hostname: string): Promise<{ title: string | null; siteName: string }> {
+async function fetchGenericMetadata(url, hostname) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-
     try {
         const response = await fetch(url, {
             headers: {
@@ -273,41 +255,34 @@ async function fetchGenericMetadata(url: string, hostname: string): Promise<{ ti
             },
             signal: controller.signal,
         });
-
         clearTimeout(timeout);
-
         if (!response.ok) {
             return { title: null, siteName: hostname.replace('www.', '') };
         }
-
         const html = await response.text();
-
         // Try to extract og:title first
         const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i)
             || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:title["']/i);
-
         if (ogTitleMatch && ogTitleMatch[1]) {
             return { title: decodeHtmlEntities(ogTitleMatch[1]), siteName: hostname.replace('www.', '') };
         }
-
         // Fall back to <title> tag
         const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
         if (titleMatch && titleMatch[1]) {
             return { title: decodeHtmlEntities(titleMatch[1].trim()), siteName: hostname.replace('www.', '') };
         }
-
         return { title: null, siteName: hostname.replace('www.', '') };
-    } catch (error: any) {
+    }
+    catch (error) {
         clearTimeout(timeout);
         console.log(`[Metadata] Failed to fetch ${url}:`, error.message);
         return { title: null, siteName: hostname.replace('www.', '') };
     }
 }
-
 /**
  * Decode common HTML entities
  */
-function decodeHtmlEntities(text: string): string {
+function decodeHtmlEntities(text) {
     return text
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
@@ -319,4 +294,4 @@ function decodeHtmlEntities(text: string): string {
         .replace(/&#x2F;/g, '/')
         .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec));
 }
-
+//# sourceMappingURL=index.js.map

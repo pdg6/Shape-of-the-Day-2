@@ -86,7 +86,11 @@ export interface Task {
     questionHistory?: QuestionEntry[]; // Array of student questions for this task
 
     // --- Teacher-side scheduling fields ---
-    linkURL?: string;        // Resource link
+    // Legacy single link fields (for backwards compatibility)
+    linkURL?: string;        // Resource link (deprecated, use links array)
+    linkTitle?: string;      // Fetched title (deprecated, use links array)
+    // New multiple links support
+    links?: LinkAttachment[]; // Array of URL links with metadata
     imageURL?: string;       // Attachment URL (legacy, prefer attachments array)
     startDate?: string;      // YYYY-MM-DD
     endDate?: string;        // YYYY-MM-DD
@@ -97,13 +101,21 @@ export interface Task {
     updatedAt?: any;         // Firebase Timestamp
 }
 
+// Interface for URL link attachments on tasks
+export interface LinkAttachment {
+    id: string;              // Unique identifier for the link
+    url: string;             // The URL
+    title?: string;          // Fetched page/video title
+    addedAt: any;            // Firebase Timestamp
+}
+
 // Type for creating a new task (without id and with optional fields)
 export interface TaskFormData {
     title: string;
     description: string;
     type: ItemType;
     parentId: string | null;
-    linkURL: string;
+    links?: LinkAttachment[]; // Array of URL links
     startDate: string;
     endDate: string;
     selectedRoomIds: string[];

@@ -331,7 +331,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/5 hover:text-brand-accent transition-all focus:outline-none"
                                         title="Create New Class"
                                     >
-                                        <div className="p-2 rounded-full bg-brand-accent/10">
+                                        <div className="p-2">
                                             <Plus className="w-6 h-6" />
                                         </div>
                                         <span className="text-[10px] font-bold uppercase text-center leading-tight">Create<br />Class</span>

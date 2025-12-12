@@ -725,10 +725,10 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                 {/* Content Header - h-16 matches sidebar header height */}
                 <div className="h-16 flex-shrink-0 flex items-center justify-between px-4">
                     <div className="flex items-baseline gap-3">
-                        <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <span className="text-fluid-lg font-black text-gray-400">
                             Tasks:
                         </span>
-                        <span className="text-fluid-xl font-black text-brand-accent">
+                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
                             Inventory
                         </span>
                     </div>
