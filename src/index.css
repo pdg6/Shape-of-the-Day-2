@@ -881,3 +881,88 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     pointer-events: none;
     z-index: 10;
 }
+
+/* ============================================
+   CodeBlockRenderer Styles (Shape of the Day)
+   Matches ProseMirror editor styles for consistency
+   ============================================ */
+
+/* List styling for rendered content */
+.code-block-renderer ul,
+.code-block-renderer ol {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+.code-block-renderer ul {
+    list-style-type: disc;
+}
+
+.code-block-renderer ol {
+    list-style-type: decimal;
+}
+
+.code-block-renderer li {
+    margin: 0.25rem 0;
+}
+
+/* Strong/bold and emphasis/italic */
+.code-block-renderer strong {
+    font-weight: 700;
+}
+
+.code-block-renderer em {
+    font-style: italic;
+}
+
+/* Heading styles */
+.code-block-renderer h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.code-block-renderer h2 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.code-block-renderer h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Inline code styling */
+.code-block-renderer code:not(pre code) {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: 0.25rem;
+    padding: 0.15rem 0.4rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.875em;
+    color: #3b82f6;
+}
+
+.dark .code-block-renderer code:not(pre code) {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+/* Blockquote styling */
+.code-block-renderer blockquote {
+    border-left: 3px solid var(--color-brand-accent);
+    padding-left: 1rem;
+    margin-left: 0;
+    color: #6b7280;
+}
+
+.dark .code-block-renderer blockquote {
+    color: #9ca3af;
+}

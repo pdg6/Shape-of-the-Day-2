@@ -15,6 +15,7 @@ import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import { format, parse, isValid } from 'date-fns';
 import { createPortal } from 'react-dom';
 import 'react-day-picker/style.css';
+import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 
 // --- Types ---
 interface Task {
@@ -183,96 +184,135 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => {
-    const TypeIcon = getTypeIcon(task.type || 'task');
-    const typeColors = getTypeColorClasses(task.type || 'task');
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const hierarchicalNumber = getHierarchicalNumber(task, allTasks, today);
-    const indent = depth * 24;
+    const indent = depth * 32; // Increased from 24 for better hierarchy visualization
+
+    // Get type-specific border color for left accent
+    const getTypeBorderColor = (type: ItemType): string => {
+        switch (type) {
+            case 'project': return 'border-l-purple-500';
+            case 'assignment': return 'border-l-blue-500';
+            case 'task': return 'border-l-green-500';
+            case 'subtask': return 'border-l-orange-500';
+        }
+    };
+    const typeBorderColor = getTypeBorderColor(task.type || 'task');
 
     // Separate image attachments from other files
     const imageAttachments = task.attachments?.filter(a => a.mimeType.startsWith('image/')) || [];
     const fileAttachments = task.attachments?.filter(a => !a.mimeType.startsWith('image/')) || [];
     const hasMedia = imageAttachments.length > 0 || fileAttachments.length > 0 || task.linkURL || task.imageURL;
 
+    // Only show date if different from current view date
+    const showDate = task.endDate && task.endDate !== today;
+
+    // Calculate child tasks for progress bar
+    const childTasks = allTasks.filter(t => t.parentId === task.id);
+    const completedChildren = childTasks.filter(t => t.status === 'done').length;
+    const hasChildren = childTasks.length > 0;
+
     return (
         <div
-            className="group bg-brand-lightSurface dark:bg-brand-darkSurface 
-                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 
-                transition-all hover:border-brand-accent/50"
+            className={`group bg-brand-lightSurface dark:bg-brand-darkSurface 
+                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-5
+                border-l-4 ${typeBorderColor}
+                transition-all duration-200
+                hover:border-brand-accent/50 hover:shadow-lg hover:shadow-brand-accent/5
+                hover:-translate-y-0.5 relative
+                ${task.status === 'done' ? 'opacity-60' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
                 width: `calc(100% - ${indent}px)`
             }}
         >
-            {/* Three-Column Layout */}
-            <div className="flex gap-4">
-                {/* Column 1: Number + Icon + Title */}
-                <div className="flex-shrink-0 flex gap-3">
-                    {/* Number Badge + Type Icon */}
-                    <div className="flex flex-col items-end gap-1 w-8">
-                        <span className="text-xs font-bold text-gray-400">
-                            {hierarchicalNumber}
-                        </span>
-                        <div className={`
-                            w-8 h-8 rounded-md border-2 
-                            flex items-center justify-center
-                            ${typeColors}
-                        `}>
-                            <TypeIcon size={14} />
-                        </div>
-                    </div>
+            {/* Expand/Collapse Toggle - Top Right */}
+            {((task.description && task.description.length > 150) || hasMedia) && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDescriptionExpanded(!isDescriptionExpanded);
+                    }}
+                    className="absolute top-3 right-3 p-1.5 rounded-lg z-20
+                        text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10
+                        transition-colors opacity-0 group-hover:opacity-100"
+                    style={{ opacity: isDescriptionExpanded ? 1 : undefined }}
+                    title={isDescriptionExpanded ? 'Collapse' : 'Expand'}
+                >
+                    {isDescriptionExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
+            )}
 
-                    {/* Title + Due Date */}
-                    <div className="min-w-[180px] max-w-[250px]">
-                        <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight">
+            {/* Horizontal Layout: Number + Title + Date */}
+            <div className="flex gap-4">
+                {/* Number with colored underline */}
+                <span className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
+                    underline decoration-2 underline-offset-4
+                    ${task.type === 'project' ? 'decoration-purple-500' : ''}
+                    ${task.type === 'assignment' ? 'decoration-blue-500' : ''}
+                    ${task.type === 'task' || !task.type ? 'decoration-emerald-500' : ''}
+                    ${task.type === 'subtask' ? 'decoration-orange-500' : ''}
+                `}>
+                    {hierarchicalNumber}
+                </span>
+
+                {/* Title + Description + Resources */}
+                <div className="flex-1 min-w-0">
+                    {/* Title + Due Date Row */}
+                    <div className="flex items-baseline gap-3">
+                        <h3 className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
+                            ${task.status === 'done' ? 'line-through decoration-2 decoration-gray-400' : ''}`}>
                             {task.title}
                         </h3>
-                        {task.endDate && (
-                            <p className="text-sm text-gray-500 mt-0.5 font-medium">
-                                {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                            </p>
+                        {showDate && (
+                            <span className="text-sm text-gray-400 font-medium flex-shrink-0">
+                                Due {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </span>
                         )}
                     </div>
-                </div>
 
-                {/* Column 2: Description (fills available space) */}
-                <div className="flex-1 min-w-0">
+                    {/* Progress Bar for Parent Tasks */}
+                    {hasChildren && (
+                        <div className="mt-2">
+                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                                <span className="font-medium">{completedChildren}/{childTasks.length} complete</span>
+                            </div>
+                            <div className="mt-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-brand-accent rounded-full transition-all duration-300"
+                                    style={{ width: `${childTasks.length > 0 ? (completedChildren / childTasks.length) * 100 : 0}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Description */}
                     {task.description && (
-                        <div className="space-y-2">
+                        <div className="mt-2">
                             {/* Description - supports HTML or plain text */}
                             {containsHtml(task.description) ? (
-                                <div
-                                    className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary prose prose-sm dark:prose-invert max-w-none ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}
-                                    dangerouslySetInnerHTML={{ __html: task.description }}
+                                <CodeBlockRenderer
+                                    key={`desc-${task.id}-${isDescriptionExpanded}`}
+                                    html={task.description}
+                                    isExpanded={isDescriptionExpanded}
+                                    className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary"
                                 />
                             ) : (
-                                <div className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                                <div className={`text-base text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
                                     {task.description}
                                 </div>
                             )}
-                            {task.description.length > 150 && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsDescriptionExpanded(!isDescriptionExpanded);
-                                    }}
-                                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-brand-accent transition-colors"
-                                >
-                                    {isDescriptionExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                    {isDescriptionExpanded ? 'Show less' : 'Show more'}
-                                </button>
-                            )}
                         </div>
                     )}
-                </div>
 
-                {/* Column 3: Resources (only shown if media exists) */}
-                {hasMedia && (
-                    <div className="flex-shrink-0 w-48 space-y-2">
-                        {/* Image Thumbnails */}
-                        {(imageAttachments.length > 0 || task.imageURL) && (
-                            <div className="flex flex-wrap gap-1">
-                                {/* Legacy imageURL */}
+                    {/* Resources Row - Below Description, only shown when expanded */}
+                    {hasMedia && isDescriptionExpanded && (
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                Resources
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                {/* Image Thumbnails - Larger */}
                                 {task.imageURL && (
                                     <a
                                         href={task.imageURL}
@@ -283,12 +323,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
                                         <img
                                             src={task.imageURL}
                                             alt=""
-                                            className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
                                             loading="lazy"
                                         />
                                     </a>
                                 )}
-                                {/* Image attachments */}
                                 {imageAttachments.map((img) => (
                                     <a
                                         key={img.id}
@@ -301,56 +340,64 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
                                         <img
                                             src={img.url}
                                             alt={img.filename}
-                                            className="w-12 h-12 object-cover rounded-lg border border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
                                             loading="lazy"
                                         />
                                     </a>
                                 ))}
+
+                                {/* Resource Link - Enhanced */}
+                                {task.linkURL && (
+                                    <a
+                                        href={task.linkURL}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 px-3 py-2 rounded-lg
+                                            bg-brand-accent/5 border border-brand-accent/20
+                                            hover:bg-brand-accent/10 transition-colors"
+                                        title={task.linkURL}
+                                    >
+                                        <ExternalLink size={16} className="text-brand-accent flex-shrink-0" />
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                {getUrlDomain(task.linkURL)}
+                                            </span>
+                                            <span className="text-xs text-gray-400 truncate max-w-[200px]">
+                                                {task.linkURL}
+                                            </span>
+                                        </div>
+                                    </a>
+                                )}
+
+                                {/* File Attachments */}
+                                {fileAttachments.map((attachment) => {
+                                    const FileIcon = getFileIcon(attachment.mimeType);
+                                    const iconColor = getFileIconColor(attachment.mimeType);
+                                    return (
+                                        <a
+                                            key={attachment.id}
+                                            href={attachment.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-3 py-2 rounded-lg
+                                                bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+                                                text-sm font-medium hover:border-brand-accent transition-colors"
+                                            title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
+                                        >
+                                            <FileIcon size={16} className={`flex-shrink-0 ${iconColor}`} />
+                                            <span className="truncate max-w-[150px] text-gray-700 dark:text-gray-300">{attachment.filename}</span>
+                                        </a>
+                                    );
+                                })}
                             </div>
-                        )}
-
-                        {/* Resource Link */}
-                        {task.linkURL && (
-                            <a
-                                href={task.linkURL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg
-                                    bg-brand-accent/10 text-brand-accent border border-brand-accent/20
-                                    text-xs font-medium hover:bg-brand-accent/20 transition-colors w-full"
-                                title={task.linkURL}
-                            >
-                                <ExternalLink size={12} className="flex-shrink-0" />
-                                <span className="truncate">{getUrlDomain(task.linkURL)}</span>
-                            </a>
-                        )}
-
-                        {/* File Attachments */}
-                        {fileAttachments.map((attachment) => {
-                            const FileIcon = getFileIcon(attachment.mimeType);
-                            const iconColor = getFileIconColor(attachment.mimeType);
-                            return (
-                                <a
-                                    key={attachment.id}
-                                    href={attachment.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg
-                                        bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                                        text-xs font-medium hover:border-brand-accent transition-colors w-full`}
-                                    title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
-                                >
-                                    <FileIcon size={12} className={`flex-shrink-0 ${iconColor}`} />
-                                    <span className="truncate text-gray-700 dark:text-gray-300">{attachment.filename}</span>
-                                </a>
-                            );
-                        })}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
 };
+
 
 interface ShapeOfDayProps {
     onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms', subTab?: string) => void;
