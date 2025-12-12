@@ -1133,3 +1133,261 @@ useEffect(() => {
   100% { transform: translateY(0); opacity: 1; }
 }
 ```
+
+---
+
+## Shape of the Day Presentation Cards
+
+The Shape of the Day view (`ShapeOfDay.tsx`) is designed for classroom projection and presentation. Task cards are optimized for readability at a distance with large typography, clear visual hierarchy, and teacher-friendly presentation features.
+
+### Card Layout Structure
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│ [4px type-colored left accent bar]                           │
+│                                                              │
+│  1.2     Task Title                      Due Mon, Dec 16     │
+│  ───     ──────────                                          │
+│  (underline matches type color)                              │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Progress: 2/3 complete  ████████████░░░░            │   │ (only for parent tasks)
+│  └──────────────────────────────────────────────────────┘   │
+│                                                              │
+│  Description text with full rich text support...             │
+│  - Bullet lists                                              │
+│  - **Bold** and *italic*                                     │
+│  - Code blocks with copy button                              │
+│                                                              │
+│  ─────────────────────────────────────────────────────────   │
+│  Resources                                                   │
+│  [80x80 image] [80x80 image] [📎 document.pdf] [🔗 link]    │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+### Visual Hierarchy
+
+| Element | Size | Weight | Color |
+|---------|------|--------|-------|
+| Task Number | `text-xl` (20px) | `font-black` | Primary text + type-colored underline |
+| Task Title | `text-xl` (20px) | `font-black` | Primary text |
+| Due Date | `text-sm` | `font-medium` | `gray-400` |
+| Description | `text-base` (16px) | Regular | Primary text |
+| Resources Label | `text-xs` | `font-semibold` | `gray-400` uppercase |
+
+### Type-Colored Accents
+
+Each task type has a distinct color applied to the left border and number underline:
+
+| Type | Border Color | Tailwind Class |
+|------|--------------|----------------|
+| Project | Purple | `border-l-purple-500`, `decoration-purple-500` |
+| Assignment | Blue | `border-l-blue-500`, `decoration-blue-500` |
+| Task | Emerald | `border-l-green-500`, `decoration-emerald-500` |
+| Subtask | Orange | `border-l-orange-500`, `decoration-orange-500` |
+
+### Interactive States
+
+```jsx
+// Card container classes
+className={`
+  group bg-brand-lightSurface dark:bg-brand-darkSurface 
+  border-2 border-gray-200 dark:border-gray-700 rounded-xl p-5
+  border-l-4 ${typeBorderColor}
+  transition-all duration-200
+  hover:border-brand-accent/50 hover:shadow-lg hover:shadow-brand-accent/5
+  hover:-translate-y-0.5 relative cursor-pointer
+  ${task.status === 'done' ? 'opacity-60' : ''}
+`}
+```
+
+- **Hover:** Accent-tinted border, shadow elevation, slight lift (`-translate-y-0.5`)
+- **Completed:** 60% opacity, strikethrough title
+- **Double-click:** Toggles description expand/collapse
+
+### Description Rendering
+
+Descriptions support full rich text from TipTap editor via `CodeBlockRenderer`:
+
+#### Prose Styling
+- Uses Tailwind Typography plugin (`prose prose-lg dark:prose-invert`)
+- Line-clamped to 3 lines when collapsed
+- Expand/collapse via chevron button or double-click
+
+#### Code Blocks
+```jsx
+// Code block styling in CodeBlockRenderer
+<pre className="relative rounded-lg overflow-hidden border-2 border-gray-400 dark:border-gray-600">
+  <button className="absolute top-4 right-4 p-1.5 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-400 hover:text-white z-10">
+    {/* Copy button */}
+  </button>
+  <code style={{ padding: '16px', display: 'block' }}>
+    {/* Syntax-highlighted code */}
+  </code>
+</pre>
+```
+
+Features:
+- 16px internal padding
+- Copy button in top-right corner
+- Syntax highlighting via lowlight
+- Dark background (`bg-gray-900`)
+
+#### CSS Classes for Rendered Content
+Located in `index.css` under `.code-block-renderer`:
+
+```css
+/* List styling */
+.code-block-renderer ol { list-style-type: decimal; padding-left: 1.5rem; }
+.code-block-renderer ul { list-style-type: disc; padding-left: 1.5rem; }
+
+/* Headings */
+.code-block-renderer h1 { font-size: 1.75rem; font-weight: 700; }
+.code-block-renderer h2 { font-size: 1.375rem; font-weight: 700; }
+.code-block-renderer h3 { font-size: 1.125rem; font-weight: 600; }
+
+/* Inline code */
+.code-block-renderer code:not(pre code) {
+  background-color: rgba(59, 130, 246, 0.1);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #3b82f6;
+}
+```
+
+### Resources Display
+
+Resources appear in a dedicated row below the description (only when expanded):
+
+```jsx
+<div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+  <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+    Resources
+  </div>
+  <div className="flex flex-wrap items-center gap-3">
+    {/* Image thumbnails, file attachments, links */}
+  </div>
+</div>
+```
+
+#### Image Thumbnails
+- Size: `80x80px` (`w-20 h-20`)
+- Border: `border-2 border-gray-200 dark:border-gray-700`
+- Hover: `hover:border-brand-accent`
+- Object fit: `cover` with `rounded-lg`
+
+#### File Attachments
+- Semantic file icons with type-specific colors:
+  - 📷 Images: Pink (`text-pink-500`)
+  - 🎬 Video: Purple (`text-purple-500`)
+  - 🎵 Audio: Cyan (`text-cyan-500`)
+  - 📊 Spreadsheets: Green (`text-green-500`)
+  - 📑 Presentations: Orange (`text-orange-500`)
+  - 📕 PDF: Red (`text-red-500`)
+- Background: `bg-gray-100 dark:bg-gray-800`
+- Shows filename and size on hover
+
+#### Link Cards
+```jsx
+<a className="flex items-center gap-2 px-3 py-2 rounded-lg
+    bg-brand-accent/5 border border-brand-accent/20
+    hover:bg-brand-accent/10 transition-colors">
+  <ExternalLink size={16} className="text-brand-accent" />
+  <div className="flex flex-col">
+    <span className="text-sm font-medium">{domain}</span>
+    <span className="text-xs text-gray-400 truncate max-w-[200px]">{url}</span>
+  </div>
+</a>
+```
+
+### Progress Bar for Parent Tasks
+
+Tasks with children display a completion progress bar:
+
+```jsx
+{hasChildren && (
+  <div className="mt-2">
+    <div className="flex items-center gap-2 text-xs text-gray-400">
+      <span className="font-medium">{completedChildren}/{childTasks.length} complete</span>
+    </div>
+    <div className="mt-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div 
+        className="h-full bg-brand-accent rounded-full transition-all duration-300"
+        style={{ width: `${(completedChildren / childTasks.length) * 100}%` }}
+      />
+    </div>
+  </div>
+)}
+```
+
+### Completed Task Styling
+
+When `task.status === 'done'`:
+- Card opacity: `opacity-60`
+- Title: `line-through decoration-2 decoration-gray-400`
+
+### Presentation Mode Features
+
+#### Fullscreen Toggle
+- Button location: Header row, right of "Active Students" badge
+- Icon: `Maximize2` / `Minimize2` from Lucide
+- Keyboard shortcut: **F** key
+- Exit: **Escape** key or click button
+- Fullscreen adds `p-6` padding to container
+
+```jsx
+<button
+  onClick={toggleFullscreen}
+  className="p-1.5 rounded-lg text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10"
+  title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Enter Fullscreen (F)'}
+>
+  {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+</button>
+```
+
+#### Double-Click to Expand
+- Double-clicking any task card toggles expand/collapse
+- Same behavior as the chevron button
+
+#### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| **F** | Toggle fullscreen mode |
+| **Escape** | Exit fullscreen mode |
+
+### Header Layout
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  Dec 12, 2024    👥 3 Active    [⛶]     │     Join at: domain/join     │
+│  ─────────────                          │     Class Code: ABC123       │
+│  Class Name Here                        │     [QR Code]                │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Date picker:** Accent-styled pill button with calendar icon
+- **Active students:** Emerald-styled pill, clickable to navigate to LiveView
+- **Fullscreen button:** Gray icon, accent on hover
+- **QR Code:** 80x80px, links to join URL with class code
+
+### Hierarchical Indentation
+
+Child tasks indent by `32px` per depth level:
+
+```jsx
+style={{
+  marginLeft: `${depth * 32}px`,
+  width: `calc(100% - ${depth * 32}px)`
+}}
+```
+
+### Accessibility
+
+- `tabIndex={0}` for keyboard focus
+- `role="article"` semantic role
+- `aria-label={`Task: ${task.title}`}` for screen readers
+- Chevron button includes descriptive accessibility text

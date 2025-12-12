@@ -201,29 +201,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [_loadingTasks, setLoadingTasks] = useState(true);
 
-    // Single form editor state (replaces multi-card system)
-    const [formData, setFormData] = useState<TaskFormData>(() => {
-        try {
-            const stored = sessionStorage.getItem('taskManager.formData');
-            if (stored) {
-                return JSON.parse(stored) as TaskFormData;
-            }
-        } catch (e) {
-            console.warn('Failed to restore form data from sessionStorage:', e);
-        }
-        return { ...INITIAL_FORM_STATE };
-    });
-    const [editingTaskId, setEditingTaskId] = useState<string | null>(() => {
-        try {
-            const stored = sessionStorage.getItem('taskManager.editingTaskId');
-            if (stored) {
-                return stored === 'null' ? null : stored;
-            }
-        } catch (e) {
-            console.warn('Failed to restore editing task ID from sessionStorage:', e);
-        }
-        return null;
-    });
+    // Single form editor state - always start with blank form
+    // (sessionStorage only used for mid-session persistence, not initial load)
+    const [formData, setFormData] = useState<TaskFormData>({ ...INITIAL_FORM_STATE });
+    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
     const [isDirty, setIsDirty] = useState(false);
 
     // UI State
@@ -804,10 +785,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
                 if (!isAutoSave) {
                     handleSuccess(`${getTypeLabel(formData.type)} updated!`);
-                    setIsDirty(false);
-                    // Optionally reset or keep open depending on user flow. 
-                    // Current flow seems to be keep open or manual reset? 
-                    // Actually existing code only did setIsDirty(false).
+                    resetForm(); // Reset to new blank task card after saving
                 } else {
                     // Quiet update
                     setIsDirty(false); // It's saved now
@@ -900,9 +878,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             setSaveState('saving');
             await handleSave(true); // isAutoSave = true
             setSaveState('saved');
-            // Reset to idle after 2 seconds
-            setTimeout(() => setSaveState('idle'), 2000);
-        }, 2000); // 2 second debounce
+            // Reset to idle after 1.5 seconds
+            setTimeout(() => setSaveState('idle'), 1500);
+        }, 1000); // 1 second debounce for quick auto-save
 
         return () => clearTimeout(timer);
     }, [activeFormData, isDirty]);

@@ -6,9 +6,9 @@ import { db } from '../../firebase';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-    Users, ExternalLink, FolderOpen, FileText, ListChecks, CheckSquare,
-    ChevronDown, ChevronUp, Calendar, ChevronLeft, ChevronRight, X,
-    File, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation, Link2, Image as ImageIcon
+    Users, ExternalLink, FileText, ChevronDown, ChevronUp, Calendar, ChevronLeft, ChevronRight, X,
+    File, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation,
+    Maximize2, Minimize2, Pencil
 } from 'lucide-react';
 import { ItemType, Attachment } from '../../types';
 import { DayPicker, getDefaultClassNames } from 'react-day-picker';
@@ -86,26 +86,6 @@ const containsHtml = (str: string): boolean => {
     return /<[a-z][\s\S]*>/i.test(str);
 };
 
-// Get type-specific icon
-const getTypeIcon = (type: ItemType) => {
-    switch (type) {
-        case 'project': return FolderOpen;
-        case 'assignment': return FileText;
-        case 'task': return ListChecks;
-        case 'subtask': return CheckSquare;
-    }
-};
-
-// Get type color classes
-const getTypeColorClasses = (type: ItemType): string => {
-    switch (type) {
-        case 'project': return 'text-purple-500 bg-purple-500/10 border-purple-500';
-        case 'assignment': return 'text-blue-500 bg-blue-500/10 border-blue-500';
-        case 'task': return 'text-green-500 bg-green-500/10 border-green-500';
-        case 'subtask': return 'text-orange-500 bg-orange-500/10 border-orange-500';
-    }
-};
-
 // Build a tree structure from flat tasks
 interface TaskNode {
     task: Task;
@@ -154,17 +134,36 @@ const flattenTree = (nodes: TaskNode[], depth = 0): TaskNode[] => {
     return result;
 };
 
+// Check if a task is "ongoing" (multi-day and not due on the selected date)
+const isOngoingTask = (task: Task, forDate: string): boolean => {
+    if (!task.startDate || !task.endDate) return false;
+    // Multi-day task (spans more than one day) and not due on the selected date
+    return task.startDate !== task.endDate && task.endDate !== forDate;
+};
+
 // Get hierarchical number like "1.2.1" for nested tasks
+// Numbers all tasks in display order (ongoing tasks come after due tasks but still get sequential numbers)
 const getHierarchicalNumber = (task: Task, allTasks: Task[], forDate?: string): string => {
-    // For root tasks with date filter, only count siblings on the same day
+    // Get siblings - all root tasks or all children of the same parent
+    // Note: We don't filter by date here since we want sequential numbering based on display order
     const siblings = task.parentId
         ? allTasks.filter(t => t.parentId === task.parentId)
-        : forDate
-            ? allTasks.filter(t => !t.parentId && t.endDate === forDate)
-            : allTasks.filter(t => !t.parentId);
+        : allTasks.filter(t => !t.parentId);
 
-    // Sort by presentation order
-    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+    // Sort: due-today first (by presentationOrder), then ongoing (by presentationOrder)
+    if (forDate && !task.parentId) {
+        siblings.sort((a, b) => {
+            const aOngoing = isOngoingTask(a, forDate);
+            const bOngoing = isOngoingTask(b, forDate);
+            // If one is ongoing and one isn't, ongoing goes after
+            if (aOngoing !== bOngoing) return aOngoing ? 1 : -1;
+            // Otherwise sort by presentation order
+            return (a.presentationOrder || 0) - (b.presentationOrder || 0);
+        });
+    } else {
+        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+    }
+
     const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
 
     if (!task.parentId) return String(myIndex);
@@ -181,10 +180,12 @@ interface TaskCardProps {
     depth: number;
     allTasks: Task[];
     today: string;
+    onEdit?: (taskId: string) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdit }) => {
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+    const [isSelected, setIsSelected] = useState(false);
     const hierarchicalNumber = getHierarchicalNumber(task, allTasks, today);
     const indent = depth * 32; // Increased from 24 for better hierarchy visualization
 
@@ -204,9 +205,6 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
     const fileAttachments = task.attachments?.filter(a => !a.mimeType.startsWith('image/')) || [];
     const hasMedia = imageAttachments.length > 0 || fileAttachments.length > 0 || task.linkURL || task.imageURL;
 
-    // Only show date if different from current view date
-    const showDate = task.endDate && task.endDate !== today;
-
     // Calculate child tasks for progress bar
     const childTasks = allTasks.filter(t => t.parentId === task.id);
     const completedChildren = childTasks.filter(t => t.status === 'done').length;
@@ -219,12 +217,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
                 border-l-4 ${typeBorderColor}
                 transition-all duration-200
                 hover:border-brand-accent/50 hover:shadow-lg hover:shadow-brand-accent/5
-                hover:-translate-y-0.5 relative
-                ${task.status === 'done' ? 'opacity-60' : ''}`}
+                hover:-translate-y-0.5 relative cursor-pointer
+                ${task.status === 'done' ? 'opacity-60' : ''}
+                ${isSelected ? 'ring-2 ring-brand-accent/50' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
                 width: `calc(100% - ${indent}px)`
             }}
+            onClick={() => setIsSelected(!isSelected)}
+            onDoubleClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+            tabIndex={0}
+            role="article"
+            aria-label={`Task: ${task.title}`}
         >
             {/* Expand/Collapse Toggle - Top Right */}
             {((task.description && task.description.length > 150) || hasMedia) && (
@@ -245,16 +249,31 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
 
             {/* Horizontal Layout: Number + Title + Date */}
             <div className="flex gap-4">
-                {/* Number with colored underline */}
-                <span className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
-                    underline decoration-2 underline-offset-4
-                    ${task.type === 'project' ? 'decoration-purple-500' : ''}
-                    ${task.type === 'assignment' ? 'decoration-blue-500' : ''}
-                    ${task.type === 'task' || !task.type ? 'decoration-emerald-500' : ''}
-                    ${task.type === 'subtask' ? 'decoration-orange-500' : ''}
-                `}>
-                    {hierarchicalNumber}
-                </span>
+                {/* Number with Edit Button below */}
+                <div className="flex flex-col items-center gap-1">
+                    <span className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
+                        underline decoration-2 underline-offset-4
+                        ${task.type === 'project' ? 'decoration-purple-500' : ''}
+                        ${task.type === 'assignment' ? 'decoration-blue-500' : ''}
+                        ${task.type === 'task' || !task.type ? 'decoration-emerald-500' : ''}
+                        ${task.type === 'subtask' ? 'decoration-orange-500' : ''}
+                    `}>
+                        {hierarchicalNumber}
+                    </span>
+                    {/* Edit button - shows when card is selected */}
+                    {isSelected && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit?.(task.id);
+                            }}
+                            className="p-1 rounded-md text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10 transition-all duration-200"
+                            title="Edit task"
+                        >
+                            <Pencil size={14} />
+                        </button>
+                    )}
+                </div>
 
                 {/* Title + Description + Resources */}
                 <div className="flex-1 min-w-0">
@@ -264,9 +283,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
                             ${task.status === 'done' ? 'line-through decoration-2 decoration-gray-400' : ''}`}>
                             {task.title}
                         </h3>
-                        {showDate && (
+                        {task.endDate && (
                             <span className="text-sm text-gray-400 font-medium flex-shrink-0">
-                                Due {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                {task.endDate === today
+                                    ? 'Due Today'
+                                    : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
+                                }
                             </span>
                         )}
                     </div>
@@ -307,10 +329,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today }) => 
 
                     {/* Resources Row - Below Description, only shown when expanded */}
                     {hasMedia && isDescriptionExpanded && (
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                                Resources
-                            </div>
+                        <div className="mt-4">
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Image Thumbnails - Larger */}
                                 {task.imageURL && (
@@ -420,6 +439,10 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     const dateButtonRef = useRef<HTMLButtonElement>(null);
     const datePopoverRef = useRef<HTMLDivElement>(null);
 
+    // Presentation mode state
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
     // Parse selected date for display
     const parsedDate = parse(selectedDate, 'yyyy-MM-dd', new Date());
     const displayDateText = isValid(parsedDate) ? format(parsedDate, 'MMM d, yyyy') : selectedDate;
@@ -470,6 +493,28 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         }
     };
 
+    // Toggle fullscreen mode
+    const toggleFullscreen = useCallback(() => {
+        if (!document.fullscreenElement) {
+            containerRef.current?.requestFullscreen().catch(err => {
+                console.warn('Could not enter fullscreen:', err);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }, []);
+
+    // Track fullscreen state changes
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
+    // Note: Keyboard navigation useEffect is defined after displayTasks
+
     // --- Data Fetching ---
     useEffect(() => {
         if (!currentClassId || !user) {
@@ -519,8 +564,27 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     // Build hierarchical structure
     const taskTree = useMemo(() => buildTaskTree(tasks), [tasks]);
 
-    // Flatten for display - always show all children (no collapse)
+    // Flatten for display - sort ongoing tasks to bottom, always show all children (no collapse)
     const displayTasks = useMemo(() => {
+        // Separate root nodes into due-today and ongoing
+        const dueToday: TaskNode[] = [];
+        const ongoing: TaskNode[] = [];
+
+        taskTree.forEach(node => {
+            if (isOngoingTask(node.task, selectedDate)) {
+                ongoing.push(node);
+            } else {
+                dueToday.push(node);
+            }
+        });
+
+        // Sort each group by presentation order
+        dueToday.sort((a, b) => (a.task.presentationOrder || 0) - (b.task.presentationOrder || 0));
+        ongoing.sort((a, b) => (a.task.presentationOrder || 0) - (b.task.presentationOrder || 0));
+
+        // Combine: due-today first, then ongoing
+        const sortedRoots = [...dueToday, ...ongoing];
+
         const flatten = (nodes: TaskNode[], depth = 0): TaskNode[] => {
             const result: TaskNode[] = [];
             nodes.forEach(node => {
@@ -532,8 +596,34 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
             });
             return result;
         };
-        return flatten(taskTree);
-    }, [taskTree]);
+        return flatten(sortedRoots);
+    }, [taskTree, selectedDate]);
+
+    // Keyboard shortcuts for presentation mode
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't handle if date picker is open or typing in an input
+            if (isDatePickerOpen || (e.target as HTMLElement).tagName === 'INPUT') return;
+
+            switch (e.key) {
+                case 'Escape':
+                    if (isFullscreen) {
+                        document.exitFullscreen();
+                    }
+                    break;
+                case 'f':
+                    // Toggle fullscreen with 'f' key
+                    if (!e.ctrlKey && !e.metaKey) {
+                        e.preventDefault();
+                        toggleFullscreen();
+                    }
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isFullscreen, isDatePickerOpen, toggleFullscreen]);
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
@@ -548,7 +638,11 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     const joinUrl = `${window.location.origin}/join`;
 
     return (
-        <div className="h-full flex flex-col space-y-3 overflow-y-auto custom-scrollbar p-1 pt-4">
+        <div
+            ref={containerRef}
+            className={`h-full flex flex-col space-y-3 overflow-y-auto custom-scrollbar p-1 pt-4
+                ${isFullscreen ? 'bg-brand-light dark:bg-brand-dark p-6' : ''}`}
+        >
 
             {/* --- HEADER CARD (Compact) --- */}
             <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl flex-shrink-0">
@@ -631,6 +725,15 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                                 <Users size={12} />
                                 <span>{activeStudentCount} Active</span>
                             </button>
+
+                            {/* Fullscreen Toggle Button */}
+                            <button
+                                onClick={toggleFullscreen}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                                title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Enter Fullscreen (F)'}
+                            >
+                                {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                            </button>
                         </div>
                         <h1 className="text-fluid-3xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight leading-tight">
                             {currentClass.name}
@@ -682,6 +785,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                                 depth={node.depth}
                                 allTasks={tasks}
                                 today={selectedDate}
+                                onEdit={(taskId) => onNavigate?.('tasks', taskId)}
                             />
                         );
                     })
