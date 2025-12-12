@@ -410,6 +410,140 @@ The content body aligns with the sidebar's navigation buttons:
 
 ---
 
+## TeacherView Desktop Layout (Complete Specification)
+
+The TeacherView is the primary interface for authenticated teachers. This section documents the exact layout structure for pixel-perfect reproduction.
+
+### Global Shell Structure
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│  Root Container: flex h-full overflow-hidden                                  │
+│                  bg-brand-lightSurface dark:bg-brand-darkSurface              │
+├───────────────┬──────────────────────────────────────────┬──────────────────┤
+│   Left        │            Main Content Area             │     Right        │
+│   Sidebar     │            (flex-1)                      │     Connection   │
+│   (w-64/w-20) │                                          │     Sidebar      │
+│   Desktop     │                                          │     (Desktop)    │
+└───────────────┴──────────────────────────────────────────┴──────────────────┘
+```
+
+### Left Sidebar Navigation
+
+| State | Width | Content |
+|-------|-------|---------|
+| Expanded | `w-64` (256px) | Icons + labels + submenus |
+| Collapsed | `w-20` (80px) | Icons only |
+
+#### Sidebar Container Classes
+```jsx
+className={`
+  hidden md:flex md:static inset-y-0 left-0 z-sidebar
+  ${isCollapsed ? 'w-20' : 'w-64'}
+  bg-brand-lightSurface dark:bg-brand-darkSurface
+  transform transition-all duration-300 ease-in-out flex-col h-full overflow-hidden
+`}
+```
+
+#### Sidebar Sections (Top to Bottom)
+
+| Section | Height | Classes | Content |
+|---------|--------|---------|---------|
+| Header | `h-16` (64px) | `flex-shrink-0 flex items-center px-4` | Logo (40x40), App name, Date |
+| Navigation | `flex-1` | `px-4 pb-4 pt-4 overflow-y-auto custom-scrollbar` | Menu items with submenus |
+| Footer | auto | `px-4 pb-1 pt-4 space-y-2 flex-shrink-0` | Toggle, divider, Join Code, Settings |
+
+#### Navigation Button Specs
+
+| Property | Active | Inactive |
+|----------|--------|----------|
+| Border | `border-brand-accent` | `border-transparent` |
+| Background | `bg-brand-accent/5` | transparent |
+| Text Color | `text-brand-accent` | `text-gray-500` |
+| Shadow | `shadow-sm` | none |
+
+#### Menu Items
+
+| ID | Icon | Label | Submenu |
+|----|------|-------|---------|
+| `classrooms` | `School` | "Classrooms" | Class list + "Add Class" (click toggle) |
+| `tasks` | `ListTodo` | "Tasks" | "Create", "Inventory" (auto-expand) |
+| `shape` | `Presentation` | "Shape of Day" | None |
+| `live` | `Activity` | "Live View" | "By Task", "By Student" (auto-expand) |
+| `reports` | `BarChart2` | "Reports" | "Calendar", "Analytics" (auto-expand) |
+
+#### Submenu Animation
+```jsx
+className={`
+  grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
+  ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
+`}
+```
+
+### Main Content Area
+
+```jsx
+<main className="flex-1 flex flex-col min-w-0 relative">
+  <div className="flex-1 min-h-0 min-w-0 relative overflow-hidden">
+    <div className="h-full w-full overflow-y-auto overflow-x-hidden px-6 pb-[84px] md:pb-6">
+      {/* Tab content renders here */}
+    </div>
+  </div>
+</main>
+```
+
+### Mobile Bottom Navigation
+
+| Property | Value |
+|----------|-------|
+| Display | `md:hidden` (mobile only) |
+| Position | `fixed bottom-0 inset-x-0` |
+| Height | `h-24` (96px overall), `h-16` (64px buttons) |
+| Background | `footer-fade` (gradient) |
+| Z-Index | `z-sidebar` |
+
+#### Mobile Nav Button Specs
+
+```jsx
+className={`
+  flex flex-col items-center justify-center gap-1 p-2
+  w-16 h-16 rounded-xl border-2 transition-all duration-200
+  bg-brand-lightSurface dark:bg-brand-darkSurface
+  ${isActive ? 'border-brand-accent text-brand-accent' : 'border-transparent ...'}
+`}
+```
+
+| Item | Icon | Label |
+|------|------|-------|
+| Classes | `School` | "Classes" |
+| Tasks | `ListTodo` | "Tasks" |
+| Shape | `Presentation` | "Shape" |
+| Live | `Activity` | "Live" |
+| More | `Home` | "More" |
+
+### Tab Content Mapping
+
+| Tab | Subtab | Component |
+|-----|--------|-----------|
+| `tasks` | `create` | `TaskManager` |
+| `tasks` | `browse` | `TaskInventory` |
+| `shape` | — | `ShapeOfDay` |
+| `live` | `tasks`/`students` | `LiveView` |
+| `classrooms` | — | `ClassroomManager (classes)` |
+| `reports` | `calendar` | `ClassroomManager (history)` |
+| `reports` | `analytics` | `ClassroomManager (analytics)` |
+
+### For Full Specifications
+
+See [teacher-ui-blueprint.md](file:///c:/Users/16047/Desktop/Antigravity/Shape%20of%20the%20Day%202/teacher-ui-blueprint.md) for exhaustive pixel-perfect documentation including:
+- All CSS class specifications
+- State management details
+- Animation timing
+- ARIA accessibility attributes
+- Icon library reference
+
+---
+
 ## Layout Utilities
 
 ### Dynamic Viewport Height
