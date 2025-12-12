@@ -3,9 +3,10 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { CheckCircle, Activity, Users, Copy, Check } from 'lucide-react';
+import { CheckCircle, Activity, Users, Copy, Check, ListChecks } from 'lucide-react';
 import { StatusBadge } from '../shared/StatusBadge';
 import { QRCodeSVG } from 'qrcode.react';
+import { Button } from '../shared/Button';
 
 /**
  * LiveView Component
@@ -17,14 +18,27 @@ import { QRCodeSVG } from 'qrcode.react';
  */
 interface LiveViewProps {
     activeView?: 'students' | 'tasks';
+    onViewChange?: (view: 'students' | 'tasks') => void;
 }
 
-const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
+const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChange }) => {
     const { currentClassId, classrooms } = useClassStore();
     const [students, setStudents] = useState<LiveStudent[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [internalView, setInternalView] = useState<'students' | 'tasks'>(activeView);
+
+    // Sync internal state with prop changes
+    useEffect(() => {
+        setInternalView(activeView);
+    }, [activeView]);
+
+    // Handle view change - update internal state and notify parent
+    const handleViewChange = (view: 'students' | 'tasks') => {
+        setInternalView(view);
+        onViewChange?.(view);
+    };
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
     const joinUrl = `${window.location.origin}/join`;
@@ -89,21 +103,43 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
         <div className="space-y-6 animate-in fade-in duration-500">
             {/* Content Header - h-16 matches sidebar header height */}
             <div className="h-16 flex-shrink-0 flex items-center justify-between">
-                <div className="flex items-baseline gap-3">
-                    <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        Live View:
-                    </span>
-                    <span className="text-fluid-xl font-black text-brand-accent">
-                        {currentClass?.name || 'No Class Selected'}
-                    </span>
-                </div>
-
-                <div className="flex items-center gap-4">
+                {/* Left: Label + Class Name + Active Count */}
+                <div className="flex items-center gap-3">
+                    <div className="flex items-baseline gap-3">
+                        <span className="text-fluid-lg font-black text-gray-400">
+                            Live View:
+                        </span>
+                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                            {currentClass?.name || 'No Class Selected'}
+                        </span>
+                    </div>
                     {/* Active Count Badge */}
                     <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium border border-green-200 dark:border-green-800">
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                         {students.length} Active
                     </div>
+                </div>
+
+                {/* Right: View Toggle Buttons */}
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        icon={ListChecks}
+                        onClick={() => handleViewChange('tasks')}
+                        className={internalView === 'tasks' ? 'text-brand-accent' : 'text-gray-500'}
+                    >
+                        Tasks
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        icon={Users}
+                        onClick={() => handleViewChange('students')}
+                        className={internalView === 'students' ? 'text-brand-accent' : 'text-gray-500'}
+                    >
+                        Students
+                    </Button>
                 </div>
             </div>
 
@@ -165,7 +201,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'tasks' }) => {
                         </div>
                     )}
                 </div>
-            ) : activeView === 'students' ? (
+            ) : internalView === 'students' ? (
                 <StudentListView students={students} totalTasks={tasks.length} tasks={tasks} />
             ) : (
                 <TaskListView tasks={tasks} students={students} />

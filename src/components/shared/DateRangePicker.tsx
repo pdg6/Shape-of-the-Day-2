@@ -269,7 +269,7 @@ export function DateRangePicker({
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${activeField === 'start'
                         ? 'border-brand-accent'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}
+                        : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
                     ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                     ${buttonClassName || 'py-2.5 text-sm'}
                 `}
@@ -303,7 +303,7 @@ export function DateRangePicker({
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${activeField === 'end'
                         ? 'border-brand-accent'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'}
+                        : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
                     ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                     ${buttonClassName || 'py-2.5 text-sm'}
                 `}
@@ -320,14 +320,14 @@ export function DateRangePicker({
             {typeof document !== 'undefined' && activeField && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-md shadow-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,
                     }}
                 >
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-400 dark:border-gray-600">
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-semibold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">
                                 {activeField === 'start' ? startLabel : endLabel}

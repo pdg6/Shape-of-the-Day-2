@@ -746,7 +746,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Search tasks..."
-                                className="w-full pl-9 pr-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent transition-all"
+                                className="w-full pl-9 pr-3 py-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent transition-all"
                             />
                         </div>
 
@@ -767,7 +767,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                     setSavedSearches([...savedSearches, newSavedSearch]);
                                 }
                             }}
-                            className="p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent transition-all"
+                            className="p-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent transition-all"
                         >
                             Save Search
                         </button>
@@ -832,7 +832,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95
                                 ${filterDate === null
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                        : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
+                                        : 'border-gray-400 dark:border-gray-600 text-gray-500 hover:border-gray-600 dark:hover:border-gray-400'
                                     }
                             `}
                             >
@@ -932,7 +932,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                 <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
                     {/* Mobile Tab Selector - only visible on small screens */}
                     <div className="lg:hidden mb-4">
-                        <div className="flex rounded-lg border-2 border-gray-200 dark:border-gray-700 p-1 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                        <div className="flex rounded-lg border-2 border-gray-400 dark:border-gray-600 p-1 bg-brand-lightSurface dark:bg-brand-darkSurface">
                             <button
                                 onClick={() => setMobileActiveTab('projects')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'projects'

@@ -87,7 +87,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                                     focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
                                         ? 'border-brand-accent text-brand-accent'
-                                        : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                        : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                     }
                                     ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
                                 `}
@@ -120,8 +120,8 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                                 <span className="text-xs font-bold text-green-500">🎉 Complete!</span>
                             )}
                         </div>
-                        <ProgressBar 
-                            current={tasksCompleted} 
+                        <ProgressBar
+                            current={tasksCompleted}
                             total={totalTasks}
                             variant="success"
                             size="md"

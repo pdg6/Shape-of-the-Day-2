@@ -603,7 +603,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     <li>
                         <button
                             onClick={() => setShowMenuModal(true)}
-                            className="flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                            className="flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Menu"
                         >
                             <Menu className="w-5 h-5" />
@@ -615,7 +615,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             onClick={() => setMobileTab('tasks')}
                             className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Tasks"
                         >
@@ -628,7 +628,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             onClick={() => setMobileTab('projects')}
                             className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'projects'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Projects"
                         >
@@ -641,7 +641,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             onClick={() => setMobileTab('schedule')}
                             className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Schedule"
                         >

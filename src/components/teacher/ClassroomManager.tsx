@@ -184,27 +184,50 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
         <div className={`flex flex-col space-y-3 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
             {/* Content Header - h-16 matches sidebar header height */}
             <div className="h-16 flex-shrink-0 flex items-center justify-between">
-                {/* Left: Classrooms label + Current Class */}
+                {/* Left: Label + Current Class */}
                 <div className="flex items-baseline gap-3">
-                    <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        Classrooms:
+                    <span className="text-fluid-lg font-black text-gray-400">
+                        {internalTab === 'classes' ? 'Classrooms:' : 'Reports:'}
                     </span>
-                    <span className="text-fluid-xl font-black text-brand-accent">
+                    <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
                         {currentClass?.name || 'None Selected'}
                     </span>
                 </div>
 
-                {/* Right: Create Class Button */}
-                <Button
-                    variant="ghost"
-                    size="md"
-                    icon={Plus}
-                    onClick={openCreateModal}
-                    title="Create new class"
-                    className="flex-shrink-0 text-brand-accent"
-                >
-                    Create Class
-                </Button>
+                {/* Right: View-specific buttons */}
+                {internalTab === 'classes' ? (
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        icon={Plus}
+                        onClick={openCreateModal}
+                        title="Create new class"
+                        className="flex-shrink-0 text-brand-accent"
+                    >
+                        Create Class
+                    </Button>
+                ) : (
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="ghost"
+                            size="md"
+                            icon={CalendarIcon}
+                            onClick={() => setInternalTab('history')}
+                            className={internalTab === 'history' ? 'text-brand-accent' : 'text-gray-500'}
+                        >
+                            Calendar
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="md"
+                            icon={BarChart3}
+                            onClick={() => setInternalTab('analytics')}
+                            className={internalTab === 'analytics' ? 'text-brand-accent' : 'text-gray-500'}
+                        >
+                            Analytics
+                        </Button>
+                    </div>
+                )}
             </div>
 
             {/* Content Area */}

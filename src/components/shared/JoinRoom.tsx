@@ -17,7 +17,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
     const [error, setError] = useState('');
     const [isJoining, setIsJoining] = useState(false);
     const [inputHint, setInputHint] = useState<string | null>(null);
-    
+
     // Rate limiter: Max 3 join attempts per minute to prevent brute-force
     const rateLimiterRef = useRef(createRateLimiter(3, 60000));
 
@@ -33,7 +33,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
         const cleaned = rawInput.replace(/[\s\-\.\,\_]/g, '');
         const sanitized = sanitizeCode(cleaned);
         setCode(sanitized);
-        
+
         // Provide helpful hints based on input transformations
         if (rawInput !== sanitized && rawInput.length > 0) {
             if (rawInput.includes(' ') || rawInput.includes('-')) {
@@ -61,13 +61,13 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
         // 1. Sanitize inputs
         const sanitizedCode = sanitizeCode(code);
         const sanitizedName = sanitizeName(name);
-        
+
         // 2. Validation
         if (sanitizedCode.length !== 6) {
             setError('Please enter a valid 6-character code');
             return;
         }
-        
+
         const nameValidation = validateName(sanitizedName);
         if (!nameValidation.valid) {
             setError(nameValidation.error);
@@ -151,8 +151,8 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         spellCheck={false}
                         aria-describedby={inputHint ? 'code-hint' : undefined}
                         className={`
-                            input-base text-center text-2xl font-mono tracking-[0.5em]
-                            placeholder:text-sm placeholder:font-sans placeholder:tracking-normal
+                            input-base text-center font-mono tracking-[0.5em]
+                            placeholder:font-sans placeholder:tracking-normal
                             min-h-[56px]  /* Fitts's Law: Larger touch target */
                             ${error
                                 ? 'border-red-300 focus:border-red-500 focus:ring-4 focus:ring-red-500/10'
@@ -175,11 +175,11 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         type="text"
                         value={name}
                         onChange={(e) => setName(sanitizeName(e.target.value))}
-                        placeholder="Your name (letters only)"
+                        placeholder="First Name"
                         maxLength={12}
                         autoComplete="off"
                         spellCheck={false}
-                        className="input-base text-center text-lg input-focus"
+                        className="input-base text-center font-medium input-focus min-h-[56px]"
                     />
                 </div>
             </div>
@@ -193,7 +193,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
             <button
                 type="submit"
                 disabled={isJoining || sanitizeCode(code).length !== 6 || !validateName(sanitizeName(name)).valid}
-                className="btn-primary-green text-lg"
+                className="btn-primary-green"
             >
                 {isJoining ? 'Joining...' : 'Join Class'}
             </button>

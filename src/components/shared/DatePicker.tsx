@@ -195,9 +195,9 @@ export function DatePicker({
                     pl-9 pr-8 py-2.5 rounded-md text-sm font-medium text-left
                     border-2 transition-all duration-200
                     bg-brand-lightSurface dark:bg-brand-darkSurface
-                    border-gray-200 dark:border-gray-700
+                    border-gray-400 dark:border-gray-600
                     hover:bg-gray-50 dark:hover:bg-gray-800/50
-                    hover:border-gray-300 dark:hover:border-gray-600
+                    hover:border-gray-600 dark:hover:border-gray-400
                     focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${value ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
@@ -229,14 +229,14 @@ export function DatePicker({
             {typeof document !== 'undefined' && isOpen && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-md shadow-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-md shadow-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,
                     }}
                 >
                     {/* Today Button */}
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-400 dark:border-gray-600">
                         <button
                             type="button"
                             onClick={handleToday}

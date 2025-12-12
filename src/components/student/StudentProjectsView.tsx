@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { 
-    FolderOpen, 
-    FileText, 
-    CheckSquare, 
-    ChevronRight, 
+import {
+    FolderOpen,
+    FileText,
+    CheckSquare,
+    ChevronRight,
     ChevronDown,
     Search,
     Plus,
@@ -26,32 +26,32 @@ interface TreeNode {
     depth: number;
 }
 
-const TYPE_CONFIG: Record<ItemType, { 
+const TYPE_CONFIG: Record<ItemType, {
     icon: React.ComponentType<{ className?: string }>;
     label: string;
     color: string;
     bgColor: string;
 }> = {
-    project: { 
-        icon: FolderOpen, 
+    project: {
+        icon: FolderOpen,
         label: 'Project',
         color: 'text-purple-600 dark:text-purple-400',
         bgColor: 'bg-purple-100 dark:bg-purple-900/30'
     },
-    assignment: { 
-        icon: FileText, 
+    assignment: {
+        icon: FileText,
         label: 'Assignment',
         color: 'text-blue-600 dark:text-blue-400',
         bgColor: 'bg-blue-100 dark:bg-blue-900/30'
     },
-    task: { 
-        icon: CheckSquare, 
+    task: {
+        icon: CheckSquare,
         label: 'Task',
         color: 'text-green-600 dark:text-green-400',
         bgColor: 'bg-green-100 dark:bg-green-900/30'
     },
-    subtask: { 
-        icon: CheckSquare, 
+    subtask: {
+        icon: CheckSquare,
         label: 'Subtask',
         color: 'text-gray-600 dark:text-gray-400',
         bgColor: 'bg-gray-100 dark:bg-gray-700/30'
@@ -111,11 +111,11 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
     const buildTree = useMemo(() => {
         const taskMap = new Map<string, Task>();
         const childrenMap = new Map<string, Task[]>();
-        
+
         // Index all tasks
         allTasks.forEach(task => {
             taskMap.set(task.id, task);
-            
+
             const parentId = task.parentId || 'root';
             if (!childrenMap.has(parentId)) {
                 childrenMap.set(parentId, []);
@@ -135,7 +135,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
 
         // Get root-level items (projects and standalone tasks)
         const rootTasks = childrenMap.get('root') || [];
-        
+
         // Separate into projects/assignments and standalone tasks
         const projects = rootTasks.filter(t => t.type === 'project');
         const assignments = rootTasks.filter(t => t.type === 'assignment' && !t.parentId);
@@ -153,11 +153,11 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
         if (!searchQuery.trim()) return buildTree;
 
         const lowerQuery = searchQuery.toLowerCase();
-        
+
         const filterNode = (node: TreeNode): TreeNode | null => {
             const matchesSelf = node.task.title.toLowerCase().includes(lowerQuery) ||
-                               node.task.description?.toLowerCase().includes(lowerQuery);
-            
+                node.task.description?.toLowerCase().includes(lowerQuery);
+
             const filteredChildren = node.children
                 .map(child => filterNode(child))
                 .filter((child): child is TreeNode => child !== null);
@@ -210,7 +210,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
     // Import all children of a node recursively
     const importAllChildren = (node: TreeNode) => {
         let importCount = 0;
-        
+
         const importRecursive = (n: TreeNode) => {
             // Only import tasks and subtasks (not projects/assignments themselves)
             if ((n.task.type === 'task' || n.task.type === 'subtask') && !currentTaskIds.has(n.task.id)) {
@@ -242,16 +242,16 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
 
         // Accordion pattern: parent container wraps children when expanded
         return (
-            <div 
-                key={key} 
+            <div
+                key={key}
                 className={`
                     select-none
                     ${!isNested ? 'mx-1 my-1' : ''}
                     ${isParentType && hasChildren ? `
                         rounded-xl overflow-hidden
-                        ${isExpanded 
-                            ? 'border-2 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20' 
-                            : 'border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-700'}
+                        ${isExpanded
+                            ? 'border-2 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20'
+                            : 'border-2 border-transparent hover:border-gray-600 dark:hover:border-gray-400'}
                     ` : ''}
                     transition-all duration-200
                 `}
@@ -264,8 +264,8 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                             rounded-lg
                             ${isNested ? 'mx-2 my-1' : ''}
                             border-2 border-transparent
-                            hover:border-gray-200 dark:hover:border-gray-700
-                            hover:bg-gray-50 dark:hover:bg-gray-800/30
+                            hover:border-gray-600 dark:hover:border-gray-400
+                            hover:bg-gray-50 dark:hover:bg-gray-800/50
                         ` : `
                             ${isExpanded ? 'bg-white/60 dark:bg-gray-900/40' : ''}
                         `}
@@ -277,7 +277,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     {hasChildren ? (
                         <button
                             onClick={() => toggleExpand(task.id)}
-                            className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
+                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200"
                             aria-label={isExpanded ? 'Collapse' : 'Expand'}
                         >
                             {isExpanded ? (
@@ -332,7 +332,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                                 <Plus className="w-4 h-4" />
                             </button>
                         )}
-                        
+
                         {/* Import all button for parents */}
                         {hasChildren && isParentType && (
                             <button
@@ -349,8 +349,8 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 {/* Children - rendered inside parent card for accordion effect */}
                 {hasChildren && isExpanded && (
                     <div className={`
-                        ${isParentType 
-                            ? 'border-t border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-900/20 py-1' 
+                        ${isParentType
+                            ? 'border-t border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-900/20 py-1'
                             : 'pl-6'}
                     `}>
                         {children.map((child, idx) => renderNode(child, `${key}-${idx}`, true))}
@@ -386,9 +386,9 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
         );
     }
 
-    const isEmpty = filteredTree.projects.length === 0 && 
-                    filteredTree.assignments.length === 0 && 
-                    filteredTree.standaloneTasks.length === 0;
+    const isEmpty = filteredTree.projects.length === 0 &&
+        filteredTree.assignments.length === 0 &&
+        filteredTree.standaloneTasks.length === 0;
 
     return (
         <div className="space-y-6">
@@ -409,7 +409,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
                     <Inbox className="w-14 h-14 mx-auto text-gray-400 mb-4" />
                     <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary text-base">
-                        {searchQuery 
+                        {searchQuery
                             ? 'No results found for your search.'
                             : 'No projects or assignments available yet.'}
                     </p>

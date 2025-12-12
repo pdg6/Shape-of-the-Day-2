@@ -92,7 +92,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         onShowData();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
@@ -115,7 +115,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         onShowJoinCode();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
@@ -138,7 +138,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         onLogout();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">

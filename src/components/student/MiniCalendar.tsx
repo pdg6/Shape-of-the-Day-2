@@ -138,7 +138,7 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20
                 ${isSelected
                                     ? 'bg-brand-lightSurface dark:bg-brand-darkSurface border-brand-accent shadow-sm scale-105 z-10'
-                                    : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-gray-400 dark:hover:border-gray-500'}
+                                    : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-gray-600 dark:hover:border-gray-400'}
               `}
                         >
                             <span className={`text-xs font-medium mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>

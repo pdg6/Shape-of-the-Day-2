@@ -924,10 +924,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 {/* Left 3 columns: Tasks label + Current Class + Drafts + New Task Button */}
                 <div className="lg:col-span-3 flex items-center gap-3">
                     <div className="flex items-baseline gap-3 flex-shrink-0">
-                        <span className="text-fluid-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <span className="text-fluid-lg font-black text-gray-400">
                             Tasks:
                         </span>
-                        <span className="text-fluid-xl font-black text-brand-accent">
+                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
                             {currentClass?.name || 'All Classes'}
                         </span>
                     </div>

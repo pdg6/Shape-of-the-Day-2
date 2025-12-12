@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Activity, School, Menu, X, LogOut, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation, Archive } from 'lucide-react';
+import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation, Archive } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
@@ -44,8 +44,8 @@ const TeacherDashboard: React.FC = () => {
 
     const [activeTab, setActiveTab] = useState<MenuItem['id']>('tasks');
     const [tasksSubTab, setTasksSubTab] = useState<'create' | 'browse'>('create');
-    const [liveViewSubTab, setLiveViewSubTab] = useState<'tasks' | 'students'>('tasks');
-    const [reportsSubTab, setReportsSubTab] = useState<'calendar' | 'analytics'>('calendar');
+    const [liveViewSubTab, setLiveViewSubTab] = useState<'tasks' | 'students'>('students');
+    const [reportsSubTab, setReportsSubTab] = useState<'calendar' | 'analytics'>('analytics');
     const [isClassroomsMenuOpen, setIsClassroomsMenuOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -203,7 +203,7 @@ const TeacherDashboard: React.FC = () => {
                                     focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
                                             ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
-                                            : 'border-transparent text-gray-500 hover:border-gray-100 dark:hover:border-gray-500'
+                                            : 'border-transparent text-gray-500 hover:border-gray-600 dark:hover:border-gray-400'
                                         }
                                     ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
                                 `}
@@ -373,7 +373,7 @@ const TeacherDashboard: React.FC = () => {
                         }}
                         aria-expanded={!isCollapsed}
                         aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
-                        className={`hidden md:flex group relative items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
+                        className={`hidden md:flex group relative items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
                         <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-colors">
@@ -394,7 +394,7 @@ const TeacherDashboard: React.FC = () => {
                     <div className={`hidden md:block h-px bg-gray-200 dark:bg-gray-700 my-2 mx-1 transition-all duration-300 ${isCollapsed ? 'w-10' : 'w-auto'}`} />
                     <button
                         onClick={() => setIsJoinCodeOpen(true)}
-                        className={`group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'
+                        className={`group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'
                             }`}
                         title={isCollapsed ? 'Join Code' : undefined}
                     >
@@ -412,7 +412,7 @@ const TeacherDashboard: React.FC = () => {
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className={`group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-100 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12' : 'w-full'
+                        className={`group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12' : 'w-full'
                             }`}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
@@ -427,21 +427,7 @@ const TeacherDashboard: React.FC = () => {
                             Settings
                         </span>
                     </button>
-                    <button
-                        onClick={logout}
-                        className="group relative flex items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden w-full border-2 border-transparent hover:border-red-200 dark:hover:border-red-900/50 focus:outline-none focus:ring-2 focus:ring-red-200 dark:focus:ring-red-900/50"
-                        title={isCollapsed ? 'Sign Out' : undefined}
-                    >
-                        <div className="flex items-center justify-center w-12 flex-shrink-0 text-red-500 transition-colors">
-                            <LogOut size={20} />
-                        </div>
-                        <span className={`
-                            whitespace-nowrap transition-all duration-200 ease-in-out text-gray-500 group-hover:text-red-500 dark:group-hover:text-red-400
-                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0'}
-                        `}>
-                            Sign Out
-                        </span>
-                    </button>
+
                 </div>
             </aside>
 
@@ -510,7 +496,7 @@ const TeacherDashboard: React.FC = () => {
                             onClick={() => setActiveTab('classrooms')}
                             className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Classrooms"
                         >
@@ -524,7 +510,7 @@ const TeacherDashboard: React.FC = () => {
                             onClick={() => setActiveTab('tasks')}
                             className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Task Manager"
                         >
@@ -538,7 +524,7 @@ const TeacherDashboard: React.FC = () => {
                             onClick={() => setActiveTab('shape')}
                             className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Shape of Day"
                         >
@@ -552,7 +538,7 @@ const TeacherDashboard: React.FC = () => {
                             onClick={() => setActiveTab('live')}
                             className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
                                 ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400'
+                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                             aria-label="Live View"
                         >
@@ -564,7 +550,7 @@ const TeacherDashboard: React.FC = () => {
                     <li>
                         <button
                             onClick={() => setIsSettingsOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-200 dark:hover:border-gray-700 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                             aria-label="Settings & More"
                         >
                             <Home className="w-6 h-6" />

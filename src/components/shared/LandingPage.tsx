@@ -43,25 +43,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
 
             <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
                 {/* Tabs for switching modes */}
-                <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-xl m-2">
+                <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-md mx-6">
                     <div
                         className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-brand-darkSurface rounded-lg shadow-sm transition-all duration-300 ease-out ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
                             }`}
                     />
                     <button
                         onClick={() => setActiveTab('student')}
-                        className={`relative flex-1 py-3 text-center font-bold text-sm transition-colors z-10 ${activeTab === 'student'
+                        className={`relative flex-1 py-2.5 text-center font-bold text-lg transition-all rounded-md z-10 ${activeTab === 'student'
                             ? 'text-student-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50'
                             }`}
                     >
                         Student
                     </button>
                     <button
                         onClick={() => setActiveTab('teacher')}
-                        className={`relative flex-1 py-3 text-center font-bold text-sm transition-colors z-10 ${activeTab === 'teacher'
+                        className={`relative flex-1 py-2.5 text-center font-bold text-lg transition-all rounded-md z-10 ${activeTab === 'teacher'
                             ? 'text-teacher-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50'
                             }`}
                     >
                         Teacher
@@ -69,14 +69,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="p-6">
+                <div className="pt-4 pb-6 px-6">
                     {activeTab === 'student' ? (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
                             <div className="text-student-accent">
                                 <GraduationCap className="w-8 h-8" />
                             </div>
                             <div>
-                                <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Join a room to see your daily tasks.</p>
+                                <p className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary">Join a room to see your daily tasks.</p>
                             </div>
                             <JoinRoom onJoin={onJoin} />
                         </div>
@@ -86,7 +86,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                                 <LayoutDashboard className="w-8 h-8" />
                             </div>
                             <div>
-                                <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
+                                <p className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
                             </div>
                             <GoogleSignInButton onClick={onLogin} />
                         </div>

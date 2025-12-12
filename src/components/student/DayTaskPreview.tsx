@@ -74,7 +74,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     ) : (
                         <button
                             onClick={onImport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10"
                         >
                             <Download className="w-4 h-4" />
                             <span className="font-medium hidden sm:inline">
@@ -127,7 +127,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                                 ) : (
                                     <button
                                         onClick={() => onImportTask(task)}
-                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10 active:text-brand-accent"
+                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-2 border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10 active:text-brand-accent"
                                         title="Import this task"
                                         aria-label={`Import ${task.title}`}
                                     >
