@@ -305,13 +305,13 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
             {tasks.map(task => {
                 // Calculate stats for this task
                 const activeStudents = students.filter(s => s.currentTaskId === task.id);
-                // Better completion check: check if task ID is in student's completed list (if we had one) or infer from history/metrics.
-                // Assuming 'metrics.tasksCompleted' is a count, we can't know WHICH ones.
-                // However, LiveStudent has 'taskHistory'. We can check if this task is in history with status 'done'.
+                // Check if task is in student's completed history
                 const studentsCompleted = students.filter(s => s.taskHistory?.some(h => h.id === task.id && h.status === 'done'));
 
-                const stuckStudents = activeStudents.filter(s => s.currentStatus === 'stuck');
-                const questionStudents = activeStudents.filter(s => s.currentStatus === 'question');
+                // Merge stuck and question into unified "help" status
+                const helpStudents = activeStudents.filter(s =>
+                    s.currentStatus === 'stuck' || s.currentStatus === 'question' || s.currentStatus === 'help'
+                );
                 const inProgressStudents = activeStudents.filter(s => s.currentStatus === 'in_progress');
 
                 // Determine Card Styling
@@ -319,10 +319,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                 let bgColor = 'bg-brand-lightSurface dark:bg-brand-darkSurface';
                 let opacity = 'opacity-100';
 
-                if (stuckStudents.length > 0) {
-                    borderColor = 'border-red-500';
-                    bgColor = 'bg-red-50 dark:bg-red-900/10';
-                } else if (questionStudents.length > 0) {
+                if (helpStudents.length > 0) {
                     borderColor = 'border-amber-500';
                     bgColor = 'bg-amber-50 dark:bg-amber-900/10';
                 } else if (activeStudents.length > 0) {
@@ -358,10 +355,9 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             </div>
                         </div>
 
-                        {/* Student Buckets */}
+                        {/* Student Buckets - unified Help instead of Stuck/Question */}
                         <div className="space-y-2">
-                            <StudentBucket label="Stuck" count={stuckStudents.length} students={stuckStudents} color="text-red-600 bg-red-100" />
-                            <StudentBucket label="Question" count={questionStudents.length} students={questionStudents} color="text-amber-600 bg-amber-100" />
+                            <StudentBucket label="Needs Help" count={helpStudents.length} students={helpStudents} color="text-amber-600 bg-amber-100" />
                             <StudentBucket label="Working" count={inProgressStudents.length} students={inProgressStudents} color="text-brand-accent bg-brand-accent/10" />
                             <StudentBucket label="Done" count={studentsCompleted.length} students={studentsCompleted} color="text-brand-accent bg-brand-accent/20" />
                         </div>
@@ -371,6 +367,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
         </div>
     );
 };
+
 
 const StudentBucket: React.FC<{ label: string, count: number, students: LiveStudent[], color: string }> = ({ label, count, students, color }) => {
     if (count === 0) return null;

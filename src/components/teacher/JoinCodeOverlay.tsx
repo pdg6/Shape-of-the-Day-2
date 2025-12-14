@@ -204,11 +204,8 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
 
                                 switch (student.currentStatus) {
                                     case 'stuck':
-                                        bgColor = 'bg-red-100 dark:bg-red-900/20';
-                                        textColor = 'text-red-600 dark:text-red-400';
-                                        dotColor = 'bg-red-500 animate-pulse';
-                                        break;
                                     case 'question':
+                                    case 'help':
                                         bgColor = 'bg-amber-100 dark:bg-amber-900/20';
                                         textColor = 'text-amber-600 dark:text-amber-400';
                                         dotColor = 'bg-amber-500 animate-pulse';

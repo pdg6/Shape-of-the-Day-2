@@ -252,14 +252,13 @@ const StudentView: React.FC<StudentViewProps> = ({
         syncToTeacher(taskId, newStatus, updatedTasks);
 
         // Show feedback to the student
-        if (newStatus === 'stuck') {
-            toast.error("Teacher notified that you're stuck!");
-        } else if (newStatus === 'question') {
-            toast('Teacher notified that you have a question.', { icon: '🙋' });
+        if (newStatus === 'help') {
+            toast('Teacher notified that you need help!', { icon: '🙋' });
         } else if (newStatus === 'done') {
             toast.success("Great job! Task completed.");
         }
     };
+
 
     /**
      * Updates the comment for a specific task.

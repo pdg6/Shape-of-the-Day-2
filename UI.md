@@ -544,6 +544,594 @@ See [teacher-ui-blueprint.md](file:///c:/Users/16047/Desktop/Antigravity/Shape%2
 
 ---
 
+## TeacherView Component-Level Specifications
+
+This section provides exhaustive documentation of every UI component pattern used within TeacherView, derived from the current implementation as ground truth.
+
+---
+
+### Content Page Headers (Standard Pattern)
+
+All content pages in TeacherView follow a consistent header pattern that aligns with the sidebar header height.
+
+#### Structure
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ h-16 flex-shrink-0 flex items-center justify-between                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  Left Side                                    │  Right Side                 │
+│  ┌────────────────────────────────────────────┴──────────────────────────┐  │
+│  │ Label: [Class Name]  [Optional Badge]     | [Action Buttons]         │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Container Classes
+```jsx
+className="h-16 flex-shrink-0 flex items-center justify-between"
+```
+
+| Property | Value | Notes |
+|----------|-------|-------|
+| Height | `h-16` (64px) | Matches sidebar header |
+| Flex shrink | `flex-shrink-0` | Prevents collapse |
+| Alignment | `items-center justify-between` | Vertical center, horizontal spread |
+
+#### Left Side Pattern: Label + Class Name
+```jsx
+<div className="flex items-center gap-3">
+    <div className="flex items-baseline gap-3">
+        <span className="text-fluid-lg font-black text-gray-400">
+            TabName:
+        </span>
+        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+            {currentClass?.name}
+        </span>
+    </div>
+    {/* Optional: Inline badges */}
+</div>
+```
+
+| Element | Typography | Color |
+|---------|------------|-------|
+| Label (e.g., "Live View:") | `text-fluid-lg font-black` | `text-gray-400` |
+| Class Name | `text-fluid-lg font-black` | Primary text with accent underline |
+| Underline | `decoration-2 underline-offset-4` | `decoration-brand-accent` |
+
+#### Tab-Specific Header Variations
+
+| Tab | Label Text | Right Side Actions | Extra Elements |
+|-----|------------|-------------------|----------------|
+| Tasks: Create | `Tasks:` | `New Task` ghost button | Draft indicator badge |
+| Tasks: Inventory | `Tasks:` | None | — |
+| Shape of Day | `Shape:` | `Fullscreen` icon button | Active students badge |
+| Live View | `Live View:` | `Tasks` / `Students` toggle | Active count badge |
+| Classrooms | `Classrooms:` | `Create Class` ghost button | — |
+| Reports: Calendar | `Reports:` | `Calendar` / `Analytics` toggle | — |
+| Reports: Analytics | `Reports:` | `Calendar` / `Analytics` toggle | — |
+
+---
+
+### Active Students Badge
+
+Displayed in LiveView and ShapeOfDay headers to show current active student count.
+
+```jsx
+<div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium border border-green-200 dark:border-green-800">
+    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+    {count} Active
+</div>
+```
+
+| Property | Light Mode | Dark Mode |
+|----------|------------|-----------|
+| Background | `bg-green-100` | `bg-green-900/30` |
+| Text | `text-green-700` | `text-green-400` |
+| Border | `border-green-200` | `border-green-800` |
+| Indicator | `bg-green-500 animate-pulse` | Same |
+| Shadow | `shadow-[0_0_8px_rgba(34,197,94,0.6)]` | Same |
+
+---
+
+### Button Variants
+
+TeacherView uses several button variants with consistent patterns.
+
+#### Ghost Button (Toggle/Navigation)
+Used for view toggles, header actions, and non-primary CTAs.
+
+```jsx
+<Button
+    variant="ghost"
+    size="md"
+    icon={IconComponent}
+    onClick={handler}
+    className={isActive ? 'text-brand-accent' : 'text-gray-500'}
+>
+    Label
+</Button>
+```
+
+**Implemented CSS Classes (from Button component):**
+```jsx
+// Base classes for ghost variant
+className="flex items-center justify-center gap-2 h-12 px-4 rounded-md font-bold transition-all duration-200
+           border-2 border-transparent
+           hover:border-brand-accent text-brand-accent hover:bg-brand-accent/5
+           focus:outline-none focus:ring-2 focus:ring-brand-accent/20
+           disabled:opacity-50 disabled:cursor-not-allowed"
+```
+
+| State | Border | Background | Text |
+|-------|--------|------------|------|
+| Default (active) | `transparent` | `transparent` | `text-brand-accent` |
+| Default (inactive) | `transparent` | `transparent` | `text-gray-500` |
+| Hover | `border-brand-accent` | `bg-brand-accent/5` | — |
+| Focus | Focus ring | — | — |
+
+#### Ghost Danger Button
+Used for delete/remove actions.
+
+```css
+.btn-ghost-danger {
+    @apply flex items-center justify-center gap-2 h-12 px-4 rounded-md;
+    @apply font-bold transition-all duration-200;
+    @apply border-2 border-transparent;
+    @apply text-red-500;
+    @apply hover:border-red-500 hover:bg-red-500/5;
+    @apply focus:outline-none focus:ring-2 focus:ring-red-500/20;
+}
+```
+
+#### Icon Button
+Small square button with icon only.
+
+```jsx
+<Button
+    variant="icon"
+    size="sm"
+    onClick={handler}
+    icon={IconComponent}
+/>
+```
+
+| Size | Dimensions | Icon Size |
+|------|------------|-----------|
+| `sm` | `w-8 h-8` | `16px` |
+| `md` | `w-10 h-10` | `20px` |
+| `lg` | `w-12 h-12` | `24px` |
+
+#### Primary Action Button (Create Class, New Task)
+Ghost variant with accent color, positioned in header right side.
+
+```jsx
+<Button
+    variant="ghost"
+    size="md"
+    icon={Plus}
+    onClick={openCreateModal}
+    className="flex-shrink-0 text-brand-accent"
+>
+    Create Class
+</Button>
+```
+
+---
+
+### Card Patterns
+
+#### Base Card (`card-base`)
+Generic card container used throughout.
+
+```css
+.card-base {
+    @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+    @apply border-2 border-gray-200 dark:border-gray-700;
+    @apply rounded-xl transition-colors;
+}
+```
+
+#### Interactive Card (`card-interactive`)
+Used for selectable items like class cards.
+
+```css
+.card-interactive {
+    @apply rounded-xl border-2 transition-all cursor-pointer;
+    @apply border-gray-400 dark:border-gray-600;
+    @apply hover:border-gray-600 dark:hover:border-gray-400;
+    @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
+}
+
+.card-interactive-selected {
+    @apply border-brand-accent bg-brand-accent/5;
+}
+```
+
+| State | Border | Background |
+|-------|--------|------------|
+| Default (Light) | `border-gray-400` | `bg-brand-lightSurface` |
+| Default (Dark) | `border-gray-600` | `bg-brand-darkSurface` |
+| Hover (Light) | `border-gray-600` | — |
+| Hover (Dark) | `border-gray-400` | — |
+| Selected | `border-brand-accent` | `bg-brand-accent/5` |
+
+#### Class Card Structure
+ClassCard component layout:
+
+```
+┌──────────────────────────────────────────────────┬───────────────┐
+│  Main Content (flex-1)                            │  Actions Bar  │
+│  ┌────────────────────────────────────────────┐   │  (w-[72px])   │
+│  │ Header (h-20, p-5)                         │   │               │
+│  │ - Class Name (text-xl font-bold)           │   │  ┌─────────┐  │
+│  │ - Join Code (text-xs)                      │   │  │ Action  │  │
+│  └────────────────────────────────────────────┘   │  │ Buttons │  │
+│  ┌────────────────────────────────────────────┐   │  │ Stack   │  │
+│  │ Body Stats (flex-1, p-5)                   │   │  └─────────┘  │
+│  │ - Students count | Tasks count             │   │               │
+│  └────────────────────────────────────────────┘   │               │
+└──────────────────────────────────────────────────┴───────────────┘
+```
+
+---
+
+### Table Styling
+
+Tables are used in LiveView for student lists and in analytics modals.
+
+#### Table Container
+```jsx
+className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm"
+```
+
+#### Table Header
+```jsx
+<thead className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+    <tr>
+        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Column</th>
+    </tr>
+</thead>
+```
+
+| Element | Property | Value |
+|---------|----------|-------|
+| Header bg | Light | `bg-gray-50` |
+| Header bg | Dark | `bg-gray-800` |
+| Header text | All | `text-xs font-bold text-gray-500 uppercase` |
+| Header padding | All | `p-4` |
+| Border | All | `border-b-2 border-gray-200 dark:border-gray-700` |
+
+#### Table Body
+```jsx
+<tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+        <td className="p-4 font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+            {/* content */}
+        </td>
+    </tr>
+</tbody>
+```
+
+| Element | Light Mode | Dark Mode |
+|---------|------------|-----------|
+| Row divider | `divide-gray-200` | `divide-gray-700` |
+| Row hover | `hover:bg-gray-50` | `hover:bg-gray-800/50` |
+| Cell padding | `p-4` | `p-4` |
+| Primary text | `text-brand-textDarkPrimary` | `text-brand-textPrimary` |
+| Secondary text | `text-gray-600` | `text-gray-400` |
+
+---
+
+### Progress Bars
+
+#### Standard Progress Bar
+Used in student list, task cards, and analytics.
+
+```jsx
+<div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+    <div
+        className="h-full bg-brand-accent transition-all duration-500 ease-out rounded-full"
+        style={{ width: `${percentage}%` }}
+    />
+</div>
+```
+
+| Property | Value |
+|----------|-------|
+| Track height | `h-3` (12px) standard, `h-2` (8px) compact, `h-1.5` (6px) inline |
+| Track bg | `bg-gray-200 dark:bg-gray-700` |
+| Fill color | `bg-brand-accent` |
+| Border radius | `rounded-full` |
+| Animation | `transition-all duration-500 ease-out` |
+
+#### Progress with Label
+```jsx
+<div className="flex items-center gap-3">
+    <div className="flex-1 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-full bg-brand-accent rounded-full" style={{ width: `${progress}%` }} />
+    </div>
+    <span className="text-xs font-bold text-gray-500 w-12 text-right">
+        {completed} / {total}
+    </span>
+</div>
+```
+
+---
+
+### Status Badges/Pills
+
+#### Status Colors (Student Status)
+```jsx
+// StatusBadge component patterns
+const statusStyles = {
+    in_progress: 'bg-brand-accent/10 text-brand-accent border-brand-accent/20',
+    stuck: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800',
+    question: 'bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+    done: 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800'
+};
+```
+
+| Status | Light BG | Dark BG | Text Light | Text Dark |
+|--------|----------|---------|------------|-----------|
+| In Progress | `brand-accent/10` | Same | `brand-accent` | Same |
+| Stuck | `red-100` | `red-900/30` | `red-600` | `red-400` |
+| Question | `amber-100` | `amber-900/30` | `amber-600` | `amber-400` |
+| Done | `green-100` | `green-900/30` | `green-600` | `green-400` |
+
+#### Inline Pill (Rounded Full)
+```jsx
+<span className="px-2 py-0.5 rounded text-xs font-bold uppercase text-center">
+    {label}
+</span>
+```
+
+#### Completion Badge
+```jsx
+<span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-xs font-bold">
+    Completed
+</span>
+```
+
+---
+
+### Form Input Specifications
+
+#### Standard Input Field (`input-field`)
+```css
+.input-field {
+    @apply w-full px-3 py-2 rounded-lg border-2 transition-all duration-200;
+    @apply bg-transparent font-medium;
+    @apply text-brand-textDarkPrimary dark:text-brand-textPrimary;
+    @apply border-gray-400 dark:border-gray-600;
+    @apply placeholder-gray-400 dark:placeholder-gray-500;
+    @apply hover:border-gray-600 dark:hover:border-gray-400;
+    @apply focus:outline-none focus:border-brand-accent;
+}
+```
+
+| State | Border (Light) | Border (Dark) |
+|-------|----------------|---------------|
+| Default | `border-gray-400` | `border-gray-600` |
+| Hover | `border-gray-600` | `border-gray-400` |
+| Focus | `border-brand-accent` | `border-brand-accent` |
+
+#### Title Input (Underline Style)
+Used in TaskManager for task title.
+
+```jsx
+className="text-fluid-xl font-bold bg-transparent border-b-2 border-gray-300 dark:border-gray-600 
+           focus:border-brand-accent focus:outline-none w-full py-2"
+```
+
+---
+
+### Empty State Patterns
+
+#### Standard Empty State
+```jsx
+<div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700">
+    <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Icon className="w-8 h-8 text-gray-400" />
+    </div>
+    <h3 className="text-fluid-lg font-bold text-gray-900 dark:text-white mb-1">
+        Primary Message
+    </h3>
+    <p className="text-fluid-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+        Secondary description text.
+    </p>
+    {/* Optional: CTA or additional content */}
+</div>
+```
+
+| Element | Property |
+|---------|----------|
+| Container padding | `py-12` |
+| Icon circle | `w-16 h-16 rounded-full` |
+| Icon size | `w-8 h-8` |
+| Icon color | `text-gray-400` |
+| Title | `text-fluid-lg font-bold` |
+| Description | `text-fluid-sm text-gray-500` |
+
+---
+
+### Modal Patterns
+
+#### Modal Backdrop
+```jsx
+className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+```
+
+#### Modal Container
+```jsx
+className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 flex flex-col"
+```
+
+#### Modal Header
+```jsx
+className="p-6 border-b-2 border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-t-xl"
+```
+
+#### Modal Sizes
+| Size | Max Width |
+|------|-----------|
+| `sm` | `max-w-sm` |
+| `md` | `max-w-md` |
+| `lg` | `max-w-lg` |
+| `xl` | `max-w-xl` |
+| `2xl` | `max-w-2xl` |
+| `4xl` | `max-w-4xl` |
+
+---
+
+### KPI Stat Tiles (Analytics)
+
+Used in ClassroomManager analytics view.
+
+```jsx
+<div className="card-base p-6">
+    <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Metric Label</span>
+        <Icon className="w-5 h-5 text-{color}-500" />
+    </div>
+    <div className="flex items-baseline gap-2">
+        <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+            {value}
+        </span>
+        <span className="text-sm text-gray-500">{unit}</span>
+    </div>
+</div>
+```
+
+| Element | Typography | Color |
+|---------|------------|-------|
+| Label | `text-xs font-bold uppercase tracking-wider` | `text-gray-500` |
+| Value | `text-3xl font-bold` | Primary text |
+| Unit | `text-sm` | `text-gray-500` |
+| Icon | `w-5 h-5` | Semantic (varies) |
+
+---
+
+### Calendar Grid (Reports)
+
+#### Day Header Row
+```jsx
+<div className="grid grid-cols-7 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+        <div key={day} className="p-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+            {day}
+        </div>
+    ))}
+</div>
+```
+
+#### Day Cell
+```jsx
+className={`
+    border-b border-r border-gray-200 dark:border-gray-700 p-2 relative cursor-pointer transition-colors
+    hover:bg-brand-accent/5
+    focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent
+    ${!isSameMonth ? 'bg-gray-50/50 dark:bg-gray-900/50 text-gray-400' : ''}
+    ${isToday ? 'bg-brand-accent/10' : ''}
+`}
+```
+
+| State | Background |
+|-------|------------|
+| Default | Transparent |
+| Different month | `bg-gray-50/50 dark:bg-gray-900/50` |
+| Today | `bg-brand-accent/10` |
+| Hover | `bg-brand-accent/5` |
+| Focus | Focus ring inset |
+
+---
+
+### Task Card States (LiveView - By Task)
+
+Task cards in LiveView change appearance based on student status.
+
+```jsx
+// Determine styling based on student status
+let borderColor = 'border-gray-200 dark:border-gray-700';
+let bgColor = 'bg-brand-lightSurface dark:bg-brand-darkSurface';
+let opacity = 'opacity-100';
+
+if (stuckStudents.length > 0) {
+    borderColor = 'border-red-500';
+    bgColor = 'bg-red-50 dark:bg-red-900/10';
+} else if (questionStudents.length > 0) {
+    borderColor = 'border-amber-500';
+    bgColor = 'bg-amber-50 dark:bg-amber-900/10';
+} else if (activeStudents.length > 0) {
+    borderColor = 'border-brand-accent';
+} else if (allCompleted) {
+    borderColor = 'border-brand-accent/50';
+    bgColor = 'bg-brand-accent/5';
+    opacity = 'opacity-60 grayscale';
+}
+```
+
+| Priority | Condition | Border | Background | Opacity |
+|----------|-----------|--------|------------|---------|
+| 1 (High) | Students stuck | `border-red-500` | `bg-red-50` | 100% |
+| 2 | Students with questions | `border-amber-500` | `bg-amber-50` | 100% |
+| 3 | Students working | `border-brand-accent` | Default | 100% |
+| 4 | All completed | `border-brand-accent/50` | `bg-brand-accent/5` | 60% + grayscale |
+| 5 (Low) | No activity | Default gray | Default | 100% |
+
+---
+
+### Loading States
+
+#### Spinner
+```jsx
+<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+```
+
+#### Skeleton Placeholders
+```css
+.skeleton {
+    @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
+}
+
+.skeleton-text {
+    @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-4 w-full;
+}
+
+.skeleton-card {
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse h-20 w-full rounded-xl;
+}
+```
+
+---
+
+### Student Buckets (LiveView Task View)
+
+Grouped student lists by status within task cards.
+
+```jsx
+<div className="flex items-start gap-2 text-sm">
+    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase w-20 shrink-0 text-center ${colorClasses}`}>
+        {label} ({count})
+    </span>
+    <div className="flex flex-wrap gap-1 flex-1">
+        {students.map(s => (
+            <span key={s.uid} className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-black/20 px-1.5 rounded border border-black/5 dark:border-white/5">
+                {s.displayName}
+            </span>
+        ))}
+    </div>
+</div>
+```
+
+| Status | BG Color Classes |
+|--------|------------------|
+| Stuck | `text-red-600 bg-red-100` |
+| Question | `text-amber-600 bg-amber-100` |
+| Working | `text-brand-accent bg-brand-accent/10` |
+| Done | `text-brand-accent bg-brand-accent/20` |
+
+---
+
 ## Layout Utilities
 
 ### Dynamic Viewport Height

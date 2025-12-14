@@ -95,9 +95,9 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     const getStatusBorderColor = (status: string) => {
                         switch (status) {
                             case 'stuck':
-                                return 'border-red-300 dark:border-red-800';
                             case 'question':
-                                return 'border-yellow-300 dark:border-yellow-800';
+                            case 'help':
+                                return 'border-amber-300 dark:border-amber-800';
                             case 'in_progress':
                                 return 'border-emerald-300 dark:border-emerald-800';
                             case 'done':

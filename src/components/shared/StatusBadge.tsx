@@ -2,25 +2,22 @@ import React from 'react';
 import { TaskStatus } from '../../types';
 
 interface StatusBadgeProps {
-    status: TaskStatus;
+    status: TaskStatus | 'stuck' | 'question'; // Allow legacy values
     size?: 'sm' | 'md';
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' }) => {
     const sizeClasses = size === 'sm' ? 'px-2.5 py-1 text-[10px]' : 'px-3 py-1.5 text-xs';
 
+    // Map legacy statuses to help
+    const normalizedStatus = (status === 'stuck' || status === 'question') ? 'help' : status;
+
     const statusConfig = {
-        stuck: {
-            color: 'text-status-stuck',
-            bg: 'bg-status-stuck/10',
-            border: 'border-status-stuck/20',
-            label: 'Stuck'
-        },
-        question: {
+        help: {
             color: 'text-status-question',
             bg: 'bg-status-question/10',
             border: 'border-status-question/20',
-            label: 'Question'
+            label: 'Needs Help'
         },
         in_progress: {
             color: 'text-status-progress',
@@ -39,10 +36,16 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
             bg: 'bg-gray-50 dark:bg-gray-800',
             border: 'border-gray-200 dark:border-gray-700',
             label: 'To Do'
+        },
+        draft: {
+            color: 'text-gray-400 dark:text-gray-500',
+            bg: 'bg-gray-50 dark:bg-gray-800',
+            border: 'border-gray-200 dark:border-gray-700',
+            label: 'Draft'
         }
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.todo;
 
     return (
         <span className={`
@@ -53,3 +56,4 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
         </span>
     );
 };
+

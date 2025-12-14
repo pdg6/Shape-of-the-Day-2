@@ -10,7 +10,12 @@ import { Timestamp } from 'firebase/firestore';
 
 // Define the possible statuses for a task.
 // Using a "Union Type" (the | symbol) restricts the values to ONLY these strings.
-export type TaskStatus = 'todo' | 'in_progress' | 'stuck' | 'question' | 'done' | 'draft';
+// Note: 'help' consolidates the previous 'stuck' and 'question' statuses
+export type TaskStatus = 'todo' | 'in_progress' | 'help' | 'done' | 'draft';
+
+// Legacy status type for backwards compatibility with existing data
+export type LegacyTaskStatus = 'stuck' | 'question';
+
 
 // Define the hierarchy level for tasks
 // Project → Assignment → Task → Subtask (4 levels max)
@@ -172,7 +177,7 @@ export interface LiveStudent {
     uid: string;            // Anonymous Auth UID
     displayName: string;    // "Sarah"
     joinedAt: Timestamp;    // Server timestamp
-    currentStatus: TaskStatus;
+    currentStatus: TaskStatus | LegacyTaskStatus; // Includes legacy 'stuck'/'question' for backwards compatibility
     currentTaskId?: string; // ID of the task they are working on
     taskHistory: Task[];    // Local copy of their progress for this session
     metrics: {

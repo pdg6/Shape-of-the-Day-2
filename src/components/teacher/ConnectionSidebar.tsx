@@ -145,8 +145,8 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                                 {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
                                             </p>
                                         </div>
-                                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${student.currentStatus === 'stuck' ? 'bg-red-500 animate-pulse ring-2 ring-red-100 dark:ring-red-900/30' :
-                                            student.currentStatus === 'question' ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
+                                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${(student.currentStatus === 'stuck' || student.currentStatus === 'question' || student.currentStatus === 'help')
+                                                ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
                                                 student.currentStatus === 'done' ? 'bg-blue-500' :
                                                     'bg-emerald-500'
                                             }`} />

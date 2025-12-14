@@ -24,14 +24,14 @@
     --color-brand-textDarkSecondary: #57534E;
 
     /* Status Colors */
-    --color-status-progress: #059669;
-    /* Emerald */
-    --color-status-stuck: #DC2626;
-    /* Red */
+    --color-status-progress: #10B981;
+    /* Emerald-500 (brighter) */
+    --color-status-stuck: #EF4444;
+    /* Red-500 (brighter) */
     --color-status-question: #D97706;
     /* Amber */
-    --color-status-complete: #2563EB;
-    /* Blue */
+    --color-status-complete: #3B82F6;
+    /* Blue-500 (brighter) */
 }
 
 /* ============================================
