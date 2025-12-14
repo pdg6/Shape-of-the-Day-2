@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-// X icon removed - unused
+import { Copy, Check, Users, X } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { LiveStudent } from '../../types';
@@ -10,113 +10,236 @@ interface JoinCodeOverlayProps {
     onClose: () => void;
     classCode: string;
     classId: string;
+    className?: string;
 }
 
-const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, classCode, classId }) => {
+const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, classCode, classId, className }) => {
     const [liveStudents, setLiveStudents] = useState<LiveStudent[]>([]);
+    const [copied, setCopied] = useState(false);
+    const [newStudentIds, setNewStudentIds] = useState<Set<string>>(new Set());
+    const prevStudentCountRef = useRef(0);
+    const [isModalHovered, setIsModalHovered] = useState(false);
+    const [isCodeHovered, setIsCodeHovered] = useState(false);
+    const [showCopyButton, setShowCopyButton] = useState(false);
+    const codeHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Handle code hover with 3 second delay
+    useEffect(() => {
+        if (isCodeHovered) {
+            setShowCopyButton(true);
+            // Clear any existing timeout
+            if (codeHoverTimeoutRef.current) {
+                clearTimeout(codeHoverTimeoutRef.current);
+            }
+        } else {
+            // Hide after 3 seconds when not hovered
+            codeHoverTimeoutRef.current = setTimeout(() => {
+                setShowCopyButton(false);
+            }, 2000);
+        }
+        return () => {
+            if (codeHoverTimeoutRef.current) {
+                clearTimeout(codeHoverTimeoutRef.current);
+            }
+        };
+    }, [isCodeHovered]);
 
     // Listen for real-time updates to the roster
     useEffect(() => {
         if (!classId) return;
 
-        // Reference to the sub-collection: classrooms/{classId}/live_students
         const studentsRef = collection(db, 'classrooms', classId, 'live_students');
 
-        // Subscribe to changes
         const unsubscribe = onSnapshot(studentsRef, (snapshot) => {
             const students: LiveStudent[] = [];
             snapshot.forEach((doc) => {
                 students.push(doc.data() as LiveStudent);
             });
+            students.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+            // Track new students for animation
+            if (students.length > prevStudentCountRef.current) {
+                const currentIds = new Set(liveStudents.map(s => s.uid));
+                const newIds = students.filter(s => !currentIds.has(s.uid)).map(s => s.uid);
+                setNewStudentIds(new Set(newIds));
+                // Clear animation after delay
+                setTimeout(() => setNewStudentIds(new Set()), 1000);
+            }
+            prevStudentCountRef.current = students.length;
 
             setLiveStudents(students);
         });
 
         return () => unsubscribe();
-    }, [classId]);
+    }, [classId, liveStudents]);
 
-    // The URL that students will visit to join
-    const joinUrl = `${window.location.origin}/join/${classCode}`;
+    const handleCopyCode = () => {
+        navigator.clipboard.writeText(classCode);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const joinUrl = `${window.location.origin}/join`;
 
     if (!isOpen) return null;
 
     return (
-        <div className="flex flex-col h-full max-h-[80vh]">
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-1">
-                <div className="flex flex-col md:flex-row gap-6">
-                    {/* Left: QR Code and Join Info */}
-                    <div className="flex-1 flex flex-col items-center space-y-4">
-                        {/* Join URL */}
-                        <div className="w-full flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 border-green-500/20 bg-green-500/5">
-                            <span className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider font-semibold mb-1">Join at</span>
-                            <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                shape-of-the-day.com
-                            </span>
-                        </div>
+        <div
+            className="flex flex-col"
+            onMouseEnter={() => setIsModalHovered(true)}
+            onMouseLeave={() => setIsModalHovered(false)}
+        >
+            {/* Header Row: Logo + Tagline (left) + Live Students (right) */}
+            <div className="flex items-center justify-between mb-8">
+                {/* Left: Logo + Tagline */}
+                <div className="flex items-center gap-3">
+                    <img
+                        src="/shape of the day logo.png"
+                        alt="Shape of the Day"
+                        className="w-10 h-10"
+                    />
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            Shape of the Day
+                        </span>
+                        <span className="text-sm text-gray-400">
+                            a digital agenda for education
+                        </span>
+                    </div>
+                </div>
 
-                        {/* Class Code */}
-                        <div className="w-full flex flex-col items-center justify-center px-4 py-3 rounded-lg border-2 border-green-500/20 bg-green-500/5">
-                            <span className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wider font-semibold mb-1">Class Code</span>
-                            <span className="text-2xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
+                {/* Right: Live Students */}
+                <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-brand-accent" />
+                    <span className="text-sm font-bold text-brand-accent">
+                        Live Students: {liveStudents.length}
+                    </span>
+                </div>
+            </div>
+
+            {/* Hero Section: QR + Join Info - Horizontal Layout */}
+            <div className="flex flex-col sm:flex-row items-stretch gap-6 mb-8">
+                {/* QR Code - Compact but scannable */}
+                <div className="bg-white p-4 rounded-xl shadow-lg shrink-0 self-center sm:self-start">
+                    <QRCodeSVG
+                        value={`${joinUrl}?code=${classCode}`}
+                        size={160}
+                        level={"H"}
+                        includeMargin={false}
+                    />
+                </div>
+
+                {/* Join Info - 3 Row Structure */}
+                <div className="flex-1 flex flex-col justify-between gap-3">
+                    {/* Row 1: Class Name + Close Button */}
+                    <div className="flex items-center justify-between">
+                        <div className="grid grid-cols-[100px_1fr] items-baseline">
+                            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Class:</span>
+                            <span className="text-2xl font-bold text-brand-accent">{className || 'Unnamed Class'}</span>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className={`p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${isModalHovered ? 'opacity-100' : 'opacity-0'}`}
+                            aria-label="Close"
+                        >
+                            <X className="w-5 h-5 text-gray-400" />
+                        </button>
+                    </div>
+
+                    {/* Row 2: Join URL */}
+                    <div className="grid grid-cols-[100px_1fr] items-baseline">
+                        <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Join at:</span>
+                        <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            shape-of-the-day.com
+                        </span>
+                    </div>
+
+                    {/* Row 3: Class Code + Copy Button */}
+                    <div
+                        className="flex items-center justify-between"
+                        onMouseEnter={() => setIsCodeHovered(true)}
+                        onMouseLeave={() => setIsCodeHovered(false)}
+                    >
+                        <div className="grid grid-cols-[100px_1fr] items-baseline">
+                            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Code:</span>
+                            <span className="text-2xl font-mono font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
                             </span>
                         </div>
-
-                        {/* QR Code */}
-                        <div className="w-56 h-56 bg-white p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 shadow-sm">
-                            <QRCodeSVG
-                                value={joinUrl}
-                                style={{ width: '100%', height: '100%' }}
-                                level={"H"}
-                                includeMargin={false}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Right: Live Students */}
-                    <div className="flex-1 flex flex-col min-h-[300px]">
-                        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center justify-between">
-                            <span>Live Students</span>
-                            <span className="bg-green-500/10 text-green-600 dark:text-green-400 px-2 py-0.5 rounded-full text-xs font-bold">
-                                {liveStudents.length}
-                            </span>
-                        </h3>
-
-                        <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar">
-                            {liveStudents.length === 0 ? (
-                                <div className="text-center py-12 text-gray-400 text-sm italic">
-                                    Waiting for students...
-                                </div>
+                        <button
+                            onClick={handleCopyCode}
+                            className={`p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${showCopyButton ? 'opacity-100' : 'opacity-0'}`}
+                            title="Copy code"
+                        >
+                            {copied ? (
+                                <Check className="w-5 h-5 text-green-500" />
                             ) : (
-                                liveStudents.map((student) => (
+                                <Copy className="w-5 h-5 text-gray-400" />
+                            )}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Live Students Section */}
+            <div className="flex-1 min-h-0">
+
+                <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
+                    {liveStudents.length === 0 ? (
+                        <div className="flex items-center justify-center gap-3 py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+                            <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                            <p className="text-sm italic">Waiting for students...</p>
+                        </div>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                            {liveStudents.map((student) => {
+                                const isNew = newStudentIds.has(student.uid);
+                                let bgColor = 'bg-brand-accent/10';
+                                let textColor = 'text-brand-accent';
+                                let dotColor = 'bg-green-500';
+
+                                switch (student.currentStatus) {
+                                    case 'stuck':
+                                        bgColor = 'bg-red-100 dark:bg-red-900/20';
+                                        textColor = 'text-red-600 dark:text-red-400';
+                                        dotColor = 'bg-red-500 animate-pulse';
+                                        break;
+                                    case 'question':
+                                        bgColor = 'bg-amber-100 dark:bg-amber-900/20';
+                                        textColor = 'text-amber-600 dark:text-amber-400';
+                                        dotColor = 'bg-amber-500 animate-pulse';
+                                        break;
+                                    case 'done':
+                                        bgColor = 'bg-blue-100 dark:bg-blue-900/20';
+                                        textColor = 'text-blue-600 dark:text-blue-400';
+                                        dotColor = 'bg-blue-500';
+                                        break;
+                                }
+
+                                return (
                                     <div
                                         key={student.uid}
-                                        className="flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border-2 border-gray-200 dark:border-gray-800 hover:border-green-500/30 bg-white dark:bg-gray-800/50 hover:shadow-md group cursor-default focus:outline-none focus:ring-2 focus:ring-green-500"
-                                        tabIndex={0}
-                                        role="listitem"
+                                        className={`
+                                            flex items-center gap-2 px-3 py-2 rounded-full
+                                            ${bgColor} ${textColor}
+                                            border border-gray-200 dark:border-gray-700
+                                            transition-all duration-300
+                                            ${isNew ? 'animate-celebration-pop ring-2 ring-green-500/50' : ''}
+                                        `}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-600 dark:text-green-400 font-bold text-xs shrink-0 group-hover:bg-green-500/20 transition-colors">
-                                            {student.displayName.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
-                                                {student.displayName}
-                                            </p>
-                                            <p className="text-xs text-gray-500 truncate">
-                                                {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
-                                            </p>
-                                        </div>
-                                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${student.currentStatus === 'stuck' ? 'bg-red-500 animate-pulse ring-2 ring-red-100 dark:ring-red-900/30' :
-                                            student.currentStatus === 'question' ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
-                                                student.currentStatus === 'done' ? 'bg-blue-500' :
-                                                    'bg-emerald-500'
-                                            }`} />
+                                        <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
+                                        <span className="text-sm font-medium truncate max-w-[120px]">
+                                            {student.displayName}
+                                        </span>
                                     </div>
-                                ))
-                            )}
+                                );
+                            })}
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

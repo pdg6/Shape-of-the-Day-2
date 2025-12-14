@@ -473,13 +473,15 @@ const TeacherDashboard: React.FC = () => {
                     <Modal
                         isOpen={isJoinCodeOpen}
                         onClose={() => setIsJoinCodeOpen(false)}
-                        title="Join Code"
+                        maxWidth="2xl"
+                        hideHeader={true}
                     >
                         <JoinCodeOverlay
                             isOpen={true}
                             onClose={() => setIsJoinCodeOpen(false)}
                             classCode={currentClass.joinCode}
                             classId={currentClass.id}
+                            className={currentClass.name}
                         />
                     </Modal>
                 )}

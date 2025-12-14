@@ -176,7 +176,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                         value={name}
                         onChange={(e) => setName(sanitizeName(e.target.value))}
                         placeholder="First Name"
-                        maxLength={12}
+                        maxLength={16}
                         autoComplete="off"
                         spellCheck={false}
                         className="input-base text-center font-medium input-focus min-h-[56px]"

@@ -36,7 +36,7 @@ const PROFANITY_LIST: string[] = [
  * Uses word boundaries to avoid false positives (e.g., "class" containing "ass").
  */
 const buildProfanityRegex = (): RegExp => {
-    const escaped = PROFANITY_LIST.map(word => 
+    const escaped = PROFANITY_LIST.map(word =>
         word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     );
     return new RegExp(`\\b(${escaped.join('|')})\\b`, 'gi');
@@ -59,16 +59,16 @@ const PROFANITY_REGEX = buildProfanityRegex();
  * @returns Sanitized name string
  */
 export const sanitizeName = (input: string): string => {
-    const MAX_LENGTH = 12;
-    
+    const MAX_LENGTH = 16;
+
     // Remove any characters that aren't letters or spaces
-    const lettersOnly = input.replace(/[^a-zA-Z\s]/g, '');
-    
+    const lettersOnly = input.replace(/[^a-zA-Z ]/g, '');
+
     // Collapse multiple spaces into single space
-    const singleSpaced = lettersOnly.replace(/\s+/g, ' ');
-    
-    // Trim and enforce max length
-    return singleSpaced.trim().slice(0, MAX_LENGTH);
+    const singleSpaced = lettersOnly.replace(/  +/g, ' ');
+
+    // Remove leading space only (allow trailing for typing), enforce max length
+    return singleSpaced.replace(/^ /, '').slice(0, MAX_LENGTH);
 };
 
 /**
@@ -79,24 +79,24 @@ export const sanitizeName = (input: string): string => {
  */
 export const validateName = (name: string): { valid: boolean; error: string } => {
     const trimmed = name.trim();
-    
+
     if (!trimmed) {
         return { valid: false, error: 'Please enter your name' };
     }
-    
+
     if (trimmed.length < 2) {
         return { valid: false, error: 'Name must be at least 2 characters' };
     }
-    
-    if (trimmed.length > 12) {
-        return { valid: false, error: 'Name must be 12 characters or less' };
+
+    if (trimmed.length > 16) {
+        return { valid: false, error: 'Name must be 16 characters or less' };
     }
-    
+
     // Check for letters only (after sanitization this should always pass)
     if (!/^[a-zA-Z\s]+$/.test(trimmed)) {
         return { valid: false, error: 'Letters only please' };
     }
-    
+
     return { valid: true, error: '' };
 };
 
@@ -110,7 +110,7 @@ export const validateName = (name: string): { valid: boolean; error: string } =>
  */
 export const sanitizeCode = (input: string): string => {
     const MAX_LENGTH = 6;
-    
+
     // Remove any characters that aren't alphanumeric, convert to uppercase
     return input
         .toUpperCase()
@@ -135,7 +135,7 @@ export const escapeHtml = (str: string): string => {
         '`': '&#x60;',
         '=': '&#x3D;'
     };
-    
+
     return str.replace(/[&<>"'`=/]/g, char => htmlEntities[char] || char);
 };
 
@@ -153,13 +153,13 @@ export const escapeHtml = (str: string): string => {
 export const sanitizeComment = (input: string, maxLength: number = 200): string => {
     // Trim and enforce max length first
     let sanitized = input.trim().slice(0, maxLength);
-    
+
     // Collapse multiple spaces/newlines
     sanitized = sanitized.replace(/\s+/g, ' ');
-    
+
     // Escape HTML entities
     sanitized = escapeHtml(sanitized);
-    
+
     return sanitized;
 };
 
@@ -208,12 +208,12 @@ const CODE_CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 export const generateSecureCode = (length: number = 6): string => {
     const array = new Uint32Array(length);
     crypto.getRandomValues(array);
-    
+
     let code = '';
     for (let i = 0; i < length; i++) {
         code += CODE_CHARSET[array[i] % CODE_CHARSET.length];
     }
-    
+
     return code;
 };
 
@@ -241,7 +241,7 @@ export const createRateLimiter = (maxAttempts: number, windowMs: number) => {
         attempts: 0,
         windowStart: Date.now()
     };
-    
+
     return {
         /**
          * Checks if another attempt is allowed.
@@ -249,28 +249,28 @@ export const createRateLimiter = (maxAttempts: number, windowMs: number) => {
          */
         check: (): { allowed: boolean; retryAfter: number } => {
             const now = Date.now();
-            
+
             // Reset window if expired
             if (now - state.windowStart > windowMs) {
                 state = { attempts: 0, windowStart: now };
             }
-            
+
             if (state.attempts >= maxAttempts) {
                 const retryAfter = Math.ceil((windowMs - (now - state.windowStart)) / 1000);
                 return { allowed: false, retryAfter };
             }
-            
+
             state.attempts++;
             return { allowed: true, retryAfter: 0 };
         },
-        
+
         /**
          * Resets the rate limiter state.
          */
         reset: (): void => {
             state = { attempts: 0, windowStart: Date.now() };
         },
-        
+
         /**
          * Gets current state for debugging.
          */
@@ -290,7 +290,7 @@ export const debounce = <T extends (...args: any[]) => any>(
     delay: number
 ): ((...args: Parameters<T>) => void) => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    
+
     return (...args: Parameters<T>) => {
         if (timeoutId) {
             clearTimeout(timeoutId);
@@ -311,7 +311,7 @@ export const throttle = <T extends (...args: any[]) => any>(
     interval: number
 ): ((...args: Parameters<T>) => void) => {
     let lastCall = 0;
-    
+
     return (...args: Parameters<T>) => {
         const now = Date.now();
         if (now - lastCall >= interval) {

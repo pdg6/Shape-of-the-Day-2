@@ -78,15 +78,17 @@ function App() {
     }, [darkMode]);
 
     // Effect to handle view switching based on auth
+    // Priority: Active student session > Authenticated user > Landing
     useEffect(() => {
         if (!loading) {
-            if (user) {
-                setView('teacher');
-            } else if (view === 'teacher') {
-                setView('landing');
-            } else if (classId && studentName) {
-                // Restore student session from sessionStorage
+            // Check for active student session FIRST (student may have joined while a teacher auth exists)
+            if (classId && studentName && view !== 'teacher') {
                 setView('student');
+            } else if (user && !classId && !studentName) {
+                // Only show teacher dashboard if there's no active student session
+                setView('teacher');
+            } else if (view === 'teacher' && !user) {
+                setView('landing');
             }
         }
     }, [user, loading, view, classId, studentName]);

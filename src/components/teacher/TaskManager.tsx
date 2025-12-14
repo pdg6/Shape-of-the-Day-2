@@ -986,7 +986,6 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                         : 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'}
                                                 `}
                                             >
-                                                <span className="opacity-50">📝</span>
                                                 <span className="font-bold">{hierNum}.</span>
                                                 <span className="truncate max-w-[60px]">{draft.title || 'Untitled'}</span>
                                             </button>
