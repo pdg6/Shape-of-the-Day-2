@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation, Archive } from 'lucide-react';
+import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
@@ -163,12 +163,12 @@ const TeacherDashboard: React.FC = () => {
                 transform transition-all duration-300 ease-in-out flex-col h-full overflow-hidden
             `}>
                 {/* Logo/Branding with Date - Constrained to logo height */}
-                <div className="h-16 flex-shrink-0 flex items-center px-4">
+                <div className="h-16 shrink-0 flex items-center px-4">
                     <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
                         <img
                             src="/shape of the day logo.png"
                             alt="Shape of the Day"
-                            className="w-10 h-10 flex-shrink-0 aspect-square object-contain"
+                            className="w-10 h-10 shrink-0 aspect-square object-contain"
                         />
                         <div className={`
                             flex flex-col justify-center overflow-hidden
@@ -185,7 +185,7 @@ const TeacherDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="p-4 flex justify-end md:hidden flex-shrink-0">
+                <div className="p-4 flex justify-end md:hidden shrink-0">
                     <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
                         <X />
                     </button>
@@ -225,7 +225,7 @@ const TeacherDashboard: React.FC = () => {
                                     }
                                 >
                                     <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'}`}>
-                                        <item.icon size={20} className="flex-shrink-0" />
+                                        <item.icon size={20} className="shrink-0" />
                                     </div>
                                     <span className={`whitespace-nowrap transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
                                         {item.label}
@@ -365,7 +365,7 @@ const TeacherDashboard: React.FC = () => {
 
                 </nav>
 
-                <div className="px-4 pb-1 pt-4 space-y-2 flex-shrink-0">
+                <div className="px-4 pb-1 pt-4 space-y-2 shrink-0">
                     <button
                         onClick={() => {
                             setIsCollapsed(!isCollapsed);
@@ -376,7 +376,7 @@ const TeacherDashboard: React.FC = () => {
                         className={`hidden md:flex group relative items-center h-12 rounded-lg transition-all duration-200 font-bold overflow-hidden border-2 border-transparent hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
-                        <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-colors">
+                        <div className="flex items-center justify-center w-12 shrink-0 text-gray-500 dark:text-gray-400 transition-colors">
                             {isCollapsed ? <ChevronRight size={24} /> : <Menu size={20} />}
                         </div>
                         <span className={`
@@ -398,7 +398,7 @@ const TeacherDashboard: React.FC = () => {
                             }`}
                         title={isCollapsed ? 'Join Code' : undefined}
                     >
-                        <div className="flex items-center justify-center w-12 flex-shrink-0 transition-colors text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center justify-center w-12 shrink-0 transition-colors text-gray-500 dark:text-gray-400">
                             <QrCode size={20} />
                         </div>
                         <span className={`
@@ -416,7 +416,7 @@ const TeacherDashboard: React.FC = () => {
                             }`}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
-                        <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 dark:text-gray-400 transition-colors">
+                        <div className="flex items-center justify-center w-12 shrink-0 text-gray-500 dark:text-gray-400 transition-colors">
                             <Settings size={20} />
                         </div>
                         <span className={`

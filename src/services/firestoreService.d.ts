@@ -1,0 +1,20 @@
+
+export function createClassroom(teacherId: string, classroomData: any): Promise<string>;
+export function getClassroom(classroomId: string): Promise<any>;
+export function getTeacherClassrooms(teacherId: string): Promise<any[]>;
+export function joinClassroom(code: string): Promise<any>;
+export function createTask(classroomId: string, taskData: any): Promise<string>;
+export function getClassroomTasks(classroomId: string): Promise<any[]>;
+export function updateTaskStatus(classroomId: string, taskId: string, studentId: string, status: string): Promise<void>;
+export function subscribeToTasks(classroomId: string, callback: (tasks: any[]) => void): () => void;
+export function subscribeToTaskStatuses(classroomId: string, taskId: string, callback: (statuses: any) => void): () => void;
+export function saveStudentProfile(studentId: string, classroomId: string, studentData: any): Promise<void>;
+export function getStudentProfile(studentId: string): Promise<any>;
+export function getTaskWithChildren(taskId: string): Promise<{ task: any, descendants: any[] }>;
+export function duplicateTask(taskId: string, options?: any): Promise<{ newTaskId: string, childMap: any }>;
+export function moveTaskToParent(taskId: string, newParentId: string | null, newParent?: any): Promise<void>;
+export function deleteTaskWithChildren(taskId: string, deleteChildren?: boolean): Promise<number>;
+export function addQuestionToTask(taskId: string, questionData: any): Promise<string>;
+export function resolveQuestion(taskId: string, questionId: string, teacherResponse?: string): Promise<void>;
+export function getTaskQuestions(taskId: string, classroomId?: string | null): Promise<any[]>;
+export function unNestAssignmentsFromProjects(): Promise<{ updated: number, errors: string[] }>;

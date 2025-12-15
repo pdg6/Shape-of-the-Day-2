@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, ChevronDown, ChevronUp, ExternalLink, File, FileText, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation, Circle } from 'lucide-react';
-import { Task, TaskStatus, QuestionEntry, Attachment, LinkAttachment } from '../../types';
-import { StatusBadge } from '../shared/StatusBadge';
+import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, ExternalLink, File, FileText, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation } from 'lucide-react';
+import { Task, TaskStatus } from '../../types';
+
 import { sanitizeComment, filterProfanity } from '../../utils/security';
 import { sanitizeHelpRequest } from '../../utils/textSanitizer';
 import { addQuestionToTask } from '../../services/firestoreService';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
-import { ProgressBar } from '../shared/ProgressIndicator';
+
 import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 
@@ -408,20 +408,7 @@ interface TaskCardProps {
     formatDateRange: (assigned?: string, due?: string) => string;
 }
 
-/**
- * Get the display label for a status
- */
-const getStatusLabel = (status: TaskStatus | 'stuck' | 'question'): string => {
-    // Map legacy statuses
-    if (status === 'stuck' || status === 'question') return 'Needs Help';
-    switch (status) {
-        case 'todo': return 'To Do';
-        case 'in_progress': return 'Working';
-        case 'help': return 'Needs Help';
-        case 'done': return 'Complete';
-        default: return 'To Do';
-    }
-};
+
 
 /**
  * TaskCard Component - Redesigned with collapsible status button
@@ -578,7 +565,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                         {/* All icons in fixed order - fade in when expanded */}
                         <div className={`flex items-center gap-1 overflow-hidden transition-all duration-500 ease-out rounded-lg
                             ${isStatusExpanded ? 'max-w-[180px] opacity-100' : 'max-w-0 opacity-0'}
-                            ${isIntroGlow ? 'bg-gradient-to-r from-gray-200/50 via-white/80 to-gray-200/50 dark:from-gray-700/50 dark:via-gray-600/80 dark:to-gray-700/50 shadow-[0_0_12px_rgba(156,163,175,0.5)] dark:shadow-[0_0_12px_rgba(107,114,128,0.6)]' : ''}`}
+                            ${isIntroGlow ? 'bg-linear-to-r from-gray-200/50 via-white/80 to-gray-200/50 dark:from-gray-700/50 dark:via-gray-600/80 dark:to-gray-700/50 shadow-[0_0_12px_rgba(156,163,175,0.5)] dark:shadow-[0_0_12px_rgba(107,114,128,0.6)]' : ''}`}
                         >
                             {STATUS_ACTIONS.map((action) => {
                                 const Icon = action.icon;

@@ -496,13 +496,10 @@ const StudentView: React.FC<StudentViewProps> = ({
     return (
         <div className="h-full flex overflow-hidden bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Desktop Sidebar */}
+            {/* Desktop Sidebar */}
             <StudentSidebar
-                studentName={studentName}
-                className={currentClassName}
                 tasksCompleted={tasksCompleted}
                 totalTasks={currentTasks.length}
-                onSignOut={handleSignOut}
-                onEditName={() => onEditName(studentName)}
                 activeTab={desktopTab}
                 onTabChange={setDesktopTab}
                 isCollapsed={isSidebarCollapsed}

@@ -3,12 +3,8 @@ import { ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings, FolderOpen
 import { ProgressBar } from '../shared/ProgressIndicator';
 
 interface StudentSidebarProps {
-    studentName: string;
-    className: string;
     tasksCompleted: number;
     totalTasks: number;
-    onSignOut: () => void;
-    onEditName: () => void;
     activeTab: 'tasks' | 'schedule' | 'projects';
     onTabChange: (tab: 'tasks' | 'schedule' | 'projects') => void;
     isCollapsed: boolean;
@@ -23,19 +19,13 @@ interface StudentSidebarProps {
  * are placed at first and last positions for better recall.
  * 
  * Contains navigation (Tasks, Projects, Schedule) and student info:
- * 1. Student Name (personalization)
- * 2. Class Name (context)
- * 3. Tasks Progress (Goal-Gradient Effect)
- * 4. Dark/Light Mode Toggle (preference)
- * 5. Sign Out Button (exit action)
+ * 1. Tasks Progress (Goal-Gradient Effect)
+ * 2. Navigation Items
+ * 3. Settings / Collapse
  */
 const StudentSidebar: React.FC<StudentSidebarProps> = ({
-    studentName,
-    className,
     tasksCompleted,
     totalTasks,
-    onSignOut,
-    onEditName,
     activeTab,
     onTabChange,
     isCollapsed,
@@ -57,12 +47,12 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             transition-all duration-300 ease-in-out
         `}>
             {/* Logo/Branding - Same height as header (h-16), matches TeacherView */}
-            <div className="h-16 flex-shrink-0 flex items-center px-4">
+            <div className="h-16 shrink-0 flex items-center px-4">
                 <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
                     <img
                         src="/shape of the day logo.png"
                         alt="Shape of the Day"
-                        className="w-10 h-10 flex-shrink-0 aspect-square object-contain"
+                        className="w-10 h-10 shrink-0 aspect-square object-contain"
                     />
                     <div className={`
                         flex flex-col justify-center overflow-hidden
@@ -80,7 +70,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             </div>
 
             {/* Navigation */}
-            <nav id="student-sidebar-nav" aria-label="Student navigation" className="flex-shrink-0 p-4">
+            <nav id="student-sidebar-nav" aria-label="Student navigation" className="shrink-0 p-4">
                 <ul className="space-y-2 list-none m-0 p-0">
                     {navItems.map((item) => (
                         <li key={item.id} className="flex">
@@ -99,7 +89,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                                 title={isCollapsed ? item.label : undefined}
                                 aria-label={item.label}
                             >
-                                <div className="flex items-center justify-center w-12 flex-shrink-0">
+                                <div className="flex items-center justify-center w-12 shrink-0">
                                     <item.icon className="w-5 h-5" />
                                 </div>
                                 <span className={`
@@ -136,7 +126,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             </div>
 
             {/* Bottom Actions - Always visible at bottom */}
-            <div className="flex-shrink-0 mt-auto p-4 space-y-2 bg-brand-lightSurface dark:bg-brand-darkSurface">
+            <div className="shrink-0 mt-auto p-4 space-y-2 bg-brand-lightSurface dark:bg-brand-darkSurface">
                 {/* Collapse Toggle */}
                 <button
                     onClick={onToggleCollapse}
@@ -150,7 +140,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     `}
                     title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                 >
-                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-brand-accent">
+                    <div className="flex items-center justify-center w-12 shrink-0 text-brand-accent">
                         {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
                     </div>
                     <span className={`
@@ -174,7 +164,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     `}
                     title={isCollapsed ? 'Settings' : undefined}
                 >
-                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-gray-500 group-hover:text-brand-accent">
+                    <div className="flex items-center justify-center w-12 shrink-0 text-gray-500 group-hover:text-brand-accent">
                         <Settings className="w-5 h-5" />
                     </div>
                     <span className={`
