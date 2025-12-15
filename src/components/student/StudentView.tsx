@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
 import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
-import { Calendar, ListTodo, Menu, FolderOpen } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
 import { clearAllStudentData, queuePendingOperation, getPendingOperations, removePendingOperation } from '../../services/storageService';
 import OfflineIndicator from '../shared/OfflineIndicator';
@@ -493,6 +493,22 @@ const StudentView: React.FC<StudentViewProps> = ({
     // Set of current task IDs for checking imported state
     const currentTaskIds = new Set(currentTasks.map(t => t.id));
 
+    // Handler for desktop tab change - resets date to today when switching to tasks
+    const handleDesktopTabChange = (tab: 'tasks' | 'projects' | 'schedule') => {
+        if (tab === 'tasks') {
+            setSelectedDate(today);
+        }
+        setDesktopTab(tab);
+    };
+
+    // Handler for mobile tab change - resets date to today when switching to tasks
+    const handleMobileTabChange = (tab: 'tasks' | 'projects' | 'schedule') => {
+        if (tab === 'tasks') {
+            setSelectedDate(today);
+        }
+        setMobileTab(tab);
+    };
+
     return (
         <div className="h-full flex overflow-hidden bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Desktop Sidebar */}
@@ -501,7 +517,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 tasksCompleted={tasksCompleted}
                 totalTasks={currentTasks.length}
                 activeTab={desktopTab}
-                onTabChange={setDesktopTab}
+                onTabChange={handleDesktopTabChange}
                 isCollapsed={isSidebarCollapsed}
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 onOpenSettings={() => setShowMenuModal(true)}
@@ -758,75 +774,19 @@ const StudentView: React.FC<StudentViewProps> = ({
                     setShowMenuModal(false);
                     onEditName(studentName);
                 }}
+                activeTab={mobileTab}
+                onTabChange={handleMobileTabChange}
             />
 
-            {/* Mobile footer fade gradient - content fades as it scrolls under */}
-            <div
-                className="md:hidden fixed bottom-[calc(4rem+env(safe-area-inset-bottom,0px)+0.5rem)] left-0 right-0 h-8 pointer-events-none z-sidebar bg-gradient-to-t from-brand-lightSurface dark:from-brand-darkSurface to-transparent"
-                aria-hidden="true"
-            />
-
-            {/* Mobile Bottom Navigation - Menu, Tasks, Projects, Schedule */}
-            <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 bg-brand-lightSurface dark:bg-brand-darkSurface z-sidebar safe-area-pb pb-2">
-                <ul className="flex justify-around items-center h-16 px-2 list-none m-0 p-0">
-                    <li aria-hidden="true">
-                        <img
-                            src="/shape of the day logo.png"
-                            alt=""
-                            className="w-7 h-7 aspect-square object-contain"
-                        />
-                    </li>
-                    <li>
-                        <button
-                            onClick={() => setShowMenuModal(true)}
-                            className="flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                            aria-label="Menu"
-                        >
-                            <Menu className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Menu</span>
-                        </button>
-                    </li>
-                    <li>
-                        <button
-                            onClick={() => setMobileTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'tasks'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Tasks"
-                        >
-                            <ListTodo className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Tasks</span>
-                        </button>
-                    </li>
-                    <li>
-                        <button
-                            onClick={() => setMobileTab('projects')}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'projects'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Projects"
-                        >
-                            <FolderOpen className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Projects</span>
-                        </button>
-                    </li>
-                    <li>
-                        <button
-                            onClick={() => setMobileTab('schedule')}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-1.5 w-14 h-14 rounded-lg border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${mobileTab === 'schedule'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Schedule"
-                        >
-                            <Calendar className="w-5 h-5" />
-                            <span className="text-[10px] font-bold">Schedule</span>
-                        </button>
-                    </li>
-                </ul>
-            </nav>
+            {/* Mobile Hamburger Menu Button - Fixed bottom-left */}
+            <button
+                onClick={() => setShowMenuModal(true)}
+                className="md:hidden fixed bottom-4 left-4 z-50 w-12 h-12 flex items-center justify-center rounded-md border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-[0_2px_8px_rgba(16,185,129,0.15)] dark:shadow-[0_2px_8px_rgba(16,185,129,0.25)] transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 safe-area-inset"
+                aria-label="Open menu"
+                style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+            >
+                <Menu className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+            </button>
 
             {/* Offline Indicator - shows when offline or pending operations */}
             <OfflineIndicator

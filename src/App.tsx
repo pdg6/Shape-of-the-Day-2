@@ -206,9 +206,15 @@ function App() {
      * SECURITY: Clears all local storage to prevent data leakage on shared devices.
      */
     const handleLogout = async () => {
-        // SECURITY: Clear all student local data first (IndexedDB, localStorage, sessionStorage)
+        // SECURITY: Explicitly clear session storage keys FIRST to prevent auto-login
+        sessionStorage.removeItem('studentName');
+        sessionStorage.removeItem('studentClassId');
+        sessionStorage.removeItem('studentClassroomColor');
+
+        // SECURITY: Clear all student local data (IndexedDB, localStorage, sessionStorage)
         await clearAllStudentData();
 
+        // Sign out from Firebase
         await logout();
 
         // Reset all application state

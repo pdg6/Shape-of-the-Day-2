@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, Home, ListTodo, Presentation } from 'lucide-react';
+import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, ListTodo, Presentation } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
@@ -466,6 +466,8 @@ const TeacherDashboard: React.FC = () => {
                         onShowData={() => setActiveTab('reports')}
                         teacherName={user?.displayName || user?.email || 'Teacher'}
                         className={currentClass?.name}
+                        activeTab={activeTab}
+                        onTabChange={handleTabChange}
                     />
                 </Modal>
 
@@ -490,77 +492,15 @@ const TeacherDashboard: React.FC = () => {
             {/* Development Tools - Remove in production */}
             {/* <DummyDataControls /> */}
 
-            {/* Mobile Bottom Navigation - iOS/Android Style */}
-            <nav aria-label="Mobile navigation" className="md:hidden fixed bottom-0 inset-x-0 h-24 footer-fade z-sidebar safe-area-pb">
-                <ul className="flex justify-around items-center h-16 px-2 list-none m-0 p-0 mt-4">
-                    <li>
-                        <button
-                            onClick={() => setActiveTab('classrooms')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Classrooms"
-                        >
-                            <School className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Classes</span>
-                        </button>
-                    </li>
-
-                    <li>
-                        <button
-                            onClick={() => setActiveTab('tasks')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Task Manager"
-                        >
-                            <ListTodo className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Tasks</span>
-                        </button>
-                    </li>
-
-                    <li>
-                        <button
-                            onClick={() => setActiveTab('shape')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Shape of Day"
-                        >
-                            <Presentation className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Shape</span>
-                        </button>
-                    </li>
-
-                    <li>
-                        <button
-                            onClick={() => setActiveTab('live')}
-                            className={`flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
-                                ? 'border-brand-accent text-brand-accent'
-                                : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                            aria-label="Live View"
-                        >
-                            <Activity className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">Live</span>
-                        </button>
-                    </li>
-
-                    <li>
-                        <button
-                            onClick={() => setIsSettingsOpen(true)}
-                            className="flex flex-col items-center justify-center gap-1 p-2 w-16 h-16 rounded-xl border-2 transition-all duration-200 bg-brand-lightSurface dark:bg-brand-darkSurface border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                            aria-label="Settings & More"
-                        >
-                            <Home className="w-6 h-6" />
-                            <span className="text-fluid-xs font-bold">More</span>
-                        </button>
-                    </li>
-                </ul>
-            </nav>
+            {/* Mobile Hamburger Menu Button - Fixed bottom-left */}
+            <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="md:hidden fixed bottom-4 left-4 z-50 w-12 h-12 flex items-center justify-center rounded-md border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-[0_2px_8px_rgba(16,185,129,0.15)] dark:shadow-[0_2px_8px_rgba(16,185,129,0.25)] transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+                aria-label="Open menu"
+                style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+            >
+                <Menu className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+            </button>
         </div >
     );
 };

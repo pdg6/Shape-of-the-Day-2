@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, LogOut, QrCode, BarChart2, User, BookOpen } from 'lucide-react';
+import { Moon, Sun, LogOut, QrCode, BarChart2, User, BookOpen, School, ListTodo, Presentation, Activity } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
 
 interface SettingsOverlayProps {
@@ -10,6 +10,8 @@ interface SettingsOverlayProps {
     onShowData?: () => void;
     teacherName?: string;
     className?: string;
+    activeTab?: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms';
+    onTabChange?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms') => void;
 }
 
 const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
@@ -19,7 +21,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
     onShowJoinCode,
     onShowData,
     teacherName = 'Teacher',
-    className = ''
+    className = '',
+    activeTab,
+    onTabChange
 }) => {
     const { darkMode, toggleDarkMode } = useClassStore();
 
@@ -27,6 +31,81 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
 
     return (
         <div className="space-y-3">
+            {/* Navigation Section - Only show if navigation props provided */}
+            {activeTab && onTabChange && (
+                <>
+                    <div className="grid grid-cols-5 gap-1.5 mb-4">
+                        <button
+                            onClick={() => {
+                                onTabChange('classrooms');
+                                onClose();
+                            }}
+                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
+                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                }`}
+                        >
+                            <School size={20} />
+                            <span className="text-[10px] font-bold">Classes</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                onTabChange('tasks');
+                                onClose();
+                            }}
+                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
+                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                }`}
+                        >
+                            <ListTodo size={20} />
+                            <span className="text-[10px] font-bold">Tasks</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                onTabChange('shape');
+                                onClose();
+                            }}
+                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
+                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                }`}
+                        >
+                            <Presentation size={20} />
+                            <span className="text-[10px] font-bold">Shape</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                onTabChange('live');
+                                onClose();
+                            }}
+                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
+                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                }`}
+                        >
+                            <Activity size={20} />
+                            <span className="text-[10px] font-bold">Live</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                onTabChange('reports');
+                                onClose();
+                            }}
+                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'reports'
+                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                }`}
+                        >
+                            <BarChart2 size={20} />
+                            <span className="text-[10px] font-bold">Reports</span>
+                        </button>
+                    </div>
+                    {/* Divider */}
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+                </>
+            )}
+
             {/* Teacher Name */}
             <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">

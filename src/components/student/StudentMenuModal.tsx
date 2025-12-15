@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle } from 'lucide-react';
+import { Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle, ListTodo, FolderOpen, CalendarDays } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
 import { Modal } from '../shared/Modal';
 
@@ -12,6 +12,8 @@ interface StudentMenuModalProps {
     totalTasks: number;
     onSignOut: () => void;
     onEditName: () => void;
+    activeTab: 'tasks' | 'projects' | 'schedule';
+    onTabChange: (tab: 'tasks' | 'projects' | 'schedule') => void;
 }
 
 /**
@@ -33,7 +35,9 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
     tasksCompleted,
     totalTasks,
     onSignOut,
-    onEditName
+    onEditName,
+    activeTab,
+    onTabChange
 }) => {
     const { darkMode, toggleDarkMode } = useClassStore();
 
@@ -49,6 +53,52 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Menu">
             <div className="space-y-3">
+                {/* Navigation Section */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                    <button
+                        onClick={() => {
+                            onTabChange('tasks');
+                            onClose();
+                        }}
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
+                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                            }`}
+                    >
+                        <ListTodo size={24} />
+                        <span className="text-xs font-bold">Tasks</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            onTabChange('projects');
+                            onClose();
+                        }}
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'projects'
+                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                            }`}
+                    >
+                        <FolderOpen size={24} />
+                        <span className="text-xs font-bold">Projects</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            onTabChange('schedule');
+                            onClose();
+                        }}
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'schedule'
+                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                            }`}
+                    >
+                        <CalendarDays size={24} />
+                        <span className="text-xs font-bold">Schedule</span>
+                    </button>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+
                 {/* Student Name */}
                 <button
                     onClick={() => {
@@ -162,8 +212,18 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                 {/* Sign Out Button */}
                 <button
                     onClick={() => {
-                        onSignOut();
-                        onClose();
+                        const confirmed = window.confirm(
+                            'Sign out of this class?\n\nYour local session data will be cleared. ' +
+                            'Your progress has been saved to the server.'
+                        );
+                        if (confirmed) {
+                            // Explicitly clear session storage keys to prevent auto-login
+                            sessionStorage.removeItem('studentName');
+                            sessionStorage.removeItem('studentClassId');
+                            sessionStorage.removeItem('studentClassroomColor');
+                            onSignOut();
+                            onClose();
+                        }
                     }}
                     className="w-full bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
                 >
