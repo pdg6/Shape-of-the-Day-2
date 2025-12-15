@@ -8,9 +8,11 @@ service firebase.storage {
     }
     
     // Allow teachers to upload attachments for tasks
+    // Allow teachers to to upload attachments for tasks
+    // SECURITY: Prevent anonymous students from overwriting teacher files
     match /tasks/{taskId}/{allPaths=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.firebase.sign_in_provider != 'anonymous';
     }
   }
 }

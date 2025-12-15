@@ -49,16 +49,13 @@ service cloud.firestore {
       // Teachers can read their own classrooms
       allow read: if isSignedIn() && resource.data.teacherId == request.auth.uid;
       
-      // Students can read classroom ONLY when querying by joinCode
-      // This prevents enumeration of all classrooms while allowing join flow
-      // Note: Firestore doesn't support query filtering in rules, so we allow 
-      // single-doc reads for students who are already enrolled
-      allow read: if isEnrolledStudent(classroomId);
+      // SECURITY: Split read access
+      // 'get' (by ID): Restrict to enrolled students or teachers
+      allow get: if isEnrolledStudent(classroomId) || isTeacher(classroomId);
       
-      // SECURITY: Join code lookup - allow read for anyone but rate limit on client
-      // This is necessary for the join flow before authentication
-      // Client-side rate limiting (3 attempts/min) provides brute-force protection
-      allow read: if true;
+      // 'list' (queries): Allow publicly for join code lookup
+      // Note: Ideally this would be a separate 'public_classrooms' collection
+      allow list: if true;
       
       // Teachers can create new classrooms (validate join code format)
       allow create: if isSignedIn() && 
