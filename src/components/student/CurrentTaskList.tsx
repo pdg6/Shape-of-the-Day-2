@@ -481,9 +481,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
     return (
         <div
             className={`group relative bg-brand-lightSurface dark:bg-brand-darkSurface 
-                rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500
+                rounded-xl border-2 border-gray-300 dark:border-gray-600 
+                hover:border-brand-accent/50 hover:shadow-sm hover:shadow-brand-accent/5
                 pt-1.5 pb-4 px-5
-                transition-all duration-200 hover:shadow-lg hover:shadow-brand-accent/5
+                transition-all duration-200
                 hover:-translate-y-0.5 select-none
                 ${isDone ? 'opacity-60' : ''}`}
             style={{
@@ -504,18 +505,18 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                 {/* Text Group - all at same level for proper baseline alignment (faded when done) */}
                 <div className={`flex items-baseline gap-2 flex-1 min-w-0 ${isDone ? 'opacity-60' : ''}`}>
                     {/* Task Number - underlined with status color, positioned up 4px */}
-                    <span className={`text-sm font-bold text-gray-400 dark:text-gray-500 shrink-0 underline decoration-2 underline-offset-[3px] relative -top-1 ${activeAction.underlineColor}`}>
+                    <span className={`text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary shrink-0 underline decoration-2 underline-offset-[3px] relative -top-1 ${activeAction.underlineColor}`}>
                         {hierarchicalNumber}
                     </span>
 
-                    {/* Title - matches ShapeOfDay styling */}
+                    {/* Title - matching ShapeOfDay styling */}
                     <h3 className={`text-xl font-black leading-tight truncate flex-1 min-w-0 ${isDone ? 'text-gray-500 line-through decoration-2' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                         {task.title}
                     </h3>
 
                     {/* Date (if exists) - immediately after title */}
                     {(assignedDate || task.dueDate) && (
-                        <span className="text-sm text-gray-400 dark:text-gray-500 font-medium shrink-0">
+                        <span className="text-sm text-gray-400 dark:text-gray-500 font-semibold shrink-0">
                             {formatDateRange(assignedDate, task.dueDate)}
                         </span>
                     )}
@@ -573,7 +574,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                         {/* Collapsed state - depends on status */}
                         {!isStatusExpanded && (
                             normalizedStatus === 'todo' ? (
-                                /* To Do: Show filled button with rounded-md styling */
+                                /* To Do: Show filled button matching UI.md button patterns */
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -581,14 +582,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                     }}
                                     title="To Do - Click to change status"
                                     aria-label="Current status: To Do. Click to change."
-                                    className="px-3 py-1.5 rounded-md transition-all duration-300 ease-out
-                                        bg-gray-800 dark:bg-gray-700
-                                        border-2 border-gray-800 dark:border-gray-700
-                                        text-white font-bold text-sm
-                                        hover:bg-gray-900 dark:hover:bg-gray-600
-                                        hover:border-gray-900 dark:hover:border-gray-600
-                                        focus:outline-none
-                                        flex items-center justify-center"
+                                    className="px-3 h-7 rounded-md transition-all duration-300 ease-out
+                                        bg-gray-500 dark:bg-gray-600
+                                        text-white font-semibold text-sm
+                                        hover:bg-gray-600 dark:hover:bg-gray-500
+                                        focus:outline-none focus:ring-2 focus:ring-gray-400/50
+                                        flex items-center justify-center
+                                        shadow-sm"
                                 >
                                     To Do
                                 </button>
@@ -859,17 +859,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
 
     return (
         <div className="flex flex-col gap-4 w-full">
-            {/* Progress bar */}
-            {tasks.length > 0 && (
-                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700">
-                    <ProgressBar
-                        current={completedCount}
-                        total={tasks.length}
-                        variant="success"
-                        showLabel={true}
-                    />
-                </div>
-            )}
+            {/* Progress now shown in header */}
 
             {sortedTasks.map((task) => (
                 <TaskCard

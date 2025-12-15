@@ -6,9 +6,10 @@ import StudentNameModal from './StudentNameModal';
 import StudentMenuModal from './StudentMenuModal';
 import StudentSidebar from './StudentSidebar';
 import StudentProjectsView from './StudentProjectsView';
+import CircularProgress from '../shared/CircularProgress';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
-import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 import { Calendar, ListTodo, Menu, FolderOpen } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
@@ -127,45 +128,65 @@ const StudentView: React.FC<StudentViewProps> = ({
         },
     ]);
 
-    // Mock database of tasks available for future dates
-    // In a real app, this would come from an API/backend
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0] ?? '';
-    const [availableTasks] = useState<Record<string, Task[]>>({
-        [today]: [], // Already imported
-        // Tomorrow's tasks
-        [tomorrow]: [
-            {
-                id: '3',
-                title: 'Reading Time',
-                description: 'Read for 20 minutes',
-                status: 'todo',
-                dueDate: tomorrow,
-                type: 'task',
-                parentId: null,
-                rootId: null,
-                path: [],
-                pathTitles: [],
-                childIds: [],
-                selectedRoomIds: [],
-                presentationOrder: 0
-            },
-            {
-                id: '4',
-                title: 'Art Project',
-                description: 'Draw your favorite animal',
-                status: 'todo',
-                dueDate: tomorrow,
-                type: 'task',
-                parentId: null,
-                rootId: null,
-                path: [],
-                pathTitles: [],
-                childIds: [],
-                selectedRoomIds: [],
-                presentationOrder: 1
-            },
-        ]
-    });
+    // Firestore-fetched tasks for the selected date (schedule view)
+    const [scheduleTasks, setScheduleTasks] = useState<Task[]>([]);
+    const [scheduleLoading, setScheduleLoading] = useState(false);
+
+    // Fetch tasks for the selected date from Firestore
+    useEffect(() => {
+        if (!classId) return;
+
+        setScheduleLoading(true);
+
+        const tasksRef = collection(db, 'tasks');
+        // Query tasks assigned to this classroom
+        const q = query(
+            tasksRef,
+            where('assignedRooms', 'array-contains', classId)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedTasks: Task[] = [];
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                // Filter by date range: startDate <= selectedDate <= endDate
+                const startDate = data.startDate || '';
+                const endDate = data.endDate || data.startDate || '';
+                const inRange = selectedDate >= startDate && selectedDate <= endDate;
+
+                // Only include non-draft tasks that are valid for the selected date
+                if (inRange && data.status !== 'draft') {
+                    fetchedTasks.push({
+                        id: docSnap.id,
+                        title: data.title || 'Untitled',
+                        description: data.description || '',
+                        status: data.status || 'todo',
+                        dueDate: data.endDate || data.dueDate,
+                        type: data.type || 'task',
+                        parentId: data.parentId || null,
+                        rootId: data.rootId || null,
+                        path: data.path || [],
+                        pathTitles: data.pathTitles || [],
+                        childIds: data.childIds || [],
+                        selectedRoomIds: data.selectedRoomIds || data.assignedRooms || [],
+                        presentationOrder: data.presentationOrder ?? 0,
+                        attachments: data.attachments || [],
+                        links: data.links || [],
+                    } as Task);
+                }
+            });
+
+            // Sort by presentation order
+            fetchedTasks.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+            setScheduleTasks(fetchedTasks);
+            setScheduleLoading(false);
+        }, (error) => {
+            console.error('Error fetching schedule tasks:', error);
+            setScheduleLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, [classId, selectedDate]);
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
@@ -281,12 +302,11 @@ const StudentView: React.FC<StudentViewProps> = ({
      * Filters out tasks that are already in the current list.
      */
     const handleImportTasks = () => {
-        const tasksToImport = availableTasks[selectedDate] || [];
-        if (tasksToImport.length === 0) return;
+        if (scheduleTasks.length === 0) return;
 
         // Filter out tasks that already exist in currentTasks
-        const currentTaskIds = new Set(currentTasks.map(t => t.id));
-        const newTasks = tasksToImport.filter(t => !currentTaskIds.has(t.id));
+        const existingIds = new Set(currentTasks.map(t => t.id));
+        const newTasks = scheduleTasks.filter(t => !existingIds.has(t.id));
 
         if (newTasks.length === 0) {
             toast.error('All tasks are already in your list!');
@@ -343,12 +363,14 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     // Determine what content to show based on the selected date
     const isToday = selectedDate === today;
-    const previewTasks = availableTasks[selectedDate] || [];
+    const previewTasks = scheduleTasks;
     const showPreview = !isToday && previewTasks.length > 0;
 
     // Calculate task stats
     const tasksCompleted = currentTasks.filter(t => t.status === 'done').length;
+    const tasksInProgress = currentTasks.filter(t => t.status === 'in_progress').length;
     const tasksLeft = currentTasks.filter(t => t.status !== 'done').length;
+    const hasStartedWork = currentTasks.some(t => t.status !== 'todo');
 
     // Set of current task IDs for checking imported state
     const currentTaskIds = new Set(currentTasks.map(t => t.id));
@@ -371,28 +393,27 @@ const StudentView: React.FC<StudentViewProps> = ({
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 grid grid-rows-[64px_1fr] row-gap-1 min-w-0 overflow-hidden relative">
-                {/* Mobile Header - Class Name (left), Tasks & Progress + Date (right) */}
-                <header className="md:hidden row-start-1 h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-4 flex items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-3 pointer-events-none">
-                    {/* Left: Class Name */}
-                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate pointer-events-auto">
+            <div className="flex-1 grid grid-rows-[40px_1fr] md:grid-rows-[64px_1fr] row-gap-1 min-w-0 overflow-hidden relative">
+                {/* Mobile Header - Compact inline: Class (left), Date + Progress (right) */}
+                <header className="md:hidden row-start-1 h-10 px-4 flex items-center justify-between z-10">
+                    {/* Left: Class Name - underlined with accent */}
+                    <h1 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-2 decoration-brand-accent">
                         {currentClassName}
                     </h1>
-                    {/* Right: Tasks & Progress (accent) + Date (gray) */}
-                    <div className="flex items-baseline gap-2 flex-shrink-0 pointer-events-auto">
-                        <span className="text-fluid-sm font-semibold text-brand-accent">
-                            {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
+                    {/* Right: Date (gray) + Progress donut + Count (white) */}
+                    <div className="flex items-center gap-2 whitespace-nowrap">
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                         </span>
-                        <span className="text-fluid-xs font-medium text-gray-500 dark:text-gray-400">
-                            {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
+                        <CircularProgress
+                            total={currentTasks.length}
+                            inProgress={tasksInProgress}
+                            completed={tasksCompleted}
+                            hasStarted={hasStartedWork}
+                            className="w-5 h-5 sm:w-6 sm:h-6"
+                        />
                     </div>
                 </header>
-                {/* Mobile header fade gradient */}
-                <div
-                    className="md:hidden absolute left-0 right-0 top-16 h-8 pointer-events-none z-dropdown bg-gradient-to-b from-brand-lightSurface dark:from-brand-darkSurface to-transparent"
-                    aria-hidden="true"
-                />
 
                 {/* Desktop Header - Class Name (left), Tasks & Progress + Date (right) */}
                 <header className="hidden md:flex row-start-1 h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-4 pointer-events-none">
@@ -475,14 +496,20 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     <h3 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                         Tasks for {isToday ? 'Today' : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                     </h3>
-                                    <DayTaskPreview
-                                        date={selectedDate}
-                                        tasks={isToday ? currentTasks : previewTasks}
-                                        onImport={handleImportTasks}
-                                        onImportTask={handleImportTask}
-                                        importedTaskIds={currentTaskIds}
-                                        hideImportButtons={isToday}
-                                    />
+                                    {scheduleLoading ? (
+                                        <div className="flex items-center justify-center py-12">
+                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-accent"></div>
+                                        </div>
+                                    ) : (
+                                        <DayTaskPreview
+                                            date={selectedDate}
+                                            tasks={isToday ? currentTasks : previewTasks}
+                                            onImport={handleImportTasks}
+                                            onImportTask={handleImportTask}
+                                            importedTaskIds={currentTaskIds}
+                                            hideImportButtons={isToday}
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -490,7 +517,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </main>
 
                 {/* Mobile Content */}
-                <main className="md:hidden row-start-2 flex-1 overflow-y-auto custom-scrollbar px-4 pb-24">
+                <main className="md:hidden row-start-2 flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
                     {mobileTab === 'tasks' ? (
                         <div>
 
@@ -545,14 +572,20 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 <h3 className="text-fluid-lg font-bold mb-3 text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                     {isToday ? "Today's Tasks" : `Tasks for ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`}
                                 </h3>
-                                <DayTaskPreview
-                                    date={selectedDate}
-                                    tasks={isToday ? currentTasks : previewTasks}
-                                    onImport={handleImportTasks}
-                                    onImportTask={handleImportTask}
-                                    importedTaskIds={currentTaskIds}
-                                    hideImportButtons={isToday}
-                                />
+                                {scheduleLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-brand-accent"></div>
+                                    </div>
+                                ) : (
+                                    <DayTaskPreview
+                                        date={selectedDate}
+                                        tasks={isToday ? currentTasks : previewTasks}
+                                        onImport={handleImportTasks}
+                                        onImportTask={handleImportTask}
+                                        importedTaskIds={currentTaskIds}
+                                        hideImportButtons={isToday}
+                                    />
+                                )}
                             </div>
                         </div>
                     )}
