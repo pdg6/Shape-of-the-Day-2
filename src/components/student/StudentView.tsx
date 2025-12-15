@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MiniCalendar from './MiniCalendar';
 import CurrentTaskList from './CurrentTaskList';
 import DayTaskPreview from './DayTaskPreview';
@@ -13,6 +13,9 @@ import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp, collection, query, 
 import { auth, db } from '../../firebase';
 import { Calendar, ListTodo, Menu, FolderOpen } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
+import { clearAllStudentData, queuePendingOperation, getPendingOperations, removePendingOperation } from '../../services/storageService';
+import OfflineIndicator from '../shared/OfflineIndicator';
+import { SyncStatus } from '../../services/studentDataService';
 
 /**
  * Props for the StudentView component.
@@ -128,9 +131,80 @@ const StudentView: React.FC<StudentViewProps> = ({
         },
     ]);
 
+    // Rate limiting for sync operations (prevents race conditions from rapid clicks)
+    const lastSyncRef = useRef<{ taskId: string; timestamp: number } | null>(null);
+    const SYNC_DEBOUNCE_MS = 300; // Minimum time between syncs for same task
+
     // Firestore-fetched tasks for the selected date (schedule view)
     const [scheduleTasks, setScheduleTasks] = useState<Task[]>([]);
     const [scheduleLoading, setScheduleLoading] = useState(false);
+
+    // Network status for offline indicator
+    const [syncStatus, setSyncStatus] = useState<SyncStatus>({
+        isOnline: navigator.onLine,
+        lastSyncTime: null,
+        pendingOperations: 0,
+        isSyncing: false,
+    });
+
+    // Listen for online/offline events
+    useEffect(() => {
+        const handleOnline = async () => {
+            setSyncStatus(prev => ({ ...prev, isOnline: true }));
+            // Process pending operations when back online
+            await processPendingOps();
+        };
+        const handleOffline = () => {
+            setSyncStatus(prev => ({ ...prev, isOnline: false }));
+        };
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+
+    // Process pending operations (called when coming back online)
+    const processPendingOps = async () => {
+        const pending = await getPendingOperations();
+        if (pending.length === 0) return;
+
+        console.log('[StudentView] Processing', pending.length, 'pending operations');
+        setSyncStatus(prev => ({ ...prev, isSyncing: true }));
+
+        for (const op of pending) {
+            try {
+                if (op.type === 'status_update') {
+                    const payload = op.payload as { taskId: string; status: string; comment: string };
+                    const currentUser = auth.currentUser;
+                    if (currentUser && classId) {
+                        const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
+                        await updateDoc(studentRef, {
+                            currentStatus: payload.status,
+                            currentTaskId: payload.taskId,
+                            currentMessage: payload.comment || '',
+                            lastActive: serverTimestamp()
+                        });
+                    }
+                }
+                await removePendingOperation(op.id);
+                console.log('[StudentView] Synced pending op:', op.id);
+            } catch (error) {
+                console.error('[StudentView] Failed to sync op:', op.id, error);
+            }
+        }
+
+        const remainingOps = await getPendingOperations();
+        setSyncStatus(prev => ({
+            ...prev,
+            isSyncing: false,
+            pendingOperations: remainingOps.length,
+            lastSyncTime: Date.now()
+        }));
+    };
 
     // Fetch tasks for the selected date from Firestore
     useEffect(() => {
@@ -190,7 +264,7 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
-     * Accepts tasks as parameter to avoid stale closure issues.
+     * OFFLINE SUPPORT: Queues operations when offline, syncs when back online.
      */
     const syncToTeacher = async (
         taskId: string,
@@ -201,8 +275,38 @@ const StudentView: React.FC<StudentViewProps> = ({
         const currentUser = auth.currentUser;
         if (!currentUser || !classId) return;
 
+        // RACE CONDITION PREVENTION: Skip if this exact task was synced recently
+        const now = Date.now();
+        if (lastSyncRef.current &&
+            lastSyncRef.current.taskId === taskId &&
+            now - lastSyncRef.current.timestamp < SYNC_DEBOUNCE_MS) {
+            console.log('[SYNC] Debounced - too soon after last sync for:', taskId);
+            return;
+        }
+        lastSyncRef.current = { taskId, timestamp: now };
+
         const completedCount = updatedTasks.filter(t => t.status === 'done').length;
         const activeTasks = updatedTasks.filter(t => t.status === 'in_progress').map(t => t.id);
+
+        // Check if we're offline - queue the operation if so
+        if (!navigator.onLine) {
+            console.log('[SYNC] Offline - queueing status update for:', taskId);
+            await queuePendingOperation({
+                type: 'status_update',
+                taskId,
+                payload: {
+                    taskId,
+                    status,
+                    comment,
+                    completedCount,
+                    activeTasks,
+                },
+            });
+            const pending = await getPendingOperations();
+            setSyncStatus(prev => ({ ...prev, pendingOperations: pending.length }));
+            toast('Saved offline - will sync when connected', { icon: '📴' });
+            return;
+        }
 
         try {
             const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
@@ -217,8 +321,18 @@ const StudentView: React.FC<StudentViewProps> = ({
             });
 
             console.log('[SYNC] Updated Firestore for student:', currentUser.uid);
+            setSyncStatus(prev => ({ ...prev, lastSyncTime: Date.now() }));
         } catch (error) {
             console.error("Failed to sync student state:", error);
+            // Queue for retry if online sync fails
+            await queuePendingOperation({
+                type: 'status_update',
+                taskId,
+                payload: { taskId, status, comment, completedCount, activeTasks },
+            });
+            const pending = await getPendingOperations();
+            setSyncStatus(prev => ({ ...prev, pendingOperations: pending.length }));
+            toast.error('Sync failed - will retry automatically');
         }
     };
 
@@ -341,7 +455,8 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     /**
      * Handles the student signing out.
-     * Cleans up live_students document and scrubs session data before logging out.
+     * Cleans up live_students document, scrubs session data, and clears local storage.
+     * SECURITY: clearAllStudentData prevents data leakage on shared devices.
      */
     const handleSignOut = async () => {
         const currentUser = auth.currentUser;
@@ -352,6 +467,10 @@ const StudentView: React.FC<StudentViewProps> = ({
                 await deleteDoc(studentRef);
 
                 await scrubAndSaveSession(classId, currentUser.uid);
+
+                // SECURITY: Clear all local storage (IndexedDB, localStorage, sessionStorage)
+                await clearAllStudentData();
+
                 toast.success('Session saved. Goodbye!');
             } catch (error) {
                 console.error("Error during sign-out cleanup:", error);
@@ -683,6 +802,12 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </li>
                 </ul>
             </nav>
+
+            {/* Offline Indicator - shows when offline or pending operations */}
+            <OfflineIndicator
+                syncStatus={syncStatus}
+                onRefresh={processPendingOps}
+            />
         </div>
     );
 };

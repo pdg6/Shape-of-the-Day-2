@@ -3,6 +3,7 @@ import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageC
 import { Task, TaskStatus, QuestionEntry, Attachment, LinkAttachment } from '../../types';
 import { StatusBadge } from '../shared/StatusBadge';
 import { sanitizeComment, filterProfanity } from '../../utils/security';
+import { sanitizeHelpRequest } from '../../utils/textSanitizer';
 import { addQuestionToTask } from '../../services/firestoreService';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
@@ -98,11 +99,14 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
     const previousFocusRef = useRef<HTMLElement | null>(null);
 
     /**
-     * Handles comment input with sanitization and profanity filtering.
+     * Handles comment input with Unicode normalization, sanitization, and profanity filtering.
      */
     const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const raw = e.target.value.slice(0, maxChars);
-        const filtered = filterProfanity(raw);
+        // Apply Unicode normalization and control character removal
+        const normalized = sanitizeHelpRequest(raw);
+        // Apply profanity filter
+        const filtered = filterProfanity(normalized);
         setComment(filtered);
     };
 
@@ -245,7 +249,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                             {submittedQuestions.map((q, idx) => (
                                 <div key={`new-${idx}`} className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-200 dark:border-green-800">
                                     <span className="text-green-700 dark:text-green-400">
-                                        ✓ "{q}" (just submitted)
+                                        âœ“ "{q}" (just submitted)
                                     </span>
                                 </div>
                             ))}
@@ -276,9 +280,14 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
 
                 {/* Content */}
                 <div className="p-4 flex-1 overflow-y-auto">
-                    <label className="block text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2">
+                    <label className="block text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">
                         Tell your teacher more:
                     </label>
+                    {/* PRIVACY: Teacher visibility warning */}
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1">
+                        <span>âš ï¸</span>
+                        <span>Your teacher will see this message</span>
+                    </p>
                     <div className="relative">
                         <textarea
                             value={comment}
@@ -312,7 +321,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                         data-testid="submit-help-btn"
                     >
                         {isSubmitting ? (
-                            <span className="animate-spin">⏳</span>
+                            <span className="animate-spin">â³</span>
                         ) : (
                             <Send size={14} />
                         )}
@@ -428,8 +437,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
     const [isExpanded, setIsExpanded] = useState(false);
     const [isStatusExpanded, setIsStatusExpanded] = useState(false);
     const [showStatusText, setShowStatusText] = useState(false);
+    const [isIntroGlow, setIsIntroGlow] = useState(false); // Intro animation glow state
     const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const textTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const introAnimatedRef = useRef(false); // Track if intro has played
 
     const hierarchicalNumber = getHierarchicalNumber(task, allTasks);
     const isDone = task.status === 'done';
@@ -475,6 +486,28 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
             if (textTimeoutRef.current) clearTimeout(textTimeoutRef.current);
         };
     }, []);
+
+    // Intro animation: auto-expand status menu on first load for 'todo' tasks only
+    useEffect(() => {
+        if (introAnimatedRef.current || normalizedStatus !== 'todo') return;
+        introAnimatedRef.current = true;
+
+        // Small delay before starting intro animation
+        const introDelay = setTimeout(() => {
+            setIsStatusExpanded(true);
+            setIsIntroGlow(true);
+
+            // Collapse after 1000ms
+            const collapseTimeout = setTimeout(() => {
+                setIsStatusExpanded(false);
+                setIsIntroGlow(false);
+            }, 1000);
+
+            statusTimeoutRef.current = collapseTimeout;
+        }, 300);
+
+        return () => clearTimeout(introDelay);
+    }, [normalizedStatus]);
 
     const ActiveIcon = activeAction.icon;
 
@@ -543,8 +576,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                     {/* Container that expands width smoothly */}
                     <div className="flex items-center">
                         {/* All icons in fixed order - fade in when expanded */}
-                        <div className={`flex items-center gap-1 overflow-hidden transition-all duration-500 ease-out ${isStatusExpanded ? 'max-w-[180px] opacity-100' : 'max-w-0 opacity-0'
-                            }`}>
+                        <div className={`flex items-center gap-1 overflow-hidden transition-all duration-500 ease-out rounded-lg
+                            ${isStatusExpanded ? 'max-w-[180px] opacity-100' : 'max-w-0 opacity-0'}
+                            ${isIntroGlow ? 'bg-gradient-to-r from-gray-200/50 via-white/80 to-gray-200/50 dark:from-gray-700/50 dark:via-gray-600/80 dark:to-gray-700/50 shadow-[0_0_12px_rgba(156,163,175,0.5)] dark:shadow-[0_0_12px_rgba(107,114,128,0.6)]' : ''}`}
+                        >
                             {STATUS_ACTIONS.map((action) => {
                                 const Icon = action.icon;
                                 const isActive = normalizedStatus === action.id;
@@ -583,9 +618,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                     title="To Do - Click to change status"
                                     aria-label="Current status: To Do. Click to change."
                                     className="px-3 h-7 rounded-md transition-all duration-300 ease-out
-                                        bg-gray-500 dark:bg-gray-600
+                                        bg-gray-500 dark:bg-gray-800/50
+                                        border-2 border-gray-600 dark:border-gray-500
                                         text-white font-semibold text-sm
-                                        hover:bg-gray-600 dark:hover:bg-gray-500
+                                        hover:bg-gray-600 dark:hover:bg-gray-700/50
                                         focus:outline-none focus:ring-2 focus:ring-gray-400/50
                                         flex items-center justify-center
                                         shadow-sm"

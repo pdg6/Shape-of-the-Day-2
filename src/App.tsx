@@ -11,6 +11,7 @@ import { Classroom } from './types';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider, UserRole } from './context/ThemeContext';
 import { loadDummyData, getDummyJoinCodes } from './services/dummyDataService';
+import { clearAllStudentData } from './services/storageService';
 
 // Lazy load heavy components for better initial load performance
 const TeacherDashboard = lazy(() => import('./components/teacher/TeacherDashboard'));
@@ -202,8 +203,12 @@ function App() {
     /**
      * Handles Sign Out for both teachers and students.
      * Resets all application state to default.
+     * SECURITY: Clears all local storage to prevent data leakage on shared devices.
      */
     const handleLogout = async () => {
+        // SECURITY: Clear all student local data first (IndexedDB, localStorage, sessionStorage)
+        await clearAllStudentData();
+
         await logout();
 
         // Reset all application state
@@ -214,11 +219,6 @@ function App() {
         setShowNameModal(false);
         setCurrentClassId(null);
         setClassrooms([]);
-
-        // Clear student session storage
-        sessionStorage.removeItem('studentName');
-        sessionStorage.removeItem('studentClassId');
-        sessionStorage.removeItem('studentClassroomColor');
     };
 
     /**
