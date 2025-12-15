@@ -488,7 +488,6 @@ const StudentView: React.FC<StudentViewProps> = ({
     // Calculate task stats
     const tasksCompleted = currentTasks.filter(t => t.status === 'done').length;
     const tasksInProgress = currentTasks.filter(t => t.status === 'in_progress').length;
-    const tasksLeft = currentTasks.filter(t => t.status !== 'done').length;
     const hasStartedWork = currentTasks.some(t => t.status !== 'todo');
 
     // Set of current task IDs for checking imported state
@@ -512,9 +511,9 @@ const StudentView: React.FC<StudentViewProps> = ({
             />
 
             {/* Main Content Area */}
-            <div className="flex-1 grid grid-rows-[40px_1fr] md:grid-rows-[64px_1fr] row-gap-1 min-w-0 overflow-hidden relative">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Header - Compact inline: Class (left), Date + Progress (right) */}
-                <header className="md:hidden row-start-1 h-10 px-4 flex items-center justify-between z-10">
+                <header className="md:hidden h-10 px-4 flex items-center justify-between z-10 shrink-0">
                     {/* Left: Class Name - underlined with accent */}
                     <h1 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-2 decoration-brand-accent">
                         {currentClassName}
@@ -534,33 +533,29 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </div>
                 </header>
 
-                {/* Desktop Header - Class Name (left), Tasks & Progress + Date (right) */}
-                <header className="hidden md:flex row-start-1 h-16 bg-brand-lightSurface dark:bg-brand-darkSurface px-6 items-baseline justify-between border-b border-gray-200 dark:border-gray-800 pb-4 pointer-events-none">
-                    {/* Left: Class Name */}
-                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate pointer-events-auto">
-                        {currentClassName}
-                    </h1>
-                    {/* Right: Tasks & Progress (accent) + Date (gray) */}
-                    <div className="flex items-baseline gap-3 flex-shrink-0 pointer-events-auto">
-                        <span className="text-fluid-lg font-semibold text-brand-accent">
-                            {tasksLeft} Tasks · {Math.round((tasksCompleted / Math.max(currentTasks.length, 1)) * 100)}%
-                        </span>
-                        <span className="text-fluid-sm font-medium text-gray-500 dark:text-gray-400">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </span>
-                    </div>
-                </header>
-                {/* Desktop header fade gradient */}
-                <div
-                    className="hidden md:block absolute left-0 right-0 top-16 h-8 pointer-events-none z-dropdown bg-gradient-to-b from-brand-lightSurface dark:from-brand-darkSurface to-transparent"
-                    aria-hidden="true"
-                />
-
                 {/* Desktop Content - Split into Tasks, Projects, and Schedule based on tab */}
-                <main className="hidden md:flex row-start-2 flex-1 overflow-hidden">
+                <main className="hidden md:flex flex-1 overflow-hidden">
                     {desktopTab === 'tasks' ? (
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pb-6">
                             <div className="max-w-4xl mx-auto">
+                                {/* Desktop Inline Content Header */}
+                                <div className="h-16 shrink-0 flex items-center justify-between pr-[22px]">
+                                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
+                                        {currentClassName}
+                                    </h1>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                        </span>
+                                        <CircularProgress
+                                            total={currentTasks.length}
+                                            inProgress={tasksInProgress}
+                                            completed={tasksCompleted}
+                                            hasStarted={hasStartedWork}
+                                            className="w-8 h-8"
+                                        />
+                                    </div>
+                                </div>
                                 {showPreview ? (
                                     <DayTaskPreview
                                         date={selectedDate}
@@ -590,11 +585,26 @@ const StudentView: React.FC<StudentViewProps> = ({
                             </div>
                         </div>
                     ) : desktopTab === 'projects' ? (
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pb-6">
                             <div className="max-w-4xl mx-auto">
-                                <h2 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                    Projects & Assignments
-                                </h2>
+                                {/* Desktop Inline Content Header */}
+                                <div className="h-16 shrink-0 flex items-center justify-between pr-[22px]">
+                                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
+                                        {currentClassName}
+                                    </h1>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                        </span>
+                                        <CircularProgress
+                                            total={currentTasks.length}
+                                            inProgress={tasksInProgress}
+                                            completed={tasksCompleted}
+                                            hasStarted={hasStartedWork}
+                                            className="w-8 h-8"
+                                        />
+                                    </div>
+                                </div>
                                 <StudentProjectsView
                                     classId={classId}
                                     onImportTask={handleImportTask}
@@ -603,8 +613,26 @@ const StudentView: React.FC<StudentViewProps> = ({
                             </div>
                         </div>
                     ) : (
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pb-6">
                             <div className="max-w-4xl mx-auto">
+                                {/* Desktop Inline Content Header */}
+                                <div className="h-16 shrink-0 flex items-center justify-between pr-[22px]">
+                                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
+                                        {currentClassName}
+                                    </h1>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                        </span>
+                                        <CircularProgress
+                                            total={currentTasks.length}
+                                            inProgress={tasksInProgress}
+                                            completed={tasksCompleted}
+                                            hasStarted={hasStartedWork}
+                                            className="w-8 h-8"
+                                        />
+                                    </div>
+                                </div>
                                 <div className="mb-6">
                                     <MiniCalendar
                                         selectedDate={selectedDate}
@@ -636,7 +664,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 </main>
 
                 {/* Mobile Content */}
-                <main className="md:hidden row-start-2 flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
+                <main className="md:hidden flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
                     {mobileTab === 'tasks' ? (
                         <div>
 

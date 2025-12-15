@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, UserCircle, ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings, FolderOpen } from 'lucide-react';
+import { ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings, FolderOpen } from 'lucide-react';
 import { ProgressBar } from '../shared/ProgressIndicator';
 
 interface StudentSidebarProps {
@@ -56,21 +56,26 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             bg-brand-lightSurface dark:bg-brand-darkSurface
             transition-all duration-300 ease-in-out
         `}>
-            {/* Logo/Branding - Same height as header (h-16) */}
-            <div className="h-16 flex-shrink-0 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
-                <div className={`flex items-center gap-2 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
+            {/* Logo/Branding - Same height as header (h-16), matches TeacherView */}
+            <div className="h-16 flex-shrink-0 flex items-center px-4">
+                <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
                     <img
                         src="/shape of the day logo.png"
                         alt="Shape of the Day"
-                        className="w-8 h-8 flex-shrink-0"
+                        className="w-10 h-10 flex-shrink-0 aspect-square object-contain"
                     />
-                    <span className={`
-                        font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap
+                    <div className={`
+                        flex flex-col justify-center overflow-hidden
                         transition-all duration-300 ease-in-out
-                        ${isCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'opacity-100'}
+                        ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                     `}>
-                        Shape of the Day
-                    </span>
+                        <span className="font-bold text-base text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap leading-tight">
+                            Shape of the Day
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap leading-tight">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -178,28 +183,6 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                     `}>
                         Settings
-                    </span>
-                </button>
-
-                {/* Sign Out */}
-                <button
-                    onClick={onSignOut}
-                    className={`
-                        group flex items-center h-10 rounded-lg transition-all duration-200 font-bold
-                        focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30
-                        ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
-                    `}
-                    title={isCollapsed ? 'Sign Out' : undefined}
-                >
-                    <div className="flex items-center justify-center w-12 flex-shrink-0 text-red-500">
-                        <LogOut className="w-5 h-5" />
-                    </div>
-                    <span className={`
-                        whitespace-nowrap transition-all duration-200
-                        text-gray-500 group-hover:text-red-500 dark:group-hover:text-red-400
-                        ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
-                    `}>
-                        Sign Out
                     </span>
                 </button>
             </div>
