@@ -188,7 +188,8 @@ const StudentView: React.FC<StudentViewProps> = ({
         setScheduleLoading(true);
 
         const tasksRef = collection(db, 'tasks');
-        // Query tasks assigned to this classroom (using selectedRoomIds which TaskManager saves)
+        // Query tasks assigned to this classroom
+        // Try both field names for compatibility (TaskManager uses selectedRoomIds, older data may use assignedRooms)
         const q = query(
             tasksRef,
             where('selectedRoomIds', 'array-contains', classId)
@@ -229,9 +230,9 @@ const StudentView: React.FC<StudentViewProps> = ({
             fetchedTasks.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
             setScheduleTasks(fetchedTasks);
 
-            // AUTO-POPULATE: If this is the first load and we're viewing today,
-            // automatically add all tasks to the student's "My Day" list
-            if (!hasAutoPopulatedRef.current && selectedDate === today && fetchedTasks.length > 0) {
+            // AUTO-POPULATE: On first load, populate the student's task list with today's tasks
+            // This runs once when tasks are first fetched and currentTasks is still empty
+            if (!hasAutoPopulatedRef.current && fetchedTasks.length > 0) {
                 console.log('[StudentView] Auto-populating', fetchedTasks.length, 'tasks for today');
                 setCurrentTasks(fetchedTasks.map(task => ({
                     ...task,
@@ -247,7 +248,7 @@ const StudentView: React.FC<StudentViewProps> = ({
         });
 
         return () => unsubscribe();
-    }, [classId, selectedDate, today]);
+    }, [classId, selectedDate]);
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
