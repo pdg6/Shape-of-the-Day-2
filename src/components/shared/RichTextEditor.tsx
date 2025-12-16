@@ -121,6 +121,29 @@ export function RichTextEditor({
         setIsDragging(false);
     }, []);
 
+    // Handle paste (for images from clipboard)
+    const handlePaste = useCallback((e: React.ClipboardEvent) => {
+        const items = e.clipboardData?.items;
+        if (!items || !onDrop) return;
+
+        const imageFiles: File[] = [];
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (item && item.type.startsWith('image/')) {
+                const file = item.getAsFile();
+                if (file) {
+                    imageFiles.push(file);
+                }
+            }
+        }
+
+        if (imageFiles.length > 0) {
+            e.preventDefault(); // Prevent default paste behavior for images
+            onDrop(imageFiles);
+        }
+        // Let text paste through normally
+    }, [onDrop]);
+
     if (!editor) {
         return null;
     }
@@ -132,6 +155,7 @@ export function RichTextEditor({
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
+            onPaste={handlePaste}
         >
             {/* Toolbar */}
             <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 rounded-t-md">

@@ -463,7 +463,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     .btn-primary-green {
         @apply w-full py-2.5 px-4 rounded-md border-2 transition-all duration-200 min-h-[56px];
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface text-base shadow-sm;
-        @apply text-brand-textPrimary dark:text-brand-textPrimary font-bold;
+        @apply text-student-accent font-bold;
         @apply border-gray-400 dark:border-gray-600;
         @apply hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400;
         @apply focus:outline-none focus:ring-2 focus:ring-gray-400/30 dark:focus:ring-gray-600/30;

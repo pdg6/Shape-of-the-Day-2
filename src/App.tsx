@@ -79,15 +79,21 @@ function App() {
     }, [darkMode]);
 
     // Effect to handle view switching based on auth
-    // Priority: Active student session > Authenticated user > Landing
+    // Priority: Active student session > Non-anonymous authenticated user > Landing
     useEffect(() => {
         if (!loading) {
             // Check for active student session FIRST (student may have joined while a teacher auth exists)
             if (classId && studentName && view !== 'teacher') {
                 setView('student');
             } else if (user && !classId && !studentName) {
-                // Only show teacher dashboard if there's no active student session
-                setView('teacher');
+                // Only show teacher dashboard if it's a non-anonymous user (teachers use Google sign-in)
+                // Anonymous users (students) without a session should go to landing
+                if (!user.isAnonymous) {
+                    setView('teacher');
+                } else {
+                    // Anonymous user with no student session - go to landing
+                    setView('landing');
+                }
             } else if (view === 'teacher' && !user) {
                 setView('landing');
             }

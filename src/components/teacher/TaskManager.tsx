@@ -658,7 +658,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 mimeType: file.type,
                 url: downloadUrl,
                 size: file.size,
-                uploadedAt: serverTimestamp(),
+                uploadedAt: new Date(), // Using Date instead of serverTimestamp() - Firestore doesn't support serverTimestamp() inside arrays
                 uploadedBy: auth.currentUser.uid,
             };
 
