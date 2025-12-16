@@ -3,8 +3,7 @@ import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/f
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
-import { StatusBadge } from '../shared/StatusBadge';
+import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2, HelpCircle, Play } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../shared/Button';
 
@@ -231,47 +230,116 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 // --- Sub-Components ---
 
 const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, totalTasks, tasks, onDelete }) => {
+    // Helper to get status-based styling for the unified task pill
+    const getStatusPillStyle = (status: string) => {
+        // Normalize legacy statuses
+        const normalizedStatus = (status === 'stuck' || status === 'question') ? 'help' : status;
+
+        switch (normalizedStatus) {
+            case 'help':
+                return {
+                    bg: 'bg-status-stuck/15 dark:bg-status-stuck/20',
+                    border: 'border-status-stuck',
+                    text: 'text-status-stuck',
+                    icon: HelpCircle
+                };
+            case 'in_progress':
+                return {
+                    bg: 'bg-status-progress/15 dark:bg-status-progress/20',
+                    border: 'border-status-progress',
+                    text: 'text-status-progress',
+                    icon: Play
+                };
+            case 'done':
+                return {
+                    bg: 'bg-status-complete/15 dark:bg-status-complete/20',
+                    border: 'border-status-complete',
+                    text: 'text-status-complete',
+                    icon: CheckCircle
+                };
+            default: // todo, idle, unknown
+                return {
+                    bg: 'bg-gray-100 dark:bg-gray-800',
+                    border: 'border-gray-300 dark:border-gray-600',
+                    text: 'text-gray-500 dark:text-gray-400',
+                    icon: null
+                };
+        }
+    };
+
     return (
         <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
             <table className="w-full text-left">
                 <thead className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                     <tr>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Student Name</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Status</th>
+                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-40">Student</th>
+                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-20 text-center">Progress</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Current Task</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-1/3">Progress</th>
+                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Questions / Comments</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase w-16 text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {students.map(student => {
-                        const currentTask = tasks.find(t => t.id === student.currentTaskId);
-                        const progress = totalTasks > 0 ? (student.metrics.tasksCompleted / totalTasks) * 100 : 0;
+                        const isAllDone = student.metrics.tasksCompleted >= totalTasks && totalTasks > 0;
+                        const needsHelp = student.currentStatus === 'help' || student.currentStatus === 'stuck' || student.currentStatus === 'question';
+                        const isWorking = student.currentStatus === 'in_progress' || needsHelp;
+
+                        // Always show the NEXT upcoming task (based on completed count)
+                        const sortedTasks = [...tasks].sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                        const nextTaskIndex = student.metrics.tasksCompleted;
+                        const nextTask = nextTaskIndex < sortedTasks.length ? sortedTasks[nextTaskIndex] : null;
+
+                        // Status: if student is actively working/stuck on this task, show that status
+                        // Otherwise show as "todo" (gray - not started yet)
+                        const displayStatus = isAllDone
+                            ? 'done'
+                            : isWorking
+                                ? student.currentStatus
+                                : 'todo';
+                        const pillStyle = getStatusPillStyle(displayStatus);
+                        const StatusIcon = pillStyle.icon;
 
                         return (
                             <tr key={student.uid} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                {/* Student Name */}
                                 <td className="p-4 font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                     {student.displayName}
                                 </td>
-                                <td className="p-4">
-                                    <StatusBadge status={student.currentStatus} />
+
+                                {/* Progress - white until done, then accent */}
+                                <td className="p-4 text-center">
+                                    <span className={`text-sm font-bold ${isAllDone ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                        {student.metrics.tasksCompleted}/{totalTasks}
+                                    </span>
                                 </td>
-                                <td className="p-4 text-sm text-gray-600 dark:text-gray-400">
-                                    {currentTask ? currentTask.title : <span className="italic text-gray-400">Idle</span>}
-                                </td>
+
+                                {/* Current Task */}
                                 <td className="p-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex-1 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-brand-accent transition-all duration-500 ease-out rounded-full"
-                                                style={{ width: `${Math.min(progress, 100)}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs font-bold text-gray-500 w-12 text-right">
-                                            {student.metrics.tasksCompleted} / {totalTasks}
+                                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 font-semibold text-sm ${pillStyle.bg} ${pillStyle.border} ${pillStyle.text}`}>
+                                        {StatusIcon && <StatusIcon className="w-4 h-4 shrink-0" />}
+                                        <span className="truncate max-w-[180px]">
+                                            {isAllDone
+                                                ? 'All Done!'
+                                                : nextTask
+                                                    ? nextTask.title
+                                                    : 'Idle'}
                                         </span>
-                                    </div>
+                                    </span>
                                 </td>
+
+                                {/* Questions/Comments - expands to fill space */}
+                                <td className="p-4">
+                                    {student.currentMessage ? (
+                                        <span className={`text-sm italic ${needsHelp ? 'text-status-stuck' : 'text-gray-500 dark:text-gray-400'}`} title={student.currentMessage}>
+                                            "{student.currentMessage}"
+                                        </span>
+                                    ) : (
+                                        <span className="text-sm text-gray-400 dark:text-gray-600">—</span>
+                                    )}
+                                </td>
+
+                                {/* Actions */}
                                 <td className="p-4 text-center">
                                     <button
                                         onClick={() => onDelete(student.uid, student.displayName)}
