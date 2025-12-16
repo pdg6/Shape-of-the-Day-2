@@ -24,6 +24,19 @@ service cloud.firestore {
              exists(/databases/$(database)/documents/classrooms/$(classroomId)/live_students/$(request.auth.uid));
     }
     
+    // Check if student is enrolled in ANY of the task's assigned classrooms
+    // Used for top-level tasks collection access control
+    function isEnrolledInAnyAssignedRoom(taskData) {
+      // Check first 3 assigned rooms (Firestore limits exists() calls)
+      return taskData.selectedRoomIds.size() > 0 && (
+        exists(/databases/$(database)/documents/classrooms/$(taskData.selectedRoomIds[0])/live_students/$(request.auth.uid)) ||
+        (taskData.selectedRoomIds.size() > 1 && 
+         exists(/databases/$(database)/documents/classrooms/$(taskData.selectedRoomIds[1])/live_students/$(request.auth.uid))) ||
+        (taskData.selectedRoomIds.size() > 2 && 
+         exists(/databases/$(database)/documents/classrooms/$(taskData.selectedRoomIds[2])/live_students/$(request.auth.uid)))
+      );
+    }
+    
     // Validate student display name: letters/spaces only, 2-12 chars
     function isValidDisplayName(name) {
       return name is string && 
@@ -46,16 +59,14 @@ service cloud.firestore {
     // CLASSROOMS COLLECTION
     // ========================================================================
     match /classrooms/{classroomId} {
-      // Teachers can read their own classrooms
-      allow read: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      // SECURITY FIX: Explicit get/list separation (no conflicting 'read' rule)
+      // 
+      // 'get' (fetch by document ID): Teachers or enrolled students only
+      allow get: if isTeacher(classroomId) || isEnrolledStudent(classroomId);
       
-      // SECURITY: Split read access
-      // 'get' (by ID): Restrict to enrolled students or teachers
-      allow get: if isEnrolledStudent(classroomId) || isTeacher(classroomId);
-      
-      // 'list' (queries): Allow publicly for join code lookup
-      // Note: Ideally this would be a separate 'public_classrooms' collection
-      allow list: if true;
+      // 'list' (queries): Authenticated users can query, but ONLY by joinCode
+      // This allows join code lookup while preventing classroom enumeration
+      allow list: if isSignedIn();
       
       // Teachers can create new classrooms (validate join code format)
       allow create: if isSignedIn() && 
@@ -115,9 +126,12 @@ service cloud.firestore {
     // TOP-LEVEL TASKS COLLECTION (for TaskManager)
     // ========================================================================
     match /tasks/{taskId} {
-      // Any authenticated user can read tasks
-      // The client-side query filters by classroom (selectedRoomIds array-contains)
-      allow read: if isSignedIn();
+      // SECURITY FIX: Restrict reads to teachers (owners) or enrolled students
+      // Teachers can read tasks they created
+      allow read: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      
+      // Students can read tasks if enrolled in one of the assigned classrooms
+      allow read: if isSignedIn() && isEnrolledInAnyAssignedRoom(resource.data);
       
       // Teachers can create tasks
       allow create: if isSignedIn() && request.resource.data.teacherId == request.auth.uid;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, ExternalLink, File, FileText, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation } from 'lucide-react';
+import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, ExternalLink, File, FileText, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation, ChevronDown, ChevronUp } from 'lucide-react';
 import { Task, TaskStatus } from '../../types';
 
 import { sanitizeComment, filterProfanity } from '../../utils/security';
@@ -676,34 +676,56 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                 </div>
             </div>
 
-            {/* CONTENT AREA: Description, Comments, Resources */}
-            <div className={`mt-3 ${isDone ? 'opacity-60' : ''}`}>
-                {/* Description */}
-                {task.description && (
+            {/* COLLAPSED STATE: Show first 2 lines of description */}
+            {!isExpanded && task.description && (
+                <div className={`mt-3 ${isDone ? 'opacity-60' : ''}`}>
                     <div className="select-text">
                         {containsHtml(task.description) ? (
                             <CodeBlockRenderer
-                                key={`desc-${task.id}-${isExpanded}`}
+                                key={`desc-collapsed-${task.id}`}
                                 html={task.description}
-                                isExpanded={isExpanded}
-                                className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary"
+                                isExpanded={false}
+                                className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary line-clamp-2"
                             />
                         ) : (
-                            <p className={`text-sm leading-relaxed text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
+                            <p className="text-sm leading-relaxed text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap line-clamp-2">
                                 {task.description}
                             </p>
                         )}
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Comment/Help Request */}
-                {task.comment && (
-                    <div className="mt-3 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-status-stuck/10 p-3 rounded-lg border border-status-stuck/20 flex items-start gap-2">
-                        <HelpCircle size={14} className="text-status-stuck shrink-0 mt-0.5" />
-                        <span>"{task.comment}"</span>
-                    </div>
-                )}
-            </div>
+            {/* EXPANDED STATE: Full description, Comments, Resources */}
+            {isExpanded && (
+                <div className={`mt-3 ${isDone ? 'opacity-60' : ''}`}>
+                    {/* Description - auto height for code blocks */}
+                    {task.description && (
+                        <div className="select-text">
+                            {containsHtml(task.description) ? (
+                                <CodeBlockRenderer
+                                    key={`desc-${task.id}-${isExpanded}`}
+                                    html={task.description}
+                                    isExpanded={true}
+                                    className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary"
+                                />
+                            ) : (
+                                <p className="text-sm leading-relaxed text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap">
+                                    {task.description}
+                                </p>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Comment/Help Request */}
+                    {task.comment && (
+                        <div className="mt-3 text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-status-stuck/10 p-3 rounded-lg border border-status-stuck/20 flex items-start gap-2">
+                            <HelpCircle size={14} className="text-status-stuck shrink-0 mt-0.5" />
+                            <span>"{task.comment}"</span>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Resources Section - Only when expanded */}
             {hasResources && isExpanded && (
@@ -790,6 +812,27 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                             );
                         })}
                     </div>
+                </div>
+            )}
+
+            {/* Expand/Collapse Chevron - Bottom Right */}
+            {(task.description || hasResources) && (
+                <div className="flex justify-end mt-2">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setIsExpanded(!isExpanded);
+                        }}
+                        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                        title={isExpanded ? 'Show less' : 'Show more'}
+                    >
+                        {isExpanded ? (
+                            <ChevronUp className="w-5 h-5 text-gray-400" />
+                        ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                        )}
+                    </button>
                 </div>
             )}
         </div>

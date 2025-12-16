@@ -103,6 +103,9 @@ const StudentView: React.FC<StudentViewProps> = ({
     // State for the tasks currently in the student's "My Day" view
     const [currentTasks, setCurrentTasks] = useState<Task[]>([]);
 
+    // Track if we've done the initial auto-population of today's tasks
+    const hasAutoPopulatedRef = useRef<boolean>(false);
+
     // Rate limiting for sync operations (prevents race conditions from rapid clicks)
     const lastSyncRef = useRef<{ taskId: string; timestamp: number } | null>(null);
     const SYNC_DEBOUNCE_MS = 300; // Minimum time between syncs for same task
@@ -225,6 +228,18 @@ const StudentView: React.FC<StudentViewProps> = ({
             // Sort by presentation order
             fetchedTasks.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
             setScheduleTasks(fetchedTasks);
+
+            // AUTO-POPULATE: If this is the first load and we're viewing today,
+            // automatically add all tasks to the student's "My Day" list
+            if (!hasAutoPopulatedRef.current && selectedDate === today && fetchedTasks.length > 0) {
+                console.log('[StudentView] Auto-populating', fetchedTasks.length, 'tasks for today');
+                setCurrentTasks(fetchedTasks.map(task => ({
+                    ...task,
+                    status: 'todo' as const  // Reset status to todo for student's working list
+                })));
+                hasAutoPopulatedRef.current = true;
+            }
+
             setScheduleLoading(false);
         }, (error) => {
             console.error('Error fetching schedule tasks:', error);
@@ -232,7 +247,7 @@ const StudentView: React.FC<StudentViewProps> = ({
         });
 
         return () => unsubscribe();
-    }, [classId, selectedDate]);
+    }, [classId, selectedDate, today]);
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
