@@ -69,7 +69,7 @@ export const ClassFormModal: React.FC = () => {
                 let joinCode = generateSecureCode(6);
                 let attempts = 0;
                 const maxAttempts = 10;
-                
+
                 while (attempts < maxAttempts) {
                     const existing = await getDocs(
                         query(collection(db, 'classrooms'), where('joinCode', '==', joinCode))
@@ -78,11 +78,11 @@ export const ClassFormModal: React.FC = () => {
                     joinCode = generateSecureCode(6);
                     attempts++;
                 }
-                
+
                 if (attempts >= maxAttempts) {
                     throw new Error('Could not generate unique join code. Please try again.');
                 }
-                
+
                 const newClass = {
                     teacherId: auth.currentUser.uid,
                     joinCode: joinCode,
@@ -93,11 +93,13 @@ export const ClassFormModal: React.FC = () => {
                     presentationSettings: { defaultView: 'grid', showTimeEstimates: true, allowStudentSorting: false },
                     contentLibrary: []
                 };
-                const ref = await addDoc(collection(db, 'classrooms'), newClass);
-                const newClassWithId = { id: ref.id, ...newClass } as Classroom;
+                // Use joinCode as the document ID for easy lookup
+                const { setDoc, doc: firestoreDoc } = await import('firebase/firestore');
+                await setDoc(firestoreDoc(db, 'classrooms', joinCode), newClass);
+                const newClassWithId = { id: joinCode, ...newClass } as Classroom;
                 setClassrooms([...classrooms, newClassWithId]);
                 // Automatically select the new class
-                setCurrentClassId(ref.id);
+                setCurrentClassId(joinCode);
                 handleSuccess('Class created successfully');
             }
             setIsClassModalOpen(false);
@@ -154,7 +156,7 @@ export const ClassFormModal: React.FC = () => {
                             </div>
                         </div>
                     </div>
-                    
+
                     {/* Appearance Section - Separate visual group */}
                     <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700">
                         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Appearance</h4>
@@ -175,7 +177,7 @@ export const ClassFormModal: React.FC = () => {
                             ))}
                         </div>
                     </div>
-                    
+
                     {/* Primary action button - Large touch target */}
                     <button
                         onClick={handleSaveClass}

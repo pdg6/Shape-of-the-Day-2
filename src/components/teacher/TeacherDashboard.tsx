@@ -109,6 +109,7 @@ const TeacherDashboard: React.FC = () => {
     };
 
     const [editingTask, setEditingTask] = useState<any>(null); // Using any to avoid complex Task import for now, or update import
+    const [tasksToAdd, setTasksToAdd] = useState<any[]>([]); // Tasks copied from inventory to add to task board
 
     const handleDeepNavigation = (tab: MenuItem['id'], subTab?: string) => {
         setActiveTab(tab);
@@ -127,14 +128,22 @@ const TeacherDashboard: React.FC = () => {
                 return tasksSubTab === 'create'
                     ? <TaskManager
                         initialTask={editingTask}
+                        tasksToAdd={tasksToAdd}
+                        onTasksAdded={() => setTasksToAdd([])} // Clear after consumed
                     // clear initial task after it's consumed so we don't re-open it blindly if we switch tabs back and forth?
                     // Actually, TaskManager will likely handle the "on load" effect. 
                     // Pass a key if we want to force re-mount, or just rely on prop change.
                     />
-                    : <TaskInventory onEditTask={(task) => {
-                        setEditingTask(task);
-                        setTasksSubTab('create');
-                    }} />;
+                    : <TaskInventory
+                        onEditTask={(task) => {
+                            setEditingTask(task);
+                            setTasksSubTab('create');
+                        }}
+                        onCopyToBoard={(tasks) => {
+                            setTasksToAdd(tasks);
+                            setTasksSubTab('create');
+                        }}
+                    />;
             case 'shape': return <ShapeOfDay onNavigate={handleDeepNavigation} />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
             case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} />;

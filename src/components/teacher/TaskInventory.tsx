@@ -55,6 +55,7 @@ const getTypeColorClasses = (type: ItemType): string => {
 
 interface TaskInventoryProps {
     onEditTask?: (task: Task) => void;
+    onCopyToBoard?: (tasks: Task[]) => void;
 }
 
 // Recursive tree item component
@@ -65,7 +66,7 @@ interface TreeItemProps {
     expandedIds: Set<string>;
     onToggleExpand: (id: string) => void;
     onEdit: (task: Task) => void;
-    onDuplicate: (task: Task) => void;
+    onCopyToBoard: (task: Task) => void;
     getProgress: (parentId: string) => { completed: number; total: number };
     onQuickAdd: (parentTask: Task) => void;
     quickAddParentId: string | null;
@@ -83,7 +84,7 @@ function TreeItem({
     expandedIds,
     onToggleExpand,
     onEdit,
-    onDuplicate,
+    onCopyToBoard,
     getProgress,
     onQuickAdd,
     quickAddParentId,
@@ -202,10 +203,10 @@ function TreeItem({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            onDuplicate(task);
+                            onCopyToBoard(task);
                         }}
                         className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-brand-accent transition-all flex items-center justify-center"
-                        title="Duplicate"
+                        title="Copy to Task Board"
                     >
                         <Copy size={14} />
                     </button>
@@ -275,7 +276,7 @@ function TreeItem({
                             expandedIds={expandedIds}
                             onToggleExpand={onToggleExpand}
                             onEdit={onEdit}
-                            onDuplicate={onDuplicate}
+                            onCopyToBoard={onCopyToBoard}
                             getProgress={getProgress}
                             onQuickAdd={onQuickAdd}
                             quickAddParentId={quickAddParentId}
@@ -292,7 +293,7 @@ function TreeItem({
     );
 }
 
-export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
+export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInventoryProps) {
     // --- Store ---
     const { classrooms: storeClassrooms } = useClassStore();
 
@@ -511,40 +512,34 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         }
     }, [onEditTask]);
 
-    const handleDuplicate = useCallback(async (task: Task) => {
-        if (!auth.currentUser) return;
-
-        try {
-            const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
-
-            // Create a copy with new dates
-            await addDoc(collection(db, 'tasks'), {
-                title: `${task.title} (Copy)`,
-                description: task.description || '',
-                type: task.type,
-                parentId: null, // Duplicates are standalone by default
-                rootId: null,
-                path: [],
-                pathTitles: [],
-                linkURL: task.linkURL || '',
-                startDate: toDateString(),
-                endDate: toDateString(),
-                selectedRoomIds: task.selectedRoomIds || [],
-                teacherId: auth.currentUser.uid,
-                presentationOrder: maxOrder + 1,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-                imageURL: task.imageURL || '',
-                status: 'todo',
-                childIds: [],
-            });
-
-            handleSuccess(`${getTypeLabel(task.type)} duplicated!`);
-        } catch (error) {
-            console.error("Error duplicating:", error);
-            handleError("Failed to duplicate item.");
+    // Helper to collect task and all descendants recursively
+    const collectTaskWithDescendants = useCallback((task: Task, allTasks: Task[]): Task[] => {
+        const result: Task[] = [task];
+        const children = allTasks.filter(t => t.parentId === task.id);
+        for (const child of children) {
+            result.push(...collectTaskWithDescendants(child, allTasks));
         }
-    }, [tasks]);
+        return result;
+    }, []);
+
+    const handleCopyToBoard = useCallback((task: Task) => {
+        if (!onCopyToBoard) {
+            handleError('Copy to board is not available');
+            return;
+        }
+
+        // Collect the task and all its descendants
+        const tasksToAdd = collectTaskWithDescendants(task, tasks);
+
+        // Call the prop callback with all tasks
+        onCopyToBoard(tasksToAdd);
+
+        const childCount = tasksToAdd.length - 1;
+        const message = childCount > 0
+            ? `Copied ${getTypeLabel(task.type)} with ${childCount} children to task board`
+            : `Copied ${getTypeLabel(task.type)} to task board`;
+        handleSuccess(message);
+    }, [tasks, onCopyToBoard, collectTaskWithDescendants]);
 
     // Quick Add handlers
     const handleQuickAdd = useCallback((parentTask: Task) => {
@@ -1024,7 +1019,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                             expandedIds={expandedIds}
                                             onToggleExpand={toggleExpand}
                                             onEdit={handleEdit}
-                                            onDuplicate={handleDuplicate}
+                                            onCopyToBoard={handleCopyToBoard}
                                             getProgress={getProgress}
                                             onQuickAdd={handleQuickAdd}
                                             quickAddParentId={quickAddParentId}
@@ -1092,7 +1087,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                             expandedIds={expandedIds}
                                             onToggleExpand={toggleExpand}
                                             onEdit={handleEdit}
-                                            onDuplicate={handleDuplicate}
+                                            onCopyToBoard={handleCopyToBoard}
                                             getProgress={getProgress}
                                             onQuickAdd={handleQuickAdd}
                                             quickAddParentId={quickAddParentId}
@@ -1160,7 +1155,7 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
                                             expandedIds={expandedIds}
                                             onToggleExpand={toggleExpand}
                                             onEdit={handleEdit}
-                                            onDuplicate={handleDuplicate}
+                                            onCopyToBoard={handleCopyToBoard}
                                             getProgress={getProgress}
                                             onQuickAdd={handleQuickAdd}
                                             quickAddParentId={quickAddParentId}

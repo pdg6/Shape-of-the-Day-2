@@ -101,38 +101,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
     // State for the tasks currently in the student's "My Day" view
-    const [currentTasks, setCurrentTasks] = useState<Task[]>([
-        {
-            id: '1',
-            title: 'Morning Check-in',
-            description: 'Say hello to the class!',
-            status: 'todo',
-            dueDate: today,
-            type: 'task',
-            parentId: null,
-            rootId: null,
-            path: [],
-            pathTitles: [],
-            childIds: [],
-            selectedRoomIds: [],
-            presentationOrder: 0
-        },
-        {
-            id: '2',
-            title: 'Math Worksheet',
-            description: 'Complete pages 10-12',
-            status: 'in_progress',
-            dueDate: today,
-            type: 'task',
-            parentId: null,
-            rootId: null,
-            path: [],
-            pathTitles: [],
-            childIds: [],
-            selectedRoomIds: [],
-            presentationOrder: 1
-        },
-    ]);
+    const [currentTasks, setCurrentTasks] = useState<Task[]>([]);
 
     // Rate limiting for sync operations (prevents race conditions from rapid clicks)
     const lastSyncRef = useRef<{ taskId: string; timestamp: number } | null>(null);

@@ -114,10 +114,12 @@ const TYPE_OPTIONS: SelectOption<ItemType>[] = [
 
 interface TaskManagerProps {
     initialTask?: Task;
+    tasksToAdd?: Task[];
+    onTasksAdded?: () => void;
 }
 
 // HMR refresh timestamp: 2025-12-08T19:30
-export default function TaskManager({ initialTask }: TaskManagerProps) {
+export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: TaskManagerProps) {
     // --- Store ---
     const { currentClassId } = useClassStore();
 
@@ -366,6 +368,77 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
             processedInitialTaskRef.current = initialTask.id;
         }
     }, [initialTask, tasks]);
+
+    // Handle tasksToAdd prop - copy tasks from inventory to this task board
+    const processedTasksToCopyRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!tasksToAdd || tasksToAdd.length === 0 || !auth.currentUser) return;
+
+        // Create a signature to avoid reprocessing the same batch
+        const signature = tasksToAdd.map(t => t.id).join(',');
+        if (signature === processedTasksToCopyRef.current) return;
+        processedTasksToCopyRef.current = signature;
+
+        const copyTasks = async () => {
+            const userId = auth.currentUser?.uid;
+            if (!userId) return;
+
+            try {
+                // Build a mapping from old IDs to new IDs
+                const idMap: Record<string, string> = {};
+                const today = toDateString();
+
+                // First pass: create all tasks and build ID map
+                for (const task of tasksToAdd) {
+                    const newRef = await addDoc(collection(db, 'tasks'), {
+                        title: task.title,
+                        description: task.description || '',
+                        type: task.type,
+                        parentId: null, // Will update in second pass
+                        rootId: null,   // Will update in second pass
+                        path: [],
+                        pathTitles: [],
+                        links: task.links || [],
+                        startDate: today,
+                        endDate: today,
+                        selectedRoomIds: currentClassId ? [currentClassId] : [],
+                        teacherId: userId,
+                        presentationOrder: task.presentationOrder || 0,
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp(),
+                        attachments: task.attachments || [],
+                        status: 'todo',
+                        childIds: [],
+                    });
+                    idMap[task.id] = newRef.id;
+                }
+
+                // Second pass: update parent relationships
+                for (const task of tasksToAdd) {
+                    const newId = idMap[task.id];
+                    if (!newId) continue;
+
+                    const newParentId = task.parentId ? idMap[task.parentId] || null : null;
+                    const newRootId = task.rootId ? idMap[task.rootId] || null : null;
+
+                    if (newParentId || newRootId) {
+                        await updateDoc(doc(db, 'tasks', newId), {
+                            parentId: newParentId,
+                            rootId: newRootId || newParentId, // If no root, use parent as root
+                        });
+                    }
+                }
+
+                handleSuccess(`Copied ${tasksToAdd.length} item(s) to task board`);
+                onTasksAdded?.(); // Clear the tasksToAdd in parent
+            } catch (error) {
+                console.error('Error copying tasks:', error);
+                handleError('Failed to copy tasks to board');
+            }
+        };
+
+        copyTasks();
+    }, [tasksToAdd, onTasksAdded, currentClassId]);
 
     // --- Link Handlers ---
 

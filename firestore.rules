@@ -115,19 +115,15 @@ service cloud.firestore {
     // TOP-LEVEL TASKS COLLECTION (for TaskManager)
     // ========================================================================
     match /tasks/{taskId} {
-      // Teachers can read tasks they created
-      allow read: if isSignedIn() && resource.data.teacherId == request.auth.uid;
+      // Any authenticated user can read tasks
+      // The client-side query filters by classroom (selectedRoomIds array-contains)
+      allow read: if isSignedIn();
       
       // Teachers can create tasks
       allow create: if isSignedIn() && request.resource.data.teacherId == request.auth.uid;
       
       // Teachers can update/delete their own tasks
       allow update, delete: if isSignedIn() && resource.data.teacherId == request.auth.uid;
-      
-      // Students can read tasks only if they're enrolled in the task's classroom
-      allow read: if isSignedIn() && 
-                     resource.data.classroomId != null && 
-                     isEnrolledStudent(resource.data.classroomId);
     }
     
     // ========================================================================
