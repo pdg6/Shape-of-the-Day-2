@@ -37,6 +37,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const MAX_REFRESH_RETRIES = 3;
 const RETRY_DELAY_BASE_MS = 1000; // Exponential backoff: 1s, 2s, 4s
 
+// Session timeout: 6 hours (aligns with education app best practices)
+const SESSION_TIMEOUT_MS = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+const SESSION_START_KEY = 'sotd_session_start';
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
@@ -55,21 +59,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Track refresh attempts to prevent infinite loops
     const refreshAttemptRef = useRef(0);
     const isRefreshingRef = useRef(false);
+    const isLoggingOutRef = useRef(false);
 
     // ========================================================================
     // Auth State Listeners
     // ========================================================================
 
-    // Primary auth state listener
+    // Primary auth state listener with session timeout check
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
-            setLoading(false);
-            // Clear auth error when user signs in successfully
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            // Check session timeout BEFORE allowing auth
             if (currentUser) {
+                const sessionStart = sessionStorage.getItem(SESSION_START_KEY);
+
+                if (sessionStart) {
+                    const elapsed = Date.now() - parseInt(sessionStart, 10);
+                    if (elapsed > SESSION_TIMEOUT_MS) {
+                        // Session expired - force logout
+                        console.log('[Auth] Session expired after 6 hours, forcing logout');
+                        await signOut(auth);
+                        sessionStorage.removeItem(SESSION_START_KEY);
+                        toast('Session expired. Please sign in again.', { icon: '⏰' });
+                        setUser(null);
+                        setLoading(false);
+                        return;
+                    }
+                } else {
+                    // First login in this session - store start time
+                    sessionStorage.setItem(SESSION_START_KEY, Date.now().toString());
+                    console.log('[Auth] Session started at', new Date().toISOString());
+                }
+
                 setAuthError(null);
                 refreshAttemptRef.current = 0;
             }
+
+            setUser(currentUser);
+            setLoading(false);
         });
         return () => unsubscribe();
     }, []);
@@ -169,6 +195,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async () => {
         try {
             const provider = new GoogleAuthProvider();
+            // Force account selection to prevent auto-login loop
+            provider.setCustomParameters({ prompt: 'select_account' });
             await signInWithPopup(auth, provider);
             toast.success('Successfully signed in!');
             setAuthError(null);
@@ -200,16 +228,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = async () => {
+        // Set flag to prevent race conditions with auth state listeners
+        isLoggingOutRef.current = true;
+
         try {
+            // Revoke Google Token if available to prevent auto-login
+            if (user) {
+                try {
+                    const token = await user.getIdToken();
+                    // Revoke token via Google API
+                    await fetch(`https://oauth2.googleapis.com/revoke?token=${token}`, {
+                        method: 'POST',
+                        headers: { 'Content-type': 'application/x-www-form-urlencoded' }
+                    }).catch(err => console.warn('[Auth] Token revocation warning:', err));
+                } catch (e) {
+                    console.warn('[Auth] Failed to revoke token', e);
+                }
+            }
+
             await signOut(auth);
             setUser(null);
             setAuthError(null);
-            // Clear any persisted task form data on sign-out
+            // Clear session timestamp and persisted task form data
+            sessionStorage.removeItem(SESSION_START_KEY);
             sessionStorage.removeItem('taskManager.openCards');
             sessionStorage.removeItem('taskManager.activeCardId');
             toast.success('Signed out successfully');
+
+            // Allow time for cleanup before re-enabling auth events
+            setTimeout(() => {
+                isLoggingOutRef.current = false;
+            }, 500);
         } catch (error) {
             console.error('Logout failed:', error);
+            isLoggingOutRef.current = false;
             toast.error('Failed to sign out.');
         }
     };

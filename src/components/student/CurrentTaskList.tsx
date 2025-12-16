@@ -424,7 +424,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
     const [isExpanded, setIsExpanded] = useState(false);
     const [isStatusExpanded, setIsStatusExpanded] = useState(false);
     const [showStatusText, setShowStatusText] = useState(false);
-    const [isIntroGlow, setIsIntroGlow] = useState(false); // Intro animation glow state
+    const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null); // Sequential highlight animation
     const statusTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const textTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const introAnimatedRef = useRef(false); // Track if intro has played
@@ -474,7 +474,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
         };
     }, []);
 
-    // Intro animation: auto-expand status menu on first load for 'todo' tasks only
+    // Intro animation: Sequential color flash - each button lights up with its accent color
     useEffect(() => {
         if (introAnimatedRef.current || normalizedStatus !== 'todo') return;
         introAnimatedRef.current = true;
@@ -482,13 +482,24 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
         // Small delay before starting intro animation
         const introDelay = setTimeout(() => {
             setIsStatusExpanded(true);
-            setIsIntroGlow(true);
 
-            // Collapse after 1000ms
+            // Sequential highlight: 0 -> 1 -> 2 -> 3 -> collapse
+            // Order: To Do (0), Help (1), In Progress (2), Done (3)
+            const highlightDuration = 150; // ms per button
+            const pauseBetween = 50; // ms between highlights
+
+            // Highlight each button in sequence
+            setTimeout(() => setHighlightedIndex(0), 0); // To Do
+            setTimeout(() => setHighlightedIndex(1), highlightDuration + pauseBetween); // Help
+            setTimeout(() => setHighlightedIndex(2), (highlightDuration + pauseBetween) * 2); // In Progress
+            setTimeout(() => setHighlightedIndex(3), (highlightDuration + pauseBetween) * 3); // Done
+
+            // Clear highlight and collapse
+            const totalDuration = (highlightDuration + pauseBetween) * 4;
             const collapseTimeout = setTimeout(() => {
+                setHighlightedIndex(null);
                 setIsStatusExpanded(false);
-                setIsIntroGlow(false);
-            }, 1000);
+            }, totalDuration);
 
             statusTimeoutRef.current = collapseTimeout;
         }, 300);
@@ -520,9 +531,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                 }
             }}
         >
-            {/* TOP ROW: Text group + Status Button */}
+            {/* TOP ROW: Text group + Date & Status Button */}
             <div className="flex items-center gap-3">
-                {/* Text Group - all at same level for proper baseline alignment (faded when done) */}
+                {/* Text Group - number and title only (faded when done) */}
                 <div className={`flex items-baseline gap-2 flex-1 min-w-0 ${isDone ? 'opacity-60' : ''}`}>
                     {/* Task Number - underlined with status color, positioned up 4px */}
                     <span className={`text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary shrink-0 underline decoration-2 underline-offset-[3px] relative -top-1 ${activeAction.underlineColor}`}>
@@ -533,26 +544,26 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                     <h3 className={`text-xl font-black leading-tight truncate flex-1 min-w-0 ${isDone ? 'text-gray-500 line-through decoration-2' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                         {task.title}
                     </h3>
-
-                    {/* Date (if exists) - immediately after title */}
-                    {(assignedDate || task.dueDate) && (
-                        <span className="text-sm text-gray-400 dark:text-gray-500 font-semibold shrink-0">
-                            {formatDateRange(assignedDate, task.dueDate)}
-                        </span>
-                    )}
                 </div>
 
-                {/* Status Button - Width Expansion Animation */}
+                {/* Date + Status Button - shared hover zone for larger target */}
                 <div
-                    className="flex items-center shrink-0"
+                    className="flex items-center gap-2 shrink-0 cursor-pointer -my-2 py-2 -mr-2 pr-2"
                     onMouseEnter={() => {
-                        // Keep menu open while hovering - clear any collapse timeout
+                        // Open menu and start 5-second inactivity timeout
                         if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                         setIsStatusExpanded(true);
                         setShowStatusText(false);
+                        // Auto-collapse after 5 seconds of inactivity
+                        statusTimeoutRef.current = setTimeout(() => {
+                            setIsStatusExpanded(false);
+                            setShowStatusText(true);
+                            if (textTimeoutRef.current) clearTimeout(textTimeoutRef.current);
+                            textTimeoutRef.current = setTimeout(() => setShowStatusText(false), 3000);
+                        }, 5000);
                     }}
                     onMouseLeave={() => {
-                        // Collapse immediately when mouse leaves, show status text
+                        // Collapse immediately when mouse leaves
                         if (statusTimeoutRef.current) clearTimeout(statusTimeoutRef.current);
                         setIsStatusExpanded(false);
                         setShowStatusText(true);
@@ -560,16 +571,36 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                         textTimeoutRef.current = setTimeout(() => setShowStatusText(false), 3000);
                     }}
                 >
+                    {/* Date (if exists) */}
+                    {(assignedDate || task.dueDate) && (
+                        <span className={`text-sm text-gray-400 dark:text-gray-500 font-semibold ${isDone ? 'opacity-60' : ''}`}>
+                            {formatDateRange(assignedDate, task.dueDate)}
+                        </span>
+                    )}
+
                     {/* Container that expands width smoothly */}
                     <div className="flex items-center">
                         {/* All icons in fixed order - fade in when expanded */}
                         <div className={`flex items-center gap-1 overflow-hidden transition-all duration-500 ease-out rounded-lg
-                            ${isStatusExpanded ? 'max-w-[180px] opacity-100' : 'max-w-0 opacity-0'}
-                            ${isIntroGlow ? 'bg-linear-to-r from-gray-200/50 via-white/80 to-gray-200/50 dark:from-gray-700/50 dark:via-gray-600/80 dark:to-gray-700/50 shadow-[0_0_12px_rgba(156,163,175,0.5)] dark:shadow-[0_0_12px_rgba(107,114,128,0.6)]' : ''}`}
+                            ${isStatusExpanded ? 'max-w-[180px] opacity-100' : 'max-w-0 opacity-0'}`}
                         >
-                            {STATUS_ACTIONS.map((action) => {
+                            {STATUS_ACTIONS.map((action, index) => {
                                 const Icon = action.icon;
                                 const isActive = normalizedStatus === action.id;
+                                const isHighlighted = highlightedIndex === index;
+
+                                // Get highlight glow color based on action
+                                const getHighlightStyle = () => {
+                                    if (!isHighlighted) return '';
+                                    switch (action.id) {
+                                        case 'todo': return 'ring-2 ring-gray-400 bg-gray-100 dark:bg-gray-700';
+                                        case 'help': return 'ring-2 ring-status-stuck bg-status-stuck/20';
+                                        case 'in_progress': return 'ring-2 ring-status-progress bg-status-progress/20';
+                                        case 'done': return 'ring-2 ring-status-complete bg-status-complete/20';
+                                        default: return '';
+                                    }
+                                };
+
                                 return (
                                     <button
                                         key={action.id}
@@ -579,15 +610,17 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                         }}
                                         title={action.label}
                                         aria-label={action.label}
-                                        className={`p-1.5 rounded-lg transition-all duration-300 ease-out
+                                        className={`p-1.5 rounded-lg transition-all duration-150 ease-out
                                             min-w-[32px] min-h-[32px] flex items-center justify-center
                                             focus:outline-none
-                                            ${isActive
+                                            ${isHighlighted ? action.activeColor : ''}
+                                            ${getHighlightStyle()}
+                                            ${!isHighlighted && (isActive
                                                 ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm`
                                                 : `text-gray-400 dark:text-gray-500 ${action.hover}`
-                                            }`}
+                                            )}`}
                                     >
-                                        <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px]' : 'stroke-2'}`} />
+                                        <Icon className={`w-5 h-5 ${isActive || isHighlighted ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                                     </button>
                                 );
                             })}

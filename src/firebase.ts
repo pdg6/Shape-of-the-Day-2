@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, browserSessionPersistence, setPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
@@ -66,6 +66,16 @@ if (RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_V3_SITE_KEY') {
 
 // Initialize Firebase services for authentication and database
 export const auth = getAuth(app);
+
+// ============================================================================
+// SESSION PERSISTENCE - Security: Credentials clear when browser tab closes
+// ============================================================================
+// This prevents auto-login on page reload and aligns with education app
+// best practices for shared devices.
+setPersistence(auth, browserSessionPersistence)
+    .then(() => console.log('✅ Firebase Auth: Session-only persistence enabled'))
+    .catch((error) => console.warn('⚠️ Failed to set auth persistence:', error));
+
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
 export const storage = getStorage(app);

@@ -94,6 +94,9 @@ const StudentView: React.FC<StudentViewProps> = ({
     // Menu modal state (mobile)
     const [showMenuModal, setShowMenuModal] = useState<boolean>(false);
 
+    // Mobile sidebar open state
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+
     // Sidebar collapse state (desktop)
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
@@ -509,39 +512,56 @@ const StudentView: React.FC<StudentViewProps> = ({
         setMobileTab(tab);
     };
 
+    // Unified handler for sidebar - updates both mobile and desktop tabs
+    const handleSidebarTabChange = (tab: 'tasks' | 'projects' | 'schedule') => {
+        if (tab === 'tasks') {
+            setSelectedDate(today);
+        }
+        setDesktopTab(tab);
+        setMobileTab(tab);
+    };
+
     return (
         <div className="h-full flex overflow-hidden bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
-            {/* Desktop Sidebar */}
-            {/* Desktop Sidebar */}
+            {/* Responsive Sidebar - Desktop static, Mobile slide-in */}
             <StudentSidebar
                 tasksCompleted={tasksCompleted}
                 totalTasks={currentTasks.length}
                 activeTab={desktopTab}
-                onTabChange={handleDesktopTabChange}
+                onTabChange={handleSidebarTabChange}
                 isCollapsed={isSidebarCollapsed}
                 onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 onOpenSettings={() => setShowMenuModal(true)}
+                isMobileOpen={isMobileSidebarOpen}
+                onMobileClose={() => setIsMobileSidebarOpen(false)}
             />
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-                {/* Mobile Header - Compact inline: Class (left), Date + Progress (right) */}
-                <header className="md:hidden h-10 px-4 flex items-center justify-between z-10 shrink-0">
-                    {/* Left: Class Name - underlined with accent */}
-                    <h1 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-2 decoration-brand-accent">
+                {/* Mobile Header */}
+                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-gray-200 dark:border-gray-700">
+                    {/* Left: Hamburger Menu */}
+                    <button
+                        onClick={() => setIsMobileSidebarOpen(true)}
+                        className="flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
+                        aria-label="Open navigation menu"
+                        aria-expanded={isMobileSidebarOpen}
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+
+                    {/* Center: Class Name */}
+                    <h1 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-2 decoration-brand-accent">
                         {currentClassName}
                     </h1>
-                    {/* Right: Date (gray) + Progress donut + Count (white) */}
+                    {/* Right: Progress donut */}
                     <div className="flex items-center gap-2 whitespace-nowrap">
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </span>
                         <CircularProgress
                             total={currentTasks.length}
                             inProgress={tasksInProgress}
                             completed={tasksCompleted}
                             hasStarted={hasStartedWork}
-                            className="w-5 h-5 sm:w-6 sm:h-6"
+                            className="w-6 h-6"
                         />
                     </div>
                 </header>
@@ -552,22 +572,17 @@ const StudentView: React.FC<StudentViewProps> = ({
                         <div className="flex-1 overflow-y-auto custom-scrollbar px-6 pb-6">
                             <div className="max-w-4xl mx-auto">
                                 {/* Desktop Inline Content Header */}
-                                <div className="h-16 shrink-0 flex items-center justify-between pr-[22px]">
+                                <div className="h-16 shrink-0 flex items-center justify-between">
                                     <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
                                         {currentClassName}
                                     </h1>
-                                    <div className="flex items-center gap-3 shrink-0">
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                        </span>
-                                        <CircularProgress
-                                            total={currentTasks.length}
-                                            inProgress={tasksInProgress}
-                                            completed={tasksCompleted}
-                                            hasStarted={hasStartedWork}
-                                            className="w-8 h-8"
-                                        />
-                                    </div>
+                                    <CircularProgress
+                                        total={currentTasks.length}
+                                        inProgress={tasksInProgress}
+                                        completed={tasksCompleted}
+                                        hasStarted={hasStartedWork}
+                                        className="w-8 h-8"
+                                    />
                                 </div>
                                 {showPreview ? (
                                     <DayTaskPreview
@@ -778,15 +793,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                 onTabChange={handleMobileTabChange}
             />
 
-            {/* Mobile Hamburger Menu Button - Fixed bottom-left */}
-            <button
-                onClick={() => setShowMenuModal(true)}
-                className="md:hidden fixed bottom-4 left-4 z-50 w-12 h-12 flex items-center justify-center rounded-md border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-[0_2px_8px_rgba(16,185,129,0.15)] dark:shadow-[0_2px_8px_rgba(16,185,129,0.25)] transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 safe-area-inset"
-                aria-label="Open menu"
-                style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
-            >
-                <Menu className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-            </button>
+
 
             {/* Offline Indicator - shows when offline or pending operations */}
             <OfflineIndicator

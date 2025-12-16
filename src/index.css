@@ -88,7 +88,7 @@
 }
 
 body {
-    @apply bg-brand-textDarkPrimary text-brand-textPrimary antialiased;
+    @apply bg-brand-dark text-brand-textPrimary antialiased;
     cursor: default;
     caret-color: transparent;
 }

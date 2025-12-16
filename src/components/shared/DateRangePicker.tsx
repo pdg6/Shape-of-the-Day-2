@@ -19,6 +19,7 @@ interface DateRangePickerProps {
     disabled?: boolean;
     className?: string;
     buttonClassName?: string;
+    singleDateMode?: boolean; // When true, shows only a single "Due Date" picker
 }
 
 // Detect touch device for native fallback
@@ -48,6 +49,7 @@ export function DateRangePicker({
     disabled = false,
     className = '',
     buttonClassName = '',
+    singleDateMode = false,
 }: DateRangePickerProps) {
     const [activeField, setActiveField] = useState<'start' | 'end' | null>(null);
     const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -253,39 +255,43 @@ export function DateRangePicker({
                 tabIndex={-1}
             />
 
-            {/* Start Date Button */}
-            <button
-                ref={startButtonRef}
-                type="button"
-                onClick={() => handleButtonClick('start')}
-                disabled={disabled}
-                className={`
-                    relative flex-1 cursor-pointer
-                    pl-9 pr-4 py-2.5 rounded-lg text-sm font-medium text-left
-                    border-2 transition-all duration-200
-                    bg-brand-lightSurface dark:bg-brand-darkSurface
-                    hover:bg-gray-50 dark:hover:bg-gray-800/50
-                    focus:outline-none focus:ring-2 focus:ring-brand-accent/20
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${activeField === 'start'
-                        ? 'border-brand-accent'
-                        : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
-                    ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
-                    ${buttonClassName || 'py-2.5 text-sm'}
-                `}
-            >
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                    <CalendarIcon size={14} />
-                </span>
-                <span className="block truncate">
-                    {startDisplay || startPlaceholder}
-                </span>
-            </button>
+            {/* Start Date Button - hidden in singleDateMode */}
+            {!singleDateMode && (
+                <button
+                    ref={startButtonRef}
+                    type="button"
+                    onClick={() => handleButtonClick('start')}
+                    disabled={disabled}
+                    className={`
+                        relative flex-1 cursor-pointer
+                        pl-9 pr-4 py-2.5 rounded-lg text-sm font-medium text-left
+                        border-2 transition-all duration-200
+                        bg-brand-lightSurface dark:bg-brand-darkSurface
+                        hover:bg-gray-50 dark:hover:bg-gray-800/50
+                        focus:outline-none focus:ring-2 focus:ring-brand-accent/20
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        ${activeField === 'start'
+                            ? 'border-brand-accent'
+                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
+                        ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                        ${buttonClassName || 'py-2.5 text-sm'}
+                    `}
+                >
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                        <CalendarIcon size={14} />
+                    </span>
+                    <span className="block truncate">
+                        {startDisplay || startPlaceholder}
+                    </span>
+                </button>
+            )}
 
-            {/* Arrow indicator */}
-            <div className="flex items-center text-gray-300 dark:text-gray-600">
-                <ArrowRight size={16} />
-            </div>
+            {/* Arrow indicator - hidden in singleDateMode */}
+            {!singleDateMode && (
+                <div className="flex items-center text-gray-300 dark:text-gray-600">
+                    <ArrowRight size={16} />
+                </div>
+            )}
 
             {/* End Date Button */}
             <button

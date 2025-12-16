@@ -13,6 +13,7 @@ import {
     Loader,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     ArrowUp,
     ArrowDown,
     FolderOpen,
@@ -214,6 +215,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle'); // Auto-save feedback
+    const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false); // Mobile accordion for tasks list
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -938,6 +940,16 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         return () => clearTimeout(timer);
     }, [activeFormData, isDirty]);
 
+    // Wire up mobile "+" button from TeacherDashboard header
+    useEffect(() => {
+        const mobileBtn = document.getElementById('mobile-new-task-btn');
+        if (mobileBtn) {
+            const handleClick = () => resetForm();
+            mobileBtn.addEventListener('click', handleClick);
+            return () => mobileBtn.removeEventListener('click', handleClick);
+        }
+    }, []);
+
     // --- Render ---
 
     const availableParents = getAvailableParents(activeFormData.type);
@@ -949,8 +961,8 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
     return (
         <div className="flex-1 h-full flex flex-col space-y-3">
-            {/* Content Header - h-16 matches sidebar header height */}
-            <div className="h-16 shrink-0 grid grid-cols-1 lg:grid-cols-4 gap-6 items-center">
+            {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
+            <div className="hidden lg:grid h-16 shrink-0 grid-cols-1 lg:grid-cols-4 gap-6 items-center">
                 {/* Left 3 columns: Tasks label + Current Class + Drafts + New Task Button */}
                 <div className="lg:col-span-3 flex items-center gap-3">
                     <div className="flex items-baseline gap-3 shrink-0">
@@ -1064,12 +1076,12 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 </div>
             </div>
 
-            {/* Main Content - both panels start at same level */}
-            <div className="flex-1 overflow-y-auto lg:overflow-hidden">
-                <div className="min-h-full lg:h-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+            {/* Main Content - flex layout on mobile, grid on desktop */}
+            <div className="flex-1 min-h-0 flex flex-col lg:block overflow-hidden">
+                <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6 lg:h-full overflow-y-auto lg:overflow-hidden">
 
-                    {/* LEFT PANEL: Task Editor */}
-                    <div className="lg:col-span-3 flex flex-col h-auto lg:h-full lg:overflow-y-auto custom-scrollbar">
+                    {/* LEFT PANEL: Task Editor - flex-1 to fill space on mobile */}
+                    <div className="flex-1 min-h-0 lg:col-span-3 flex flex-col lg:overflow-y-auto custom-scrollbar">
                         {/* Main Form Card */}
                         <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-lg p-4 space-y-4 flex-1 flex flex-col relative z-40">
                             {/* Save State Indicator - top right */}
@@ -1105,7 +1117,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 {/* TYPE */}
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Type</span>
-                                    <div className="w-[160px]">
+                                    <div className="w-full lg:w-[160px]">
                                         <Select<ItemType>
                                             value={activeFormData.type}
                                             onChange={(value) => updateActiveCard('type', value || 'task')}
@@ -1125,7 +1137,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 {/* CONNECTIONS */}
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Connections</span>
-                                    <div className="w-[160px]">
+                                    <div className="w-full lg:w-[160px]">
                                         <Select<string>
                                             value={activeFormData.parentId}
                                             onChange={async (value) => {
@@ -1186,25 +1198,32 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     </div>
                                 </div>
 
-                                {/* DATES - pushed to right */}
+                                {/* DUE DATE - single date picker for mobile simplicity */}
                                 <div className="flex flex-col gap-1 ml-auto">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Dates</span>
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Due Date</span>
                                     <DateRangePicker
-                                        startDate={activeFormData.startDate}
+                                        startDate={activeFormData.endDate}
                                         endDate={activeFormData.endDate}
-                                        onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                        onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                        startPlaceholder="Start"
+                                        onStartDateChange={(value) => {
+                                            updateActiveCard('startDate', value);
+                                            updateActiveCard('endDate', value);
+                                        }}
+                                        onEndDateChange={(value) => {
+                                            updateActiveCard('startDate', value);
+                                            updateActiveCard('endDate', value);
+                                        }}
+                                        startPlaceholder="Due"
                                         endPlaceholder="Due"
                                         buttonClassName="py-1 text-sm"
+                                        singleDateMode={true}
                                     />
                                 </div>
                             </div>
                             {/* Description & Attachments Section */}
                             {/* Description Container with embedded Upload/Link buttons */}
-                            <div className="flex-1 min-h-[150px] lg:min-h-[200px] relative">
+                            <div className="flex-1 min-h-[120px] relative">
                                 <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 rounded-md border-2 border-gray-400 dark:border-gray-600 focus-within:border-gray-600 dark:focus-within:border-gray-400 bg-gray-50/50 dark:bg-gray-900/30 overflow-hidden transition-colors">
+                                    <div className="flex-1 rounded-md border-2 border-gray-400 dark:border-gray-600 focus-within:border-gray-600 dark:focus-within:border-gray-400 bg-gray-50/50 dark:bg-gray-900/30 overflow-y-auto transition-colors">
                                         <RichTextEditor
                                             value={activeFormData.description}
                                             onChange={(value) => updateActiveCard('description', value)}
@@ -1328,9 +1347,8 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 </div>
                             </div>
 
-
                             {/* Action Row: Class Selector + Delete/Save buttons */}
-                            <div className="pt-4 flex items-end justify-between gap-4">
+                            <div className="pt-1 flex items-end justify-between gap-4">
                                 {/* Left: Class Selector */}
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
@@ -1358,37 +1376,17 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
                                 {/* Right: Action Buttons */}
                                 <div className="flex items-center gap-2">
-                                    {/* Delete Button - only for existing tasks */}
+                                    {/* Delete Button - always visible for existing tasks (drafts can be deleted) */}
                                     {!isNewTask && (
                                         <button
                                             type="button"
                                             onClick={() => handleDelete(editingTaskId!)}
                                             disabled={isSubmitting}
-                                            className="px-4 py-2 rounded-md text-sm font-medium border-2 border-gray-400 dark:border-gray-600 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-red-500 hover:border-red-400 transition-all disabled:opacity-50"
+                                            className="px-4 py-2.5 min-h-[44px] rounded-md text-sm font-medium border-2 border-gray-400 dark:border-gray-600 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-red-500 hover:border-red-400 transition-all disabled:opacity-50"
                                         >
                                             <span className="flex items-center gap-2">
                                                 <Trash2 size={16} />
                                                 Delete
-                                            </span>
-                                        </button>
-                                    )}
-
-                                    {/* Discard Button - only when dirty */}
-                                    {isDirty && (
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                if (window.confirm('Discard unsaved changes?')) {
-                                                    sessionStorage.removeItem('taskManager.formData');
-                                                    sessionStorage.removeItem('taskManager.editingTaskId');
-                                                    resetForm();
-                                                }
-                                            }}
-                                            className="px-4 py-2 rounded-md text-sm font-medium border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 transition-all"
-                                        >
-                                            <span className="flex items-center gap-2">
-                                                <X size={16} />
-                                                Discard
                                             </span>
                                         </button>
                                     )}
@@ -1404,7 +1402,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                             await handleSave();
                                         }}
                                         disabled={isSubmitting}
-                                        className="min-w-[100px] px-4 py-2 rounded-md text-sm font-medium border-2 border-gray-400 dark:border-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-brand-accent focus:border-brand-accent transition-all disabled:opacity-50"
+                                        className="min-w-[100px] px-4 py-2.5 min-h-[44px] rounded-md text-sm font-medium border-2 border-gray-400 dark:border-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-brand-accent focus:border-brand-accent transition-all disabled:opacity-50"
                                     >
                                         <span className="flex items-center justify-center gap-2">
                                             {isSubmitting ? <Loader size={16} className="animate-spin" /> : <Check size={16} className="text-brand-accent" />}
@@ -1416,10 +1414,9 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                         </div>
                     </div>
 
-
-                    {/* RIGHT PANEL: Task List */}
-                    <div className="lg:col-span-1 flex flex-col h-auto lg:h-full lg:overflow-hidden">
-                        <div className="h-auto lg:h-full flex flex-col justify-between overflow-hidden">
+                    {/* RIGHT PANEL: Task List - shrink-0 on mobile so form gets the space */}
+                    <div className="shrink-0 lg:col-span-1 flex flex-col lg:h-full lg:overflow-hidden">
+                        <div className="flex flex-col justify-end lg:justify-between overflow-hidden pb-2 lg:pb-0 lg:h-full">
 
                             {/* Calendar Portal (rendered when open) */}
                             {isCalendarOpen && createPortal(
@@ -1480,8 +1477,41 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 document.body
                             )}
 
-                            {/* Task List */}
-                            <div className="flex-1 overflow-y-auto px-0 pt-0 pb-4 space-y-3 custom-scrollbar min-h-[300px] lg:min-h-0">
+                            {/* Mobile Overlay - closes accordion when clicking outside */}
+                            {isMobileTasksOpen && (
+                                <div
+                                    className="lg:hidden fixed inset-0 top-12 bg-black/30 z-40"
+                                    onClick={() => setIsMobileTasksOpen(false)}
+                                    aria-hidden="true"
+                                />
+                            )}
+
+                            {/* Mobile Accordion Header for Task List - only visible on mobile */}
+                            <button
+                                type="button"
+                                onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
+                                className="lg:hidden relative z-50 flex items-center justify-between w-full p-4 mt-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <CalendarIcon size={16} className="text-gray-400" />
+                                    <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                        Today's Tasks
+                                    </span>
+                                    <span className="text-xs text-gray-400">({filteredTasks.length})</span>
+                                </div>
+                                <ChevronDown
+                                    size={18}
+                                    className={`text-gray-400 transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
+                                />
+                            </button>
+
+                            {/* Task List - collapsible on mobile, always visible on lg+ */}
+                            <div className={`
+                                overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-brand-lightSurface dark:bg-brand-darkSurface
+                                lg:flex-1 lg:min-h-0 lg:pt-0 lg:pb-4 lg:bg-transparent
+                                ${isMobileTasksOpen ? 'flex-1 pt-3 pb-4 rounded-lg' : 'max-h-0 lg:max-h-none overflow-hidden'}
+                                transition-all duration-300 ease-in-out
+                            `}>
                                 {!currentClassId ? (
                                     <div className="text-center py-8 text-gray-400 italic text-sm">
                                         Select a class to view schedule.

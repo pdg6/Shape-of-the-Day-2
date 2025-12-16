@@ -182,8 +182,8 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
     return (
         <div className={`flex flex-col space-y-3 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
-            {/* Content Header - h-16 matches sidebar header height */}
-            <div className="h-16 flex-shrink-0 flex items-center justify-between">
+            {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
+            <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
                 {/* Left: Label + Current Class */}
                 <div className="flex items-baseline gap-3">
                     <span className="text-fluid-lg font-black text-gray-400">

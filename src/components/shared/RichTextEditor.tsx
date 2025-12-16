@@ -208,8 +208,8 @@ export function RichTextEditor({
                     editor={editor}
                     className="h-full [&_.ProseMirror]:h-full [&_.ProseMirror]:min-h-[100px]"
                 />
-                {/* Multi-line Placeholder */}
-                {editor.isEmpty && (
+                {/* Multi-line Placeholder - only show when truly empty (both editor state and value prop) */}
+                {editor.isEmpty && (!value || value === '<p></p>') && (
                     <div className="absolute top-4 left-4 pointer-events-none">
                         <div className="text-gray-400 dark:text-gray-500 text-sm font-medium">
                             {placeholder}

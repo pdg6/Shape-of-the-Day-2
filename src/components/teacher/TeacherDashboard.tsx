@@ -7,7 +7,6 @@ import TaskInventory from './TaskInventory';
 import ShapeOfDay from './ShapeOfDay';
 import LiveView from './LiveView';
 import ClassroomManager from './ClassroomManager';
-import ConnectionSidebar from './ConnectionSidebar';
 import { ClassFormModal } from './ClassFormModal';
 import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
@@ -145,26 +144,32 @@ const TeacherDashboard: React.FC = () => {
     };
 
     return (
-        <div className="flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
+        <div className="flex h-full bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
             {/* Mobile Sidebar Overlay */}
-            {isSidebarOpen && (
-                <div
-                    className="fixed inset-0 bg-black/50 z-tooltip md:hidden"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
+            <div
+                className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                onClick={() => setSidebarOpen(false)}
+                aria-hidden="true"
+            />
 
-            {/* Sidebar Navigation - Desktop Only */}
+            {/* Sidebar Navigation - Slides in on mobile, static on desktop */}
             <aside
                 ref={sidebarRef}
                 className={`
-                hidden md:flex md:static inset-y-0 left-0 z-sidebar
-                ${isCollapsed ? 'w-20' : 'w-64'} bg-brand-lightSurface dark:bg-brand-darkSurface
-                transform transition-all duration-300 ease-in-out flex-col h-full overflow-hidden
-            `}>
-                {/* Logo/Branding with Date - Constrained to logo height */}
-                <div className="h-16 shrink-0 flex items-center px-4">
-                    <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12' : ''}`}>
+                    fixed md:static inset-y-0 left-0 z-50
+                    ${isCollapsed ? 'md:w-20' : 'md:w-64'} w-64
+                    bg-brand-light dark:bg-brand-dark
+                    transform transition-transform duration-300 ease-in-out
+                    flex flex-col h-full overflow-hidden
+                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                    shadow-lg md:shadow-none
+                `}
+                aria-label="Main navigation"
+                aria-hidden={!isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 768 ? 'true' : 'false'}
+            >
+                {/* Sidebar Header - Logo/Branding with Close button on mobile */}
+                <div className="h-16 shrink-0 flex items-center justify-between px-4">
+                    <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12 md:w-12' : ''}`}>
                         <img
                             src="/shape of the day logo.png"
                             alt="Shape of the Day"
@@ -173,7 +178,7 @@ const TeacherDashboard: React.FC = () => {
                         <div className={`
                             flex flex-col justify-center overflow-hidden
                             transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
+                            ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100'}
                         `}>
                             <span className="font-bold text-base text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap leading-tight">
                                 Shape of the Day
@@ -183,11 +188,13 @@ const TeacherDashboard: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                </div>
-
-                <div className="p-4 flex justify-end md:hidden shrink-0">
-                    <button onClick={() => setSidebarOpen(false)} className="text-gray-500">
-                        <X />
+                    {/* Mobile Close Button */}
+                    <button
+                        onClick={() => setSidebarOpen(false)}
+                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                        aria-label="Close navigation menu"
+                    >
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
 
@@ -431,23 +438,74 @@ const TeacherDashboard: React.FC = () => {
                 </div>
             </aside>
 
-            {/* Main Content - No header, content goes to top */}
+            {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 relative">
+                {/* Mobile Header */}
+                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0">
+                    {/* Left: Hamburger Menu + Section Title (matches desktop format) */}
+                    <div className="flex items-center gap-3 min-w-0">
+                        <button
+                            onClick={() => setSidebarOpen(true)}
+                            className="flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
+                            aria-label="Open navigation menu"
+                            aria-expanded={isSidebarOpen}
+                            aria-controls="main-navigation"
+                        >
+                            <Menu className="w-6 h-6" />
+                        </button>
+                        <h1 className="flex items-baseline gap-1.5 text-xl font-black truncate">
+                            <span className="text-gray-400">
+                                {activeTab === 'tasks' ? (tasksSubTab === 'create' ? 'Tasks:' : 'Inventory:')
+                                    : activeTab === 'shape' ? 'Shape:'
+                                        : activeTab === 'live' ? 'Live:'
+                                            : activeTab === 'classrooms' ? 'Classrooms:'
+                                                : activeTab === 'reports' ? 'Reports:'
+                                                    : ''}
+                            </span>
+                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4 truncate">
+                                {currentClass?.name || 'All Classes'}
+                            </span>
+                        </h1>
+                    </div>
+                    {/* Right: CTA Button (for Tasks, Classrooms, Live) or Date */}
+                    {activeTab === 'tasks' && tasksSubTab === 'create' ? (
+                        <button
+                            id="mobile-new-task-btn"
+                            className="w-10 h-10 flex items-center justify-center rounded-md text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                            aria-label="New Task"
+                        >
+                            <Plus className="w-6 h-6" />
+                        </button>
+                    ) : activeTab === 'classrooms' ? (
+                        <button
+                            onClick={() => setIsClassModalOpen(true)}
+                            className="w-10 h-10 flex items-center justify-center rounded-md text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                            aria-label="Add Class"
+                        >
+                            <Plus className="w-6 h-6" />
+                        </button>
+                    ) : activeTab === 'live' ? (
+                        <button
+                            onClick={() => setIsJoinCodeOpen(true)}
+                            className="w-10 h-10 flex items-center justify-center rounded-md text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                            aria-label="Show Join Code"
+                        >
+                            <QrCode className="w-5 h-5" />
+                        </button>
+                    ) : (
+                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
+                    )}
+                </header>
+
                 {/* Content Body */}
                 <div className="flex-1 min-h-0 min-w-0 relative overflow-hidden">
                     {/* Scrollable content */}
-                    <div className="h-full w-full overflow-y-auto overflow-x-hidden px-6 pb-[84px] md:pb-6">
+                    <div className="h-full w-full overflow-y-auto overflow-x-hidden px-6 pb-6">
                         {renderContent()}
                     </div>
                 </div>
-
-                {/* Connection Sidebar (Right) */}
-                {currentClass && (
-                    <ConnectionSidebar
-                        classCode={currentClass.joinCode}
-                        classId={currentClass.id}
-                    />
-                )}
 
                 {/* Global Modals */}
                 {/* Global Modals */}
@@ -492,15 +550,7 @@ const TeacherDashboard: React.FC = () => {
             {/* Development Tools - Remove in production */}
             {/* <DummyDataControls /> */}
 
-            {/* Mobile Hamburger Menu Button - Fixed bottom-left */}
-            <button
-                onClick={() => setIsSettingsOpen(true)}
-                className="md:hidden fixed bottom-4 left-4 z-50 w-12 h-12 flex items-center justify-center rounded-md border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-[0_2px_8px_rgba(16,185,129,0.15)] dark:shadow-[0_2px_8px_rgba(16,185,129,0.25)] transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                aria-label="Open menu"
-                style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
-            >
-                <Menu className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-            </button>
+
         </div >
     );
 };
