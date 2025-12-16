@@ -371,16 +371,22 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
 
     // Add a new link and fetch its metadata
     const addLink = useCallback(async (url: string) => {
+        // Normalize URL - add https:// if no protocol provided
+        let normalizedUrl = url.trim();
+        if (normalizedUrl && !normalizedUrl.match(/^https?:\/\//i)) {
+            normalizedUrl = 'https://' + normalizedUrl;
+        }
+
         // Validate URL format
         try {
-            new URL(url);
+            new URL(normalizedUrl);
         } catch {
             handleError('Please enter a valid URL');
             return;
         }
 
         // Check for duplicates
-        if (formData.links?.some(link => link.url === url)) {
+        if (formData.links?.some(link => link.url === normalizedUrl)) {
             handleError('This link is already added');
             return;
         }
@@ -388,7 +394,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         // Create new link with temporary ID
         const newLink: LinkAttachment = {
             id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            url,
+            url: normalizedUrl,
             addedAt: new Date(),
         };
 
@@ -403,7 +409,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
         setIsLoadingLinkTitle(true);
         try {
             const fetchMetadata = httpsCallable<{ url: string }, { title: string | null; siteName: string; error?: string }>(functions, 'fetchUrlMetadata');
-            const result = await fetchMetadata({ url });
+            const result = await fetchMetadata({ url: normalizedUrl });
 
             if (result.data.title) {
                 // Update the link with its title
@@ -794,6 +800,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                 startDate: formData.startDate,
                 endDate: formData.endDate,
                 selectedRoomIds: formData.selectedRoomIds,
+                assignedRooms: formData.selectedRoomIds, // Also save as assignedRooms for StudentView query compatibility
                 attachments: formData.attachments || [],
                 teacherId: auth.currentUser.uid,
                 updatedAt: serverTimestamp(),
@@ -1201,18 +1208,33 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     </div>
                                 </div>
 
-                                {/* DATE RANGE - full range picker for all screen sizes */}
+                                {/* DATE RANGE - compact on mobile, separate buttons on desktop */}
                                 <div className="flex flex-col gap-1 ml-auto">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Dates</span>
-                                    <DateRangePicker
-                                        startDate={activeFormData.startDate}
-                                        endDate={activeFormData.endDate}
-                                        onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                        onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                        startPlaceholder="Start"
-                                        endPlaceholder="Due"
-                                        compactMode={true}
-                                    />
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider hidden lg:block">Dates</span>
+                                    {/* Desktop: Separate start/end buttons */}
+                                    <div className="hidden lg:block">
+                                        <DateRangePicker
+                                            startDate={activeFormData.startDate}
+                                            endDate={activeFormData.endDate}
+                                            onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                            onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                            startPlaceholder="Start"
+                                            endPlaceholder="Due"
+                                            compactMode={false}
+                                        />
+                                    </div>
+                                    {/* Mobile: Compact single button */}
+                                    <div className="lg:hidden">
+                                        <DateRangePicker
+                                            startDate={activeFormData.startDate}
+                                            endDate={activeFormData.endDate}
+                                            onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                            onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                            startPlaceholder="Start"
+                                            endPlaceholder="Due"
+                                            compactMode={true}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                             {/* Description & Attachments Section */}

@@ -216,10 +216,10 @@ const StudentView: React.FC<StudentViewProps> = ({
         setScheduleLoading(true);
 
         const tasksRef = collection(db, 'tasks');
-        // Query tasks assigned to this classroom
+        // Query tasks assigned to this classroom (using selectedRoomIds which TaskManager saves)
         const q = query(
             tasksRef,
-            where('assignedRooms', 'array-contains', classId)
+            where('selectedRoomIds', 'array-contains', classId)
         );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {

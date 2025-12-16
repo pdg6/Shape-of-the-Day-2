@@ -147,7 +147,7 @@ const TeacherDashboard: React.FC = () => {
         <div className="flex h-full bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary overflow-hidden transition-colors duration-300">
             {/* Mobile Sidebar Overlay */}
             <div
-                className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                 onClick={() => setSidebarOpen(false)}
                 aria-hidden="true"
             />
@@ -156,16 +156,16 @@ const TeacherDashboard: React.FC = () => {
             <aside
                 ref={sidebarRef}
                 className={`
-                    fixed md:static inset-y-0 left-0 z-50
-                    ${isCollapsed ? 'md:w-20' : 'md:w-64'} w-64
+                    fixed lg:static inset-y-0 left-0 z-50
+                    ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64
                     bg-brand-light dark:bg-brand-dark
                     transform transition-transform duration-300 ease-in-out
                     flex flex-col h-full overflow-hidden
-                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                    shadow-lg md:shadow-none
+                    ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    shadow-lg lg:shadow-none
                 `}
                 aria-label="Main navigation"
-                aria-hidden={!isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 768 ? 'true' : 'false'}
+                aria-hidden={!isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 1024 ? 'true' : 'false'}
             >
                 {/* Sidebar Header - Logo/Branding with Close button on mobile */}
                 <div className="h-16 shrink-0 flex items-center justify-between px-4">
@@ -178,7 +178,7 @@ const TeacherDashboard: React.FC = () => {
                         <div className={`
                             flex flex-col justify-center overflow-hidden
                             transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100'}
+                            ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'opacity-100'}
                         `}>
                             <span className="font-bold text-base text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap leading-tight">
                                 Shape of the Day
@@ -191,7 +191,7 @@ const TeacherDashboard: React.FC = () => {
                     {/* Mobile Close Button */}
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                        className="lg:hidden flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
                         aria-label="Close navigation menu"
                     >
                         <X className="w-5 h-5" />
@@ -212,7 +212,7 @@ const TeacherDashboard: React.FC = () => {
                                             ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
                                             : 'border-transparent text-gray-500 hover:border-gray-600 dark:hover:border-gray-400'
                                         }
-                                    ${isCollapsed ? 'w-12 h-12 justify-center' : 'w-full h-12'}
+                                    ${isCollapsed ? 'lg:w-12 lg:h-12 lg:justify-center w-full h-12' : 'w-full h-12'}
                                 `}
                                     title={isCollapsed ? item.label : undefined}
                                     aria-label={item.label}
@@ -234,7 +234,7 @@ const TeacherDashboard: React.FC = () => {
                                     <div className={`flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'w-12' : 'w-12'}`}>
                                         <item.icon size={20} className="shrink-0" />
                                     </div>
-                                    <span className={`whitespace-nowrap transition-all duration-300 ease-in-out ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}`}>
+                                    <span className={`whitespace-nowrap transition-all duration-300 ease-in-out ${isCollapsed ? 'lg:w-0 lg:opacity-0 opacity-100' : 'opacity-100'}`}>
                                         {item.label}
                                     </span>
                                 </button>
