@@ -86,7 +86,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
         // Query tasks for this class. 
         // Note: In a real app, we might filter by 'published' status or date.
-        const q = query(collection(db, 'tasks'), where('classroomId', '==', currentClassId));
+        const q = query(collection(db, 'tasks'), where('selectedRoomIds', 'array-contains', currentClassId));
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const taskData: Task[] = [];
             snapshot.forEach((doc) => {
