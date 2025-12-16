@@ -187,7 +187,7 @@ export function Select<T extends string | number = string>({
                                     style={{
                                         top: dropdownPosition.top,
                                         left: dropdownPosition.left,
-                                        width: dropdownPosition.width,
+                                        minWidth: Math.max(dropdownPosition.width, 200),
                                         maxHeight: '300px',
                                     }}
                                 >

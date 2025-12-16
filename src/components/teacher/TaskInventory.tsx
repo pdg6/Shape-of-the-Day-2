@@ -722,8 +722,8 @@ export default function TaskInventory({ onEditTask }: TaskInventoryProps) {
         <div className="h-full w-full min-w-0 overflow-hidden">
             <div className="h-full w-full flex flex-col space-y-3 overflow-y-auto lg:overflow-hidden">
 
-                {/* Content Header - h-16 matches sidebar header height */}
-                <div className="h-16 flex-shrink-0 flex items-center justify-between px-4">
+                {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
+                <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between px-4">
                     <div className="flex items-baseline gap-3">
                         <span className="text-fluid-lg font-black text-gray-400">
                             Tasks:

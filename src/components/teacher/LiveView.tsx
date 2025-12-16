@@ -119,8 +119,8 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Content Header - h-16 matches sidebar header height */}
-            <div className="h-16 flex-shrink-0 flex items-center justify-between">
+            {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
+            <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
                 {/* Left: Label + Class Name + Active Count */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-baseline gap-3">

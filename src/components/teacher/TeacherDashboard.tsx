@@ -93,7 +93,7 @@ const TeacherDashboard: React.FC = () => {
         }
 
         // Close mobile sidebar on selection
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 1024) {
             setSidebarOpen(false);
         }
     };
@@ -103,7 +103,7 @@ const TeacherDashboard: React.FC = () => {
         // Close the classrooms submenu after selection
         setIsClassroomsMenuOpen(false);
         // Close mobile sidebar on selection
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 1024) {
             setSidebarOpen(false);
         }
     };
@@ -440,8 +440,8 @@ const TeacherDashboard: React.FC = () => {
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col min-w-0 relative">
-                {/* Mobile Header */}
-                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0">
+                {/* Mobile/Tablet Header - visible below lg breakpoint */}
+                <header className="lg:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0">
                     {/* Left: Hamburger Menu + Section Title (matches desktop format) */}
                     <div className="flex items-center gap-3 min-w-0">
                         <button

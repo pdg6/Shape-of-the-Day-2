@@ -27,7 +27,9 @@ import {
 import { Select, SelectOption } from '../shared/Select';
 import { MultiSelect } from '../shared/MultiSelect';
 import { DateRangePicker } from '../shared/DateRangePicker';
+import { DatePicker } from '../shared/DatePicker';
 import { RichTextEditor } from '../shared/RichTextEditor';
+import { format, parse } from 'date-fns';
 import { Button } from '../shared/Button';
 
 import { handleError, handleSuccess } from '../../utils/errorHandler';
@@ -216,6 +218,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle'); // Auto-save feedback
     const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false); // Mobile accordion for tasks list
+    const [summaryDate, setSummaryDate] = useState<string>(toDateString()); // Date for task summary view
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1112,8 +1115,8 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                 </div>
                             </div>
 
-                            {/* Metadata Row: Type, Connections, Dates */}
-                            <div className="flex items-end gap-4 flex-wrap lg:flex-nowrap">
+                            {/* Metadata Row: Type, Connections, Dates - all on one row */}
+                            <div className="flex items-end gap-2 lg:gap-4">
                                 {/* TYPE */}
                                 <div className="flex flex-col gap-1">
                                     <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Type</span>
@@ -1134,10 +1137,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     </div>
                                 </div>
 
-                                {/* CONNECTIONS */}
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Connections</span>
-                                    <div className="w-full lg:w-[160px]">
+                                {/* CONNECTIONS - narrower on mobile */}
+                                <div className="flex flex-col gap-1 shrink-0">
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Link</span>
+                                    <div className="w-24 lg:w-[160px]">
                                         <Select<string>
                                             value={activeFormData.parentId}
                                             onChange={async (value) => {
@@ -1189,7 +1192,7 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                                     iconColor: getTypeHexColor(parent.type),
                                                 })),
                                             ]}
-                                            placeholder="Linked to..."
+                                            placeholder="..."
                                             icon={LinkIcon}
                                             nullable
                                             searchable
@@ -1198,24 +1201,17 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                     </div>
                                 </div>
 
-                                {/* DUE DATE - single date picker for mobile simplicity */}
+                                {/* DATE RANGE - full range picker for all screen sizes */}
                                 <div className="flex flex-col gap-1 ml-auto">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Due Date</span>
+                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Dates</span>
                                     <DateRangePicker
-                                        startDate={activeFormData.endDate}
+                                        startDate={activeFormData.startDate}
                                         endDate={activeFormData.endDate}
-                                        onStartDateChange={(value) => {
-                                            updateActiveCard('startDate', value);
-                                            updateActiveCard('endDate', value);
-                                        }}
-                                        onEndDateChange={(value) => {
-                                            updateActiveCard('startDate', value);
-                                            updateActiveCard('endDate', value);
-                                        }}
-                                        startPlaceholder="Due"
+                                        onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                        onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                        startPlaceholder="Start"
                                         endPlaceholder="Due"
-                                        buttonClassName="py-1 text-sm"
-                                        singleDateMode={true}
+                                        compactMode={true}
                                     />
                                 </div>
                             </div>
@@ -1487,23 +1483,35 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                             )}
 
                             {/* Mobile Accordion Header for Task List - only visible on mobile */}
-                            <button
-                                type="button"
-                                onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
-                                className="lg:hidden relative z-50 flex items-center justify-between w-full p-4 mt-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <CalendarIcon size={16} className="text-gray-400" />
-                                    <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                        Today's Tasks
-                                    </span>
-                                    <span className="text-xs text-gray-400">({filteredTasks.length})</span>
-                                </div>
-                                <ChevronDown
-                                    size={18}
-                                    className={`text-gray-400 transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
+                            <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                                {/* Left: Calendar icon */}
+                                <DatePicker
+                                    value={summaryDate || toDateString()}
+                                    onChange={(value) => setSummaryDate(value || toDateString())}
+                                    iconOnly={true}
+                                    iconColor="var(--color-brand-accent)"
                                 />
-                            </button>
+
+                                {/* Center: Title with task count */}
+                                <div className="flex-1 flex items-center justify-center gap-2">
+                                    <span className="font-medium text-gray-400">
+                                        {summaryDate === toDateString() ? "Today's Tasks:" : format(parse(summaryDate, 'yyyy-MM-dd', new Date()), 'MMM d') + "'s Tasks:"}
+                                    </span>
+                                    <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{filteredTasks.length}</span>
+                                </div>
+
+                                {/* Right: Expand/collapse toggle */}
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
+                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                    <ChevronDown
+                                        size={18}
+                                        className={`text-gray-400 transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+                            </div>
 
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
@@ -1534,7 +1542,10 @@ export default function TaskManager({ initialTask }: TaskManagerProps) {
                                         return (
                                             <div
                                                 key={task.id}
-                                                onClick={() => handleEditClick(task)}
+                                                onClick={() => {
+                                                    handleEditClick(task);
+                                                    setIsMobileTasksOpen(false); // Close accordion on mobile
+                                                }}
                                                 style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
                                                 className={`
                                                 group relative p-3 rounded-lg border-2 transition-all cursor-pointer

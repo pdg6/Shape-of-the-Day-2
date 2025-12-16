@@ -20,6 +20,7 @@ interface DateRangePickerProps {
     className?: string;
     buttonClassName?: string;
     singleDateMode?: boolean; // When true, shows only a single "Due Date" picker
+    compactMode?: boolean; // When true, uses shorter date format (M/d) and reduces padding
 }
 
 // Detect touch device for native fallback
@@ -50,6 +51,7 @@ export function DateRangePicker({
     className = '',
     buttonClassName = '',
     singleDateMode = false,
+    compactMode = false,
 }: DateRangePickerProps) {
     const [activeField, setActiveField] = useState<'start' | 'end' | null>(null);
     const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -67,9 +69,9 @@ export function DateRangePicker({
     const isStartValid = startDateObj && isValid(startDateObj);
     const isEndValid = endDateObj && isValid(endDateObj);
 
-    // Format for display
-    const startDisplay = isStartValid ? format(startDateObj, 'MMM d') : '';
-    const endDisplay = isEndValid ? format(endDateObj, 'MMM d') : '';
+    // Format for display - compact mode shows "MMM d → d" (e.g., "Dec 15 → 16")
+    const startDisplay = isStartValid ? format(startDateObj, compactMode ? 'MMM d' : 'MMM d') : '';
+    const endDisplay = isEndValid ? format(endDateObj, compactMode ? 'd' : 'MMM d') : '';
 
     // Update position based on active field
     const updatePosition = useCallback((field: 'start' | 'end') => {
@@ -255,72 +257,97 @@ export function DateRangePicker({
                 tabIndex={-1}
             />
 
-            {/* Start Date Button - hidden in singleDateMode */}
-            {!singleDateMode && (
+            {/* Compact Mode: Single button showing date range */}
+            {compactMode ? (
                 <button
                     ref={startButtonRef}
                     type="button"
                     onClick={() => handleButtonClick('start')}
                     disabled={disabled}
                     className={`
-                        relative flex-1 cursor-pointer
-                        pl-9 pr-4 py-2.5 rounded-lg text-sm font-medium text-left
-                        border-2 transition-all duration-200
+                        cursor-pointer px-4 py-2.5 rounded-md text-sm font-medium
+                        border-2 transition-all duration-200 whitespace-nowrap
                         bg-brand-lightSurface dark:bg-brand-darkSurface
                         hover:bg-gray-50 dark:hover:bg-gray-800/50
-                        focus:outline-none focus:ring-2 focus:ring-brand-accent/20
+                        focus:outline-none
                         disabled:opacity-50 disabled:cursor-not-allowed
-                        ${activeField === 'start'
+                        ${activeField
                             ? 'border-brand-accent'
                             : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
-                        ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
-                        ${buttonClassName || 'py-2.5 text-sm'}
+                        ${startDate || endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                        ${buttonClassName}
                     `}
                 >
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                        <CalendarIcon size={14} />
-                    </span>
-                    <span className="block truncate">
-                        {startDisplay || startPlaceholder}
-                    </span>
+                    {startDisplay && endDisplay
+                        ? (startDisplay === endDisplay ? startDisplay : `${startDisplay} → ${endDisplay}`)
+                        : 'Set dates'}
                 </button>
-            )}
+            ) : (
+                <>
+                    {/* Start Date Button */}
+                    <button
+                        ref={startButtonRef}
+                        type="button"
+                        onClick={() => handleButtonClick('start')}
+                        disabled={disabled}
+                        className={`
+                            relative flex-1 cursor-pointer
+                            pl-9 pr-4 py-2.5 rounded-lg text-sm font-medium text-left
+                            border-2 transition-all duration-200
+                            bg-brand-lightSurface dark:bg-brand-darkSurface
+                            hover:bg-gray-50 dark:hover:bg-gray-800/50
+                            focus:outline-none
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            ${activeField === 'start'
+                                ? 'border-brand-accent'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
+                            ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                            ${buttonClassName || 'py-2.5 text-sm'}
+                        `}
+                    >
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                            <CalendarIcon size={14} />
+                        </span>
+                        <span className="block truncate">
+                            {startDisplay || startPlaceholder}
+                        </span>
+                    </button>
 
-            {/* Arrow indicator - hidden in singleDateMode */}
-            {!singleDateMode && (
-                <div className="flex items-center text-gray-300 dark:text-gray-600">
-                    <ArrowRight size={16} />
-                </div>
-            )}
+                    {/* Arrow indicator */}
+                    <div className="flex items-center text-gray-300 dark:text-gray-600">
+                        <ArrowRight size={16} />
+                    </div>
 
-            {/* End Date Button */}
-            <button
-                ref={endButtonRef}
-                type="button"
-                onClick={() => handleButtonClick('end')}
-                disabled={disabled}
-                className={`
-                    relative flex-1 cursor-pointer
-                    pl-9 pr-4 py-2.5 rounded-lg text-sm font-medium text-left
-                    border-2 transition-all duration-200
-                    bg-brand-lightSurface dark:bg-brand-darkSurface
-                    hover:bg-gray-50 dark:hover:bg-gray-800/50
-                    focus:outline-none focus:ring-2 focus:ring-brand-accent/20
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${activeField === 'end'
-                        ? 'border-brand-accent'
-                        : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
-                    ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
-                    ${buttonClassName || 'py-2.5 text-sm'}
-                `}
-            >
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                    <CalendarIcon size={14} />
-                </span>
-                <span className="block truncate">
-                    {endDisplay || endPlaceholder}
-                </span>
-            </button>
+                    {/* End Date Button */}
+                    <button
+                        ref={endButtonRef}
+                        type="button"
+                        onClick={() => handleButtonClick('end')}
+                        disabled={disabled}
+                        className={`
+                            relative flex-1 cursor-pointer
+                            pl-9 pr-4 py-2.5 rounded-lg text-sm font-medium text-left
+                            border-2 transition-all duration-200
+                            bg-brand-lightSurface dark:bg-brand-darkSurface
+                            hover:bg-gray-50 dark:hover:bg-gray-800/50
+                            focus:outline-none
+                            disabled:opacity-50 disabled:cursor-not-allowed
+                            ${activeField === 'end'
+                                ? 'border-brand-accent'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
+                            ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                            ${buttonClassName || 'py-2.5 text-sm'}
+                        `}
+                    >
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                            <CalendarIcon size={14} />
+                        </span>
+                        <span className="block truncate">
+                            {endDisplay || endPlaceholder}
+                        </span>
+                    </button>
+                </>
+            )}
 
             {/* Portal-rendered Calendar Popover */}
             {typeof document !== 'undefined' && activeField && createPortal(

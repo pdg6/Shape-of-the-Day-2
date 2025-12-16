@@ -17,6 +17,8 @@ interface DatePickerProps {
     maxDate?: string;
     disabled?: boolean;
     className?: string;
+    iconOnly?: boolean; // When true, shows just a calendar icon button
+    iconColor?: string; // Color for the icon when iconOnly is true
 }
 
 // Detect touch device for native fallback
@@ -46,6 +48,8 @@ export function DatePicker({
     maxDate,
     disabled = false,
     className = '',
+    iconOnly = false,
+    iconColor,
 }: DatePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -185,45 +189,63 @@ export function DatePicker({
             />
 
             {/* Trigger Button */}
-            <button
-                ref={buttonRef}
-                type="button"
-                onClick={toggleOpen}
-                disabled={disabled}
-                className={`
-                    relative w-full cursor-pointer
-                    pl-9 pr-8 py-2.5 rounded-md text-sm font-medium text-left
-                    border-2 transition-all duration-200
-                    bg-brand-lightSurface dark:bg-brand-darkSurface
-                    border-gray-400 dark:border-gray-600
-                    hover:bg-gray-50 dark:hover:bg-gray-800/50
-                    hover:border-gray-600 dark:hover:border-gray-400
-                    focus:outline-none focus:border-brand-accent
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    ${value ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
-                `}
-            >
-                {/* Calendar Icon */}
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                    <CalendarIcon size={14} />
-                </span>
-
-                {/* Display Value */}
-                <span className="block truncate">
-                    {label && !value ? label : ''}
-                    {displayValue || (!label ? placeholder : '')}
-                </span>
-
-                {/* Clear Button */}
-                {value && !disabled && (
-                    <span
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
-                        onClick={handleClear}
-                    >
-                        <X size={14} />
+            {iconOnly ? (
+                <button
+                    ref={buttonRef}
+                    type="button"
+                    onClick={toggleOpen}
+                    disabled={disabled}
+                    className={`
+                        cursor-pointer p-1.5 rounded-md transition-all duration-200
+                        hover:bg-gray-100 dark:hover:bg-gray-800
+                        focus:outline-none
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                    `}
+                    style={{ color: iconColor }}
+                >
+                    <CalendarIcon size={20} />
+                </button>
+            ) : (
+                <button
+                    ref={buttonRef}
+                    type="button"
+                    onClick={toggleOpen}
+                    disabled={disabled}
+                    className={`
+                        relative w-full cursor-pointer
+                        pl-9 pr-8 py-2.5 rounded-md text-sm font-medium text-left
+                        border-2 transition-all duration-200
+                        bg-brand-lightSurface dark:bg-brand-darkSurface
+                        border-gray-400 dark:border-gray-600
+                        hover:bg-gray-50 dark:hover:bg-gray-800/50
+                        hover:border-gray-600 dark:hover:border-gray-400
+                        focus:outline-none focus:border-brand-accent
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        ${value ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                    `}
+                >
+                    {/* Calendar Icon */}
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                        <CalendarIcon size={14} />
                     </span>
-                )}
-            </button>
+
+                    {/* Display Value */}
+                    <span className="block truncate">
+                        {label && !value ? label : ''}
+                        {displayValue || (!label ? placeholder : '')}
+                    </span>
+
+                    {/* Clear Button */}
+                    {value && !disabled && (
+                        <span
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                            onClick={handleClear}
+                        >
+                            <X size={14} />
+                        </span>
+                    )}
+                </button>
+            )}
 
             {/* Portal-rendered Calendar Popover */}
             {typeof document !== 'undefined' && isOpen && createPortal(
