@@ -99,6 +99,49 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         return () => unsubscribe();
     }, [currentClassId]);
 
+    // Auto-remove inactive students (90 minutes)
+    useEffect(() => {
+        if (!currentClassId || students.length === 0) return;
+
+        const checkInactivity = async () => {
+            const now = Date.now();
+            const INACTIVITY_LIMIT_MS = 90 * 60 * 1000; // 90 minutes
+
+            const inactiveStudents = students.filter(student => {
+                if (!student.lastSeen) return false;
+
+                // key check: is it a Firestore Timestamp?
+                let lastSeenTime = 0;
+                if (typeof student.lastSeen.toDate === 'function') {
+                    lastSeenTime = student.lastSeen.toDate().getTime();
+                } else if (student.lastSeen instanceof Date) {
+                    lastSeenTime = student.lastSeen.getTime();
+                } else {
+                    // Fallback if it's a number or string
+                    lastSeenTime = new Date(student.lastSeen).getTime();
+                }
+
+                return (now - lastSeenTime) > INACTIVITY_LIMIT_MS;
+            });
+
+            if (inactiveStudents.length > 0) {
+                console.log(`[Auto-Cleanup] Removing ${inactiveStudents.length} inactive students`);
+                for (const student of inactiveStudents) {
+                    try {
+                        console.log(`Removing inactive student: ${student.displayName} (${student.uid})`);
+                        await deleteDoc(doc(db, 'classrooms', currentClassId, 'live_students', student.uid));
+                    } catch (err) {
+                        console.error('Error removing inactive student:', err);
+                    }
+                }
+            }
+        };
+
+        // Check every minute
+        const intervalId = setInterval(checkInactivity, 60000);
+        return () => clearInterval(intervalId);
+    }, [currentClassId, students]);
+
     if (!currentClassId) {
         return (
             <div className="flex flex-col items-center justify-center h-64 text-gray-500">

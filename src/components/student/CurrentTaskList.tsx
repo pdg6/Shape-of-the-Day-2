@@ -406,6 +406,8 @@ interface TaskCardProps {
     onOpenHelpModal: (task: Task) => void;
     assignedDate?: string;
     formatDateRange: (assigned?: string, due?: string) => string;
+    isExpanded: boolean;
+    onToggleExpand: () => void;
 }
 
 
@@ -420,8 +422,8 @@ interface TaskCardProps {
  * - Resources section (links, files)
  * - Collapsible status buttons: single icon expands to show all 4 in fixed positions
  */
-const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onOpenHelpModal, assignedDate, formatDateRange }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onOpenHelpModal, assignedDate, formatDateRange, isExpanded, onToggleExpand }) => {
+    // Removed local isExpanded state - now controlled by parent for accordion behavior
     const [isStatusExpanded, setIsStatusExpanded] = useState(false);
     const [showStatusText, setShowStatusText] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null); // Sequential highlight animation
@@ -527,7 +529,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                 const isInteractive = target.closest('a, button, input, [role="button"]');
                 if (!isInteractive) {
                     e.preventDefault();
-                    setIsExpanded(!isExpanded);
+                    onToggleExpand();
                 }
             }}
         >
@@ -678,14 +680,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
 
             {/* Description - Always render single instance, control visibility via isExpanded */}
             {task.description && (
-                <div className={`mt-3 ${isDone ? 'opacity-60' : ''}`}>
-                    <div className="select-text">
+                <div className={`mt-3 overflow-hidden min-w-0 ${isDone ? 'opacity-60' : ''}`}>
+                    <div className="select-text w-full min-w-0">
                         {containsHtml(task.description) ? (
                             <CodeBlockRenderer
-                                key={`desc-${task.id}`}
+                                key={`desc-${task.id}-${isExpanded}`}
                                 html={task.description}
                                 isExpanded={isExpanded}
-                                className={`text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary ${!isExpanded ? 'line-clamp-2' : ''}`}
+                                className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary"
                             />
                         ) : (
                             <p className={`text-sm leading-relaxed text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${!isExpanded ? 'line-clamp-2' : ''}`}>
@@ -800,7 +802,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            setIsExpanded(!isExpanded);
+                            onToggleExpand();
                         }}
                         className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                         aria-label={isExpanded ? 'Collapse' : 'Expand'}
@@ -848,6 +850,8 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
     const [helpModalTask, setHelpModalTask] = useState<Task | null>(null);
     const [showCelebration, setShowCelebration] = useState(false);
     const [previousProgress, setPreviousProgress] = useState(0);
+    // Accordion behavior: only one task can be expanded at a time
+    const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
     // Track task completion for celebrations
     const completedCount = tasks.filter(t => t.status === 'done').length;
@@ -948,6 +952,8 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
                     onOpenHelpModal={handleOpenHelpModal}
                     assignedDate={assignedDate}
                     formatDateRange={formatDateRange}
+                    isExpanded={expandedTaskId === task.id}
+                    onToggleExpand={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
                 />
             ))}
 

@@ -350,7 +350,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
                     {/* Description - text selectable */}
                     {task.description && (
-                        <div className="mt-2 select-text">
+                        <div className="mt-2 select-text overflow-hidden min-w-0 w-full">
                             {/* Description - supports HTML or plain text */}
                             {containsHtml(task.description) ? (
                                 <CodeBlockRenderer

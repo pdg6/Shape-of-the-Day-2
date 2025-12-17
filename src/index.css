@@ -981,3 +981,51 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .dark .code-block-renderer blockquote {
     color: #9ca3af;
 }
+
+/* Code Block Wrapper - Containment Styles */
+.code-block-wrapper {
+    /* Allow wrapper to grow vertically, contain horizontally */
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    /* Clips border-radius corners cleanly */
+}
+
+.code-block-wrapper pre {
+    margin: 0;
+    padding: 0;
+    /* pre-wrap: preserves line breaks but wraps long lines */
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    background: transparent;
+}
+
+.code-block-wrapper pre code {
+    display: block;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    background: transparent;
+}
+
+/* Code block content container */
+.code-block-content {
+    /* Grows vertically to fit content, contained horizontally */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.code-block-content pre {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    /* Wrap long lines within container */
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}

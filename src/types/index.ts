@@ -185,6 +185,8 @@ export interface LiveStudent {
         activeTasks: string[]; // IDs of active tasks
     };
     currentMessage?: string; // Student's question or comment
+    lastSeen?: any;         // Timestamp of last heartbeat
+    lastActive?: any;       // Timestamp of last interaction
 }
 
 // Phase C: The Analytics Vault (Persistent - Stored in 'analytics_logs')
