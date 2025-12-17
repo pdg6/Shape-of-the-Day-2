@@ -79,6 +79,29 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         return () => unsubscribe();
     }, [currentClassId]);
 
+    // Helper to check if a student was active within the last 90 minutes
+    const isRecentlyActive = (student: LiveStudent): boolean => {
+        if (!student.lastSeen) return true; // If no lastSeen, show them (new student)
+
+        const now = Date.now();
+        const INACTIVITY_LIMIT_MS = 90 * 60 * 1000; // 90 minutes
+
+        let lastSeenTime = 0;
+        if (typeof student.lastSeen.toDate === 'function') {
+            lastSeenTime = student.lastSeen.toDate().getTime();
+        } else if (student.lastSeen instanceof Date) {
+            lastSeenTime = student.lastSeen.getTime();
+        } else {
+            // Fallback if it's a number or string
+            lastSeenTime = new Date(student.lastSeen).getTime();
+        }
+
+        return (now - lastSeenTime) <= INACTIVITY_LIMIT_MS;
+    };
+
+    // Filter students to only show those active within the last 90 minutes
+    const activeStudents = students.filter(isRecentlyActive);
+
     // Fetch Active Tasks for the Class (Real-time to catch imported tasks)
     useEffect(() => {
         if (!currentClassId) return;
@@ -176,7 +199,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                     {/* Active Count Badge */}
                     <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full text-sm font-medium border border-green-200 dark:border-green-800">
                         <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                        {students.length} Active
+                        {activeStudents.length} Active
                     </div>
                 </div>
 
@@ -204,7 +227,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
             </div>
 
             {/* Content */}
-            {students.length === 0 ? (
+            {activeStudents.length === 0 ? (
                 <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-gray-400" />
@@ -262,9 +285,9 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                     )}
                 </div>
             ) : internalView === 'students' ? (
-                <StudentListView students={students} totalTasks={tasks.length} tasks={tasks} onDelete={handleDeleteStudent} />
+                <StudentListView students={activeStudents} totalTasks={tasks.length} tasks={tasks} onDelete={handleDeleteStudent} />
             ) : (
-                <TaskListView tasks={tasks} students={students} />
+                <TaskListView tasks={tasks} students={activeStudents} />
             )}
         </div>
     );

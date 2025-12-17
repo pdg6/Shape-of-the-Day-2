@@ -12,7 +12,9 @@ import {
     Filter,
     Search,
     Loader,
-    Plus
+    Plus,
+    Pencil,
+    Trash2
 } from 'lucide-react';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
@@ -20,6 +22,7 @@ import { Classroom, ItemType, Task, ALLOWED_CHILD_TYPES } from '../../types';
 import { useClassStore } from '../../store/classStore';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
+import { deleteTaskWithChildren } from '../../services/firestoreService';
 import { DatePicker } from '../shared/DatePicker';
 import { Select } from '../shared/Select';
 
@@ -66,6 +69,7 @@ interface TreeItemProps {
     expandedIds: Set<string>;
     onToggleExpand: (id: string) => void;
     onEdit: (task: Task) => void;
+    onDelete: (task: Task) => void;
     onCopyToBoard: (task: Task) => void;
     getProgress: (parentId: string) => { completed: number; total: number };
     onQuickAdd: (parentTask: Task) => void;
@@ -84,6 +88,7 @@ function TreeItem({
     expandedIds,
     onToggleExpand,
     onEdit,
+    onDelete,
     onCopyToBoard,
     getProgress,
     onQuickAdd,
@@ -141,65 +146,42 @@ function TreeItem({
 
                 {/* Title & Info */}
                 <div className="flex-1 min-w-0" onClick={() => onEdit(task)}>
-                    <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary">
                             {task.title}
                         </span>
                         {task.status === 'done' && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 font-medium">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 font-medium flex-shrink-0">
                                 Done
                             </span>
                         )}
                     </div>
-
-                    {/* Progress Bar for parents */}
-                    {progress && progress.total > 0 && (
-                        <div className="flex items-center gap-2 mt-1">
-                            <div className="w-20 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-brand-accent rounded-full transition-all"
-                                    style={{ width: `${(progress.completed / progress.total) * 100}%` }}
-                                />
-                            </div>
-                            <span className="text-xs text-gray-400">
-                                {progress.completed}/{progress.total}
-                            </span>
-                        </div>
-                    )}
                 </div>
-
-                {/* Date Range - compact on mobile, full on desktop */}
-                {task.startDate && task.endDate && (
-                    <span className="text-xs text-gray-400 flex-shrink-0">
-                        {/* Mobile: show due date only */}
-                        <span className="sm:hidden">
-                            {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                        {/* Desktop: show full range */}
-                        <span className="hidden sm:inline">
-                            {new Date(task.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            {task.startDate !== task.endDate && (
-                                <> - {new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</>
-                            )}
-                        </span>
-                    </span>
-                )}
 
                 {/* Actions */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity">
-                    {/* Quick Add Button - only show for items that can have children */}
-                    {canHaveChildren && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onQuickAdd(task);
-                            }}
-                            className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-gray-400 hover:text-green-500 transition-all flex items-center justify-center"
-                            title={`Add ${allowedChildTypes[0]}`}
-                        >
-                            <Plus size={14} />
-                        </button>
-                    )}
+                    {/* Edit Button */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(task);
+                        }}
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 transition-all flex items-center justify-center"
+                        title="Edit task"
+                    >
+                        <Pencil size={14} />
+                    </button>
+                    {/* Delete Button */}
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(task);
+                        }}
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all flex items-center justify-center"
+                        title="Delete task"
+                    >
+                        <Trash2 size={14} />
+                    </button>
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
@@ -276,6 +258,7 @@ function TreeItem({
                             expandedIds={expandedIds}
                             onToggleExpand={onToggleExpand}
                             onEdit={onEdit}
+                            onDelete={onDelete}
                             onCopyToBoard={onCopyToBoard}
                             getProgress={getProgress}
                             onQuickAdd={onQuickAdd}
@@ -521,6 +504,28 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
         }
         return result;
     }, []);
+
+    const handleDelete = useCallback(async (task: Task) => {
+        // Count descendants
+        const descendants = collectTaskWithDescendants(task, tasks);
+        const childCount = descendants.length - 1;
+
+        const confirmMessage = childCount > 0
+            ? `Delete "${task.title}" and ${childCount} child item${childCount > 1 ? 's' : ''}?`
+            : `Delete "${task.title}"?`;
+
+        if (!window.confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            const deletedCount = await deleteTaskWithChildren(task.id, true);
+            handleSuccess(`Deleted ${deletedCount} item${deletedCount > 1 ? 's' : ''}`);
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            handleError('Failed to delete task');
+        }
+    }, [tasks, collectTaskWithDescendants]);
 
     const handleCopyToBoard = useCallback((task: Task) => {
         if (!onCopyToBoard) {
@@ -1019,6 +1024,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                             expandedIds={expandedIds}
                                             onToggleExpand={toggleExpand}
                                             onEdit={handleEdit}
+                                            onDelete={handleDelete}
                                             onCopyToBoard={handleCopyToBoard}
                                             getProgress={getProgress}
                                             onQuickAdd={handleQuickAdd}
@@ -1087,6 +1093,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                             expandedIds={expandedIds}
                                             onToggleExpand={toggleExpand}
                                             onEdit={handleEdit}
+                                            onDelete={handleDelete}
                                             onCopyToBoard={handleCopyToBoard}
                                             getProgress={getProgress}
                                             onQuickAdd={handleQuickAdd}
@@ -1155,6 +1162,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                             expandedIds={expandedIds}
                                             onToggleExpand={toggleExpand}
                                             onEdit={handleEdit}
+                                            onDelete={handleDelete}
                                             onCopyToBoard={handleCopyToBoard}
                                             getProgress={getProgress}
                                             onQuickAdd={handleQuickAdd}

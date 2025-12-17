@@ -415,7 +415,11 @@ const StudentView: React.FC<StudentViewProps> = ({
             return;
         }
 
-        setCurrentTasks(prev => [...prev, ...newTasks]);
+        // Combine and re-sort by presentationOrder to maintain correct ordering
+        setCurrentTasks(prev => {
+            const combined = [...prev, ...newTasks];
+            return combined.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        });
         toast.success(`Imported ${newTasks.length} task${newTasks.length !== 1 ? 's' : ''} to your day`);
     };
 
@@ -429,7 +433,11 @@ const StudentView: React.FC<StudentViewProps> = ({
             return;
         }
 
-        setCurrentTasks(prev => [...prev, task]);
+        // Add and re-sort by presentationOrder to maintain correct ordering
+        setCurrentTasks(prev => {
+            const combined = [...prev, task];
+            return combined.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        });
         toast.success(`Added "${task.title}" to today's tasks`);
     };
 

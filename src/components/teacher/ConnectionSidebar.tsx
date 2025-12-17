@@ -55,9 +55,32 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
 
         // Subscribe to changes
         const unsubscribe = onSnapshot(studentsRef, (snapshot) => {
+            const now = Date.now();
+            const INACTIVITY_LIMIT_MS = 90 * 60 * 1000; // 90 minutes
+
             const students: LiveStudent[] = [];
             snapshot.forEach((doc) => {
-                students.push(doc.data() as LiveStudent);
+                const data = doc.data() as LiveStudent;
+
+                // Filter to only include students active within last 90 minutes
+                if (!data.lastSeen) {
+                    // If no lastSeen, include them (new student)
+                    students.push(data);
+                    return;
+                }
+
+                let lastSeenTime = 0;
+                if (typeof data.lastSeen.toDate === 'function') {
+                    lastSeenTime = data.lastSeen.toDate().getTime();
+                } else if (data.lastSeen instanceof Date) {
+                    lastSeenTime = data.lastSeen.getTime();
+                } else {
+                    lastSeenTime = new Date(data.lastSeen).getTime();
+                }
+
+                if ((now - lastSeenTime) <= INACTIVITY_LIMIT_MS) {
+                    students.push(data);
+                }
             });
 
             setLiveStudents(students);
@@ -146,9 +169,9 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                             </p>
                                         </div>
                                         <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${(student.currentStatus === 'stuck' || student.currentStatus === 'question' || student.currentStatus === 'help')
-                                                ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
-                                                student.currentStatus === 'done' ? 'bg-blue-500' :
-                                                    'bg-emerald-500'
+                                            ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
+                                            student.currentStatus === 'done' ? 'bg-blue-500' :
+                                                'bg-emerald-500'
                                             }`} />
                                     </div>
                                 ))

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Classroom } from '../../types';
-import { collection, getCountFromServer, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { Copy, Edit2, BarChart2, Check, Calendar, ListTodo, Presentation } from 'lucide-react';
 import { toDateString } from '../../utils/dateHelpers';
@@ -29,8 +29,36 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
         const fetchActiveCount = async () => {
             try {
                 const coll = collection(db, `classrooms/${classroom.id}/live_students`);
-                const snapshot = await getCountFromServer(coll);
-                setActiveStudentCount(snapshot.data().count);
+                const snapshot = await getDocs(coll);
+
+                // Filter students active within last 90 minutes
+                const now = Date.now();
+                const INACTIVITY_LIMIT_MS = 90 * 60 * 1000; // 90 minutes
+
+                let activeCount = 0;
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (!data.lastSeen) {
+                        // If no lastSeen, count them (new student)
+                        activeCount++;
+                        return;
+                    }
+
+                    let lastSeenTime = 0;
+                    if (typeof data.lastSeen.toDate === 'function') {
+                        lastSeenTime = data.lastSeen.toDate().getTime();
+                    } else if (data.lastSeen instanceof Date) {
+                        lastSeenTime = data.lastSeen.getTime();
+                    } else {
+                        lastSeenTime = new Date(data.lastSeen).getTime();
+                    }
+
+                    if ((now - lastSeenTime) <= INACTIVITY_LIMIT_MS) {
+                        activeCount++;
+                    }
+                });
+
+                setActiveStudentCount(activeCount);
             } catch (error) {
                 console.error("Error fetching active student count:", error);
                 setActiveStudentCount(0);

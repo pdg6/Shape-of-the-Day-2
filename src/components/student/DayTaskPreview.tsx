@@ -143,13 +143,6 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                                     {task.title}
                                 </h4>
 
-                                {/* Description */}
-                                {task.description && (
-                                    <p className="text-sm text-gray-500 dark:text-gray-500 mb-3">
-                                        {task.description}
-                                    </p>
-                                )}
-
                                 {/* Date Information */}
                                 <div className="flex flex-wrap gap-3 text-xs">
                                     <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-500">

@@ -110,7 +110,21 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
-            console.error('Failed to copy:', err);
+            // Fallback for older browsers/restricted contexts
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = codeText;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (fallbackErr) {
+                console.error('Failed to copy:', fallbackErr);
+            }
         }
     };
 
@@ -119,6 +133,7 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
             {/* Copy button - React controlled */}
             <button
                 onClick={handleCopy}
+                aria-label={copied ? 'Copied to clipboard' : 'Copy code to clipboard'}
                 className={`absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border-2 
                     ${copied
                         ? 'border-green-400 text-green-400'
@@ -142,7 +157,7 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
 
             {/* Code block content - scrolls horizontally, grows vertically */}
             <div
-                className="code-block-content bg-gray-900 text-gray-100 text-sm p-4 pr-24 w-full overflow-x-auto"
+                className="code-block-content bg-gray-900 text-gray-100 text-sm p-4 pr-24 w-full whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{ __html: html }}
             />
         </div>
