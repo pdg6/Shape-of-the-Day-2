@@ -10,7 +10,7 @@ import {
     Inbox
 } from 'lucide-react';
 import { Task, ItemType } from '../../types';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { db } from '../../firebase';
 import toast from 'react-hot-toast';
 
@@ -85,22 +85,8 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
             return;
         }
 
-        const tasksRef = collection(db, 'tasks');
-        const q = query(
-            tasksRef,
-            where('assignedRooms', 'array-contains', classId),
-            orderBy('title', 'asc')
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const tasks = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as Task[];
+        const unsubscribe = subscribeToClassroomTasks(classId, (tasks: Task[]) => {
             setAllTasks(tasks);
-            setIsLoading(false);
-        }, (error) => {
-            console.error('Error fetching tasks:', error);
             setIsLoading(false);
         });
 

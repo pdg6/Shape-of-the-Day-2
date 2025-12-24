@@ -16,13 +16,13 @@ interface SkeletonProps {
 /**
  * Base skeleton element with shimmer animation
  */
-export const Skeleton: React.FC<SkeletonProps> = ({ 
-    className = '', 
-    animate = true 
+export const Skeleton: React.FC<SkeletonProps> = ({
+    className = '',
+    animate = true
 }) => (
-    <div 
+    <div
         className={`
-            bg-gray-200 dark:bg-gray-700 rounded-lg
+            bg-slate-300 dark:bg-gray-700 rounded-lg
             ${animate ? 'animate-pulse' : ''}
             ${className}
         `}
@@ -33,15 +33,15 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 /**
  * Skeleton for text lines
  */
-export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({ 
-    lines = 1, 
-    className = '' 
+export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
+    lines = 1,
+    className = ''
 }) => (
     <div className={`space-y-2 ${className}`}>
         {Array.from({ length: lines }).map((_, i) => (
-            <Skeleton 
-                key={i} 
-                className={`h-4 ${i === lines - 1 ? 'w-3/4' : 'w-full'}`} 
+            <Skeleton
+                key={i}
+                className={`h-4 ${i === lines - 1 ? 'w-3/4' : 'w-full'}`}
             />
         ))}
     </div>
@@ -51,7 +51,7 @@ export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
  * Skeleton for task cards - matches TaskCard layout
  */
 export const SkeletonTaskCard: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-xl border-2 border-gray-200 dark:border-gray-700 min-h-[160px]">
+    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-5 rounded-xl border-2 border-slate-300 dark:border-gray-700 min-h-[160px]">
         <div className="flex gap-6">
             {/* Left Column */}
             <div className="flex flex-col gap-3 w-48 shrink-0">
@@ -101,7 +101,7 @@ export const SkeletonSidebar: React.FC = () => (
  * Skeleton for calendar/schedule view
  */
 export const SkeletonCalendar: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700">
+    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-slate-300 dark:border-gray-700">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
             <Skeleton className="h-6 w-32" />
@@ -123,7 +123,7 @@ export const SkeletonCalendar: React.FC = () => (
  * Skeleton for class cards in teacher view
  */
 export const SkeletonClassCard: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700">
+    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-2 border-slate-300 dark:border-gray-700">
         <div className="flex items-start gap-4">
             <Skeleton className="w-12 h-12 rounded-full" />
             <div className="flex-1">
@@ -144,8 +144,8 @@ export const SkeletonClassCard: React.FC = () => (
 export const SkeletonPage: React.FC = () => (
     <div className="h-screen flex bg-brand-light dark:bg-brand-dark">
         {/* Sidebar skeleton */}
-        <aside className="hidden md:flex flex-col w-72 bg-brand-lightSurface dark:bg-brand-darkSurface border-r border-gray-200 dark:border-gray-700">
-            <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-800">
+        <aside className="hidden md:flex flex-col w-72 bg-brand-lightSurface dark:bg-brand-darkSurface border-r-2 border-slate-300 dark:border-gray-700">
+            <div className="h-16 flex items-center px-4 border-b-2 border-slate-300 dark:border-gray-800">
                 <Skeleton className="h-8 w-8 rounded-md mr-2" />
                 <Skeleton className="h-6 w-32" />
             </div>

@@ -185,7 +185,7 @@ class StudentDataService {
             const tasksRef = collection(db, 'tasks');
             const q = query(
                 tasksRef,
-                where('assignedRooms', 'array-contains', this.classId)
+                where('selectedRoomIds', 'array-contains', this.classId)
             );
 
             const snapshot = await getDocs(q);
@@ -206,7 +206,6 @@ class StudentDataService {
                         dueDate: data.dueDate || '',
                         presentationOrder: data.presentationOrder || 0,
                         selectedRoomIds: data.selectedRoomIds || [],
-                        assignedRooms: data.assignedRooms || [],
                         parentId: data.parentId || null,
                         rootId: data.rootId || null,
                         path: data.path || [],
@@ -342,6 +341,7 @@ class StudentDataService {
         await updateDoc(studentRef, {
             currentStatus: payload.status,
             currentTaskId: payload.taskId,
+            [`taskStatuses.${payload.taskId}`]: payload.status,  // Per-task status tracking
             currentMessage: payload.comment,
             lastActive: serverTimestamp(),
         });

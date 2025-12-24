@@ -278,7 +278,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                             {/* Summary / Create Card - Moved to end */}
                             {/* Summary / Create Card - Refactored to match ClassCard */}
-                            <div className="flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden min-h-[160px]">
+                            <div className="flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-slate-300 dark:border-gray-700 shadow-sm overflow-hidden min-h-[160px]">
                                 {/* Main Content (Left Side) */}
                                 <div className="flex-1 flex flex-col min-w-0">
                                     {/* Header */}
@@ -345,7 +345,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 {internalTab === 'history' && (
                     <div className="h-full flex flex-col">
                         {/* History Toolbar */}
-                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-slate-300 dark:border-gray-700 shadow-sm">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <Button

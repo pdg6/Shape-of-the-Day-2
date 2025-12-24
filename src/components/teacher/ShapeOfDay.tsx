@@ -1,21 +1,19 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useClassStore } from '../../store/classStore';
 import { useAuth } from '../../context/AuthContext';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
+import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-    Users, ExternalLink, FileText, ChevronDown, ChevronUp, Calendar, ChevronLeft, ChevronRight, X,
+    Users, ExternalLink, FileText, ChevronDown, ChevronUp,
     File, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation,
     Maximize2, Minimize2, Pencil
 } from 'lucide-react';
 import { ItemType, Attachment } from '../../types';
-import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 import { format, parse, isValid } from 'date-fns';
-import { createPortal } from 'react-dom';
-import 'react-day-picker/style.css';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
+import { DatePicker } from '../shared/DatePicker';
 
 // --- Types ---
 import { LinkAttachment } from '../../types';
@@ -245,10 +243,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
     return (
         <div
             className={`group bg-brand-lightSurface dark:bg-brand-darkSurface 
-                border-2 border-gray-200 dark:border-gray-700 rounded-xl p-5
+                border-2 border-slate-300 dark:border-gray-700 rounded-xl p-5
                 border-l-4 ${typeBorderColor}
-                transition-all duration-200
-                hover:border-brand-accent/50 hover:shadow-lg hover:shadow-brand-accent/5
+                transition-all duration-300
+                hover:border-brand-accent hover:shadow-2xl hover:shadow-slate-400/20
                 hover:-translate-y-0.5 relative select-none
                 ${task.status === 'done' ? 'opacity-60' : ''}`}
             style={{
@@ -471,8 +469,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 px-3 py-2 rounded-lg
-                                                bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                                                text-sm font-medium hover:border-brand-accent transition-colors"
+                                                bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-slate-300 dark:border-gray-700
+                                                text-sm font-medium hover:border-brand-accent hover:shadow-lg transition-all"
                                             title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                             onClick={(e) => e.stopPropagation()}
                                         >
@@ -506,11 +504,6 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     const today = toDateString();
     const [selectedDate, setSelectedDate] = useState(today);
 
-    // Date picker popover state
-    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-    const [datePickerPosition, setDatePickerPosition] = useState({ top: 0, left: 0 });
-    const dateButtonRef = useRef<HTMLButtonElement>(null);
-    const datePopoverRef = useRef<HTMLDivElement>(null);
 
     // Presentation mode state
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -518,53 +511,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
 
     // Parse selected date for display
     const parsedDate = parse(selectedDate, 'yyyy-MM-dd', new Date());
-    const displayDateText = isValid(parsedDate) ? format(parsedDate, 'MMM d, yyyy') : selectedDate;
 
-    // Update date picker position
-    const updateDatePickerPosition = useCallback(() => {
-        if (dateButtonRef.current) {
-            const rect = dateButtonRef.current.getBoundingClientRect();
-            setDatePickerPosition({
-                top: rect.bottom + window.scrollY + 4,
-                left: rect.left + window.scrollX
-            });
-        }
-    }, []);
-
-    // Handle click outside date picker
-    useEffect(() => {
-        if (!isDatePickerOpen) return;
-
-        const handleClickOutside = (e: MouseEvent) => {
-            if (
-                datePopoverRef.current &&
-                !datePopoverRef.current.contains(e.target as Node) &&
-                dateButtonRef.current &&
-                !dateButtonRef.current.contains(e.target as Node)
-            ) {
-                setIsDatePickerOpen(false);
-            }
-        };
-
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') setIsDatePickerOpen(false);
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            document.removeEventListener('keydown', handleEscape);
-        };
-    }, [isDatePickerOpen]);
-
-    // Handle date selection
-    const handleDateSelect = (date: Date | undefined) => {
-        if (date) {
-            setSelectedDate(format(date, 'yyyy-MM-dd'));
-            setIsDatePickerOpen(false);
-        }
-    };
 
     // Toggle fullscreen mode
     const toggleFullscreen = useCallback(() => {
@@ -596,19 +543,12 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
             return;
         }
 
-        const q = query(
-            collection(db, 'tasks'),
-            where('selectedRoomIds', 'array-contains', currentClassId)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const unsubscribe = subscribeToClassroomTasks(currentClassId, (tasks) => {
             const taskData: Task[] = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
+            tasks.forEach(data => {
                 // Filter by selected date range and exclude drafts
                 if (selectedDate >= (data.startDate || '') && selectedDate <= (data.endDate || selectedDate) && data.status !== 'draft') {
                     taskData.push({
-                        id: doc.id,
                         ...data,
                         type: data.type || 'task',
                         parentId: data.parentId || null,
@@ -622,12 +562,8 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 }
             });
 
-            taskData.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-
+            // Sorting is now handled by the service (orderBy presentationOrder)
             setTasks(taskData);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching tasks for Shape of the Day:", error);
             setLoading(false);
         });
 
@@ -675,8 +611,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     // Keyboard shortcuts for presentation mode
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Don't handle if date picker is open or typing in an input
-            if (isDatePickerOpen || (e.target as HTMLElement).tagName === 'INPUT') return;
+            if ((e.target as HTMLElement).tagName === 'INPUT') return;
 
             switch (e.key) {
                 case 'Escape':
@@ -696,7 +631,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isFullscreen, isDatePickerOpen, toggleFullscreen]);
+    }, [isFullscreen, toggleFullscreen]);
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
@@ -724,73 +659,21 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                     {/* Left: Class Identity */}
                     <div className="flex-1 flex flex-col justify-center">
                         <div className="flex items-center gap-3 mb-1">
-                            {/* Date Picker Button - accent styled */}
-                            <button
-                                ref={dateButtonRef}
-                                onClick={() => {
-                                    updateDatePickerPosition();
-                                    setIsDatePickerOpen(!isDatePickerOpen);
-                                }}
-                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-accent/10 text-brand-accent text-fluid-md font-bold uppercase tracking-wider border border-brand-accent/20 hover:bg-brand-accent/20 transition-colors cursor-pointer"
-                            >
-                                <Calendar size={12} />
-                                {displayDateText}
-                            </button>
-
-                            {/* Date Picker Popover */}
-                            {typeof document !== 'undefined' && isDatePickerOpen && createPortal(
-                                <div
-                                    ref={datePopoverRef}
-                                    className="fixed z-9999 bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-lg p-3 animate-fade-in"
-                                    style={{
-                                        top: datePickerPosition.top,
-                                        left: datePickerPosition.left,
-                                    }}
-                                >
-                                    {/* Today Button */}
-                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
-                                                setIsDatePickerOpen(false);
-                                            }}
-                                            className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
-                                        >
-                                            Today
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsDatePickerOpen(false)}
-                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-
-                                    {/* Calendar */}
-                                    <DayPicker
-                                        mode="single"
-                                        selected={isValid(parsedDate) ? parsedDate : undefined}
-                                        onSelect={handleDateSelect}
-                                        defaultMonth={isValid(parsedDate) ? parsedDate : new Date()}
-                                        components={{
-                                            Chevron: ({ orientation }) =>
-                                                orientation === 'left'
-                                                    ? <ChevronLeft size={16} />
-                                                    : <ChevronRight size={16} />,
-                                        }}
-                                        classNames={{
-                                            ...getDefaultClassNames(),
-                                            root: `${getDefaultClassNames().root} rdp-custom`,
-                                            disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
-                                            outside: 'text-gray-300 dark:text-gray-600 opacity-50',
-                                            chevron: 'fill-gray-500 dark:fill-gray-400',
-                                        }}
-                                    />
-                                </div>,
-                                document.body
-                            )}
+                            <DatePicker
+                                value={selectedDate}
+                                onChange={(value) => setSelectedDate(value || toDateString())}
+                                iconOnly={true}
+                                iconColor="var(--color-brand-accent)"
+                                className="z-10"
+                            />
+                            <span className="text-fluid-base font-bold whitespace-nowrap">
+                                <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
+                                    {selectedDate === today
+                                        ? 'Today'
+                                        : isValid(parsedDate) ? format(parsedDate, 'EEE, MMM d') : selectedDate}
+                                </span>
+                                <span className="text-gray-400">{' '}Schedule</span>
+                            </span>
                             <button
                                 onClick={() => onNavigate?.('live', 'students')}
                                 className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-fluid-md font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
@@ -846,7 +729,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 {loading ? (
                     <div className="text-center py-12 text-gray-400">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="text-center py-12 text-brand-textDarkSecondary italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
                         No tasks scheduled for this date.
                     </div>
                 ) : (

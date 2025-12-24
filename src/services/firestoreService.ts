@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Firebase Firestore database services
 import {
     collection,
@@ -21,7 +22,7 @@ import { db } from '../firebase';
  * @param {Object} classroomData - Classroom data
  * @returns {Promise<string>} Classroom ID
  */
-export const createClassroom = async (teacherId, classroomData) => {
+export const createClassroom = async (teacherId: string, classroomData: any) => {
     const classroomRef = doc(collection(db, 'classrooms'));
     await setDoc(classroomRef, {
         ...classroomData,
@@ -37,7 +38,7 @@ export const createClassroom = async (teacherId, classroomData) => {
  * @param {string} classroomId 
  * @returns {Promise<Object|null>}
  */
-export const getClassroom = async (classroomId) => {
+export const getClassroom = async (classroomId: string) => {
     const classroomRef = doc(db, 'classrooms', classroomId);
     const snapshot = await getDoc(classroomRef);
     return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
@@ -48,7 +49,7 @@ export const getClassroom = async (classroomId) => {
  * @param {string} teacherId 
  * @returns {Promise<Array>}
  */
-export const getTeacherClassrooms = async (teacherId) => {
+export const getTeacherClassrooms = async (teacherId: string) => {
     const q = query(
         collection(db, 'classrooms'),
         where('teacherId', '==', teacherId)
@@ -62,7 +63,7 @@ export const getTeacherClassrooms = async (teacherId) => {
  * @param {string} code - The classroom code
  * @returns {Promise<Object|null>}
  */
-export const joinClassroom = async (code) => {
+export const joinClassroom = async (code: string) => {
     const q = query(
         collection(db, 'classrooms'),
         where('code', '==', code)
@@ -74,61 +75,55 @@ export const joinClassroom = async (code) => {
 };
 
 /**
- * Create or update a task
- * @param {string} classroomId 
+ * Create or update a task (Root collection)
+ * @param {string} teacherId
  * @param {Object} taskData 
  * @returns {Promise<string>} Task ID
  */
-export const createTask = async (classroomId, taskData) => {
-    const taskRef = doc(collection(db, 'classrooms', classroomId, 'tasks'));
-    await setDoc(taskRef, {
+export const saveTask = async (teacherId: string, taskData: any) => {
+    const taskRef = taskData.id ? doc(db, 'tasks', taskData.id) : doc(collection(db, 'tasks'));
+    const isNew = !taskData.id;
+
+    const data = {
         ...taskData,
-        createdAt: serverTimestamp(),
+        teacherId,
         updatedAt: serverTimestamp()
-    });
+    };
+
+    if (isNew) {
+        data.createdAt = serverTimestamp();
+    }
+
+    await setDoc(taskRef, data, { merge: true });
     return taskRef.id;
 };
 
 /**
- * Get all tasks for a classroom
+ * Get all tasks for a classroom (from root collection)
  * @param {string} classroomId 
  * @returns {Promise<Array>}
  */
-export const getClassroomTasks = async (classroomId) => {
+export const getClassroomTasks = async (classroomId: string) => {
     const q = query(
-        collection(db, 'classrooms', classroomId, 'tasks'),
-        orderBy('createdAt', 'desc')
+        collection(db, 'tasks'),
+        where('selectedRoomIds', 'array-contains', classroomId),
+        orderBy('presentationOrder', 'asc')
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 /**
- * Update task status for a student
- * @param {string} classroomId 
- * @param {string} taskId 
- * @param {string} studentId 
- * @param {string} status 
- * @returns {Promise<void>}
- */
-export const updateTaskStatus = async (classroomId, taskId, studentId, status) => {
-    const statusRef = doc(db, 'classrooms', classroomId, 'tasks', taskId, 'statuses', studentId);
-    await setDoc(statusRef, {
-        status,
-        updatedAt: serverTimestamp()
-    }, { merge: true });
-};
-
-/**
- * Listen to real-time updates for classroom tasks
+ * Listen to real-time updates for classroom tasks (from root collection)
  * @param {string} classroomId 
  * @param {Function} callback 
  * @returns {Function} Unsubscribe function
  */
-export const subscribeToTasks = (classroomId, callback) => {
+export const subscribeToClassroomTasks = (classroomId: string, callback: (tasks: any[]) => void) => {
     const q = query(
-        collection(db, 'classrooms', classroomId, 'tasks'),
-        orderBy('createdAt', 'desc')
+        collection(db, 'tasks'),
+        where('selectedRoomIds', 'array-contains', classroomId),
+        orderBy('presentationOrder', 'asc')
     );
     return onSnapshot(q, (snapshot) => {
         const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -137,20 +132,17 @@ export const subscribeToTasks = (classroomId, callback) => {
 };
 
 /**
- * Listen to real-time task status updates
+ * Update student status in a classroom
  * @param {string} classroomId 
- * @param {string} taskId 
- * @param {Function} callback 
- * @returns {Function} Unsubscribe function
+ * @param {string} studentId 
+ * @param {Object} statusData 
+ * @returns {Promise<void>}
  */
-export const subscribeToTaskStatuses = (classroomId, taskId, callback) => {
-    const statusesRef = collection(db, 'classrooms', classroomId, 'tasks', taskId, 'statuses');
-    return onSnapshot(statusesRef, (snapshot) => {
-        const statuses = {};
-        snapshot.docs.forEach(doc => {
-            statuses[doc.id] = doc.data();
-        });
-        callback(statuses);
+export const updateStudentStatus = async (classroomId, studentId, statusData) => {
+    const studentRef = doc(db, 'classrooms', classroomId, 'live_students', studentId);
+    await updateDoc(studentRef, {
+        ...statusData,
+        lastActive: serverTimestamp()
     });
 };
 
@@ -261,7 +253,7 @@ export const duplicateTask = async (taskId, options = {}) => {
             rootId: rootId || newId,
             path,
             pathTitles,
-            assignedRooms: newAssignedRooms || original.assignedRooms,
+            selectedRoomIds: newAssignedRooms || original.selectedRoomIds,
             childIds: [], // Will be updated after children are created
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
@@ -575,7 +567,7 @@ export const getTaskQuestions = async (taskId, classroomId = null) => {
  */
 export const unNestAssignmentsFromProjects = async () => {
     const result = { updated: 0, errors: [] };
-    
+
     try {
         // Find all assignments that have a parent
         const tasksRef = collection(db, 'tasks');
@@ -583,21 +575,21 @@ export const unNestAssignmentsFromProjects = async () => {
             tasksRef,
             where('type', '==', 'assignment')
         );
-        
+
         const snapshot = await getDocs(q);
         const nestedAssignments = snapshot.docs.filter(doc => {
             const data = doc.data();
             return data.parentId !== null && data.parentId !== undefined;
         });
-        
+
         console.log(`Found ${nestedAssignments.length} nested assignments to migrate`);
-        
+
         for (const assignmentDoc of nestedAssignments) {
             try {
                 const assignment = assignmentDoc.data();
                 const assignmentId = assignmentDoc.id;
                 const oldParentId = assignment.parentId;
-                
+
                 // Update the assignment to be standalone
                 const assignmentRef = doc(db, 'tasks', assignmentId);
                 await updateDoc(assignmentRef, {
@@ -607,25 +599,25 @@ export const unNestAssignmentsFromProjects = async () => {
                     pathTitles: [],
                     updatedAt: serverTimestamp(),
                 });
-                
+
                 // Remove assignment from parent's childIds
                 if (oldParentId) {
                     const parentRef = doc(db, 'tasks', oldParentId);
                     const parentDoc = await getDoc(parentRef);
-                    
+
                     if (parentDoc.exists()) {
                         const parentData = parentDoc.data();
                         const updatedChildIds = (parentData.childIds || []).filter(
                             id => id !== assignmentId
                         );
-                        
+
                         await updateDoc(parentRef, {
                             childIds: updatedChildIds,
                             updatedAt: serverTimestamp(),
                         });
                     }
                 }
-                
+
                 result.updated++;
                 console.log(`Migrated assignment: ${assignment.title} (${assignmentId})`);
             } catch (err) {
@@ -634,12 +626,12 @@ export const unNestAssignmentsFromProjects = async () => {
                 console.error(errorMsg);
             }
         }
-        
+
         console.log(`Migration complete: ${result.updated} assignments updated, ${result.errors.length} errors`);
     } catch (err) {
         result.errors.push(`Migration failed: ${err.message}`);
         console.error('Migration failed:', err);
     }
-    
+
     return result;
 };

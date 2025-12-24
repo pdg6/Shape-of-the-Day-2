@@ -179,7 +179,9 @@ export interface LiveStudent {
     joinedAt: Timestamp;    // Server timestamp
     currentStatus: TaskStatus | LegacyTaskStatus; // Includes legacy 'stuck'/'question' for backwards compatibility
     currentTaskId?: string; // ID of the task they are working on
-    taskHistory: Task[];    // Local copy of their progress for this session
+    /** @deprecated Use taskStatuses instead. Kept for backwards compatibility. */
+    taskHistory?: Task[];   // Local copy of their progress for this session
+    taskStatuses?: Record<string, TaskStatus>;  // NEW: Per-task status tracking { taskId: status }
     metrics: {
         tasksCompleted: number;
         activeTasks: string[]; // IDs of active tasks

@@ -273,7 +273,7 @@ export function DateRangePicker({
                         disabled:opacity-50 disabled:cursor-not-allowed
                         ${activeField
                             ? 'border-brand-accent'
-                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
+                            : 'border-slate-300 dark:border-gray-600 hover:border-slate-400 dark:hover:border-gray-500'}
                         ${startDate || endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                         ${buttonClassName}
                     `}
@@ -300,7 +300,7 @@ export function DateRangePicker({
                             disabled:opacity-50 disabled:cursor-not-allowed
                             ${activeField === 'start'
                                 ? 'border-brand-accent'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
+                                : 'border-slate-300 dark:border-gray-600 hover:border-slate-400 dark:hover:border-gray-500'}
                             ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
@@ -334,7 +334,7 @@ export function DateRangePicker({
                             disabled:opacity-50 disabled:cursor-not-allowed
                             ${activeField === 'end'
                                 ? 'border-brand-accent'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400'}
+                                : 'border-slate-300 dark:border-gray-600 hover:border-slate-400 dark:hover:border-gray-500'}
                             ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}

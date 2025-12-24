@@ -19,6 +19,7 @@ interface ClassState {
     setSidebarOpen: (isOpen: boolean) => void;
     setActiveStudentCount: (count: number) => void;
     toggleDarkMode: () => void;
+    setDarkMode: (isDark: boolean) => void;
     setIsClassModalOpen: (isOpen: boolean, editingClass?: Classroom | null) => void;
 }
 
@@ -48,5 +49,6 @@ export const useClassStore = create<ClassState>((set) => ({
     setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
     setActiveStudentCount: (count) => set({ activeStudentCount: count }),
     toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+    setDarkMode: (isDark: boolean) => set({ darkMode: isDark }),
     setIsClassModalOpen: (isOpen, editingClass = null) => set({ isClassModalOpen: isOpen, editingClass }),
 }));

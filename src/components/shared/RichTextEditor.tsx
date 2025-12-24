@@ -44,7 +44,7 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, title }: Toolbar
             p-1.5 rounded transition-colors
             ${isActive
                 ? 'bg-brand-accent/20 text-brand-accent'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}
+                : 'text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
     >

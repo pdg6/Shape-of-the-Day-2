@@ -67,15 +67,29 @@ function App() {
         setClassrooms
     } = useClassStore();
 
-    // Effect to apply dark mode class to the HTML element
+    // Effect to apply dark mode class to the HTML element and sync browser theme-color
     useEffect(() => {
+        const root = document.documentElement;
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+
         if (darkMode) {
-            document.documentElement.classList.add('dark');
+            root.classList.add('dark');
+            root.style.colorScheme = 'dark';
             localStorage.setItem('darkMode', 'true');
+            // Sync browser chrome color (address bar, PWA splash)
+            if (themeColorMeta) {
+                themeColorMeta.setAttribute('content', '#10100e'); // --color-brand-dark
+            }
         } else {
-            document.documentElement.classList.remove('dark');
+            root.classList.remove('dark');
+            root.style.colorScheme = 'light';
             localStorage.setItem('darkMode', 'false');
+            // Sync browser chrome color for light mode
+            if (themeColorMeta) {
+                themeColorMeta.setAttribute('content', '#F1F5F9'); // --color-brand-light (slate-100)
+            }
         }
+        console.log('🌓 Theme synced:', darkMode ? 'dark' : 'light');
     }, [darkMode]);
 
     // Effect to handle view switching based on auth

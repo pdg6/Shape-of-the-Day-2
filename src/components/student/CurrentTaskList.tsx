@@ -177,14 +177,6 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
-    // Sync comment changes
-    useEffect(() => {
-        if (comment) {
-            const sanitized = sanitizeComment(comment, maxChars);
-            onUpdateComment(task.id, sanitized);
-        }
-    }, [comment, task.id, onUpdateComment]);
-
     // Get previous questions for this task
     const previousQuestions = task.questionHistory?.filter(
         q => q.classroomId === classroomId

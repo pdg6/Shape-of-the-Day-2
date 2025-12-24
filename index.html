@@ -18,11 +18,19 @@
   <!-- Blocking script: apply theme before React renders (prevents flash) -->
   <script>
     (function () {
-      // Dark mode is default; remove only if user explicitly chose light mode
-      if (localStorage.getItem('darkMode') === 'false') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        // Ensure dark class is present (covers null/missing and 'true')
+      try {
+        const darkMode = localStorage.getItem('darkMode');
+        // If darkMode is 'false', it's light mode. Anything else (true or null) defaults to dark mode.
+        if (darkMode === 'false') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      } catch (e) {
+        console.error('Theme initialization failed:', e);
+        // Fallback to dark mode on error
         document.documentElement.classList.add('dark');
       }
     })();

@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { DayPicker, getDefaultClassNames } from 'react-day-picker';
 
-import { createPortal } from 'react-dom';
 import 'react-day-picker/style.css';
 
 import {
@@ -29,15 +27,15 @@ import { MultiSelect } from '../shared/MultiSelect';
 import { DateRangePicker } from '../shared/DateRangePicker';
 import { DatePicker } from '../shared/DatePicker';
 import { RichTextEditor } from '../shared/RichTextEditor';
-import { format, parse } from 'date-fns';
 import { Button } from '../shared/Button';
 
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
-import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, onSnapshot, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { db, auth, storage, functions } from '../../firebase';
+import { saveTask, subscribeToClassroomTasks } from '../../services/firestoreService';
 import { Classroom, ItemType, Task, TaskFormData, TaskStatus, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment, LinkAttachment } from '../../types';
 import { useClassStore } from '../../store/classStore';
 
@@ -124,82 +122,6 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const { currentClassId } = useClassStore();
 
     // --- State ---
-    const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-    const [calendarPosition, setCalendarPosition] = useState({ top: 0, left: 0, origin: 'top left' });
-    const calendarButtonRef = useRef<HTMLButtonElement>(null);
-    const calendarPopoverRef = useRef<HTMLDivElement>(null);
-
-    // Update calendar position
-    const updateCalendarPosition = useCallback(() => {
-        if (calendarButtonRef.current) {
-            const rect = calendarButtonRef.current.getBoundingClientRect();
-            // Estimate size (captured from typical rendering)
-            const popoverHeight = 320;
-            const popoverWidth = 280;
-
-            // Default: Bottom-left aligned (viewport coordinates because position: fixed)
-            let top = rect.bottom + 4;
-            let left = rect.left;
-            let origin = 'top left';
-
-            // Vertical positioning
-            const spaceBelow = window.innerHeight - rect.bottom;
-            // If not enough space below AND more space above, flip up
-            if (spaceBelow < popoverHeight && rect.top > popoverHeight) {
-                top = rect.top - popoverHeight - 4;
-                origin = 'bottom left';
-            }
-
-            // Horizontal positioning (keep on screen)
-            if (left + popoverWidth > window.innerWidth) {
-                // If overflows right, align to right edge of window with padding
-                left = window.innerWidth - popoverWidth - 16;
-
-                // If flipping alignment, update origin to pivot from right
-                if (origin === 'top left') origin = 'top right';
-                else origin = 'bottom right';
-            }
-
-            // Ensure strictly non-negative
-            if (left < 4) left = 4;
-
-            // Ensure top is on screen (clamping)
-            if (top < 4) top = 4;
-
-            setCalendarPosition({ top, left, origin });
-        }
-    }, []);
-
-    // Handle click outside for calendar
-    useEffect(() => {
-        if (!isCalendarOpen) return;
-
-        const handleClickOutside = (e: MouseEvent) => {
-            if (
-                calendarPopoverRef.current &&
-                !calendarPopoverRef.current.contains(e.target as Node) &&
-                calendarButtonRef.current &&
-                !calendarButtonRef.current.contains(e.target as Node)
-            ) {
-                setIsCalendarOpen(false);
-            }
-        };
-
-        const handleResize = () => {
-            if (isCalendarOpen) updateCalendarPosition();
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        window.addEventListener('resize', handleResize);
-        window.addEventListener('scroll', handleResize, true);
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-            window.removeEventListener('resize', handleResize);
-            window.removeEventListener('scroll', handleResize, true);
-        };
-    }, [isCalendarOpen, updateCalendarPosition]);
-
     const [rooms, setRooms] = useState<Classroom[]>([]);
     const [loadingRooms, setLoadingRooms] = useState(true);
 
@@ -220,7 +142,6 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle'); // Auto-save feedback
     const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false); // Mobile accordion for tasks list
-    const [summaryDate, setSummaryDate] = useState<string>(toDateString()); // Date for task summary view
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -260,38 +181,16 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     useEffect(() => {
         if (!auth.currentUser) return;
 
-        const q = query(
-            collection(db, 'tasks'),
-            where('teacherId', '==', auth.currentUser.uid)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const taskData: Task[] = [];
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                taskData.push({
-                    id: doc.id,
-                    ...data,
-                    type: data.type || 'task', // Default to 'task' for legacy items
-                    parentId: data.parentId || null,
-                    rootId: data.rootId || null,
-                    path: data.path || [],
-                    pathTitles: data.pathTitles || [],
-                    childIds: data.childIds || [],
-                    selectedRoomIds: data.selectedRoomIds || [],
-                    status: data.status || 'todo',
-                } as Task);
-            });
-            taskData.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-            setTasks(taskData);
-            setLoadingTasks(false);
-        }, (error) => {
-            console.error("Error fetching tasks:", error);
+        const unsubscribe = subscribeToClassroomTasks(currentClassId || '', (taskData: Task[]) => {
+            // Filter out tasks not belonging to this teacher (security/privacy)
+            // Note: firestore.rules already handle this, but it's good to be explicit
+            const teacherTasks = taskData.filter((t: Task) => t.teacherId === auth.currentUser?.uid);
+            setTasks(teacherTasks);
             setLoadingTasks(false);
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [currentClassId]);
 
     // Auto-select current class for new tasks (without marking as dirty)
     useEffect(() => {
@@ -515,8 +414,6 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
 
 
-
-
     // Filter tasks by date and class, then build hierarchy with proper ordering
     const filteredTasks = useMemo(() => {
         const filtered = tasks.filter(task => {
@@ -712,7 +609,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
         // Validate file size
         if (file.size > MAX_FILE_SIZE) {
-            handleError(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB`);
+            handleError(`File too large.Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB`);
             return null;
         }
 
@@ -873,61 +770,46 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 startDate: formData.startDate,
                 endDate: formData.endDate,
                 selectedRoomIds: formData.selectedRoomIds,
-                assignedRooms: formData.selectedRoomIds, // Also save as assignedRooms for StudentView query compatibility
                 attachments: formData.attachments || [],
                 teacherId: auth.currentUser.uid,
                 updatedAt: serverTimestamp(),
                 status: statusToSave, // Update status
             };
 
+            // Calculate presentationOrder among siblings (same parentId)
+            let newPresentationOrder = 1;
             if (isNewTask) {
-                // Create new task
-                const maxOrder = tasks.length > 0 ? Math.max(...tasks.map(t => t.presentationOrder || 0)) : 0;
+                const siblings = tasks.filter(t => t.parentId === formData.parentId);
+                newPresentationOrder = siblings.length > 0
+                    ? Math.max(...siblings.map(t => t.presentationOrder || 0)) + 1
+                    : 1;
+            }
 
-                const docRef = await addDoc(collection(db, 'tasks'), {
-                    ...taskData,
-                    presentationOrder: maxOrder + 1,
-                    createdAt: serverTimestamp(),
-                    imageURL: '',
-                    childIds: [],
-                });
+            const savedId = await saveTask(auth.currentUser.uid, {
+                ...taskData,
+                id: editingTaskId || undefined,
+                presentationOrder: isNewTask ? newPresentationOrder : undefined,
+                imageURL: isNewTask ? '' : undefined,
+                childIds: isNewTask ? [] : undefined,
+            });
 
-                // Update parent's childIds if applicable
-                if (formData.parentId) {
-                    const parentDoc = doc(db, 'tasks', formData.parentId);
-                    const parent = tasks.find(t => t.id === formData.parentId);
-                    if (parent) {
-                        await updateDoc(parentDoc, {
-                            childIds: [...(parent.childIds || []), docRef.id]
-                        });
-                    }
+            // Update parent's childIds if applicable
+            if (isNewTask && formData.parentId) {
+                const parent = tasks.find(t => t.id === formData.parentId);
+                if (parent) {
+                    await updateDoc(doc(db, 'tasks', formData.parentId), {
+                        childIds: [...(parent.childIds || []), savedId]
+                    });
                 }
+            }
 
-                if (!isAutoSave) {
-                    handleSuccess(`${getTypeLabel(formData.type)} created successfully!`);
-                    resetForm();
-                } else {
-                    // Critical: Determine that this is now an existing task so future auto-saves update it
-                    // We must update the editingTaskId to the new ID
-                    // And conceptually it's no longer a "new task" in the UI sense of "unsaved"
-                    // However, our component derives "isNewTask" from editingTaskId being null.
-                    // So we must switch to editing mode.
-                    setEditingTaskId(docRef.id);
-                    // Note: This might effectively "refresh" the component state because editingTaskId changes.
-                    // Ideally we update local state without full reload if possible, but switching mode is safer.
-                }
-
-            } else if (editingTaskId) {
-                // Update existing task
-                await updateDoc(doc(db, 'tasks', editingTaskId), taskData);
-
-                if (!isAutoSave) {
-                    handleSuccess(`${getTypeLabel(formData.type)} updated!`);
-                    resetForm(); // Reset to new blank task card after saving
-                } else {
-                    // Quiet update
-                    setIsDirty(false); // It's saved now
-                }
+            if (!isAutoSave) {
+                handleSuccess(`${getTypeLabel(formData.type)} ${isNewTask ? 'created' : 'updated'}!`);
+                resetForm();
+            } else if (isNewTask) {
+                setEditingTaskId(savedId);
+            } else {
+                setIsDirty(false);
             }
 
         } catch (error) {
@@ -946,16 +828,49 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             // Get the task to find its children
             const taskToDelete = tasks.find(t => t.id === taskId);
 
-            // Update children to become standalone
+            // Recursively collect all descendant IDs
+            const getAllDescendants = (parentId: string): string[] => {
+                const children = tasks.filter(t => t.parentId === parentId);
+                let allIds: string[] = [];
+                for (const child of children) {
+                    allIds.push(child.id);
+                    allIds = allIds.concat(getAllDescendants(child.id));
+                }
+                return allIds;
+            };
+
+            // Update all descendants to become standalone (not just direct children)
             if (taskToDelete?.childIds?.length) {
+                const allDescendantIds = getAllDescendants(taskId);
                 const batch = writeBatch(db);
-                for (const childId of taskToDelete.childIds) {
-                    batch.update(doc(db, 'tasks', childId), {
-                        parentId: null,
-                        rootId: null,
-                        path: [],
-                        pathTitles: [],
-                    });
+
+                for (const descendantId of allDescendantIds) {
+                    const descendant = tasks.find(t => t.id === descendantId);
+                    // Direct children become standalone; grandchildren get updated paths
+                    if (descendant?.parentId === taskId) {
+                        // Direct child - becomes standalone
+                        batch.update(doc(db, 'tasks', descendantId), {
+                            parentId: null,
+                            rootId: null,
+                            path: [],
+                            pathTitles: [],
+                        });
+                    } else if (descendant) {
+                        // Grandchild - update path to reflect new parent
+                        const newParent = tasks.find(t => t.id === descendant.parentId);
+                        if (newParent) {
+                            // Recalculate path without the deleted task
+                            const filteredPath = (descendant.path || []).filter(id => id !== taskId);
+                            const filteredPathTitles = (descendant.pathTitles || []).slice(
+                                (descendant.path || []).indexOf(taskId) + 1
+                            );
+                            batch.update(doc(db, 'tasks', descendantId), {
+                                rootId: filteredPath[0] || descendant.parentId,
+                                path: filteredPath,
+                                pathTitles: filteredPathTitles,
+                            });
+                        }
+                    }
                 }
                 await batch.commit();
             }
@@ -981,7 +896,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
         siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
 
-        const currentIndex = siblings.findIndex(t => t.id === taskId);
+        const currentIndex = siblings.findIndex(t => t.id === task.id);
         if (currentIndex === -1) return;
 
         const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
@@ -1043,7 +958,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const currentClass = rooms.find(r => r.id === currentClassId);
 
     return (
-        <div className="flex-1 h-full flex flex-col space-y-3">
+        <div className="flex-1 h-full flex flex-col space-y-4">
             {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
             <div className="hidden lg:grid h-16 shrink-0 grid-cols-1 lg:grid-cols-4 gap-6 items-center">
                 {/* Left 3 columns: Tasks label + Current Class + Drafts + New Task Button */}
@@ -1077,8 +992,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 className={`
                                                     flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
                                                     ${isActive
-                                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-400 dark:border-gray-600'
-                                                        : 'bg-gray-100 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300 border border-transparent'}
+                                                        ? 'bg-slate-200 dark:bg-gray-700 text-brand-textDarkPrimary dark:text-gray-200 border border-slate-300 dark:border-gray-600'
+                                                        : 'bg-slate-50 dark:bg-gray-800/50 text-brand-textDarkSecondary dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-800 hover:text-brand-textDarkPrimary dark:hover:text-gray-300 border border-transparent'}
                                                 `}
                                             >
                                                 <span className="font-bold">{hierNum}.</span>
@@ -1121,19 +1036,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         <ChevronLeft size={16} />
                     </button>
 
-                    <div className="flex items-center gap-2 text-center relative">
-                        <button
-                            ref={calendarButtonRef}
-                            type="button"
-                            onClick={() => {
-                                if (!isCalendarOpen) updateCalendarPosition();
-                                setIsCalendarOpen(!isCalendarOpen);
-                            }}
-                            className={`p-1 -m-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 focus:bg-gray-100 dark:focus:bg-gray-800/50 transition-colors cursor-pointer focus:outline-none ${isCalendarOpen ? 'text-brand-accent bg-brand-accent/10' : 'text-gray-400'}`}
-                            title="Jump to date"
-                        >
-                            <CalendarIcon size={18} className="shrink-0" />
-                        </button>
+                    <div className="flex items-center gap-2 text-center">
+                        <DatePicker
+                            value={selectedDate}
+                            onChange={(value) => setSelectedDate(value || toDateString())}
+                            iconOnly={true}
+                            iconColor="var(--color-brand-accent)"
+                        />
 
                         <span className="text-fluid-base font-bold whitespace-nowrap">
                             <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
@@ -1166,11 +1075,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     {/* LEFT PANEL: Task Editor - flex-1 to fill space on mobile */}
                     <div className="flex-1 min-h-0 lg:col-span-3 flex flex-col lg:overflow-y-auto custom-scrollbar">
                         {/* Main Form Card */}
-                        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-lg p-4 space-y-4 flex-1 flex flex-col relative z-40">
+                        <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg border-2 border-slate-300 dark:border-gray-700 shadow-md dark:shadow-none p-4 space-y-4 flex-1 flex flex-col relative z-40">
                             {/* Save State Indicator - top right */}
                             <div className="absolute top-3 right-3 z-10">
                                 {saveState === 'saving' && (
-                                    <div className="flex items-center gap-1.5 text-gray-400" title="Saving...">
+                                    <div className="flex items-center gap-1.5 text-slate-400" title="Saving...">
                                         <Loader size={14} className="animate-spin" />
                                     </div>
                                 )}
@@ -1183,14 +1092,14 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                             {/* Title Input */}
                             <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider shrink-0">Title</span>
+                                <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider shrink-0">Title</span>
                                 <div className="flex-1">
                                     <input
                                         type="text"
                                         value={activeFormData.title}
                                         onChange={(e) => updateActiveCard('title', e.target.value)}
                                         placeholder="Task Title"
-                                        className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-gray-400 focus:border-brand-accent focus:ring-0 focus:outline-none px-2 py-1 transition-all placeholder-gray-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
+                                        className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-slate-300 focus:border-brand-accent focus:ring-0 focus:outline-none px-2 py-1 transition-all placeholder-slate-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
                                     />
                                 </div>
                             </div>
@@ -1199,7 +1108,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             <div className="flex items-end gap-2 lg:gap-4">
                                 {/* TYPE */}
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Type</span>
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Type</span>
                                     <div className="w-full lg:w-[160px]">
                                         <Select<ItemType>
                                             value={activeFormData.type}
@@ -1219,7 +1128,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                                 {/* CONNECTIONS - narrower on mobile */}
                                 <div className="flex flex-col gap-1 shrink-0">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Link</span>
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Link</span>
                                     <div className="w-24 lg:w-[160px]">
                                         <Select<string>
                                             value={activeFormData.parentId}
@@ -1283,7 +1192,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                                 {/* DATE RANGE - compact on mobile, separate buttons on desktop */}
                                 <div className="flex flex-col gap-1 ml-auto">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider hidden lg:block">Dates</span>
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider hidden lg:block">Dates</span>
                                     {/* Desktop: Separate start/end buttons */}
                                     <div className="hidden lg:block">
                                         <DateRangePicker
@@ -1314,7 +1223,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             {/* Description Container with embedded Upload/Link buttons */}
                             <div className="flex-1 min-h-[120px] relative">
                                 <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 rounded-md border-2 border-gray-400 dark:border-gray-600 focus-within:border-gray-600 dark:focus-within:border-gray-400 bg-gray-50/50 dark:bg-gray-900/30 overflow-y-auto transition-colors">
+                                    <div className="flex-1 rounded-md border-2 border-slate-400 dark:border-gray-500 focus-within:border-slate-500 dark:focus-within:border-gray-400 bg-slate-200 dark:bg-gray-800/70 shadow-inner overflow-y-auto transition-colors">
                                         <RichTextEditor
                                             value={activeFormData.description}
                                             onChange={(value) => updateActiveCard('description', value)}
@@ -1330,7 +1239,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         {activeFormData.attachments && activeFormData.attachments.map(attachment => (
                                             <div
                                                 key={attachment.id}
-                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-400 dark:border-gray-600 text-xs group hover:scale-[1.02] transition-transform cursor-default"
+                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-slate-200 dark:border-gray-600 text-xs group hover:scale-[1.02] transition-transform cursor-default"
                                                 title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                             >
                                                 {attachment.mimeType.startsWith('image/') ? (
@@ -1344,7 +1253,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         <img
                                                             src={attachment.url}
                                                             alt={attachment.filename}
-                                                            className="w-10 h-10 object-cover rounded border border-gray-200 dark:border-gray-600"
+                                                            className="w-10 h-10 object-cover rounded border border-slate-200 dark:border-gray-600"
                                                         />
                                                         <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[80px]">
                                                             {attachment.filename}
@@ -1405,7 +1314,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         )}
                                         {/* Upload & Link buttons - Always visible now for better UX */}
                                         <div className="flex items-center gap-3">
-                                            <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-400 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group cursor-pointer">
+                                            <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-slate-400 dark:border-gray-500 bg-slate-50 dark:bg-gray-800/30 shadow-sm hover:bg-white dark:hover:bg-gray-800/50 hover:border-brand-accent dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group cursor-pointer">
                                                 <input
                                                     ref={fileInputRef}
                                                     type="file"
@@ -1415,7 +1324,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     disabled={isUploading}
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                 />
-                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'}`}>
+                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-slate-500 group-hover:text-slate-700 dark:group-hover:text-gray-300'}`}>
                                                     {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
                                                     <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
                                                 </div>
@@ -1426,9 +1335,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     const url = prompt('Enter URL:');
                                                     if (url) addLink(url);
                                                 }}
-                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-gray-400 dark:border-gray-600 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group"
+                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-slate-400 dark:border-gray-500 bg-slate-50 dark:bg-gray-800/30 shadow-sm hover:bg-white dark:hover:bg-gray-800/50 hover:border-slate-500 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group"
                                             >
-                                                <div className="flex items-center justify-center gap-2 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                                                <div className="flex items-center justify-center gap-2 text-slate-500 group-hover:text-slate-700 dark:group-hover:text-gray-300 transition-colors">
                                                     <LinkIcon size={16} />
                                                     <span className="text-sm font-medium">Add Link</span>
                                                 </div>
@@ -1442,7 +1351,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             <div className="pt-1 flex items-end justify-between gap-4">
                                 {/* Left: Class Selector */}
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Add to Class:</span>
+                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Add to Class:</span>
                                     <div className="w-[200px]">
                                         {loadingRooms ? (
                                             <Loader className="w-4 h-4 animate-spin text-gray-400" />
@@ -1482,9 +1391,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         </button>
                                     )}
 
-                                    {/* Save Button */}
-                                    <button
-                                        type="button"
+                                    {/* Save Button - Primary CTA */}
+                                    <Button
+                                        variant="primary"
+                                        size="md"
+                                        icon={isSubmitting ? Loader : Check}
                                         onClick={async () => {
                                             if (!activeFormData.title.trim()) {
                                                 handleError(new Error("⚠️ Please include a title before saving."));
@@ -1493,13 +1404,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             await handleSave();
                                         }}
                                         disabled={isSubmitting}
-                                        className="min-w-[100px] px-4 py-2.5 min-h-[44px] rounded-md text-sm font-medium border-2 border-gray-400 dark:border-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-brand-accent focus:border-brand-accent transition-all disabled:opacity-50"
+                                        className="min-w-[100px]"
                                     >
-                                        <span className="flex items-center justify-center gap-2">
-                                            {isSubmitting ? <Loader size={16} className="animate-spin" /> : <Check size={16} className="text-brand-accent" />}
-                                            Save
-                                        </span>
-                                    </button>
+                                        Save
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -1507,66 +1415,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                     {/* RIGHT PANEL: Task List - shrink-0 on mobile so form gets the space */}
                     <div className="shrink-0 lg:col-span-1 flex flex-col lg:h-full lg:overflow-hidden">
-                        <div className="flex flex-col justify-end lg:justify-between overflow-hidden pb-2 lg:pb-0 lg:h-full">
+                        <div className="flex flex-col justify-end lg:justify-between overflow-hidden pb-2 lg:pb-0 lg:h-full lg:bg-brand-lightSurface lg:dark:bg-brand-darkSurface lg:border-2 lg:border-slate-300 lg:dark:border-gray-700 lg:rounded-lg lg:shadow-md lg:dark:shadow-none lg:p-3">
 
-                            {/* Calendar Portal (rendered when open) */}
-                            {isCalendarOpen && createPortal(
-                                <div
-                                    ref={calendarPopoverRef}
-                                    className="fixed z-9999 bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-gray-400 dark:border-gray-600 rounded-xl shadow-lg p-3 animate-fade-in origin-top-left"
-                                    style={{
-                                        top: calendarPosition.top,
-                                        left: calendarPosition.left,
-                                        transform: 'scale(0.9)',
-                                        transformOrigin: calendarPosition.origin
-                                    }}
-                                >
-                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-400 dark:border-gray-600">
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setSelectedDate(toDateString(new Date()));
-                                                setIsCalendarOpen(false);
-                                            }}
-                                            className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
-                                        >
-                                            Today
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsCalendarOpen(false)}
-                                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                    <DayPicker
-                                        mode="single"
-                                        selected={new Date(selectedDate + 'T00:00:00')}
-                                        onSelect={(date) => {
-                                            if (date) {
-                                                setSelectedDate(toDateString(date));
-                                                setIsCalendarOpen(false);
-                                            }
-                                        }}
-                                        defaultMonth={new Date(selectedDate + 'T00:00:00')}
-                                        components={{
-                                            Chevron: ({ orientation }) =>
-                                                orientation === 'left'
-                                                    ? <ChevronLeft size={16} />
-                                                    : <ChevronRight size={16} />,
-                                        }}
-                                        classNames={{
-                                            ...getDefaultClassNames(),
-                                            root: `${getDefaultClassNames().root} rdp-custom`,
-                                            disabled: 'text-gray-300 dark:text-gray-600 cursor-not-allowed',
-                                            outside: 'text-gray-300 dark:text-gray-600 opacity-50',
-                                            chevron: 'fill-gray-500 dark:fill-gray-400',
-                                        }}
-                                    />
-                                </div>,
-                                document.body
-                            )}
 
                             {/* Mobile Overlay - closes accordion when clicking outside */}
                             {isMobileTasksOpen && (
@@ -1579,18 +1429,17 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                             {/* Mobile Accordion Header for Task List - only visible on mobile */}
                             <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface">
-                                {/* Left: Calendar icon */}
+                                {/* Left: Date Picker - Full display for more presence */}
                                 <DatePicker
-                                    value={summaryDate || toDateString()}
-                                    onChange={(value) => setSummaryDate(value || toDateString())}
-                                    iconOnly={true}
-                                    iconColor="var(--color-brand-accent)"
+                                    value={selectedDate}
+                                    onChange={(value) => setSelectedDate(value || toDateString())}
+                                    className="shrink-0 scale-90 -ml-2"
                                 />
 
                                 {/* Center: Title with task count */}
-                                <div className="flex-1 flex items-center justify-center gap-2">
+                                <div className="flex-1 flex items-center justify-center gap-2 -ml-4">
                                     <span className="font-medium text-gray-400">
-                                        {summaryDate === toDateString() ? "Today's Tasks:" : format(parse(summaryDate, 'yyyy-MM-dd', new Date()), 'MMM d') + "'s Tasks:"}
+                                        Tasks:
                                     </span>
                                     <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{filteredTasks.length}</span>
                                 </div>
@@ -1616,12 +1465,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                 transition-all duration-300 ease-in-out
                             `}>
                                 {!currentClassId ? (
-                                    <div className="text-center py-8 text-gray-400 italic text-sm">
+                                    <div className="text-center py-8 text-slate-400 dark:text-gray-500 italic text-sm">
                                         Select a class to view schedule.
                                     </div>
                                 ) : filteredTasks.length === 0 ? (
-                                    <div className="text-center py-8 text-gray-400 italic text-sm">
-                                        No tasks scheduled.
+                                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                                        <div className="text-slate-400 dark:text-gray-500 text-sm font-medium">No tasks scheduled.</div>
+                                        <div className="text-slate-300 dark:text-gray-600 text-xs mt-1">Create a task to get started.</div>
                                     </div>
                                 ) : (() => {
                                     return filteredTasks.map((task) => {

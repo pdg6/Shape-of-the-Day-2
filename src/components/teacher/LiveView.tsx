@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { collection, onSnapshot, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, query, deleteDoc, doc } from 'firebase/firestore';
+import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { db } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2, HelpCircle, Play } from 'lucide-react';
+import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../shared/Button';
+import TaskProgressIcons from './TaskProgressIcons';
 
 /**
  * LiveView Component
@@ -102,25 +104,28 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
     // Filter students to only show those active within the last 90 minutes
     const activeStudents = students.filter(isRecentlyActive);
 
-    // Fetch Active Tasks for the Class (Real-time to catch imported tasks)
+    // Get today's date for filtering tasks
+    const today = new Date().toISOString().split('T')[0] ?? '';
+
+    // Fetch Active Tasks for the Class - ONLY tasks active TODAY
     useEffect(() => {
         if (!currentClassId) return;
 
-        // Query tasks for this class. 
-        // Note: In a real app, we might filter by 'published' status or date.
-        const q = query(collection(db, 'tasks'), where('selectedRoomIds', 'array-contains', currentClassId));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const taskData: Task[] = [];
-            snapshot.forEach((doc) => {
-                taskData.push({ id: doc.id, ...doc.data() } as Task);
+        const unsubscribe = subscribeToClassroomTasks(currentClassId, (taskData: Task[]) => {
+            // Filter to only show tasks that are active TODAY
+            const todaysTasks = taskData.filter(task => {
+                const startDate = task.startDate || '';
+                const endDate = task.endDate || task.startDate || '';
+                // Check if today falls within the task's date range
+                const isActiveToday = today >= startDate && today <= endDate;
+                // Exclude draft tasks
+                return isActiveToday && task.status !== 'draft';
             });
-            // Sort by creation time if available, or title
-            // Assuming we want them in some logical order.
-            setTasks(taskData);
+            setTasks(todaysTasks);
         });
 
         return () => unsubscribe();
-    }, [currentClassId]);
+    }, [currentClassId, today]);
 
     // Auto-remove inactive students (90 minutes)
     useEffect(() => {
@@ -228,7 +233,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
             {/* Content */}
             {activeStudents.length === 0 ? (
-                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700">
+                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-slate-300 dark:border-gray-700 shadow-sm">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-gray-400" />
                     </div>
@@ -295,76 +300,21 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
 // --- Sub-Components ---
 
-const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, totalTasks, tasks, onDelete }) => {
-    // Helper to get status-based styling for the unified task pill
-    const getStatusPillStyle = (status: string) => {
-        // Normalize legacy statuses
-        const normalizedStatus = (status === 'stuck' || status === 'question') ? 'help' : status;
-
-        switch (normalizedStatus) {
-            case 'help':
-                return {
-                    bg: 'bg-status-stuck/15 dark:bg-status-stuck/20',
-                    border: 'border-status-stuck',
-                    text: 'text-status-stuck',
-                    icon: HelpCircle
-                };
-            case 'in_progress':
-                return {
-                    bg: 'bg-status-progress/15 dark:bg-status-progress/20',
-                    border: 'border-status-progress',
-                    text: 'text-status-progress',
-                    icon: Play
-                };
-            case 'done':
-                return {
-                    bg: 'bg-status-complete/15 dark:bg-status-complete/20',
-                    border: 'border-status-complete',
-                    text: 'text-status-complete',
-                    icon: CheckCircle
-                };
-            default: // todo, idle, unknown
-                return {
-                    bg: 'bg-gray-100 dark:bg-gray-800',
-                    border: 'border-gray-300 dark:border-gray-600',
-                    text: 'text-gray-500 dark:text-gray-400',
-                    icon: null
-                };
-        }
-    };
-
+const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-slate-300 dark:border-gray-700 overflow-hidden shadow-sm">
             <table className="w-full text-left">
                 <thead className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                     <tr>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase w-40">Student</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-20 text-center">Progress</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Current Task</th>
+                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Task Progress</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase">Questions / Comments</th>
                         <th className="p-4 text-xs font-bold text-gray-500 uppercase w-16 text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {students.map(student => {
-                        const isAllDone = student.metrics.tasksCompleted >= totalTasks && totalTasks > 0;
                         const needsHelp = student.currentStatus === 'help' || student.currentStatus === 'stuck' || student.currentStatus === 'question';
-                        const isWorking = student.currentStatus === 'in_progress' || needsHelp;
-
-                        // Always show the NEXT upcoming task (based on completed count)
-                        const sortedTasks = [...tasks].sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-                        const nextTaskIndex = student.metrics.tasksCompleted;
-                        const nextTask = nextTaskIndex < sortedTasks.length ? sortedTasks[nextTaskIndex] : null;
-
-                        // Status: if student is actively working/stuck on this task, show that status
-                        // Otherwise show as "todo" (gray - not started yet)
-                        const displayStatus = isAllDone
-                            ? 'done'
-                            : isWorking
-                                ? student.currentStatus
-                                : 'todo';
-                        const pillStyle = getStatusPillStyle(displayStatus);
-                        const StatusIcon = pillStyle.icon;
 
                         return (
                             <tr key={student.uid} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -373,31 +323,19 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                     {student.displayName}
                                 </td>
 
-                                {/* Progress - white until done, then accent */}
-                                <td className="p-4 text-center">
-                                    <span className={`text-sm font-bold ${isAllDone ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
-                                        {student.metrics.tasksCompleted}/{totalTasks}
-                                    </span>
-                                </td>
-
-                                {/* Current Task */}
+                                {/* Task Progress Icons */}
                                 <td className="p-4">
-                                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border-2 font-semibold text-sm ${pillStyle.bg} ${pillStyle.border} ${pillStyle.text}`}>
-                                        {StatusIcon && <StatusIcon className="w-4 h-4 shrink-0" />}
-                                        <span className="truncate max-w-[180px]">
-                                            {isAllDone
-                                                ? 'All Done!'
-                                                : nextTask
-                                                    ? nextTask.title
-                                                    : 'Idle'}
-                                        </span>
-                                    </span>
+                                    <TaskProgressIcons
+                                        tasks={tasks}
+                                        taskStatuses={student.taskStatuses || {}}
+                                        maxVisible={10}
+                                    />
                                 </td>
 
                                 {/* Questions/Comments - expands to fill space */}
                                 <td className="p-4">
                                     {student.currentMessage ? (
-                                        <span className={`text-sm italic ${needsHelp ? 'text-status-stuck' : 'text-gray-500 dark:text-gray-400'}`} title={student.currentMessage}>
+                                        <span className={`text-sm italic ${needsHelp ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} title={student.currentMessage}>
                                             "{student.currentMessage}"
                                         </span>
                                     ) : (
@@ -437,19 +375,25 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {tasks.map(task => {
-                // Calculate stats for this task
-                const activeStudents = students.filter(s => s.currentTaskId === task.id);
-                // Check if task is in student's completed history
-                const studentsCompleted = students.filter(s => s.taskHistory?.some(h => h.id === task.id && h.status === 'done'));
-
-                // Merge stuck and question into unified "help" status
-                const helpStudents = activeStudents.filter(s =>
-                    s.currentStatus === 'stuck' || s.currentStatus === 'question' || s.currentStatus === 'help'
+                // Calculate stats for this task using taskStatuses (per-task status tracking)
+                const studentsCompleted = students.filter(s =>
+                    s.taskStatuses?.[task.id] === 'done'
                 );
-                const inProgressStudents = activeStudents.filter(s => s.currentStatus === 'in_progress');
+
+                // Help status - taskStatuses uses unified 'help' status
+                const helpStudents = students.filter(s =>
+                    s.taskStatuses?.[task.id] === 'help'
+                );
+
+                const inProgressStudents = students.filter(s =>
+                    s.taskStatuses?.[task.id] === 'in_progress'
+                );
+
+                // Students actively working on this task (union of help + in_progress)
+                const activeStudents = [...helpStudents, ...inProgressStudents];
 
                 // Determine Card Styling
-                let borderColor = 'border-gray-200 dark:border-gray-700';
+                let borderColor = 'border-slate-300 dark:border-gray-700';
                 let bgColor = 'bg-brand-lightSurface dark:bg-brand-darkSurface';
                 let opacity = 'opacity-100';
 
@@ -465,7 +409,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                 }
 
                 return (
-                    <div key={task.id} className={`rounded-xl border-2 shadow-sm p-5 transition-all duration-300 ${borderColor} ${bgColor} ${opacity}`}>
+                    <div key={task.id} className={`rounded-xl border-2 shadow-sm p-5 transition-all duration-300 hover:shadow-lg ${borderColor} ${bgColor} ${opacity}`}>
                         <div className="flex justify-between items-start mb-4">
                             <h3 className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-2">
                                 {task.title}

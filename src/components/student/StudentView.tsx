@@ -9,7 +9,8 @@ import StudentProjectsView from './StudentProjectsView';
 import CircularProgress from '../shared/CircularProgress';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
-import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { auth, db } from '../../firebase';
 import { Menu } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
@@ -103,8 +104,9 @@ const StudentView: React.FC<StudentViewProps> = ({
     // State for the tasks currently in the student's "My Day" view
     const [currentTasks, setCurrentTasks] = useState<Task[]>([]);
 
-    // Track if we've done the initial auto-population of today's tasks
-    const hasAutoPopulatedRef = useRef<boolean>(false);
+    // Track which task set we've already populated to avoid duplicate restoration calls
+    // Uses a hash of task IDs to detect when the task set has changed
+    const lastPopulatedTaskIdsRef = useRef<string>('');
 
     // Rate limiting for sync operations (prevents race conditions from rapid clicks)
     const lastSyncRef = useRef<{ taskId: string; timestamp: number } | null>(null);
@@ -160,6 +162,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         await updateDoc(studentRef, {
                             currentStatus: payload.status,
                             currentTaskId: payload.taskId,
+                            [`taskStatuses.${payload.taskId}`]: payload.status,  // Per-task status tracking
                             currentMessage: payload.comment || '',
                             lastActive: serverTimestamp()
                         });
@@ -187,68 +190,63 @@ const StudentView: React.FC<StudentViewProps> = ({
 
         setScheduleLoading(true);
 
-        const tasksRef = collection(db, 'tasks');
-        // Query tasks assigned to this classroom
-        // Try both field names for compatibility (TaskManager uses selectedRoomIds, older data may use assignedRooms)
-        const q = query(
-            tasksRef,
-            where('selectedRoomIds', 'array-contains', classId)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedTasks: Task[] = [];
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
+        const unsubscribe = subscribeToClassroomTasks(classId, (taskData: Task[]) => {
+            const fetchedTasks: Task[] = taskData.filter(task => {
                 // Filter by date range: startDate <= selectedDate <= endDate
-                const startDate = data.startDate || '';
-                const endDate = data.endDate || data.startDate || '';
+                const startDate = task.startDate || '';
+                const endDate = task.endDate || task.startDate || '';
                 const inRange = selectedDate >= startDate && selectedDate <= endDate;
 
                 // Only include non-draft tasks that are valid for the selected date
-                if (inRange && data.status !== 'draft') {
-                    fetchedTasks.push({
-                        id: docSnap.id,
-                        title: data.title || 'Untitled',
-                        description: data.description || '',
-                        status: data.status || 'todo',
-                        dueDate: data.endDate || data.dueDate,
-                        type: data.type || 'task',
-                        parentId: data.parentId || null,
-                        rootId: data.rootId || null,
-                        path: data.path || [],
-                        pathTitles: data.pathTitles || [],
-                        childIds: data.childIds || [],
-                        selectedRoomIds: data.selectedRoomIds || data.assignedRooms || [],
-                        presentationOrder: data.presentationOrder ?? 0,
-                        attachments: data.attachments || [],
-                        links: data.links || [],
-                    } as Task);
-                }
+                return inRange && task.status !== 'draft';
             });
 
-            // Sort by presentation order
-            fetchedTasks.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
             setScheduleTasks(fetchedTasks);
 
-            // AUTO-POPULATE: On first load, populate the student's task list with today's tasks
-            // This runs once when tasks are first fetched and currentTasks is still empty
-            if (!hasAutoPopulatedRef.current && fetchedTasks.length > 0) {
-                console.log('[StudentView] Auto-populating', fetchedTasks.length, 'tasks for today');
-                setCurrentTasks(fetchedTasks.map(task => ({
-                    ...task,
-                    status: 'todo' as const  // Reset status to todo for student's working list
-                })));
-                hasAutoPopulatedRef.current = true;
+            // AUTO-POPULATE: Restore saved statuses when loading today's tasks
+            // Uses task ID hash to prevent duplicate calls for the same task set
+            // This runs on every page refresh to restore saved progress
+            if (fetchedTasks.length > 0 && selectedDate === today) {
+                // Create a hash of current task IDs to detect changes
+                const taskIdsHash = fetchedTasks.map(t => t.id).sort().join(',');
+
+                // Skip if we've already populated with this exact task set and have tasks loaded
+                if (lastPopulatedTaskIdsRef.current === taskIdsHash && currentTasks.length > 0) {
+                    setScheduleLoading(false);
+                    return;
+                }
+                lastPopulatedTaskIdsRef.current = taskIdsHash;
+
+                const currentUser = auth.currentUser;
+
+                // Async IIFE to restore saved statuses from Firestore
+                (async () => {
+                    let savedStatuses: Record<string, TaskStatus> = {};
+                    if (currentUser && classId) {
+                        try {
+                            const studentDoc = await getDoc(doc(db, 'classrooms', classId, 'live_students', currentUser.uid));
+                            if (studentDoc.exists()) {
+                                savedStatuses = studentDoc.data()?.taskStatuses || {};
+                                console.log('[StudentView] Restored', Object.keys(savedStatuses).length, 'saved task statuses');
+                            }
+                        } catch (error) {
+                            console.warn('[StudentView] Could not restore saved statuses:', error);
+                        }
+                    }
+
+                    console.log('[StudentView] Auto-populating', fetchedTasks.length, 'tasks for today');
+                    setCurrentTasks(fetchedTasks.map(task => ({
+                        ...task,
+                        status: savedStatuses[task.id] || 'todo' as const  // Restore saved or default to todo
+                    })));
+                })();
             }
 
-            setScheduleLoading(false);
-        }, (error) => {
-            console.error('Error fetching schedule tasks:', error);
             setScheduleLoading(false);
         });
 
         return () => unsubscribe();
-    }, [classId, selectedDate]);
+    }, [classId, selectedDate, today]);
 
     /**
      * Syncs the student's progress to the teacher's dashboard via Firestore.
@@ -302,6 +300,7 @@ const StudentView: React.FC<StudentViewProps> = ({
             await updateDoc(studentRef, {
                 currentStatus: status,
                 currentTaskId: taskId,
+                [`taskStatuses.${taskId}`]: status,  // NEW: Per-task status tracking
                 'metrics.tasksCompleted': completedCount,
                 'metrics.activeTasks': activeTasks,
                 currentMessage: comment,
@@ -515,7 +514,7 @@ const StudentView: React.FC<StudentViewProps> = ({
     };
 
     return (
-        <div className="h-full flex overflow-hidden bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
+        <div className="h-full flex overflow-hidden bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
             {/* Responsive Sidebar - Desktop static, Mobile slide-in */}
             <StudentSidebar
                 tasksCompleted={tasksCompleted}
@@ -532,13 +531,13 @@ const StudentView: React.FC<StudentViewProps> = ({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Header */}
-                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-gray-200 dark:border-gray-700">
+                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b-2 border-slate-300 dark:border-gray-700">
                     {/* Left: Hamburger Menu */}
                     <button
                         onClick={() => setIsMobileSidebarOpen(true)}
-                        className="flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
+                        className="flex items-center justify-center text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
                         aria-label="Open navigation menu"
-                        aria-expanded={isMobileSidebarOpen}
+                        aria-expanded={isMobileSidebarOpen ? "true" : "false"}
                     >
                         <Menu className="w-6 h-6" />
                     </button>
@@ -595,7 +594,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         classroomId={classId}
                                     />
                                 ) : (
-                                    <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+                                    <div className="text-center py-12 text-brand-textDarkSecondary italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
                                         <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                             {previewTasks.length > 0
                                                 ? "Import these tasks to start working on them."
@@ -688,7 +687,6 @@ const StudentView: React.FC<StudentViewProps> = ({
                 <main className="md:hidden flex-1 overflow-y-auto custom-scrollbar px-4 pt-4 pb-24">
                     {mobileTab === 'tasks' ? (
                         <div>
-
                             {showPreview ? (
                                 <DayTaskPreview
                                     date={selectedDate}
@@ -707,7 +705,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     classroomId={classId}
                                 />
                             ) : (
-                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700">
+                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
                                     <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                         {previewTasks.length > 0
                                             ? "Import these tasks to start working on them."
@@ -729,7 +727,6 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     ) : (
                         <div>
-
                             <div className="mb-4">
                                 <MiniCalendar
                                     selectedDate={selectedDate}
@@ -785,8 +782,6 @@ const StudentView: React.FC<StudentViewProps> = ({
                 activeTab={mobileTab}
                 onTabChange={handleMobileTabChange}
             />
-
-
 
             {/* Offline Indicator - shows when offline or pending operations */}
             <OfflineIndicator

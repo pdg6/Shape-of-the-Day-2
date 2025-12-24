@@ -165,11 +165,11 @@ export function MultiSelect<T extends string | number = string>({
                     pl-10 pr-8 py-2.5 rounded-md text-sm font-medium
                     border-2 transition-all duration-200
                     bg-brand-lightSurface dark:bg-brand-darkSurface
-                    border-gray-400 dark:border-gray-600
-                    hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:border-gray-600 dark:hover:border-gray-400
+                    border-slate-300 dark:border-gray-600
+                    hover:bg-slate-50 dark:hover:bg-gray-800/50 hover:border-brand-accent dark:hover:border-gray-400
                     focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    ${value.length > 0 ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                    ${value.length > 0 ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-slate-400 dark:text-gray-500'}
                     ${buttonClassName}
                 `}
             >
@@ -217,7 +217,7 @@ export function MultiSelect<T extends string | number = string>({
                 >
                     <div
                         data-multiselect-dropdown
-                        className="fixed z-[9999] overflow-hidden rounded-md border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
+                        className="fixed z-[9999] overflow-hidden rounded-md border-2 border-slate-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,
@@ -227,7 +227,7 @@ export function MultiSelect<T extends string | number = string>({
                     >
                         {/* Search Input */}
                         {showSearch && (
-                            <div className="p-2 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                            <div className="p-2 border-b border-slate-200 dark:border-gray-700 sticky top-0 bg-brand-lightSurface dark:bg-brand-darkSurface">
                                 <div className="relative">
                                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input
@@ -236,7 +236,7 @@ export function MultiSelect<T extends string | number = string>({
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                         placeholder="Search..."
-                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-accent/30"
+                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-md border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/50 text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-accent/30"
                                         onClick={e => e.stopPropagation()}
                                         onKeyDown={e => e.stopPropagation()}
                                     />
@@ -267,7 +267,7 @@ export function MultiSelect<T extends string | number = string>({
                                         onClick={() => handleToggle(option.value)}
                                         className={`
                                             relative w-full cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm text-left
-                                            hover:bg-gray-100 dark:hover:bg-gray-800
+                                            hover:bg-slate-50 dark:hover:bg-gray-800
                                             ${option.disabled ? 'opacity-50 cursor-not-allowed' : ''}
                                             text-brand-textDarkPrimary dark:text-brand-textPrimary
                                         `}
