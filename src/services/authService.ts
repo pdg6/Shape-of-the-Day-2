@@ -2,15 +2,18 @@
 import {
     signInWithPopup,
     signOut as firebaseSignOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    User,
+    UserCredential,
+    Unsubscribe
 } from 'firebase/auth';
-import { auth, googleProvider } from './firebase';
+import { auth, googleProvider } from '../firebase';
 
 /**
  * Sign in with Google
- * @returns {Promise<UserCredential>}
+ * @returns Promise resolving to UserCredential
  */
-export const signInWithGoogle = async () => {
+export const signInWithGoogle = async (): Promise<UserCredential> => {
     try {
         const result = await signInWithPopup(auth, googleProvider);
         return result;
@@ -22,9 +25,8 @@ export const signInWithGoogle = async () => {
 
 /**
  * Sign out the current user
- * @returns {Promise<void>}
  */
-export const signOut = async () => {
+export const signOut = async (): Promise<void> => {
     try {
         await firebaseSignOut(auth);
     } catch (error) {
@@ -35,17 +37,17 @@ export const signOut = async () => {
 
 /**
  * Listen to authentication state changes
- * @param {Function} callback - Called with the current user or null
- * @returns {Function} Unsubscribe function
+ * @param callback - Called with the current user or null
+ * @returns Unsubscribe function
  */
-export const onAuthChange = (callback) => {
+export const onAuthChange = (callback: (user: User | null) => void): Unsubscribe => {
     return onAuthStateChanged(auth, callback);
 };
 
 /**
  * Get the current authenticated user
- * @returns {User|null}
+ * @returns Current user or null if not authenticated
  */
-export const getCurrentUser = () => {
+export const getCurrentUser = (): User | null => {
     return auth.currentUser;
 };

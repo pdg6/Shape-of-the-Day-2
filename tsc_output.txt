@@ -1,78 +1,41 @@
-src/App.tsx(88,26): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/App.tsx(56,12): error TS6133: 'isJoining' is declared but its value is never read.
+src/components/shared/CodeBlockRenderer.tsx(35,19): error TS2532: Object is possibly 'undefined'.
+src/components/shared/DateRangePicker.tsx(53,5): error TS6133: 'singleDateMode' is declared but its value is never read.
 src/components/shared/ErrorBoundary.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/components/student/CurrentTaskList.tsx(3,28): error TS6133: 'QuestionEntry' is declared but its value is never read.
-src/components/student/CurrentTaskList.tsx(5,44): error TS6133: 'escapeHtml' is declared but its value is never read.
-src/components/student/StudentSidebar.tsx(2,18): error TS6133: 'UserCircle' is declared but its value is never read.
-src/components/student/StudentSidebar.tsx(30,5): error TS6133: 'studentName' is declared but its value is never read.
-src/components/student/StudentSidebar.tsx(31,5): error TS6133: 'className' is declared but its value is never read.
-src/components/student/StudentSidebar.tsx(32,5): error TS6133: 'tasksCompleted' is declared but its value is never read.
-src/components/student/StudentSidebar.tsx(33,5): error TS6133: 'totalTasks' is declared but its value is never read.
-src/components/student/StudentSidebar.tsx(35,5): error TS6133: 'onEditName' is declared but its value is never read.
-src/components/student/StudentView.tsx(1,38): error TS6133: 'useRef' is declared but its value is never read.
-src/components/student/StudentView.tsx(1,46): error TS6133: 'useCallback' is declared but its value is never read.
-src/components/student/StudentView.tsx(15,1): error TS6133: 'throttle' is declared but its value is never read.
-src/components/student/StudentView.tsx(99,9): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/components/student/StudentView.tsx(100,9): error TS2740: Type '{ id: string; title: string; description: string; status: "in_progress"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/components/student/StudentView.tsx(106,63): error TS2345: Argument of type '{ [x: string]: { id: string; title: string; description: string; status: "todo"; dueDate: string; }[]; }' is not assignable to parameter of type 'Record<string, Task[]> | (() => Record<string, Task[]>)'.
-src/components/teacher/TeacherDashboard.tsx(2,137): error TS6133: 'Archive' is declared but its value is never read.
-src/components/teacher/TeacherDashboard.tsx(117,51): error TS6133: 'task' is declared but its value is never read.
-src/components/teacher/TeacherDashboard.tsx(122,78): error TS2322: Type '(tab: MenuItem["id"], subTab?: string) => void' is not assignable to type '(tab: "classrooms" | "tasks" | "data" | "shape" | "live", subTab?: string | undefined) => void'.
-  Types of parameters 'tab' and 'tab' are incompatible.
-    Type '"classrooms" | "tasks" | "data" | "shape" | "live"' is not assignable to type '"classrooms" | "tasks" | "shape" | "live" | "reports"'.
-      Type '"data"' is not assignable to type '"classrooms" | "tasks" | "shape" | "live" | "reports"'.
-src/components/teacher/TeacherDashboard.tsx(123,122): error TS2322: Type '(tab: MenuItem["id"], subTab?: string) => void' is not assignable to type '(tab: "classrooms" | "tasks" | "data" | "shape" | "live", subTab?: string | undefined) => void'.
-  Types of parameters 'tab' and 'tab' are incompatible.
-    Type '"classrooms" | "tasks" | "data" | "shape" | "live"' is not assignable to type '"classrooms" | "tasks" | "shape" | "live" | "reports"'.
-      Type '"data"' is not assignable to type '"classrooms" | "tasks" | "shape" | "live" | "reports"'.
-src/firebase.ts(41,40): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/firebase.ts(55,24): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/firebase.ts(60,36): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/utils/dummyData.ts(85,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(92,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(99,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(106,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(113,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(121,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(128,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(136,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(143,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(156,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(163,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(170,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(177,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(184,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(192,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(199,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(207,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(214,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(227,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(234,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(241,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(248,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(255,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(263,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(270,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(278,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(285,5): error TS2740: Type '{ id: string; title: string; description: string; status: "todo"; dueDate: string; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(309,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(316,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(323,13): error TS2740: Type '{ id: string; title: string; description: string; status: "in_progress"; startedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(343,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(350,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(357,13): error TS2740: Type '{ id: string; title: string; description: string; status: "stuck"; startedAt: number; wasStuck: true; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(379,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(386,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(393,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(400,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(420,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(427,13): error TS2740: Type '{ id: string; title: string; description: string; status: "question"; questions: string[]; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(448,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(455,13): error TS2740: Type '{ id: string; title: string; description: string; status: "in_progress"; startedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(487,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(494,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(501,13): error TS2740: Type '{ id: string; title: string; description: string; status: "in_progress"; startedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(521,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(528,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(535,13): error TS2740: Type '{ id: string; title: string; description: string; status: "done"; completedAt: number; wasStuck: true; questions: string[]; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
-src/utils/dummyData.ts(544,13): error TS2740: Type '{ id: string; title: string; description: string; status: "in_progress"; startedAt: number; }' is missing the following properties from type 'Task': type, parentId, rootId, path, and 4 more.
+src/components/student/StudentProjectsView.tsx(14,1): error TS6133: 'db' is declared but its value is never read.
+src/components/student/StudentView.tsx(492,11): error TS6133: 'handleDesktopTabChange' is declared but its value is never read.
+src/components/teacher/ClassFormModal.tsx(2,22): error TS6133: 'addDoc' is declared but its value is never read.
+src/components/teacher/ShapeOfDay.tsx(4,1): error TS6133: 'db' is declared but its value is never read.
+src/components/teacher/TaskInventory.test.tsx(3,1): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(10,15): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(11,15): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(11,24): error TS6133: 'query' is declared but its value is never read.
+src/components/teacher/TaskInventory.test.tsx(11,24): error TS7006: Parameter 'query' implicitly has an 'any' type.
+src/components/teacher/TaskInventory.test.tsx(11,31): error TS7006: Parameter 'callback' implicitly has an 'any' type.
+src/components/teacher/TaskInventory.test.tsx(13,17): error TS6133: 'callback' is declared but its value is never read.
+src/components/teacher/TaskInventory.test.tsx(13,17): error TS7006: Parameter 'callback' implicitly has an 'any' type.
+src/components/teacher/TaskInventory.test.tsx(17,12): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(19,10): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(20,10): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(23,1): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(24,18): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(31,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/teacher/TaskInventory.test.tsx(32,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/teacher/TaskInventory.test.tsx(35,5): error TS2304: Cannot find name 'expect'.
+src/components/teacher/TaskInventory.test.tsx(38,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/teacher/TaskInventory.tsx(106,11): error TS6133: 'progress' is declared but its value is never read.
+src/components/teacher/TaskInventory.tsx(110,11): error TS6133: 'canHaveChildren' is declared but its value is never read.
+src/components/teacher/TaskInventory.tsx(626,11): error TS6133: 'resetCalendarToToday' is declared but its value is never read.
+src/components/teacher/TaskInventory.tsx(776,26): error TS2741: Property 'value' is missing in type '{ onChange: (value: string | null) => void; options: { value: string; label: string; }[]; placeholder: string; }' but required in type 'SelectProps<string>'.
+src/firebase.ts(42,40): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/firebase.ts(56,24): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/firebase.ts(61,36): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
+src/services/studentDataService.ts(37,7): error TS6133: 'CACHE_KEY_TASKS' is declared but its value is never read.
+src/services/telemetryService.ts(48,7): error TS6133: 'MAX_METRICS' is declared but its value is never read.
+src/utils/debounce.ts(52,20): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Parameters<T>'.
+src/utils/debounce.ts(52,23): error TS2488: Type 'NonNullable<Parameters<T>>' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/utils/debounce.ts(73,16): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Parameters<T>'.
+src/utils/debounce.ts(73,19): error TS2488: Type 'NonNullable<Parameters<T>>' must have a '[Symbol.iterator]()' method that returns an iterator.
+src/utils/debounce.ts(119,24): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Parameters<T>'.
+src/utils/debounce.ts(119,27): error TS2488: Type 'NonNullable<Parameters<T>>' must have a '[Symbol.iterator]()' method that returns an iterator.
 src/utils/security.ts(214,30): error TS2532: Object is possibly 'undefined'.

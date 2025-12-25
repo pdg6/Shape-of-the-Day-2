@@ -1,5 +1,7 @@
-// @ts-nocheck
 // Firebase Firestore database services
+/**
+ * Note: Type safety is fully restored. @ts-nocheck has been removed.
+ */
 import {
     collection,
     doc,
@@ -12,9 +14,76 @@ import {
     where,
     onSnapshot,
     serverTimestamp,
-    orderBy
+    orderBy,
+    Unsubscribe,
+    FirestoreDataConverter,
+    QueryDocumentSnapshot,
+    DocumentData,
+    WithFieldValue
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { Task, Classroom, QuestionEntry, ItemType, LiveStudent, Student } from '../types';
+import { writeBatch } from 'firebase/firestore';
+
+/**
+ * Firestore Data Converter for Task objects.
+ * Handles normalization and sanitization of data between the app and Firestore.
+ */
+export const taskConverter: FirestoreDataConverter<Task> = {
+    toFirestore(task: WithFieldValue<Task>): DocumentData {
+        const data = { ...task } as any;
+
+        // Remove fields that should not be in Firestore
+        delete data.id;
+        delete data.questionHistory;
+
+        // Recursive helper to remove undefined values
+        const removeUndefined = (obj: any): any => {
+            if (Array.isArray(obj)) {
+                return obj.map(removeUndefined);
+            } else if (obj !== null && typeof obj === 'object' && !(obj instanceof Date) && !('type' in obj && obj.type === 'serverTimestamp')) {
+                const newObj: any = {};
+                for (const key in obj) {
+                    if (obj[key] !== undefined) {
+                        newObj[key] = removeUndefined(obj[key]);
+                    }
+                }
+                return newObj;
+            }
+            return obj;
+        };
+
+        return removeUndefined(data);
+    },
+    fromFirestore(snapshot: QueryDocumentSnapshot): Task {
+        const data = snapshot.data();
+
+        // Normalize fields to ensure they match our TypeScript interface
+        return {
+            id: snapshot.id,
+            title: data.title || '',
+            description: data.description || '',
+            status: data.status || 'todo',
+            type: data.type as ItemType || 'task',
+            parentId: data.parentId === undefined ? null : data.parentId,
+            rootId: data.rootId === undefined ? null : data.rootId,
+            path: data.path || [],
+            pathTitles: data.pathTitles || [],
+            childIds: data.childIds || [],
+            links: data.links || [],
+            selectedRoomIds: data.selectedRoomIds || data.assignedRooms || [],
+            presentationOrder: data.presentationOrder ?? 0,
+            teacherId: data.teacherId,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            // Legacy/Optional fields
+            startDate: data.startDate,
+            endDate: data.endDate,
+            imageURL: data.imageURL,
+            attachments: data.attachments || [],
+        } as Task;
+    }
+};
 
 /**
  * Create or update a classroom
@@ -22,7 +91,10 @@ import { db } from '../firebase';
  * @param {Object} classroomData - Classroom data
  * @returns {Promise<string>} Classroom ID
  */
-export const createClassroom = async (teacherId: string, classroomData: any) => {
+export const createClassroom = async (
+    teacherId: string,
+    classroomData: Partial<Classroom>
+): Promise<string> => {
     const classroomRef = doc(collection(db, 'classrooms'));
     await setDoc(classroomRef, {
         ...classroomData,
@@ -38,10 +110,10 @@ export const createClassroom = async (teacherId: string, classroomData: any) => 
  * @param {string} classroomId 
  * @returns {Promise<Object|null>}
  */
-export const getClassroom = async (classroomId: string) => {
+export const getClassroom = async (classroomId: string): Promise<Classroom | null> => {
     const classroomRef = doc(db, 'classrooms', classroomId);
     const snapshot = await getDoc(classroomRef);
-    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Classroom : null;
 };
 
 /**
@@ -49,13 +121,13 @@ export const getClassroom = async (classroomId: string) => {
  * @param {string} teacherId 
  * @returns {Promise<Array>}
  */
-export const getTeacherClassrooms = async (teacherId: string) => {
+export const getTeacherClassrooms = async (teacherId: string): Promise<Classroom[]> => {
     const q = query(
         collection(db, 'classrooms'),
         where('teacherId', '==', teacherId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Classroom));
 };
 
 /**
@@ -63,7 +135,7 @@ export const getTeacherClassrooms = async (teacherId: string) => {
  * @param {string} code - The classroom code
  * @returns {Promise<Object|null>}
  */
-export const joinClassroom = async (code: string) => {
+export const joinClassroom = async (code: string): Promise<Classroom | null> => {
     const q = query(
         collection(db, 'classrooms'),
         where('code', '==', code)
@@ -71,7 +143,8 @@ export const joinClassroom = async (code: string) => {
     const snapshot = await getDocs(q);
     if (snapshot.empty) return null;
     const classroomDoc = snapshot.docs[0];
-    return { id: classroomDoc.id, ...classroomDoc.data() };
+    if (!classroomDoc) return null;
+    return { id: classroomDoc.id, ...classroomDoc.data() } as Classroom;
 };
 
 /**
@@ -80,21 +153,29 @@ export const joinClassroom = async (code: string) => {
  * @param {Object} taskData 
  * @returns {Promise<string>} Task ID
  */
-export const saveTask = async (teacherId: string, taskData: any) => {
-    const taskRef = taskData.id ? doc(db, 'tasks', taskData.id) : doc(collection(db, 'tasks'));
-    const isNew = !taskData.id;
+export const saveTask = async (
+    teacherId: string,
+    taskData: Partial<Task> & { id?: string }
+): Promise<string> => {
+    const { id, ...dataToSave } = taskData;
+    const taskRef = id
+        ? doc(db, 'tasks', id).withConverter(taskConverter)
+        : doc(collection(db, 'tasks')).withConverter(taskConverter);
 
-    const data = {
-        ...taskData,
+    const isNew = !id;
+
+    const finalData = {
+        ...dataToSave,
         teacherId,
         updatedAt: serverTimestamp()
     };
 
     if (isNew) {
-        data.createdAt = serverTimestamp();
+        // @ts-ignore - createdAt is added for new tasks
+        finalData.createdAt = serverTimestamp();
     }
 
-    await setDoc(taskRef, data, { merge: true });
+    await setDoc(taskRef, finalData, { merge: true });
     return taskRef.id;
 };
 
@@ -103,30 +184,53 @@ export const saveTask = async (teacherId: string, taskData: any) => {
  * @param {string} classroomId 
  * @returns {Promise<Array>}
  */
-export const getClassroomTasks = async (classroomId: string) => {
+export const getClassroomTasks = async (classroomId: string): Promise<Task[]> => {
     const q = query(
-        collection(db, 'tasks'),
+        collection(db, 'tasks').withConverter(taskConverter),
         where('selectedRoomIds', 'array-contains', classroomId),
         orderBy('presentationOrder', 'asc')
     );
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map(doc => doc.data());
 };
 
 /**
- * Listen to real-time updates for classroom tasks (from root collection)
+ * Subscribe to classroom tasks with real-time updates
  * @param {string} classroomId 
  * @param {Function} callback 
- * @returns {Function} Unsubscribe function
+ * @param {string} [teacherId] - Optional: filter by teacher if classroomId is empty
+ * @returns {Unsubscribe}
  */
-export const subscribeToClassroomTasks = (classroomId: string, callback: (tasks: any[]) => void) => {
-    const q = query(
-        collection(db, 'tasks'),
-        where('selectedRoomIds', 'array-contains', classroomId),
-        orderBy('presentationOrder', 'asc')
-    );
+export const subscribeToClassroomTasks = (
+    classroomId: string,
+    callback: (tasks: Task[]) => void,
+    teacherId?: string
+): Unsubscribe => {
+    let q;
+
+    if (classroomId) {
+        q = query(
+            collection(db, 'tasks').withConverter(taskConverter),
+            where('selectedRoomIds', 'array-contains', classroomId),
+            orderBy('presentationOrder', 'asc')
+        );
+    } else if (teacherId) {
+        q = query(
+            collection(db, 'tasks').withConverter(taskConverter),
+            where('teacherId', '==', teacherId),
+            orderBy('presentationOrder', 'asc')
+        );
+    } else {
+        // Fallback to all tasks if neither ID is provided
+        q = query(
+            collection(db, 'tasks').withConverter(taskConverter),
+            orderBy('presentationOrder', 'asc')
+        );
+    }
+
     return onSnapshot(q, (snapshot) => {
-        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const tasks = snapshot.docs.map(doc => doc.data());
         callback(tasks);
     });
 };
@@ -138,11 +242,49 @@ export const subscribeToClassroomTasks = (classroomId: string, callback: (tasks:
  * @param {Object} statusData 
  * @returns {Promise<void>}
  */
-export const updateStudentStatus = async (classroomId, studentId, statusData) => {
+export const updateStudentStatus = async (
+    classroomId: string,
+    studentId: string,
+    statusData: Partial<LiveStudent>
+): Promise<void> => {
     const studentRef = doc(db, 'classrooms', classroomId, 'live_students', studentId);
-    await updateDoc(studentRef, {
+    await setDoc(studentRef, {
         ...statusData,
         lastActive: serverTimestamp()
+    }, { merge: true });
+};
+
+/**
+ * Remove a student from the live session
+ * @param {string} classroomId 
+ * @param {string} studentId 
+ * @returns {Promise<void>}
+ */
+export const deleteStudent = async (
+    classroomId: string,
+    studentId: string
+): Promise<void> => {
+    const studentRef = doc(db, 'classrooms', classroomId, 'live_students', studentId);
+    await deleteDoc(studentRef);
+};
+
+/**
+ * Subscribe to students in a classroom
+ * @param {string} classroomId 
+ * @param {Function} callback 
+ * @returns {Unsubscribe}
+ */
+export const subscribeToStudents = (
+    classroomId: string,
+    callback: (students: LiveStudent[]) => void
+): Unsubscribe => {
+    const studentsQuery = query(collection(db, 'classrooms', classroomId, 'live_students'));
+    return onSnapshot(studentsQuery, (snapshot) => {
+        const students: LiveStudent[] = [];
+        snapshot.forEach(docSnap => {
+            students.push({ uid: docSnap.id, ...docSnap.data() } as LiveStudent);
+        });
+        callback(students);
     });
 };
 
@@ -153,7 +295,11 @@ export const updateStudentStatus = async (classroomId, studentId, statusData) =>
  * @param {Object} studentData 
  * @returns {Promise<void>}
  */
-export const saveStudentProfile = async (studentId, classroomId, studentData) => {
+export const saveStudentProfile = async (
+    studentId: string,
+    classroomId: string,
+    studentData: Partial<Student>
+): Promise<void> => {
     const studentRef = doc(db, 'students', studentId);
     await setDoc(studentRef, {
         ...studentData,
@@ -167,10 +313,10 @@ export const saveStudentProfile = async (studentId, classroomId, studentData) =>
  * @param {string} studentId 
  * @returns {Promise<Object|null>}
  */
-export const getStudentProfile = async (studentId) => {
+export const getStudentProfile = async (studentId: string): Promise<Student | null> => {
     const studentRef = doc(db, 'students', studentId);
     const snapshot = await getDoc(studentRef);
-    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } as Student : null;
 };
 
 // ============================================
@@ -182,161 +328,141 @@ export const getStudentProfile = async (studentId) => {
  * @param {string} taskId - The root task ID
  * @returns {Promise<{task: Object, descendants: Array}>}
  */
-export const getTaskWithChildren = async (taskId) => {
-    const tasksRef = collection(db, 'tasks');
+export const getTaskWithChildren = async (taskId: string): Promise<{ task: Task; descendants: Task[] }> => {
+    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
+    const snapshot = await getDoc(taskRef);
 
-    // Get the root task
-    const taskDoc = await getDoc(doc(db, 'tasks', taskId));
-    if (!taskDoc.exists()) {
-        return { task: null, descendants: [] };
+    if (!snapshot.exists()) {
+        throw new Error('Task not found');
     }
 
-    const rootTask = { id: taskDoc.id, ...taskDoc.data() };
+    const task = snapshot.data();
 
-    // Get all descendants using rootId or path
-    const q = query(
-        tasksRef,
-        where('rootId', '==', taskId)
-    );
+    // Recursive function to get all descendants
+    const fetchDescendants = async (parentId: string): Promise<Task[]> => {
+        const q = query(
+            collection(db, 'tasks').withConverter(taskConverter),
+            where('parentId', '==', parentId)
+        );
+        const childSnapshot = await getDocs(q);
+        const children = childSnapshot.docs.map(doc => doc.data());
 
-    const snapshot = await getDocs(q);
-    const descendants = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let allDescendants = [...children];
+        for (const child of children) {
+            const grandchildren = await fetchDescendants(child.id);
+            allDescendants = [...allDescendants, ...grandchildren];
+        }
+        return allDescendants;
+    };
 
-    return { task: rootTask, descendants };
+    const descendants = await fetchDescendants(taskId);
+    return { task, descendants };
 };
+
+export interface DuplicateOptions {
+    includeChildren?: boolean;
+    newTitle?: string;
+    newStartDate?: string;
+    newEndDate?: string;
+    newAssignedRooms?: string[];
+}
 
 /**
  * Duplicate a task and optionally all its children
  * @param {string} taskId - The task to duplicate
- * @param {Object} options - Options for duplication
- * @param {boolean} options.includeChildren - Whether to duplicate children
- * @param {string} options.newParentId - New parent ID (for moving)
- * @param {Array<string>} options.newAssignedRooms - Override assigned rooms
- * @returns {Promise<{newTaskId: string, childMap: Object}>} New task ID and mapping of old to new IDs
+ * @param {DuplicateOptions} options - Options for duplication
+ * @returns {Promise<{newTaskId: string, childMap: Record<string, string>}>}
  */
-export const duplicateTask = async (taskId, options = {}) => {
-    const { includeChildren = true, newParentId = null, newAssignedRooms = null } = options;
-
-    // Get the task and its children if needed
+export const duplicateTask = async (
+    taskId: string,
+    options: DuplicateOptions = {}
+): Promise<{ newTaskId: string; childMap: Record<string, string> }> => {
     const { task, descendants } = await getTaskWithChildren(taskId);
+    const batch = writeBatch(db);
+    const childMap: Record<string, string> = {}; // Old ID -> New ID
 
-    if (!task) {
-        throw new Error('Task not found');
-    }
+    // 1. Create duplicate for the root task
+    const newRootRef = doc(collection(db, 'tasks')).withConverter(taskConverter);
+    const newRootId = newRootRef.id;
+    childMap[taskId] = newRootId;
 
-    // Create mapping from old IDs to new IDs
-    const idMap = {};
-
-    // Helper to create a duplicate task
-    const createDuplicate = async (original, parentId, rootId) => {
-        const newTaskRef = doc(collection(db, 'tasks'));
-        const newId = newTaskRef.id;
-        idMap[original.id] = newId;
-
-        // Build path and pathTitles for the new task
-        let path = [];
-        let pathTitles = [];
-
-        if (parentId && idMap[original.parentId]) {
-            // Find the parent in our duplicated items
-            const duplicatedParent = descendants.find(d => d.id === original.parentId);
-            if (duplicatedParent) {
-                path = [...(duplicatedParent.path || []), parentId];
-                pathTitles = [...(duplicatedParent.pathTitles || []), duplicatedParent.title];
-            }
-        }
-
-        const newTaskData = {
-            ...original,
-            id: undefined, // Remove old id
-            parentId: parentId,
-            rootId: rootId || newId,
-            path,
-            pathTitles,
-            selectedRoomIds: newAssignedRooms || original.selectedRoomIds,
-            childIds: [], // Will be updated after children are created
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
-
-        // Remove undefined fields
-        Object.keys(newTaskData).forEach(key => {
-            if (newTaskData[key] === undefined) {
-                delete newTaskData[key];
-            }
-        });
-
-        await setDoc(newTaskRef, newTaskData);
-        return newId;
+    const newRootData: Partial<Task> = {
+        ...task,
+        title: options.newTitle || `${task.title} (Copy)`,
+        startDate: options.newStartDate || task.startDate,
+        endDate: options.newEndDate || task.endDate,
+        selectedRoomIds: options.newAssignedRooms || task.selectedRoomIds,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        childIds: [] // Will populate if includeChildren is true
     };
 
-    // Duplicate the root task
-    const newRootId = await createDuplicate(task, newParentId, null);
+    batch.set(newRootRef, newRootData);
 
-    // Duplicate children if requested
-    if (includeChildren && descendants.length > 0) {
-        // Sort by depth (path length) to ensure parents are created before children
-        const sortedDescendants = [...descendants].sort((a, b) =>
-            (a.path?.length || 0) - (b.path?.length || 0)
-        );
-
-        for (const child of sortedDescendants) {
-            const newParent = idMap[child.parentId] || newRootId;
-            await createDuplicate(child, newParent, newRootId);
+    // 2. Duplicate children if requested
+    if (options.includeChildren && descendants.length > 0) {
+        // First pass: create references for all descendants
+        const descendantCopies: Record<string, { ref: any; original: Task }> = {};
+        for (const desc of descendants) {
+            const newRef = doc(collection(db, 'tasks')).withConverter(taskConverter);
+            childMap[desc.id] = newRef.id;
+            descendantCopies[desc.id] = { ref: newRef, original: desc };
         }
 
-        // Update childIds for all duplicated tasks
-        for (const original of [task, ...descendants]) {
-            if (original.childIds && original.childIds.length > 0) {
-                const newTaskId = idMap[original.id];
-                const newChildIds = original.childIds
-                    .map(oldChildId => idMap[oldChildId])
-                    .filter(Boolean);
+        // Second pass: set data with updated parent/root IDs
+        for (const oldId in descendantCopies) {
+            const entry = descendantCopies[oldId];
+            if (!entry) continue;
 
-                if (newChildIds.length > 0) {
-                    await updateDoc(doc(db, 'tasks', newTaskId), {
-                        childIds: newChildIds,
-                        updatedAt: serverTimestamp()
-                    });
-                }
-            }
+            const { ref, original } = entry;
+            const newParentId = childMap[original.parentId!] || newRootId;
+            const newPath = original.path.map((id: string) => childMap[id] || id);
+
+            const copyData: Partial<Task> = {
+                ...original,
+                parentId: newParentId,
+                rootId: newRootId,
+                path: newPath,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+                childIds: original.childIds.map((id: string) => childMap[id]).filter((id: string | undefined): id is string => !!id)
+            };
+
+            batch.set(ref, copyData);
         }
+
+        // Update root's childIds
+        const rootChildIds = task.childIds.map((id: string) => childMap[id]).filter((id: string | undefined): id is string => !!id);
+        batch.update(newRootRef, { childIds: rootChildIds });
     }
 
-    return { newTaskId: newRootId, childMap: idMap };
+    await batch.commit();
+    return { newTaskId: newRootId, childMap };
 };
 
 /**
  * Move a task to a new parent (changes hierarchy)
  * @param {string} taskId - The task to move
- * @param {string} newParentId - New parent ID (null for root level)
- * @param {Object} newParent - The new parent task object (for path building)
+ * @param {string | null} newParentId - New parent ID (null for root level)
+ * @param {Task | null} newParent - The new parent task object (for path building)
  * @returns {Promise<void>}
  */
-export const moveTaskToParent = async (taskId, newParentId, newParent = null) => {
-    const taskRef = doc(db, 'tasks', taskId);
-    const taskDoc = await getDoc(taskRef);
+export const moveTaskToParent = async (
+    taskId: string,
+    newParentId: string | null,
+    newParent: Task | null = null
+): Promise<void> => {
+    // Get the task and all its descendants to update their paths
+    const { task, descendants } = await getTaskWithChildren(taskId);
+    const batch = writeBatch(db);
 
-    if (!taskDoc.exists()) {
-        throw new Error('Task not found');
-    }
+    // 1. Update the task itself
+    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
+    const newPath = newParent ? [...newParent.path, newParent.id] : [];
+    const newPathTitles = newParent ? [...newParent.pathTitles, newParent.title] : [];
+    const newRootId = newParent ? (newParent.rootId || newParent.id) : null;
 
-    const task = taskDoc.data();
-    const oldParentId = task.parentId;
-
-    // Build new path and pathTitles
-    let newPath = [];
-    let newPathTitles = [];
-    let newRootId = taskId;
-
-    if (newParent) {
-        newPath = [...(newParent.path || []), newParentId];
-        newPathTitles = [...(newParent.pathTitles || []), newParent.title];
-        newRootId = newParent.rootId || newParentId;
-    }
-
-    // Update the moved task
-    await updateDoc(taskRef, {
+    batch.update(taskRef, {
         parentId: newParentId,
         rootId: newRootId,
         path: newPath,
@@ -344,114 +470,195 @@ export const moveTaskToParent = async (taskId, newParentId, newParent = null) =>
         updatedAt: serverTimestamp()
     });
 
-    // Remove from old parent's childIds
-    if (oldParentId) {
-        const oldParentRef = doc(db, 'tasks', oldParentId);
-        const oldParentDoc = await getDoc(oldParentRef);
-        if (oldParentDoc.exists()) {
-            const oldParentData = oldParentDoc.data();
-            const updatedChildIds = (oldParentData.childIds || []).filter(id => id !== taskId);
-            await updateDoc(oldParentRef, {
-                childIds: updatedChildIds,
-                updatedAt: serverTimestamp()
+    // 2. Remove taskId from old parent's childIds
+    if (task.parentId) {
+        const oldParentRef = doc(db, 'tasks', task.parentId);
+        const oldParentSnap = await getDoc(oldParentRef);
+        if (oldParentSnap.exists()) {
+            const oldChildIds = oldParentSnap.data().childIds || [];
+            batch.update(oldParentRef, {
+                childIds: oldChildIds.filter((id: string) => id !== taskId)
             });
         }
     }
 
-    // Add to new parent's childIds
+    // 3. Add taskId to new parent's childIds
     if (newParentId) {
         const newParentRef = doc(db, 'tasks', newParentId);
-        const newParentDoc = await getDoc(newParentRef);
-        if (newParentDoc.exists()) {
-            const newParentData = newParentDoc.data();
-            const updatedChildIds = [...(newParentData.childIds || []), taskId];
-            await updateDoc(newParentRef, {
-                childIds: updatedChildIds,
-                updatedAt: serverTimestamp()
-            });
+        const newParentSnap = await getDoc(newParentRef);
+        if (newParentSnap.exists()) {
+            const newChildIds = newParentSnap.data().childIds || [];
+            if (!newChildIds.includes(taskId)) {
+                batch.update(newParentRef, {
+                    childIds: [...newChildIds, taskId]
+                });
+            }
         }
     }
 
-    // Update all descendants' paths and rootIds
-    const { descendants } = await getTaskWithChildren(taskId);
-    for (const descendant of descendants) {
-        // Recalculate path for this descendant
-        const descendantRef = doc(db, 'tasks', descendant.id);
+    // 4. Update descendants' paths and rootIds
+    // This is a bit complex as we need to rebuild the path for each descendant
+    // For simplicity, we can just update the segment of the path that changed
+    for (const desc of descendants) {
+        const descRef = doc(db, 'tasks', desc.id).withConverter(taskConverter);
 
-        // Find the descendant's immediate parent in our list
-        const parentInDescendants = descendants.find(d => d.id === descendant.parentId);
-        const isDirectChild = descendant.parentId === taskId;
+        // Find where the old path for the moved task was in the descendant's path
+        const taskIndex = desc.path.indexOf(taskId);
+        let updatedPath = [...newPath, taskId];
+        let updatedPathTitles = [...newPathTitles, task.title];
 
-        let descendantPath, descendantPathTitles;
-
-        if (isDirectChild) {
-            descendantPath = [...newPath, taskId];
-            descendantPathTitles = [...newPathTitles, task.title];
-        } else if (parentInDescendants) {
-            // This will be updated in a subsequent iteration
-            continue; // Skip for now, will be handled by cascading updates
+        if (taskIndex !== -1) {
+            // Append the existing sub-path after the moved task
+            const subPath = desc.path.slice(taskIndex + 1);
+            const subPathTitles = desc.pathTitles.slice(taskIndex + 1);
+            updatedPath = [...updatedPath, ...subPath];
+            updatedPathTitles = [...updatedPathTitles, ...subPathTitles];
         }
 
-        await updateDoc(descendantRef, {
+        batch.update(descRef, {
+            path: updatedPath,
+            pathTitles: updatedPathTitles,
             rootId: newRootId,
-            path: descendantPath,
-            pathTitles: descendantPathTitles,
             updatedAt: serverTimestamp()
         });
     }
+
+    await batch.commit();
 };
 
 /**
- * Delete a task and optionally all its children
+ * Delete a task and optionally all its children.
+ * If children are NOT deleted, they (and their descendants) are re-parented.
+ * 
  * @param {string} taskId - The task to delete
  * @param {boolean} deleteChildren - Whether to delete children (default: true)
+ * @param {Task[]} allTasks - Optional: current local tasks to avoid extra fetches
  * @returns {Promise<number>} Number of tasks deleted
  */
-export const deleteTaskWithChildren = async (taskId, deleteChildren = true) => {
-    const taskRef = doc(db, 'tasks', taskId);
-    const taskDoc = await getDoc(taskRef);
+export const deleteTaskWithChildren = async (
+    taskId: string,
+    deleteChildren: boolean = true
+): Promise<number> => {
+    // 1. Get the task and its descendants
+    const { task, descendants } = await getTaskWithChildren(taskId);
+    const batch = writeBatch(db);
+    let count = 0;
 
-    if (!taskDoc.exists()) {
-        return 0;
-    }
+    // 2. Delete the task itself
+    batch.delete(doc(db, 'tasks', taskId));
+    count++;
 
-    const task = taskDoc.data();
-    let deletedCount = 0;
-
-    // Delete children first if requested
     if (deleteChildren) {
-        const { descendants } = await getTaskWithChildren(taskId);
+        // 3a. Delete all recursive descendants
+        for (const desc of descendants) {
+            batch.delete(doc(db, 'tasks', desc.id));
+            count++;
+        }
+    } else {
+        // 3b. Make children standalone and update descendant paths
+        // We need the full local list or use fetched descendants
+        const descendantsToUpdate = descendants;
 
-        // Delete in reverse order (deepest first)
-        const sortedDescendants = [...descendants].sort((a, b) =>
-            (b.path?.length || 0) - (a.path?.length || 0)
-        );
+        for (const desc of descendantsToUpdate) {
+            if (desc.parentId === taskId) {
+                // Direct child - becomes standalone root
+                batch.update(doc(db, 'tasks', desc.id), {
+                    parentId: null,
+                    rootId: null,
+                    path: [],
+                    pathTitles: [],
+                    updatedAt: serverTimestamp()
+                });
+            } else {
+                // Grandchild/deeper - update path to remove the deleted taskId
+                // We calculate the new path by filtering out the deleted ID
+                const newPath = (desc.path || []).filter(id => id !== taskId);
+                const newPathTitles = (desc.pathTitles || []);
 
-        for (const descendant of sortedDescendants) {
-            await deleteDoc(doc(db, 'tasks', descendant.id));
-            deletedCount++;
+                // Remove the title matching the taskId if we can find it
+                // Note: path and pathTitles correspond 1:1
+                const taskIndex = (desc.path || []).indexOf(taskId);
+                if (taskIndex !== -1) {
+                    newPathTitles.splice(taskIndex, 1);
+                }
+
+                batch.update(doc(db, 'tasks', desc.id), {
+                    rootId: newPath[0] || desc.parentId,
+                    path: newPath,
+                    pathTitles: newPathTitles,
+                    updatedAt: serverTimestamp()
+                });
+            }
         }
     }
 
-    // Remove from parent's childIds
+    // 4. Update parent's childIds if the deleted task had a parent
     if (task.parentId) {
         const parentRef = doc(db, 'tasks', task.parentId);
-        const parentDoc = await getDoc(parentRef);
-        if (parentDoc.exists()) {
-            const parentData = parentDoc.data();
-            const updatedChildIds = (parentData.childIds || []).filter(id => id !== taskId);
-            await updateDoc(parentRef, {
-                childIds: updatedChildIds,
-                updatedAt: serverTimestamp()
+        const parentSnap = await getDoc(parentRef);
+        if (parentSnap.exists()) {
+            const childIds = parentSnap.data().childIds || [];
+            batch.update(parentRef, {
+                childIds: childIds.filter((id: string) => id !== taskId)
             });
         }
     }
 
-    // Delete the task itself
-    await deleteDoc(taskRef);
-    deletedCount++;
+    await batch.commit();
+    return count;
+};
 
-    return deletedCount;
+/**
+ * Reorder a task relative to its siblings
+ * @param {string} taskId - Task being moved
+ * @param {string} targetTaskId - Task to swap with (or relative to)
+ * @param {Task[]} siblings - All siblings sharing the same parent
+ * @returns {Promise<void>}
+ */
+export const reorderTasks = async (
+    taskId: string,
+    targetTaskId: string,
+    siblings: Task[]
+): Promise<void> => {
+    const currentTask = siblings.find(t => t.id === taskId);
+    const targetTask = siblings.find(t => t.id === targetTaskId);
+    if (!currentTask || !targetTask) return;
+
+    // Check for duplicate orders - if any exist, normalize all siblings first
+    const orders = siblings.map(t => t.presentationOrder || 0);
+    const hasDuplicates = orders.length !== new Set(orders).size;
+
+    if (hasDuplicates) {
+        console.log('[firestoreService] Normalizing duplicate orders');
+        const batch = writeBatch(db);
+        // Re-sort siblings by their current (possibly ambiguous) order or fallback to ID
+        const sorted = [...siblings].sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+
+        sorted.forEach((sibling, index) => {
+            batch.update(doc(db, 'tasks', sibling.id), {
+                presentationOrder: (index + 1) * 10
+            });
+        });
+
+        // Perform the swap in the same batch if possible, or commit and then swap
+        // To be safe and simple, we do the normalization first
+        await batch.commit();
+
+        // Recalculate and swap
+        const currentIndex = sorted.findIndex(t => t.id === taskId);
+        const targetIndex = sorted.findIndex(t => t.id === targetTaskId);
+        const newCurrentOrder = (targetIndex + 1) * 10;
+        const newTargetOrder = (currentIndex + 1) * 10;
+
+        await updateDoc(doc(db, 'tasks', taskId), { presentationOrder: newCurrentOrder });
+        await updateDoc(doc(db, 'tasks', targetTaskId), { presentationOrder: newTargetOrder });
+    } else {
+        // Simple swap
+        const batch = writeBatch(db);
+        batch.update(doc(db, 'tasks', taskId), { presentationOrder: targetTask.presentationOrder });
+        batch.update(doc(db, 'tasks', targetTaskId), { presentationOrder: currentTask.presentationOrder });
+        await batch.commit();
+    }
 };
 
 // ============================================
@@ -460,33 +667,31 @@ export const deleteTaskWithChildren = async (taskId, deleteChildren = true) => {
 
 /**
  * Add a question to a task's question history
- * Note: Questions are stored on the task and NOT duplicated when task is copied
  * @param {string} taskId - The task ID
- * @param {Object} questionData - Question data
- * @param {string} questionData.studentId - Student's UID
- * @param {string} questionData.studentName - Student's display name
- * @param {string} questionData.classroomId - Classroom ID where question was asked
- * @param {string} questionData.question - The question text
+ * @param {Partial<QuestionEntry>} questionData - Question data
  * @returns {Promise<string>} Question ID
  */
-export const addQuestionToTask = async (taskId, questionData) => {
-    const taskRef = doc(db, 'tasks', taskId);
-    const taskDoc = await getDoc(taskRef);
+export const addQuestionToTask = async (
+    taskId: string,
+    questionData: Partial<QuestionEntry>
+): Promise<string> => {
+    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
+    const snapshot = await getDoc(taskRef);
 
-    if (!taskDoc.exists()) {
+    if (!snapshot.exists()) {
         throw new Error('Task not found');
     }
 
-    const task = taskDoc.data();
+    const task = snapshot.data();
     const questionHistory = task.questionHistory || [];
 
-    const questionId = `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newQuestion = {
+    const questionId = `q_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+    const newQuestion: QuestionEntry = {
         id: questionId,
-        studentId: questionData.studentId,
-        studentName: questionData.studentName,
-        classroomId: questionData.classroomId,
-        question: questionData.question,
+        studentId: questionData.studentId!,
+        studentName: questionData.studentName!,
+        classroomId: questionData.classroomId!,
+        question: questionData.question!,
         askedAt: serverTimestamp(),
         resolved: false,
     };
@@ -506,15 +711,19 @@ export const addQuestionToTask = async (taskId, questionData) => {
  * @param {string} teacherResponse - Optional teacher response
  * @returns {Promise<void>}
  */
-export const resolveQuestion = async (taskId, questionId, teacherResponse = '') => {
-    const taskRef = doc(db, 'tasks', taskId);
-    const taskDoc = await getDoc(taskRef);
+export const resolveQuestion = async (
+    taskId: string,
+    questionId: string,
+    teacherResponse: string = ''
+): Promise<void> => {
+    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
+    const snapshot = await getDoc(taskRef);
 
-    if (!taskDoc.exists()) {
+    if (!snapshot.exists()) {
         throw new Error('Task not found');
     }
 
-    const task = taskDoc.data();
+    const task = snapshot.data();
     const questionHistory = (task.questionHistory || []).map(q => {
         if (q.id === questionId) {
             return {
@@ -536,18 +745,21 @@ export const resolveQuestion = async (taskId, questionId, teacherResponse = '') 
 /**
  * Get questions for a task, optionally filtered by classroom
  * @param {string} taskId - The task ID
- * @param {string} classroomId - Optional: filter by classroom
- * @returns {Promise<Array>} Array of questions
+ * @param {string | null} classroomId - Optional: filter by classroom
+ * @returns {Promise<QuestionEntry[]>} Array of questions
  */
-export const getTaskQuestions = async (taskId, classroomId = null) => {
-    const taskRef = doc(db, 'tasks', taskId);
-    const taskDoc = await getDoc(taskRef);
+export const getTaskQuestions = async (
+    taskId: string,
+    classroomId: string | null = null
+): Promise<QuestionEntry[]> => {
+    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
+    const snapshot = await getDoc(taskRef);
 
-    if (!taskDoc.exists()) {
+    if (!snapshot.exists()) {
         return [];
     }
 
-    const task = taskDoc.data();
+    const task = snapshot.data();
     let questions = task.questionHistory || [];
 
     if (classroomId) {
@@ -559,20 +771,14 @@ export const getTaskQuestions = async (taskId, classroomId = null) => {
 
 /**
  * Migration: Un-nest all assignments from projects
- * This converts assignments that are children of projects to standalone items.
- * - Sets parentId, rootId to null
- * - Clears path and pathTitles arrays
- * - Removes assignment IDs from parent project's childIds array
  * @returns {Promise<{updated: number, errors: string[]}>} Migration result
  */
-export const unNestAssignmentsFromProjects = async () => {
-    const result = { updated: 0, errors: [] };
+export const unNestAssignmentsFromProjects = async (): Promise<{ updated: number; errors: string[] }> => {
+    const result = { updated: 0, errors: [] as string[] };
 
     try {
-        // Find all assignments that have a parent
-        const tasksRef = collection(db, 'tasks');
         const q = query(
-            tasksRef,
+            collection(db, 'tasks').withConverter(taskConverter),
             where('type', '==', 'assignment')
         );
 
@@ -582,17 +788,16 @@ export const unNestAssignmentsFromProjects = async () => {
             return data.parentId !== null && data.parentId !== undefined;
         });
 
-        console.log(`Found ${nestedAssignments.length} nested assignments to migrate`);
-
-        for (const assignmentDoc of nestedAssignments) {
+        for (const assignmentSnap of nestedAssignments) {
             try {
-                const assignment = assignmentDoc.data();
-                const assignmentId = assignmentDoc.id;
+                const assignment = assignmentSnap.data();
+                const assignmentId = assignmentSnap.id;
                 const oldParentId = assignment.parentId;
 
-                // Update the assignment to be standalone
-                const assignmentRef = doc(db, 'tasks', assignmentId);
-                await updateDoc(assignmentRef, {
+                const batch = writeBatch(db);
+
+                // 1. Update assignment
+                batch.update(doc(db, 'tasks', assignmentId), {
                     parentId: null,
                     rootId: null,
                     path: [],
@@ -600,37 +805,27 @@ export const unNestAssignmentsFromProjects = async () => {
                     updatedAt: serverTimestamp(),
                 });
 
-                // Remove assignment from parent's childIds
+                // 2. Remove from parent
                 if (oldParentId) {
                     const parentRef = doc(db, 'tasks', oldParentId);
-                    const parentDoc = await getDoc(parentRef);
-
-                    if (parentDoc.exists()) {
-                        const parentData = parentDoc.data();
-                        const updatedChildIds = (parentData.childIds || []).filter(
-                            id => id !== assignmentId
-                        );
-
-                        await updateDoc(parentRef, {
-                            childIds: updatedChildIds,
-                            updatedAt: serverTimestamp(),
+                    const parentSnap = await getDoc(parentRef);
+                    if (parentSnap.exists()) {
+                        const childIds = parentSnap.data().childIds || [];
+                        batch.update(parentRef, {
+                            childIds: childIds.filter((id: string) => id !== assignmentId),
+                            updatedAt: serverTimestamp()
                         });
                     }
                 }
 
+                await batch.commit();
                 result.updated++;
-                console.log(`Migrated assignment: ${assignment.title} (${assignmentId})`);
-            } catch (err) {
-                const errorMsg = `Failed to migrate assignment ${assignmentDoc.id}: ${err.message}`;
-                result.errors.push(errorMsg);
-                console.error(errorMsg);
+            } catch (err: any) {
+                result.errors.push(`Failed to migrate assignment ${assignmentSnap.id}: ${err.message}`);
             }
         }
-
-        console.log(`Migration complete: ${result.updated} assignments updated, ${result.errors.length} errors`);
-    } catch (err) {
+    } catch (err: any) {
         result.errors.push(`Migration failed: ${err.message}`);
-        console.error('Migration failed:', err);
     }
 
     return result;

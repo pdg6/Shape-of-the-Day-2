@@ -11,8 +11,9 @@
 // Disabled imports - used by AI functions that are currently disabled
 // import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { initializeApp } from 'firebase-admin/app';
-// import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 // import { getStorage } from 'firebase-admin/storage';
 
 // Genkit AI imports - disabled until Genkit is properly configured
@@ -23,7 +24,7 @@ import { initializeApp } from 'firebase-admin/app';
 
 // Initialize Firebase Admin
 initializeApp();
-// const db = getFirestore();
+const db = getFirestore();
 // const storage = getStorage();
 
 // Genkit configuration - disabled until properly set up
@@ -319,4 +320,50 @@ function decodeHtmlEntities(text: string): string {
         .replace(/&#x2F;/g, '/')
         .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(dec));
 }
+// =============================================================================
+// MAINTENANCE FUNCTIONS - ACTIVE
+// =============================================================================
 
+/**
+ * Scheduled function to clean up inactive students.
+ * Runs every 30 minutes.
+ * Deletes student documents from classrooms/{classId}/live_students if lastSeen is > 2 hours old.
+ */
+export const cleanupInactiveStudents = onSchedule('every 30 minutes', async (event) => {
+    console.log('[Cleanup] Starting inactive student cleanup');
+
+    // 2 hours ago
+    const threshold = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    let totalDeleted = 0;
+
+    try {
+        // 1. Get all classrooms
+        const classroomsSnapshot = await db.collection('classrooms').get();
+        console.log(`[Cleanup] Checking ${classroomsSnapshot.size} classrooms`);
+
+        for (const classDoc of classroomsSnapshot.docs) {
+            const liveStudentsRef = classDoc.ref.collection('live_students');
+
+            // 2. Query students in this class with lastSeen < threshold
+            const inactiveSnapshot = await liveStudentsRef
+                .where('lastSeen', '<', threshold)
+                .get();
+
+            if (inactiveSnapshot.empty) continue;
+
+            console.log(`[Cleanup] Deleting ${inactiveSnapshot.size} students from class ${classDoc.id}`);
+
+            // 3. Batch delete
+            const batch = db.batch();
+            inactiveSnapshot.forEach(doc => {
+                batch.delete(doc.ref);
+                totalDeleted++;
+            });
+            await batch.commit();
+        }
+
+        console.log(`[Cleanup] Finished. Total students deleted: ${totalDeleted}`);
+    } catch (error) {
+        console.error('[Cleanup] Error during cleanup:', error);
+    }
+});

@@ -211,7 +211,10 @@ export const generateSecureCode = (length: number = 6): string => {
 
     let code = '';
     for (let i = 0; i < length; i++) {
-        code += CODE_CHARSET[array[i] % CODE_CHARSET.length];
+        const val = array[i];
+        if (val !== undefined) {
+            code += CODE_CHARSET[val % CODE_CHARSET.length];
+        }
     }
 
     return code;

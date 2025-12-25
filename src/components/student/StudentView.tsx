@@ -9,12 +9,12 @@ import StudentProjectsView from './StudentProjectsView';
 import CircularProgress from '../shared/CircularProgress';
 import toast from 'react-hot-toast';
 import { Task, TaskStatus } from '../../types';
-import { doc, updateDoc, getDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { subscribeToClassroomTasks } from '../../services/firestoreService';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
+import { studentDataService } from '../../services/studentDataService';
 import { Menu } from 'lucide-react';
 import { scrubAndSaveSession } from '../../utils/analyticsScrubber';
-import { clearAllStudentData, queuePendingOperation, getPendingOperations, removePendingOperation } from '../../services/storageService';
+import { clearAllStudentData } from '../../services/storageService';
 import OfflineIndicator from '../shared/OfflineIndicator';
 import { SyncStatus } from '../../services/studentDataService';
 
@@ -108,10 +108,6 @@ const StudentView: React.FC<StudentViewProps> = ({
     // Uses a hash of task IDs to detect when the task set has changed
     const lastPopulatedTaskIdsRef = useRef<string>('');
 
-    // Rate limiting for sync operations (prevents race conditions from rapid clicks)
-    const lastSyncRef = useRef<{ taskId: string; timestamp: number } | null>(null);
-    const SYNC_DEBOUNCE_MS = 300; // Minimum time between syncs for same task
-
     // Firestore-fetched tasks for the selected date (schedule view)
     const [scheduleTasks, setScheduleTasks] = useState<Task[]>([]);
     const [scheduleLoading, setScheduleLoading] = useState(false);
@@ -124,93 +120,43 @@ const StudentView: React.FC<StudentViewProps> = ({
         isSyncing: false,
     });
 
-    // Listen for online/offline events
+    // Subscribe to sync status from service
     useEffect(() => {
-        const handleOnline = async () => {
-            setSyncStatus(prev => ({ ...prev, isOnline: true }));
-            // Process pending operations when back online
-            await processPendingOps();
-        };
-        const handleOffline = () => {
-            setSyncStatus(prev => ({ ...prev, isOnline: false }));
-        };
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-        };
+        const unsubscribe = studentDataService.onSyncStatusChange((status) => {
+            setSyncStatus(status);
+        });
+        return () => unsubscribe();
     }, []);
 
-    // Process pending operations (called when coming back online)
-    const processPendingOps = async () => {
-        const pending = await getPendingOperations();
-        if (pending.length === 0) return;
-
-        console.log('[StudentView] Processing', pending.length, 'pending operations');
-        setSyncStatus(prev => ({ ...prev, isSyncing: true }));
-
-        for (const op of pending) {
-            try {
-                if (op.type === 'status_update') {
-                    const payload = op.payload as { taskId: string; status: string; comment: string };
-                    const currentUser = auth.currentUser;
-                    if (currentUser && classId) {
-                        const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
-                        await updateDoc(studentRef, {
-                            currentStatus: payload.status,
-                            currentTaskId: payload.taskId,
-                            [`taskStatuses.${payload.taskId}`]: payload.status,  // Per-task status tracking
-                            currentMessage: payload.comment || '',
-                            lastActive: serverTimestamp()
-                        });
-                    }
-                }
-                await removePendingOperation(op.id);
-                console.log('[StudentView] Synced pending op:', op.id);
-            } catch (error) {
-                console.error('[StudentView] Failed to sync op:', op.id, error);
-            }
+    // Initialize service on mount
+    useEffect(() => {
+        if (classId) {
+            studentDataService.initialize(classId);
         }
+    }, [classId]);
 
-        const remainingOps = await getPendingOperations();
-        setSyncStatus(prev => ({
-            ...prev,
-            isSyncing: false,
-            pendingOperations: remainingOps.length,
-            lastSyncTime: Date.now()
-        }));
-    };
 
-    // Fetch tasks for the selected date from Firestore
+
+    // Subscribe to tasks via service
     useEffect(() => {
         if (!classId) return;
 
         setScheduleLoading(true);
 
-        const unsubscribe = subscribeToClassroomTasks(classId, (taskData: Task[]) => {
+        const unsubscribe = studentDataService.subscribeToTasks(async (taskData: Task[]) => {
             const fetchedTasks: Task[] = taskData.filter(task => {
-                // Filter by date range: startDate <= selectedDate <= endDate
                 const startDate = task.startDate || '';
                 const endDate = task.endDate || task.startDate || '';
                 const inRange = selectedDate >= startDate && selectedDate <= endDate;
-
-                // Only include non-draft tasks that are valid for the selected date
                 return inRange && task.status !== 'draft';
             });
 
             setScheduleTasks(fetchedTasks);
 
-            // AUTO-POPULATE: Restore saved statuses when loading today's tasks
-            // Uses task ID hash to prevent duplicate calls for the same task set
-            // This runs on every page refresh to restore saved progress
+            // AUTO-POPULATE: Restore saved statuses
             if (fetchedTasks.length > 0 && selectedDate === today) {
-                // Create a hash of current task IDs to detect changes
                 const taskIdsHash = fetchedTasks.map(t => t.id).sort().join(',');
 
-                // Skip if we've already populated with this exact task set and have tasks loaded
                 if (lastPopulatedTaskIdsRef.current === taskIdsHash && currentTasks.length > 0) {
                     setScheduleLoading(false);
                     return;
@@ -219,27 +165,22 @@ const StudentView: React.FC<StudentViewProps> = ({
 
                 const currentUser = auth.currentUser;
 
-                // Async IIFE to restore saved statuses from Firestore
-                (async () => {
-                    let savedStatuses: Record<string, TaskStatus> = {};
-                    if (currentUser && classId) {
-                        try {
-                            const studentDoc = await getDoc(doc(db, 'classrooms', classId, 'live_students', currentUser.uid));
-                            if (studentDoc.exists()) {
-                                savedStatuses = studentDoc.data()?.taskStatuses || {};
-                                console.log('[StudentView] Restored', Object.keys(savedStatuses).length, 'saved task statuses');
-                            }
-                        } catch (error) {
-                            console.warn('[StudentView] Could not restore saved statuses:', error);
+                let savedStatuses: Record<string, TaskStatus> = {};
+                if (currentUser && classId) {
+                    try {
+                        const studentDoc = await getDoc(doc(db, 'classrooms', classId, 'live_students', currentUser.uid));
+                        if (studentDoc.exists()) {
+                            savedStatuses = studentDoc.data()?.taskStatuses || {};
                         }
+                    } catch (error) {
+                        console.warn('[StudentView] Could not restore saved statuses:', error);
                     }
+                }
 
-                    console.log('[StudentView] Auto-populating', fetchedTasks.length, 'tasks for today');
-                    setCurrentTasks(fetchedTasks.map(task => ({
-                        ...task,
-                        status: savedStatuses[task.id] || 'todo' as const  // Restore saved or default to todo
-                    })));
-                })();
+                setCurrentTasks(fetchedTasks.map(task => ({
+                    ...task,
+                    status: savedStatuses[task.id] || 'todo' as const
+                })));
             }
 
             setScheduleLoading(false);
@@ -258,104 +199,18 @@ const StudentView: React.FC<StudentViewProps> = ({
         updatedTasks: Task[],
         comment: string = ''
     ) => {
-        const currentUser = auth.currentUser;
-        if (!currentUser || !classId) return;
-
-        // RACE CONDITION PREVENTION: Skip if this exact task was synced recently
-        const now = Date.now();
-        if (lastSyncRef.current &&
-            lastSyncRef.current.taskId === taskId &&
-            now - lastSyncRef.current.timestamp < SYNC_DEBOUNCE_MS) {
-            console.log('[SYNC] Debounced - too soon after last sync for:', taskId);
-            return;
-        }
-        lastSyncRef.current = { taskId, timestamp: now };
-
         const completedCount = updatedTasks.filter(t => t.status === 'done').length;
         const activeTasks = updatedTasks.filter(t => t.status === 'in_progress').map(t => t.id);
 
-        // Check if we're offline - queue the operation if so
-        if (!navigator.onLine) {
-            console.log('[SYNC] Offline - queueing status update for:', taskId);
-            await queuePendingOperation({
-                type: 'status_update',
-                taskId,
-                payload: {
-                    taskId,
-                    status,
-                    comment,
-                    completedCount,
-                    activeTasks,
-                },
-            });
-            const pending = await getPendingOperations();
-            setSyncStatus(prev => ({ ...prev, pendingOperations: pending.length }));
-            toast('Saved offline - will sync when connected', { icon: '📴' });
-            return;
-        }
-
-        try {
-            const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
-
-            await updateDoc(studentRef, {
-                currentStatus: status,
-                currentTaskId: taskId,
-                [`taskStatuses.${taskId}`]: status,  // NEW: Per-task status tracking
-                'metrics.tasksCompleted': completedCount,
-                'metrics.activeTasks': activeTasks,
-                currentMessage: comment,
-                lastActive: serverTimestamp()
-            });
-
-            console.log('[SYNC] Updated Firestore for student:', currentUser.uid);
-            setSyncStatus(prev => ({ ...prev, lastSyncTime: Date.now() }));
-        } catch (error) {
-            console.error("Failed to sync student state:", error);
-            // Queue for retry if online sync fails
-            await queuePendingOperation({
-                type: 'status_update',
-                taskId,
-                payload: { taskId, status, comment, completedCount, activeTasks },
-            });
-            const pending = await getPendingOperations();
-            setSyncStatus(prev => ({ ...prev, pendingOperations: pending.length }));
-            toast.error('Sync failed - will retry automatically');
-        }
+        await studentDataService.syncProgress(
+            taskId,
+            status,
+            { completedCount, activeTasks },
+            comment
+        );
     };
 
-    /**
-     * SECURITY: Student heartbeat - updates lastSeen every 60 seconds
-     * Allows teachers to identify inactive/disconnected students
-     * Can be used for session cleanup (students inactive >5min can be removed)
-     */
-    useEffect(() => {
-        const currentUser = auth.currentUser;
-        if (!currentUser || !classId) return;
 
-        const sendHeartbeat = async () => {
-            try {
-                const studentRef = doc(db, 'classrooms', classId, 'live_students', currentUser.uid);
-                await updateDoc(studentRef, {
-                    lastSeen: serverTimestamp(),
-                    lastActive: serverTimestamp()
-                });
-                console.log('[HEARTBEAT] Updated lastSeen timestamp');
-            } catch (error) {
-                console.error('[HEARTBEAT] Failed to update:', error);
-            }
-        };
-
-        // Send initial heartbeat
-        sendHeartbeat();
-
-        // Send heartbeat every 60 seconds
-        const heartbeatInterval = setInterval(sendHeartbeat, 60000);
-
-        // Cleanup on unmount or classId change
-        return () => {
-            clearInterval(heartbeatInterval);
-        };
-    }, [classId]);
 
     /**
      * Updates the status of a specific task (e.g., todo -> in_progress).
@@ -487,14 +342,6 @@ const StudentView: React.FC<StudentViewProps> = ({
 
     // Set of current task IDs for checking imported state
     const currentTaskIds = new Set(currentTasks.map(t => t.id));
-
-    // Handler for desktop tab change - resets date to today when switching to tasks
-    const handleDesktopTabChange = (tab: 'tasks' | 'projects' | 'schedule') => {
-        if (tab === 'tasks') {
-            setSelectedDate(today);
-        }
-        setDesktopTab(tab);
-    };
 
     // Handler for mobile tab change - resets date to today when switching to tasks
     const handleMobileTabChange = (tab: 'tasks' | 'projects' | 'schedule') => {
@@ -786,7 +633,7 @@ const StudentView: React.FC<StudentViewProps> = ({
             {/* Offline Indicator - shows when offline or pending operations */}
             <OfflineIndicator
                 syncStatus={syncStatus}
-                onRefresh={processPendingOps}
+                onRefresh={() => studentDataService.forceCacheReload()}
             />
         </div>
     );

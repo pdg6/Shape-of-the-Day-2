@@ -31,27 +31,15 @@ import { Button } from '../shared/Button';
 
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
-import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
 import { db, auth, storage, functions } from '../../firebase';
-import { saveTask, subscribeToClassroomTasks } from '../../services/firestoreService';
-import { Classroom, ItemType, Task, TaskFormData, TaskStatus, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment, LinkAttachment } from '../../types';
+import { subscribeToClassroomTasks } from '../../services/firestoreService';
+import { ItemType, Task, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
 import { useClassStore } from '../../store/classStore';
-
-// --- Constants ---
-
-const INITIAL_FORM_STATE: TaskFormData = {
-    title: '',
-    description: '',
-    type: 'task',
-    parentId: null,
-    links: [],
-    startDate: toDateString(),
-    endDate: toDateString(),
-    selectedRoomIds: [],
-    attachments: []
-};
+import { useTaskManager } from '../../hooks/useTaskManager';
+import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 
 // Allowed file types for attachments
 const ALLOWED_FILE_TYPES = [
@@ -78,14 +66,7 @@ const getTypeIcon = (type: ItemType) => {
 };
 
 // Get type label
-const getTypeLabel = (type: ItemType): string => {
-    switch (type) {
-        case 'project': return 'Project';
-        case 'assignment': return 'Assignment';
-        case 'task': return 'Task';
-        case 'subtask': return 'Subtask';
-    }
-};
+// No longer used: const getTypeLabel = (type: ItemType): string => ...
 
 // Get type color classes (use semantic CSS classes from index.css)
 const getTypeColorClasses = (type: ItemType): string => {
@@ -119,80 +100,149 @@ interface TaskManagerProps {
 // HMR refresh timestamp: 2025-12-08T19:30
 export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: TaskManagerProps) {
     // --- Store ---
-    const { currentClassId } = useClassStore();
+    const { currentClassId, classrooms: rooms } = useClassStore();
 
     // --- State ---
-    const [rooms, setRooms] = useState<Classroom[]>([]);
-    const [loadingRooms, setLoadingRooms] = useState(true);
-
-    // Task Data (all tasks from Firestore)
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [_loadingTasks, setLoadingTasks] = useState(true);
-
-    // Single form editor state - always start with blank form
-    // (sessionStorage only used for mid-session persistence, not initial load)
-    const [formData, setFormData] = useState<TaskFormData>({ ...INITIAL_FORM_STATE });
-    const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-    const [isDirty, setIsDirty] = useState(false);
 
     // UI State
     const [selectedDate, setSelectedDate] = useState<string>(toDateString());
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
-    const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle'); // Auto-save feedback
-    const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false); // Mobile accordion for tasks list
+    const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
+    const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false);
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Calendar State
+    // --- Task Manager Hook ---
+    const {
+        editingTaskId,
+        formData,
+        setFormData,
+        isDirty,
+        setIsDirty,
+        isSubmitting,
+        isNewTask,
+        hierarchicalTasks,
+        loadTask,
+        resetForm,
+        handleSave: hookHandleSave,
+        handleDelete: hookHandleDelete,
+        handleReorder: hookHandleReorder,
+        updateField,
+        addLink: hookAddLink,
+        removeLink: hookRemoveLink,
+        addAttachments: hookAddAttachments,
+        removeAttachment: hookRemoveAttachment
+    } = useTaskManager({
+        tasks,
+        onSuccess: () => setSaveState('saved'),
+    });
 
-
-    // --- Computed ---
-    // For compatibility with existing code, create an activeFormData alias
     const activeFormData = formData;
-    const isNewTask = editingTaskId === null;
+    const updateActiveCard = updateField;
+    const loadingRooms = rooms.length === 0 && !!currentClassId;
+
+    // --- Actions ---
+
+    const handleEditClick = (task: Task) => {
+        loadTask(task);
+        if (window.innerWidth < 1024) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const handleAddSubtask = (parentTask: Task) => {
+        const allowedChildren = ALLOWED_CHILD_TYPES[parentTask.type];
+        if (!allowedChildren || allowedChildren.length === 0) return;
+
+        resetForm(parentTask.id, allowedChildren[0] as ItemType);
+        // Explicitly set dates and rooms from parent
+        setFormData(prev => ({
+            ...prev,
+            selectedRoomIds: parentTask.selectedRoomIds || (currentClassId ? [currentClassId] : []),
+            startDate: parentTask.startDate || toDateString(),
+            endDate: parentTask.endDate || toDateString()
+        }));
+        setIsDirty(true);
+    };
+
+    const handleSave = async (isAutoSave: boolean = false) => {
+        await hookHandleSave(isAutoSave);
+    };
+
+    const handleDelete = async (taskId: string) => {
+        await hookHandleDelete(taskId, false); // Keep children by default in this context
+    };
+
+    const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
+        await hookHandleReorder(taskId, direction);
+    };
+
+    const addLink = async (url: string) => {
+        // Normalize URL
+        let normalizedUrl = url.trim();
+        if (normalizedUrl && !normalizedUrl.match(/^https?:\/\//i)) {
+            normalizedUrl = 'https://' + normalizedUrl;
+        }
+
+        // Validate URL
+        try {
+            new URL(normalizedUrl);
+        } catch {
+            handleError('Please enter a valid URL');
+            return;
+        }
+
+        // Check for duplicates
+        if (formData.links?.some(link => link.url === normalizedUrl)) {
+            handleError('This link is already added');
+            return;
+        }
+
+        const linkId = `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        hookAddLink({ id: linkId, url: normalizedUrl });
+
+        // Fetch metadata asynchronously
+        setIsLoadingLinkTitle(true);
+        try {
+            const fetchMetadata = httpsCallable<{ url: string }, { title: string | null; siteName: string; error?: string }>(functions, 'fetchUrlMetadata');
+            const result = await fetchMetadata({ url: normalizedUrl });
+
+            if (result.data.title) {
+                setFormData(prev => ({
+                    ...prev,
+                    links: prev.links?.map(link =>
+                        link.id === linkId
+                            ? { ...link, title: result.data.title || undefined }
+                            : link
+                    )
+                }));
+            }
+        } catch (error) {
+            console.warn('Failed to fetch URL metadata:', error);
+        } finally {
+            setIsLoadingLinkTitle(false);
+        }
+    };
 
     // --- Effects ---
 
-    // Fetch Classrooms
+    // Subscribe to tasks
     useEffect(() => {
-        const fetchClassrooms = async () => {
-            if (!auth.currentUser) return;
-            try {
-                const q = query(collection(db, 'classrooms'), where('teacherId', '==', auth.currentUser.uid));
-                const snapshot = await getDocs(q);
-                const roomData: Classroom[] = [];
-                snapshot.forEach(doc => {
-                    roomData.push({ id: doc.id, ...doc.data() } as Classroom);
-                });
-                setRooms(roomData);
-            } catch (error) {
-                console.error("Failed to fetch classrooms:", error);
-            } finally {
-                setLoadingRooms(false);
-            }
-        };
-        fetchClassrooms();
-    }, []);
+        if (!currentClassId) {
+            return;
+        }
 
-    // Fetch Tasks (Real-time)
-    useEffect(() => {
-        if (!auth.currentUser) return;
-
-        const unsubscribe = subscribeToClassroomTasks(currentClassId || '', (taskData: Task[]) => {
-            // Filter out tasks not belonging to this teacher (security/privacy)
-            // Note: firestore.rules already handle this, but it's good to be explicit
-            const teacherTasks = taskData.filter((t: Task) => t.teacherId === auth.currentUser?.uid);
-            setTasks(teacherTasks);
-            setLoadingTasks(false);
+        const unsubscribe = subscribeToClassroomTasks(currentClassId, (taskData) => {
+            setTasks(taskData);
         });
 
         return () => unsubscribe();
     }, [currentClassId]);
 
-    // Auto-select current class for new tasks (without marking as dirty)
+    // Auto-select current class for new tasks
     useEffect(() => {
         if (currentClassId && isNewTask && !formData.selectedRoomIds.includes(currentClassId)) {
             setFormData(prev => ({
@@ -200,9 +250,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 selectedRoomIds: [currentClassId, ...prev.selectedRoomIds]
             }));
         }
-    }, [currentClassId, isNewTask]);
+    }, [currentClassId, isNewTask, setFormData]);
 
-    // Persist formData to sessionStorage on changes
+    // Persist formData to sessionStorage
     useEffect(() => {
         try {
             sessionStorage.setItem('taskManager.formData', JSON.stringify(formData));
@@ -211,7 +261,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         }
     }, [formData]);
 
-    // Persist editingTaskId to sessionStorage on changes
+    // Persist editingTaskId to sessionStorage
     useEffect(() => {
         try {
             sessionStorage.setItem('taskManager.editingTaskId', editingTaskId || 'null');
@@ -220,47 +270,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         }
     }, [editingTaskId]);
 
-    // Handle initialTask prop - open it if provided
-    useEffect(() => {
-        if (initialTask) {
-            // We need to use a timeout or ensure tasks are loaded, but for now let's just push it to state
-            // Re-using the logic from handleEditClick would be ideal, but that function relies on 'tasks' state which might not be loaded yet?
-            // Actually, handleEditClick uses 'tasks' to find ancestors. 
-            // If we just want to open *this* task, we can do it directly.
-            // But we want ancestors too.
-            // Let's assume tasks might be loaded shortly.
-
-            // However, since 'tasks' is loaded async, we might not find ancestors immediately.
-            // But 'initialTask' object itself is available.
-            // Let's defer this to when tasks are loaded IF we want ancestors.
-            // For now, let's just try to call handleEditClick if tasks are available, or just open the single card.
-
-            // Actually, simpler: define handleEditClick inside the component scope (it is).
-            // Call it if tasks are loaded.
-            if (tasks.length > 0) {
-                handleEditClick(initialTask);
-            } else {
-                // If tasks aren't loaded, at least open the target task so the user sees something
-                // But ideally we wait for tasks.
-                // Let's add 'tasks' to dependency? No, that might trigger unwanted edits.
-                // We only want to trigger when initialTask CHANGES.
-            }
-        }
-    }, [initialTask, tasks.length > 0]); // Trigger when initialTask changes OR tasks load (if initialTask is present)
-    // Note: This might re-trigger if tasks updates. We should probably only do it once per initialTask reference.
-    // But initialTask comes from parent state, typically set on click.
-
-    // Better implementation:
-    // If we have initialTask, we want to open it. Check if it's already open?
-    // handleEditClick handles "already open" logic (sort of, strictly it just sets openCards).
-    // We should make sure we don't overwrite user work if they are doing something else.
-    // The parent sets 'editingTask' then likely clears it? No, we didn't add clear logic.
-    // The user clicks "Edit" -> parent sets editingTask -> TaskManager mounts/updates -> effect runs.
-
-    // Let's refine the effect to be safe.
-
+    // Handle initialTask prop
     const processedInitialTaskRef = useRef<string | null>(null);
-
     useEffect(() => {
         if (initialTask && initialTask.id !== processedInitialTaskRef.current && tasks.length > 0) {
             handleEditClick(initialTask);
@@ -268,12 +279,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         }
     }, [initialTask, tasks]);
 
-    // Handle tasksToAdd prop - copy tasks from inventory to this task board
+    // Handle tasksToAdd prop
     const processedTasksToCopyRef = useRef<string | null>(null);
     useEffect(() => {
         if (!tasksToAdd || tasksToAdd.length === 0 || !auth.currentUser) return;
 
-        // Create a signature to avoid reprocessing the same batch
         const signature = tasksToAdd.map(t => t.id).join(',');
         if (signature === processedTasksToCopyRef.current) return;
         processedTasksToCopyRef.current = signature;
@@ -283,18 +293,16 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             if (!userId) return;
 
             try {
-                // Build a mapping from old IDs to new IDs
                 const idMap: Record<string, string> = {};
                 const today = toDateString();
 
-                // First pass: create all tasks and build ID map
                 for (const task of tasksToAdd) {
                     const newRef = await addDoc(collection(db, 'tasks'), {
                         title: task.title,
                         description: task.description || '',
                         type: task.type,
-                        parentId: null, // Will update in second pass
-                        rootId: null,   // Will update in second pass
+                        parentId: null,
+                        rootId: null,
                         path: [],
                         pathTitles: [],
                         links: task.links || [],
@@ -312,7 +320,6 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     idMap[task.id] = newRef.id;
                 }
 
-                // Second pass: update parent relationships
                 for (const task of tasksToAdd) {
                     const newId = idMap[task.id];
                     if (!newId) continue;
@@ -323,13 +330,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     if (newParentId || newRootId) {
                         await updateDoc(doc(db, 'tasks', newId), {
                             parentId: newParentId,
-                            rootId: newRootId || newParentId, // If no root, use parent as root
+                            rootId: newRootId || newParentId,
                         });
                     }
                 }
 
                 handleSuccess(`Copied ${tasksToAdd.length} item(s) to task board`);
-                onTasksAdded?.(); // Clear the tasksToAdd in parent
+                onTasksAdded?.();
             } catch (error) {
                 console.error('Error copying tasks:', error);
                 handleError('Failed to copy tasks to board');
@@ -339,84 +346,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         copyTasks();
     }, [tasksToAdd, onTasksAdded, currentClassId]);
 
-    // --- Link Handlers ---
-
-    // Add a new link and fetch its metadata
-    const addLink = useCallback(async (url: string) => {
-        // Normalize URL - add https:// if no protocol provided
-        let normalizedUrl = url.trim();
-        if (normalizedUrl && !normalizedUrl.match(/^https?:\/\//i)) {
-            normalizedUrl = 'https://' + normalizedUrl;
-        }
-
-        // Validate URL format
-        try {
-            new URL(normalizedUrl);
-        } catch {
-            handleError('Please enter a valid URL');
-            return;
-        }
-
-        // Check for duplicates
-        if (formData.links?.some(link => link.url === normalizedUrl)) {
-            handleError('This link is already added');
-            return;
-        }
-
-        // Create new link with temporary ID
-        const newLink: LinkAttachment = {
-            id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            url: normalizedUrl,
-            addedAt: new Date(),
-        };
-
-        // Add link immediately (optimistic update)
-        setFormData(prev => ({
-            ...prev,
-            links: [...(prev.links || []), newLink]
-        }));
-        setIsDirty(true);
-
-        // Fetch metadata asynchronously
-        setIsLoadingLinkTitle(true);
-        try {
-            const fetchMetadata = httpsCallable<{ url: string }, { title: string | null; siteName: string; error?: string }>(functions, 'fetchUrlMetadata');
-            const result = await fetchMetadata({ url: normalizedUrl });
-
-            if (result.data.title) {
-                // Update the link with its title
-                setFormData(prev => ({
-                    ...prev,
-                    links: prev.links?.map(link =>
-                        link.id === newLink.id
-                            ? { ...link, title: result.data.title || undefined }
-                            : link
-                    )
-                }));
-            }
-        } catch (error) {
-            console.warn('Failed to fetch URL metadata:', error);
-        } finally {
-            setIsLoadingLinkTitle(false);
-        }
-    }, [formData.links]);
-
-    // Remove a link by ID
-    const removeLink = useCallback((linkId: string) => {
-        setFormData(prev => ({
-            ...prev,
-            links: prev.links?.filter(link => link.id !== linkId) || []
-        }));
-        setIsDirty(true);
-    }, []);
-
-    // --- Helpers ---
-
-
-
-    // Filter tasks by date and class, then build hierarchy with proper ordering
+    // Combined filtering: Hook-based (text/type) + Component-based (date/class)
     const filteredTasks = useMemo(() => {
-        const filtered = tasks.filter(task => {
+        // Note: useTaskManager's filteredTasks already handles text/type
+        // But here we need to filter 'hierarchicalTasks' by date/class to keep hierarchy
+        const filtered = hierarchicalTasks.filter(task => {
             const isInDateRange = task.startDate && task.endDate
                 ? selectedDate >= task.startDate && selectedDate <= task.endDate
                 : true;
@@ -426,172 +360,15 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             return isInDateRange && isAssignedToCurrentClass;
         });
 
-        // Sort hierarchically: parent followed by its children
-        const buildHierarchy = (parentId: string | null): Task[] => {
-            const children = filtered
-                .filter(t => t.parentId === parentId)
-                .sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        return filtered;
+    }, [hierarchicalTasks, selectedDate, currentClassId]);
 
-            const result: Task[] = [];
-            for (const child of children) {
-                result.push(child);
-                result.push(...buildHierarchy(child.id)); // Recursively add children
-            }
-            return result;
-        };
-
-        return buildHierarchy(null); // Start from root tasks (no parent)
-    }, [tasks, selectedDate, currentClassId]);
-
-    // Get available parents for a given type
+    // Get available parents
     const getAvailableParents = useCallback((itemType: ItemType): Task[] => {
         const allowedParentTypes = ALLOWED_PARENT_TYPES[itemType];
         if (allowedParentTypes.length === 0) return [];
-
         return tasks.filter(t => allowedParentTypes.includes(t.type));
     }, [tasks]);
-
-
-
-
-
-    // Check if a task is "ongoing" (multi-day and not due on the selected date)
-    const isOngoingTask = useCallback((task: Task, forDate: string): boolean => {
-        if (!task.startDate || !task.endDate) return false;
-        // Multi-day task (spans more than one day) and not due on the selected date
-        return task.startDate !== task.endDate && task.endDate !== forDate;
-    }, []);
-
-    // Calculate hierarchical number for display (1, 2, 2.1, 2.2, etc.)
-    // When forDate is provided, root-level tasks are numbered relative to that day
-    // Matches ShapeOfDay.tsx behavior: due-today first, then ongoing tasks
-    const getHierarchicalNumber = useCallback((task: Task, allTasks: Task[], forDate?: string): string => {
-        // For root tasks with date filter, count all siblings active on that day (both due-today and ongoing)
-        const siblings = task.parentId
-            ? allTasks.filter(t => t.parentId === task.parentId)
-            : forDate
-                ? allTasks.filter(t => !t.parentId && t.startDate && t.endDate && forDate >= t.startDate && forDate <= t.endDate)
-                : allTasks.filter(t => !t.parentId);
-
-        // Sort: due-today first (by presentationOrder), then ongoing (by presentationOrder)
-        if (forDate && !task.parentId) {
-            siblings.sort((a, b) => {
-                const aOngoing = isOngoingTask(a, forDate);
-                const bOngoing = isOngoingTask(b, forDate);
-                // If one is ongoing and one isn't, ongoing goes after
-                if (aOngoing !== bOngoing) return aOngoing ? 1 : -1;
-                // Otherwise sort by presentation order
-                return (a.presentationOrder || 0) - (b.presentationOrder || 0);
-            });
-        } else {
-            siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-        }
-
-        const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
-
-        if (!task.parentId) return String(myIndex);
-
-        const parent = allTasks.find(t => t.id === task.parentId);
-        if (!parent) return String(myIndex);
-
-        return `${getHierarchicalNumber(parent, allTasks, forDate)}.${myIndex}`;
-    }, [isOngoingTask]);
-
-    // --- Form Management (simplified - single form instead of multi-card) ---
-
-    const updateField = useCallback(<K extends keyof TaskFormData>(
-        field: K,
-        value: TaskFormData[K] | ((prev: TaskFormData[K]) => TaskFormData[K])
-    ) => {
-        setFormData(prev => {
-            const newValue = typeof value === 'function'
-                ? (value as (prev: TaskFormData[K]) => TaskFormData[K])(prev[field])
-                : value;
-            return { ...prev, [field]: newValue };
-        });
-        setIsDirty(true);
-    }, []);
-
-    // Alias for compatibility with existing code
-    const updateActiveCard = updateField;
-
-    const resetForm = useCallback(() => {
-        setFormData({
-            ...INITIAL_FORM_STATE,
-            selectedRoomIds: currentClassId ? [currentClassId] : []
-        });
-        setEditingTaskId(null);
-        setIsDirty(false);
-    }, [currentClassId]);
-
-
-
-    const loadTask = useCallback((task: Task) => {
-        // Handle backwards compatibility: convert legacy linkURL to links array
-        let links: LinkAttachment[] = task.links || [];
-        if (task.linkURL && links.length === 0) {
-            // Migration from old single-link format
-            links = [{
-                id: `link_legacy_${Date.now()}`,
-                url: task.linkURL,
-                title: task.linkTitle,
-                addedAt: task.createdAt || new Date(),
-            }];
-        }
-
-        setFormData({
-            title: task.title,
-            description: task.description || '',
-            type: task.type,
-            parentId: task.parentId,
-            links,
-            startDate: task.startDate || toDateString(),
-            endDate: task.endDate || toDateString(),
-            selectedRoomIds: task.selectedRoomIds || [],
-            attachments: task.attachments || [],
-        });
-        setEditingTaskId(task.id);
-        setIsDirty(false);
-    }, []);
-
-    // Called when clicking a task in the summary
-    const handleEditClick = useCallback((task: Task) => {
-        if (isDirty) {
-            if (!window.confirm('You have unsaved changes. Discard and switch tasks?')) {
-                return;
-            }
-        }
-        loadTask(task);
-    }, [isDirty, loadTask]);
-
-    const handleAddSubtask = useCallback((parentTask: Task | { id: string, type: ItemType, title: string, path: string[], pathTitles: string[], rootId: string | null, selectedRoomIds: string[], startDate?: string, endDate?: string }) => {
-        const allowedChildren = ALLOWED_CHILD_TYPES[parentTask.type];
-        if (allowedChildren.length === 0) {
-            handleError(`Cannot add subtasks to a ${getTypeLabel(parentTask.type)}`);
-            return;
-        }
-
-        if (isDirty) {
-            if (!window.confirm('You have unsaved changes. Discard and create subtask?')) {
-                return;
-            }
-        }
-
-        const childType = allowedChildren[0] as ItemType;
-
-        setFormData({
-            ...INITIAL_FORM_STATE,
-            type: childType,
-            parentId: parentTask.id,
-            startDate: parentTask.startDate || INITIAL_FORM_STATE.startDate,
-            endDate: parentTask.endDate || INITIAL_FORM_STATE.endDate,
-            selectedRoomIds: parentTask.selectedRoomIds || [],
-        });
-        setEditingTaskId(null); // It's a new task
-        setIsDirty(false);
-    }, [isDirty]);
-
-
 
     // --- File Upload Handlers ---
 
@@ -601,15 +378,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             return null;
         }
 
-        // Validate file type
         if (!ALLOWED_FILE_TYPES.includes(file.type)) {
             handleError(`File type not allowed: ${file.type}`);
             return null;
         }
 
-        // Validate file size
         if (file.size > MAX_FILE_SIZE) {
-            handleError(`File too large.Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB`);
+            handleError(`File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB`);
             return null;
         }
 
@@ -628,7 +403,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 mimeType: file.type,
                 url: downloadUrl,
                 size: file.size,
-                uploadedAt: new Date(), // Using Date instead of serverTimestamp() - Firestore doesn't support serverTimestamp() inside arrays
+                uploadedAt: new Date(),
                 uploadedBy: auth.currentUser.uid,
             };
 
@@ -647,298 +422,69 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         if (!files || files.length === 0) return;
 
         const newAttachments: Attachment[] = [];
-
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (file) {
                 const attachment = await uploadFile(file);
-                if (attachment) {
-                    newAttachments.push(attachment);
-                }
+                if (attachment) newAttachments.push(attachment);
             }
         }
 
         if (newAttachments.length > 0) {
-            updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
-                ...(prev || []),
-                ...newAttachments
-            ]);
+            hookAddAttachments(newAttachments);
             handleSuccess(`${newAttachments.length} file(s) uploaded`);
         }
 
-        // Reset file input
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
+        if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
-    // Handle drag-drop file upload from RichTextEditor
     const handleFileDrop = async (files: File[]) => {
         if (files.length === 0) return;
 
         const newAttachments: Attachment[] = [];
-
         for (const file of files) {
             const attachment = await uploadFile(file);
-            if (attachment) {
-                newAttachments.push(attachment);
-            }
+            if (attachment) newAttachments.push(attachment);
         }
 
         if (newAttachments.length > 0) {
-            updateActiveCard('attachments', (prev: Attachment[] | undefined) => [
-                ...(prev || []),
-                ...newAttachments
-            ]);
+            hookAddAttachments(newAttachments);
             handleSuccess(`${newAttachments.length} file(s) uploaded`);
         }
     };
 
     const removeAttachment = async (attachmentId: string) => {
-        const currentAttachments = activeFormData.attachments || [];
-        const attachment = currentAttachments.find(a => a.id === attachmentId);
-
+        const attachment = activeFormData.attachments?.find(a => a.id === attachmentId);
         if (attachment) {
             try {
-                // Try to delete from storage (may fail if URL structure changed)
                 const pathMatch = attachment.url.match(/attachments%2F([^?]+)/);
                 if (pathMatch && pathMatch[1]) {
                     const filePath = decodeURIComponent(pathMatch[1]);
                     const storageRef = ref(storage, `attachments/${filePath}`);
-                    await deleteObject(storageRef).catch(() => {
-                        // Ignore deletion errors - file may already be deleted
-                    });
+                    await deleteObject(storageRef).catch(() => { });
                 }
             } catch (error) {
                 console.warn('Could not delete attachment from storage:', error);
             }
         }
-
-        updateActiveCard('attachments', (prev: Attachment[] | undefined) =>
-            (prev || []).filter(a => a.id !== attachmentId)
-        );
+        hookRemoveAttachment(attachmentId);
     };
-
-    // --- Handlers ---
-
-    const handleSave = async (isAutoSave: boolean = false) => {
-        if (!auth.currentUser) return;
-
-        // Validation - stricter for manual save
-        if (!isAutoSave) {
-            if (!formData.title.trim()) {
-                handleError("Please enter a title.");
-                return;
-            }
-            if (formData.selectedRoomIds.length === 0) {
-                handleError("Please assign at least one class.");
-                return;
-            }
-        } else {
-            // Auto-save requirements (looser)
-            if (!formData.title.trim() && formData.selectedRoomIds.length === 0) return; // Nothing to save
-        }
-
-        setIsSubmitting(true);
-        try {
-            // Build path...
-            let path: string[] = [];
-            let pathTitles: string[] = [];
-            let rootId: string | null = null;
-
-            if (formData.parentId) {
-                const parent = tasks.find(t => t.id === formData.parentId);
-                if (parent) {
-                    path = [...(parent.path || []), parent.id];
-                    pathTitles = [...(parent.pathTitles || []), parent.title];
-                    rootId = parent.rootId || parent.id;
-                }
-            }
-
-            // Determine status
-            const statusToSave: TaskStatus = isAutoSave ? 'draft' : 'todo';
-
-            const taskData = {
-                title: formData.title,
-                description: formData.description,
-                type: formData.type,
-                parentId: formData.parentId,
-                rootId,
-                path,
-                pathTitles,
-                links: formData.links || [],
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                selectedRoomIds: formData.selectedRoomIds,
-                attachments: formData.attachments || [],
-                teacherId: auth.currentUser.uid,
-                updatedAt: serverTimestamp(),
-                status: statusToSave, // Update status
-            };
-
-            // Calculate presentationOrder among siblings (same parentId)
-            let newPresentationOrder = 1;
-            if (isNewTask) {
-                const siblings = tasks.filter(t => t.parentId === formData.parentId);
-                newPresentationOrder = siblings.length > 0
-                    ? Math.max(...siblings.map(t => t.presentationOrder || 0)) + 1
-                    : 1;
-            }
-
-            const savedId = await saveTask(auth.currentUser.uid, {
-                ...taskData,
-                id: editingTaskId || undefined,
-                presentationOrder: isNewTask ? newPresentationOrder : undefined,
-                imageURL: isNewTask ? '' : undefined,
-                childIds: isNewTask ? [] : undefined,
-            });
-
-            // Update parent's childIds if applicable
-            if (isNewTask && formData.parentId) {
-                const parent = tasks.find(t => t.id === formData.parentId);
-                if (parent) {
-                    await updateDoc(doc(db, 'tasks', formData.parentId), {
-                        childIds: [...(parent.childIds || []), savedId]
-                    });
-                }
-            }
-
-            if (!isAutoSave) {
-                handleSuccess(`${getTypeLabel(formData.type)} ${isNewTask ? 'created' : 'updated'}!`);
-                resetForm();
-            } else if (isNewTask) {
-                setEditingTaskId(savedId);
-            } else {
-                setIsDirty(false);
-            }
-
-        } catch (error) {
-            console.error("Error saving:", error);
-            if (!isAutoSave) handleError("Failed to save.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleDelete = async (taskId: string) => {
-        if (!window.confirm("Are you sure you want to delete this item? Children will become standalone.")) return;
-
-        setIsSubmitting(true);
-        try {
-            // Get the task to find its children
-            const taskToDelete = tasks.find(t => t.id === taskId);
-
-            // Recursively collect all descendant IDs
-            const getAllDescendants = (parentId: string): string[] => {
-                const children = tasks.filter(t => t.parentId === parentId);
-                let allIds: string[] = [];
-                for (const child of children) {
-                    allIds.push(child.id);
-                    allIds = allIds.concat(getAllDescendants(child.id));
-                }
-                return allIds;
-            };
-
-            // Update all descendants to become standalone (not just direct children)
-            if (taskToDelete?.childIds?.length) {
-                const allDescendantIds = getAllDescendants(taskId);
-                const batch = writeBatch(db);
-
-                for (const descendantId of allDescendantIds) {
-                    const descendant = tasks.find(t => t.id === descendantId);
-                    // Direct children become standalone; grandchildren get updated paths
-                    if (descendant?.parentId === taskId) {
-                        // Direct child - becomes standalone
-                        batch.update(doc(db, 'tasks', descendantId), {
-                            parentId: null,
-                            rootId: null,
-                            path: [],
-                            pathTitles: [],
-                        });
-                    } else if (descendant) {
-                        // Grandchild - update path to reflect new parent
-                        const newParent = tasks.find(t => t.id === descendant.parentId);
-                        if (newParent) {
-                            // Recalculate path without the deleted task
-                            const filteredPath = (descendant.path || []).filter(id => id !== taskId);
-                            const filteredPathTitles = (descendant.pathTitles || []).slice(
-                                (descendant.path || []).indexOf(taskId) + 1
-                            );
-                            batch.update(doc(db, 'tasks', descendantId), {
-                                rootId: filteredPath[0] || descendant.parentId,
-                                path: filteredPath,
-                                pathTitles: filteredPathTitles,
-                            });
-                        }
-                    }
-                }
-                await batch.commit();
-            }
-
-            // Delete the task
-            await deleteDoc(doc(db, 'tasks', taskId));
-            handleSuccess("Item deleted.");
-            resetForm();
-        } catch (error) {
-            console.error("Error deleting:", error);
-            handleError("Failed to delete.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
-        // Find the task being reordered
-        const task = filteredTasks.find(t => t.id === taskId);
-        if (!task) return;
-
-        // Get siblings (tasks with the same parentId)
-        const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
-        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-
-        const currentIndex = siblings.findIndex(t => t.id === task.id);
-        if (currentIndex === -1) return;
-
-        const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
-        if (targetIndex < 0 || targetIndex >= siblings.length) return;
-
-        const currentTask = siblings[currentIndex];
-        const targetTask = siblings[targetIndex];
-
-        if (!currentTask || !targetTask) return;
-
-        try {
-            const currentOrder = currentTask.presentationOrder || 0;
-            const targetOrder = targetTask.presentationOrder || 0;
-
-            await updateDoc(doc(db, 'tasks', currentTask.id), { presentationOrder: targetOrder });
-            await updateDoc(doc(db, 'tasks', targetTask.id), { presentationOrder: currentOrder });
-        } catch (error) {
-            console.error("Failed to reorder:", error);
-        }
-    };
-
-
-
-
 
     // --- Auto-Save Effect ---
     useEffect(() => {
-        // Only auto-save if dirty and has minimal required data
         if (!isDirty || (!activeFormData.title.trim() && activeFormData.selectedRoomIds.length === 0)) return;
 
         const timer = setTimeout(async () => {
             setSaveState('saving');
-            await handleSave(true); // isAutoSave = true
+            await handleSave(true);
             setSaveState('saved');
-            // Reset to idle after 1.5 seconds
             setTimeout(() => setSaveState('idle'), 1500);
-        }, 1000); // 1 second debounce for quick auto-save
+        }, 1000);
 
         return () => clearTimeout(timer);
     }, [activeFormData, isDirty]);
 
-    // Wire up mobile "+" button from TeacherDashboard header
+    // Header interaction
     useEffect(() => {
         const mobileBtn = document.getElementById('mobile-new-task-btn');
         if (mobileBtn) {
@@ -946,15 +492,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             mobileBtn.addEventListener('click', handleClick);
             return () => mobileBtn.removeEventListener('click', handleClick);
         }
-    }, []);
+    }, [resetForm]);
 
     // --- Render ---
 
     const availableParents = getAvailableParents(activeFormData.type);
-
-
-
-    // Get current class name from rooms
     const currentClass = rooms.find(r => r.id === currentClassId);
 
     return (
@@ -1276,6 +818,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 <button
                                                     onClick={() => removeAttachment(attachment.id)}
                                                     className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    title="Remove attachment"
                                                 >
                                                     <X size={10} />
                                                 </button>
@@ -1298,8 +841,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     {link.title || (() => { try { return new URL(link.url).hostname; } catch { return link.url; } })()}
                                                 </a>
                                                 <button
-                                                    onClick={() => removeLink(link.id)}
+                                                    onClick={() => hookRemoveLink(link.id)}
                                                     className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded shrink-0"
+                                                    title="Remove link"
                                                 >
                                                     <X size={10} />
                                                 </button>
@@ -1322,6 +866,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     accept={ALLOWED_FILE_TYPES.join(',')}
                                                     onChange={handleFileSelect}
                                                     disabled={isUploading}
+                                                    title="Upload files"
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                 />
                                                 <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-slate-500 group-hover:text-slate-700 dark:group-hover:text-gray-300'}`}>
@@ -1449,6 +994,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                     type="button"
                                     onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
                                     className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    title={isMobileTasksOpen ? "Close tasks list" : "Open tasks list"}
                                 >
                                     <ChevronDown
                                         size={18}
@@ -1474,13 +1020,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         <div className="text-slate-300 dark:text-gray-600 text-xs mt-1">Create a task to get started.</div>
                                     </div>
                                 ) : (() => {
-                                    return filteredTasks.map((task) => {
+                                    return hierarchicalTasks.map((task) => {
                                         const TypeIconSmall = getTypeIcon(task.type);
 
                                         const isEditing = editingTaskId === task.id;
 
                                         // Get siblings (same parentId) for proper disabled state
-                                        const siblings = filteredTasks.filter(t => t.parentId === task.parentId);
+                                        const siblings = tasks.filter(t => t.parentId === task.parentId);
                                         siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
                                         const siblingIndex = siblings.findIndex(t => t.id === task.id);
 
@@ -1506,6 +1052,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         <button
                                                             onClick={() => handleReorder(task.id, 'up')}
                                                             disabled={siblingIndex === 0}
+                                                            title="Move up"
                                                             className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-400 hover:text-brand-accent focus:bg-gray-100 dark:focus:bg-gray-800/50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors focus:outline-none"
                                                         >
                                                             <ArrowUp size={14} />
@@ -1513,6 +1060,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         <button
                                                             onClick={() => handleReorder(task.id, 'down')}
                                                             disabled={siblingIndex === siblings.length - 1}
+                                                            title="Move down"
                                                             className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-400 hover:text-brand-accent focus:bg-gray-100 dark:focus:bg-gray-800/50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors focus:outline-none"
                                                         >
                                                             <ArrowDown size={14} />

@@ -12,13 +12,14 @@ import {
     collection,
     query,
     where,
-    getDocs,
     doc,
     updateDoc,
-    serverTimestamp
+    serverTimestamp,
+    onSnapshot,
+    Unsubscribe
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { Task } from '../types';
+import { Task, TaskStatus } from '../types';
 import {
     setIndexedDB,
     getIndexedDB,
@@ -33,8 +34,6 @@ import {
 // Configuration
 // ============================================================================
 
-const SYNC_INTERVAL_MS = 180000; // 3 minutes
-const CACHE_KEY_TASKS = 'cached_tasks';
 const CACHE_KEY_LAST_SYNC = 'last_sync_timestamp';
 const CACHE_KEY_CLASS_ID = 'current_class_id';
 
@@ -57,10 +56,14 @@ type SyncCallback = (status: SyncStatus) => void;
 
 class StudentDataService {
     private classId: string | null = null;
-    private syncInterval: ReturnType<typeof setInterval> | null = null;
     private isOnline: boolean = navigator.onLine;
     private isSyncing: boolean = false;
     private syncCallbacks: Set<SyncCallback> = new Set();
+    private unsubscribeTasks: Unsubscribe | null = null;
+    private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+    private pendingOpsCount: number = 0;
+    private taskCallbacks: Set<(tasks: Task[]) => void> = new Set();
+    private currentTasks: Task[] = [];
 
     constructor() {
         // Listen for online/offline events
@@ -76,33 +79,24 @@ class StudentDataService {
      * Initialize the service for a specific class
      * Pre-fetches all tasks and starts periodic sync
      */
-    async initialize(classId: string): Promise<Task[]> {
+    async initialize(classId: string): Promise<void> {
         console.log('[StudentData] Initializing for class:', classId);
         this.classId = classId;
         setLocalStorage(CACHE_KEY_CLASS_ID, classId);
 
-        // Try to load from cache first (instant)
-        let tasks = await this.loadFromCache();
+        // Update initial pending ops count
+        const pending = await getPendingOperations();
+        this.pendingOpsCount = pending.length;
 
-        // If online, fetch fresh data
-        if (this.isOnline) {
-            try {
-                tasks = await this.fetchAndCacheTasks();
-            } catch (error) {
-                console.warn('[StudentData] Failed to fetch, using cache:', error);
-                // Fall back to cached data
-            }
-        }
-
-        // Start periodic sync
-        this.startPeriodicSync();
-
-        // Process any pending offline operations
+        // Process any pending offline operations if online
         if (this.isOnline) {
             await this.processPendingOperations();
         }
 
-        return tasks;
+        // Start heartbeat
+        this.startHeartbeat();
+
+        // Note: Real-time subscription is started by the component via subscribeToTasks
     }
 
     /**
@@ -110,7 +104,11 @@ class StudentDataService {
      */
     destroy(): void {
         console.log('[StudentData] Destroying service');
-        this.stopPeriodicSync();
+        this.stopHeartbeat();
+        if (this.unsubscribeTasks) {
+            this.unsubscribeTasks();
+            this.unsubscribeTasks = null;
+        }
         window.removeEventListener('online', this.handleOnline);
         window.removeEventListener('offline', this.handleOffline);
         this.syncCallbacks.clear();
@@ -141,7 +139,7 @@ class StudentDataService {
         return {
             isOnline: this.isOnline,
             lastSyncTime: lastSync,
-            pendingOperations: 0, // Will be updated async
+            pendingOperations: this.pendingOpsCount,
             isSyncing: this.isSyncing,
         };
     }
@@ -170,106 +168,101 @@ class StudentDataService {
     }
 
     /**
-     * Fetch tasks from Firestore and cache them
+     * Subscribe to tasks for the current class in real-time
+     * This replaces the periodic sync and ensures the local cache is always up to date.
+     * Supports multiple concurrent subscribers.
      */
-    private async fetchAndCacheTasks(): Promise<Task[]> {
+    subscribeToTasks(callback: (tasks: Task[]) => void): () => void {
         if (!this.classId) {
-            throw new Error('No class ID set');
+            console.error('[StudentData] Cannot subscribe: no class ID');
+            return () => { };
         }
 
-        console.log('[StudentData] Fetching from Firestore...');
-        this.isSyncing = true;
-        this.notifySyncStatusChange();
+        this.taskCallbacks.add(callback);
 
-        try {
+        // If we already have tasks, provide them immediately
+        if (this.currentTasks.length > 0) {
+            callback(this.currentTasks);
+        }
+
+        // Start Firestore listener if this is the first subscriber
+        if (this.taskCallbacks.size === 1 && !this.unsubscribeTasks) {
+            console.log('[StudentData] Starting real-time task subscription');
+            this.isSyncing = true;
+            this.notifySyncStatusChange();
+
             const tasksRef = collection(db, 'tasks');
             const q = query(
                 tasksRef,
                 where('selectedRoomIds', 'array-contains', this.classId)
             );
 
-            const snapshot = await getDocs(q);
-            const tasks: Task[] = [];
+            this.unsubscribeTasks = onSnapshot(q, (snapshot) => {
+                const tasks: Task[] = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.status !== 'draft') {
+                        tasks.push({
+                            id: docSnap.id,
+                            ...data
+                        } as Task);
+                    }
+                });
 
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                // Only include non-draft tasks
-                if (data.status !== 'draft') {
-                    tasks.push({
-                        id: docSnap.id,
-                        title: data.title || '',
-                        description: data.description || '',
-                        type: data.type || 'task',
-                        status: data.status || 'todo',
-                        startDate: data.startDate || '',
-                        endDate: data.endDate || '',
-                        dueDate: data.dueDate || '',
-                        presentationOrder: data.presentationOrder || 0,
-                        selectedRoomIds: data.selectedRoomIds || [],
-                        parentId: data.parentId || null,
-                        rootId: data.rootId || null,
-                        path: data.path || [],
-                        pathTitles: data.pathTitles || [],
-                        childIds: data.childIds || [],
-                        links: data.links || [],
-                        attachments: data.attachments || [],
-                    } as Task);
-                }
+                this.currentTasks = tasks;
+                // Cache for offline use
+                setIndexedDB('tasks', tasks);
+                setLocalStorage(CACHE_KEY_LAST_SYNC, Date.now());
+
+                this.isSyncing = false;
+                this.notifySyncStatusChange();
+
+                // Notify all subscribers
+                this.taskCallbacks.forEach(cb => cb(tasks));
+            }, (error) => {
+                console.error('[StudentData] Task subscription error:', error);
+                this.isSyncing = false;
+                this.notifySyncStatusChange();
             });
-
-            // Cache the tasks
-            await setIndexedDB('tasks', tasks);
-            setLocalStorage(CACHE_KEY_LAST_SYNC, Date.now());
-
-            console.log('[StudentData] Cached', tasks.length, 'tasks');
-            return tasks;
-
-        } finally {
-            this.isSyncing = false;
-            this.notifySyncStatusChange();
         }
+
+        return () => {
+            this.taskCallbacks.delete(callback);
+            // Stop Firestore listener if no more subscribers
+            if (this.taskCallbacks.size === 0 && this.unsubscribeTasks) {
+                console.log('[StudentData] Stopping real-time task subscription');
+                this.unsubscribeTasks();
+                this.unsubscribeTasks = null;
+                this.currentTasks = [];
+            }
+        };
     }
 
     // ========================================================================
     // Periodic Sync
     // ========================================================================
 
-    private startPeriodicSync(): void {
-        if (this.syncInterval) return;
+    private startHeartbeat(): void {
+        if (this.heartbeatInterval) return;
 
-        console.log('[StudentData] Starting periodic sync (every 3 min)');
-        this.syncInterval = setInterval(async () => {
-            if (this.isOnline && !this.isSyncing) {
-                try {
-                    await this.fetchAndCacheTasks();
-                    await this.processPendingOperations();
-                } catch (error) {
-                    console.error('[StudentData] Periodic sync failed:', error);
-                }
-            }
-        }, SYNC_INTERVAL_MS);
+        console.log('[StudentData] Starting heartbeat (every 60s)');
+        this.sendHeartbeat(); // Initial heartbeat
+        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 60000);
     }
 
-    private stopPeriodicSync(): void {
-        if (this.syncInterval) {
-            clearInterval(this.syncInterval);
-            this.syncInterval = null;
-            console.log('[StudentData] Stopped periodic sync');
+    private stopHeartbeat(): void {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+            console.log('[StudentData] Stopped heartbeat');
         }
     }
 
     /**
-     * Force an immediate sync (user-triggered refresh)
+     * Force an immediate cache reload from local storage
      */
-    async forceSync(): Promise<Task[]> {
-        if (!this.isOnline) {
-            console.warn('[StudentData] Cannot sync while offline');
-            return this.loadFromCache();
-        }
-
-        const tasks = await this.fetchAndCacheTasks();
-        await this.processPendingOperations();
-        return tasks;
+    async forceCacheReload(): Promise<Task[]> {
+        return this.loadFromCache();
     }
 
     // ========================================================================
@@ -278,15 +271,20 @@ class StudentDataService {
 
     /**
      * Update task status - queues for offline if needed
+     * @param taskId - The task being updated
+     * @param status - The new status
+     * @param metrics - Progress metrics (completed count, active task IDs)
+     * @param comment - Optional student comment
      */
-    async updateTaskStatus(
+    async syncProgress(
         taskId: string,
-        status: 'todo' | 'in_progress' | 'done' | 'help',
+        status: TaskStatus,
+        metrics: { completedCount: number; activeTasks: string[] },
         comment?: string
     ): Promise<boolean> {
         const currentUser = auth.currentUser;
         if (!currentUser || !this.classId) {
-            console.error('[StudentData] Cannot update: no user or class');
+            console.error('[StudentData] Cannot sync: no user or class');
             return false;
         }
 
@@ -296,28 +294,46 @@ class StudentDataService {
             comment: comment || '',
             userId: currentUser.uid,
             classId: this.classId,
+            metrics
         };
 
         if (this.isOnline) {
-            // Try to sync immediately
             try {
                 await this.syncStatusToFirestore(payload);
                 return true;
             } catch (error) {
                 console.warn('[StudentData] Online sync failed, queueing:', error);
-                // Fall through to queue
             }
         }
 
-        // Queue for later sync
         await queuePendingOperation({
             type: 'status_update',
             taskId,
             payload,
         });
-        console.log('[StudentData] Queued status update for:', taskId);
+
+        const pending = await getPendingOperations();
+        this.pendingOpsCount = pending.length;
         this.notifySyncStatusChange();
         return true;
+    }
+
+    /**
+     * Send a heartbeat to update lastSeen/lastActive
+     */
+    async sendHeartbeat(): Promise<void> {
+        const currentUser = auth.currentUser;
+        if (!currentUser || !this.classId) return;
+
+        try {
+            const studentRef = doc(db, 'classrooms', this.classId, 'live_students', currentUser.uid);
+            await updateDoc(studentRef, {
+                lastSeen: serverTimestamp(),
+                lastActive: serverTimestamp()
+            });
+        } catch (error) {
+            console.error('[StudentData] Heartbeat failed:', error);
+        }
     }
 
     /**
@@ -329,6 +345,7 @@ class StudentDataService {
         comment: string;
         userId: string;
         classId: string;
+        metrics?: { completedCount: number; activeTasks: string[] };
     }): Promise<void> {
         const studentRef = doc(
             db,
@@ -338,14 +355,20 @@ class StudentDataService {
             payload.userId
         );
 
-        await updateDoc(studentRef, {
+        const updateData: any = {
             currentStatus: payload.status,
             currentTaskId: payload.taskId,
-            [`taskStatuses.${payload.taskId}`]: payload.status,  // Per-task status tracking
+            [`taskStatuses.${payload.taskId}`]: payload.status,
             currentMessage: payload.comment,
             lastActive: serverTimestamp(),
-        });
+        };
 
+        if (payload.metrics) {
+            updateData['metrics.tasksCompleted'] = payload.metrics.completedCount;
+            updateData['metrics.activeTasks'] = payload.metrics.activeTasks;
+        }
+
+        await updateDoc(studentRef, updateData);
         console.log('[StudentData] Synced status to Firestore:', payload.taskId);
     }
 
@@ -368,6 +391,7 @@ class StudentDataService {
                         comment: string;
                         userId: string;
                         classId: string;
+                        metrics?: { completedCount: number; activeTasks: string[] };
                     });
                 }
 
@@ -381,6 +405,8 @@ class StudentDataService {
             }
         }
 
+        const remaining = await getPendingOperations();
+        this.pendingOpsCount = remaining.length;
         this.notifySyncStatusChange();
     }
 
@@ -395,13 +421,6 @@ class StudentDataService {
 
         // Sync pending operations
         await this.processPendingOperations();
-
-        // Fetch latest data
-        try {
-            await this.fetchAndCacheTasks();
-        } catch (error) {
-            console.error('[StudentData] Failed to sync on reconnect:', error);
-        }
     };
 
     private handleOffline = (): void => {

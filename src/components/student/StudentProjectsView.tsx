@@ -10,8 +10,7 @@ import {
     Inbox
 } from 'lucide-react';
 import { Task, ItemType } from '../../types';
-import { subscribeToClassroomTasks } from '../../services/firestoreService';
-import { db } from '../../firebase';
+import { studentDataService } from '../../services/studentDataService';
 import toast from 'react-hot-toast';
 
 interface StudentProjectsViewProps {
@@ -78,14 +77,14 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
 
-    // Fetch all tasks for this class
+    // Fetch all tasks for this class via service
     useEffect(() => {
         if (!classId) {
             setIsLoading(false);
             return;
         }
 
-        const unsubscribe = subscribeToClassroomTasks(classId, (tasks: Task[]) => {
+        const unsubscribe = studentDataService.subscribeToTasks((tasks: Task[]) => {
             setAllTasks(tasks);
             setIsLoading(false);
         });

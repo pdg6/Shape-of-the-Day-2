@@ -1,0 +1,19 @@
+# Firebase App Hosting Configuration
+kind: "AppHosting"
+schemaVersion: "v1"
+
+# Cloud Run runtime settings
+runConfig:
+  minInstances: 0  # Allow scaling to zero for cost efficiency (pay-as-you-go)
+  maxInstances: 10 # Cap scaling to prevent runaway costs
+  memory: "512Mi"  # Sufficient for a Vite/React SPA SSR/Static environment
+  cpu: 1
+
+# Environment variables and Secrets
+# Note: Secrets must be created in Google Cloud Secret Manager first.
+# This configuration tells App Hosting to load them at runtime.
+env:
+  - variable: VITE_RECAPTCHA_SITE_KEY
+    secret: RECAPTCHA_SITE_KEY_VERSION
+  - variable: VITE_APPCHECK_DEBUG_TOKEN
+    secret: APPCHECK_DEBUG_TOKEN_VERSION

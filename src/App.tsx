@@ -10,7 +10,7 @@ import { useClassStore } from './store/classStore';
 import { Classroom } from './types';
 import { useAuth } from './context/AuthContext';
 import { ThemeProvider, UserRole } from './context/ThemeContext';
-import { loadDummyData, getDummyJoinCodes } from './services/dummyDataService';
+
 import { clearAllStudentData } from './services/storageService';
 
 // Lazy load heavy components for better initial load performance
@@ -39,35 +39,29 @@ function App() {
     // Auth Context
     const { user, loading, login, logout } = useAuth();
 
-    // View state: controls which main component is rendered
-    const [view, setView] = useState<'landing' | 'teacher' | 'student'>('landing');
+    // Global Store
+    const {
+        view, setView,
+        studentName, setStudentName,
+        studentClassId: classId, setStudentClassId: setClassId,
+        studentClassroomColor, setStudentClassroomColor,
+        darkMode,
+        currentClassId,
+        setCurrentClassId,
+        setClassrooms,
+        resetAppState
+    } = useClassStore();
 
-    // Student specific state - restored from sessionStorage if available
+    // Student specific UI state (local to App)
     const [showNameModal, setShowNameModal] = useState(false);
-    const [studentName, setStudentName] = useState(() => {
-        return sessionStorage.getItem('studentName') || '';
-    });
-    const [classId, setClassId] = useState(() => {
-        return sessionStorage.getItem('studentClassId') || '';
-    });
-    const [studentClassroomColor, setStudentClassroomColor] = useState<string | undefined>(() => {
-        return sessionStorage.getItem('studentClassroomColor') || undefined;
-    });
-    const [isJoining, setIsJoining] = useState(false);
 
     // Determine user role for theming
     const userRole: UserRole = view === 'student' ? 'student' : 'teacher';
 
-
-    // Global Store
-    const {
-        darkMode,
-        currentClassId,
-        setCurrentClassId,
-        setClassrooms
-    } = useClassStore();
-
-    // Effect to apply dark mode class to the HTML element and sync browser theme-color
+    /**
+     * Effect to apply dark mode class to the HTML element and sync browser theme-color.
+     * Persistence is handled within the store's toggleDarkMode/setDarkMode actions.
+     */
     useEffect(() => {
         const root = document.documentElement;
         const themeColorMeta = document.querySelector('meta[name="theme-color"]');
@@ -75,16 +69,12 @@ function App() {
         if (darkMode) {
             root.classList.add('dark');
             root.style.colorScheme = 'dark';
-            localStorage.setItem('darkMode', 'true');
-            // Sync browser chrome color (address bar, PWA splash)
             if (themeColorMeta) {
                 themeColorMeta.setAttribute('content', '#10100e'); // --color-brand-dark
             }
         } else {
             root.classList.remove('dark');
             root.style.colorScheme = 'light';
-            localStorage.setItem('darkMode', 'false');
-            // Sync browser chrome color for light mode
             if (themeColorMeta) {
                 themeColorMeta.setAttribute('content', '#F1F5F9'); // --color-brand-light (slate-100)
             }
@@ -92,100 +82,33 @@ function App() {
         console.log('🌓 Theme synced:', darkMode ? 'dark' : 'light');
     }, [darkMode]);
 
-    // Effect to handle view switching based on auth
-    // Priority: Active student session > Non-anonymous authenticated user > Landing
+    /**
+     * Effect to handle view switching based on auth.
+     * Priority: Active student session > Non-anonymous authenticated user > Landing.
+     */
     useEffect(() => {
         if (!loading) {
-            // Check for active student session FIRST (student may have joined while a teacher auth exists)
+            // Check for active student session FIRST
             if (classId && studentName && view !== 'teacher') {
                 setView('student');
             } else if (user && !classId && !studentName) {
-                // Only show teacher dashboard if it's a non-anonymous user (teachers use Google sign-in)
-                // Anonymous users (students) without a session should go to landing
+                // Teachers (non-anonymous) go to dashboard, anonymous with no session go to landing
                 if (!user.isAnonymous) {
                     setView('teacher');
                 } else {
-                    // Anonymous user with no student session - go to landing
                     setView('landing');
                 }
             } else if (view === 'teacher' && !user) {
                 setView('landing');
             }
         }
-    }, [user, loading, view, classId, studentName]);
-
-    // Effect to persist student session to sessionStorage
-    useEffect(() => {
-        if (studentName) {
-            sessionStorage.setItem('studentName', studentName);
-        } else {
-            sessionStorage.removeItem('studentName');
-        }
-        if (classId) {
-            sessionStorage.setItem('studentClassId', classId);
-        } else {
-            sessionStorage.removeItem('studentClassId');
-        }
-        if (studentClassroomColor) {
-            sessionStorage.setItem('studentClassroomColor', studentClassroomColor);
-        } else {
-            sessionStorage.removeItem('studentClassroomColor');
-        }
-    }, [studentName, classId, studentClassroomColor]);
-
-    // Developer Mode: Keyboard shortcut to load dummy data (Ctrl+Shift+D)
-    // SECURITY: Only enabled in development mode to prevent production abuse
-    useEffect(() => {
+    }, [user, loading, view, classId, studentName, setView]);
 
 
-        const handleKeyPress = async (event: KeyboardEvent) => {
-            // Check for Ctrl+Shift+D (or Cmd+Shift+D on Mac)
-            if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'D') {
-                event.preventDefault();
 
-                if (!user) {
-                    toast.error('Please sign in as a teacher first!');
-                    return;
-                }
-
-                console.log('🚀 Loading dummy data...');
-                toast.loading('Loading dummy data...', { id: 'dummy-data' });
-
-                try {
-                    await loadDummyData(user.uid);
-                    toast.dismiss('dummy-data');
-
-                    // Show join codes for easy access
-                    const joinCodes = getDummyJoinCodes();
-                    const codesMessage = joinCodes
-                        .map((c: { name: string; code: string }) => `${c.name}: ${c.code}`)
-                        .join('\n');
-
-                    toast.success(
-                        `Dummy data loaded!\n\nJoin Codes:\n${codesMessage}`,
-                        {
-                            duration: 8000,
-                            style: {
-                                maxWidth: '500px',
-                                whiteSpace: 'pre-line',
-                            },
-                        }
-                    );
-
-                    // Refresh the page to load new data
-                    window.location.reload();
-                } catch (error) {
-                    toast.dismiss('dummy-data');
-                    console.error('Failed to load dummy data:', error);
-                }
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [user]);
-
-    // Fetch Classrooms for Teacher
+    /**
+     * Fetch Classrooms for Teacher Dashboard.
+     */
     useEffect(() => {
         const fetchClassrooms = async () => {
             if (!user || view !== 'teacher') return;
@@ -195,22 +118,18 @@ function App() {
                 const snapshot = await getDocs(q);
                 const data: Classroom[] = [];
                 snapshot.forEach(doc => {
-                    console.log('Found classroom:', doc.id, doc.data());
                     data.push({ id: doc.id, ...doc.data() } as Classroom);
                 });
 
                 console.log('Total classrooms found:', data.length);
                 setClassrooms(data);
 
-                // Validate persisted class still exists, or select first class
                 const firstClass = data[0];
                 const persistedClassExists = currentClassId && data.some(c => c.id === currentClassId);
 
                 if (data.length > 0 && !persistedClassExists && firstClass) {
-                    console.log('Setting current class to:', firstClass.id);
                     setCurrentClassId(firstClass.id);
                 } else if (data.length === 0) {
-                    console.warn('No classrooms found for this teacher. Use Ctrl+Shift+D to load dummy data.');
                     setCurrentClassId(null);
                 }
             } catch (error) {
@@ -222,37 +141,24 @@ function App() {
 
     /**
      * Handles Sign Out for both teachers and students.
-     * Resets all application state to default.
-     * SECURITY: Clears all local storage to prevent data leakage on shared devices.
+     * Centralized in store's resetAppState.
      */
     const handleLogout = async () => {
-        // SECURITY: Explicitly clear session storage keys FIRST to prevent auto-login
-        sessionStorage.removeItem('studentName');
-        sessionStorage.removeItem('studentClassId');
-        sessionStorage.removeItem('studentClassroomColor');
-
-        // SECURITY: Clear all student local data (IndexedDB, localStorage, sessionStorage)
+        // SECURITY: Clear all student local data
         await clearAllStudentData();
 
         // Sign out from Firebase
         await logout();
 
-        // Reset all application state
-        setStudentName('');
-        setClassId('');
-        setStudentClassroomColor(undefined);
-        setView('landing');
-        setShowNameModal(false);
-        setCurrentClassId(null);
-        setClassrooms([]);
+        // Reset all application state via store
+        resetAppState();
     };
 
     /**
      * Handles a student joining a room via code.
      */
-    const handleJoinRoom = async (code: string, name: string, joinedClassId: string) => {
-        console.log('Joining room:', code, 'as', name, 'ID:', joinedClassId);
-        setIsJoining(true);
+    const handleJoinRoom = async (_code: string, name: string, joinedClassId: string) => {
+        console.log('Joining room as', name, 'ID:', joinedClassId);
 
         setStudentName(name);
         setClassId(joinedClassId);
@@ -267,21 +173,18 @@ function App() {
         } catch (error) {
             console.error('Error fetching classroom color:', error);
             toast.error('Could not load classroom theme. Using default.');
-        } finally {
-            setIsJoining(false);
         }
 
         setView('student');
     };
 
     /**
-     * Handles the student submitting their name.
+     * Handles the student submitting their name change.
      */
     const handleNameSubmit = (name: string) => {
         setStudentName(name);
         setShowNameModal(false);
         setView('student');
-        // In real app, we'd save this to session/local storage or context
     };
 
     // currentClass is used by TeacherDashboard via the store

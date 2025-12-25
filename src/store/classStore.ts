@@ -12,6 +12,12 @@ interface ClassState {
     isClassModalOpen: boolean;
     editingClass: Classroom | null;
 
+    // App View State
+    view: 'landing' | 'teacher' | 'student';
+    studentName: string;
+    studentClassId: string;
+    studentClassroomColor: string | undefined;
+
     // Actions
     setCurrentClassId: (id: string | null) => void;
     setClassrooms: (classrooms: Classroom[]) => void;
@@ -21,26 +27,34 @@ interface ClassState {
     toggleDarkMode: () => void;
     setDarkMode: (isDark: boolean) => void;
     setIsClassModalOpen: (isOpen: boolean, editingClass?: Classroom | null) => void;
+
+    // View Actions
+    setView: (view: 'landing' | 'teacher' | 'student') => void;
+    setStudentName: (name: string) => void;
+    setStudentClassId: (id: string) => void;
+    setStudentClassroomColor: (color: string | undefined) => void;
+    resetAppState: () => void;
 }
 
 export const useClassStore = create<ClassState>((set) => ({
     currentClassId: typeof window !== 'undefined' ? localStorage.getItem(CURRENT_CLASS_KEY) : null,
     classrooms: [],
-    isSidebarOpen: false, // Default closed to show QR icon
+    isSidebarOpen: false,
     activeStudentCount: 0,
     darkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') !== 'false' : true,
-
     isClassModalOpen: false,
     editingClass: null,
 
+    // Initial View State
+    view: 'landing',
+    studentName: typeof window !== 'undefined' ? sessionStorage.getItem('studentName') || '' : '',
+    studentClassId: typeof window !== 'undefined' ? sessionStorage.getItem('studentClassId') || '' : '',
+    studentClassroomColor: typeof window !== 'undefined' ? sessionStorage.getItem('studentClassroomColor') || undefined : undefined,
+
     setCurrentClassId: (id) => {
-        // Persist to localStorage
         if (typeof window !== 'undefined') {
-            if (id) {
-                localStorage.setItem(CURRENT_CLASS_KEY, id);
-            } else {
-                localStorage.removeItem(CURRENT_CLASS_KEY);
-            }
+            if (id) localStorage.setItem(CURRENT_CLASS_KEY, id);
+            else localStorage.removeItem(CURRENT_CLASS_KEY);
         }
         set({ currentClassId: id });
     },
@@ -48,7 +62,54 @@ export const useClassStore = create<ClassState>((set) => ({
     toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
     setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
     setActiveStudentCount: (count) => set({ activeStudentCount: count }),
-    toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-    setDarkMode: (isDark: boolean) => set({ darkMode: isDark }),
+    toggleDarkMode: () => set((state) => {
+        const nextDark = !state.darkMode;
+        if (typeof window !== 'undefined') localStorage.setItem('darkMode', String(nextDark));
+        return { darkMode: nextDark };
+    }),
+    setDarkMode: (isDark: boolean) => {
+        if (typeof window !== 'undefined') localStorage.setItem('darkMode', String(isDark));
+        set({ darkMode: isDark });
+    },
     setIsClassModalOpen: (isOpen, editingClass = null) => set({ isClassModalOpen: isOpen, editingClass }),
+
+    // View State Actions
+    setView: (view) => set({ view }),
+    setStudentName: (studentName) => {
+        if (typeof window !== 'undefined') {
+            if (studentName) sessionStorage.setItem('studentName', studentName);
+            else sessionStorage.removeItem('studentName');
+        }
+        set({ studentName });
+    },
+    setStudentClassId: (studentClassId) => {
+        if (typeof window !== 'undefined') {
+            if (studentClassId) sessionStorage.setItem('studentClassId', studentClassId);
+            else sessionStorage.removeItem('studentClassId');
+        }
+        set({ studentClassId });
+    },
+    setStudentClassroomColor: (studentClassroomColor) => {
+        if (typeof window !== 'undefined') {
+            if (studentClassroomColor) sessionStorage.setItem('studentClassroomColor', studentClassroomColor);
+            else sessionStorage.removeItem('studentClassroomColor');
+        }
+        set({ studentClassroomColor });
+    },
+    resetAppState: () => {
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('studentName');
+            sessionStorage.removeItem('studentClassId');
+            sessionStorage.removeItem('studentClassroomColor');
+            localStorage.removeItem(CURRENT_CLASS_KEY);
+        }
+        set({
+            view: 'landing',
+            studentName: '',
+            studentClassId: '',
+            studentClassroomColor: undefined,
+            currentClassId: null,
+            classrooms: []
+        });
+    }
 }));
