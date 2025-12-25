@@ -231,13 +231,14 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
     // Subscribe to tasks
     useEffect(() => {
-        if (!currentClassId) {
+        const user = auth.currentUser;
+        if (!currentClassId || !user) {
             return;
         }
 
         const unsubscribe = subscribeToClassroomTasks(currentClassId, (taskData) => {
             setTasks(taskData);
-        });
+        }, user.uid);
 
         return () => unsubscribe();
     }, [currentClassId]);
@@ -348,19 +349,24 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
     // Combined filtering: Hook-based (text/type) + Component-based (date/class)
     const filteredTasks = useMemo(() => {
-        // Note: useTaskManager's filteredTasks already handles text/type
-        // But here we need to filter 'hierarchicalTasks' by date/class to keep hierarchy
-        const filtered = hierarchicalTasks.filter(task => {
-            const isInDateRange = task.startDate && task.endDate
-                ? selectedDate >= task.startDate && selectedDate <= task.endDate
-                : true;
+        // Match ShapeOfDay's strict filtering:
+        // 1. Must have start and end dates
+        // 2. Must be within the selected date range
+        // 3. Must be assigned to the current class
+        // 4. Must not be a draft (published)
+
+        return hierarchicalTasks.filter(task => {
+            const startDate = task.startDate || '';
+            const endDate = task.endDate || '';
+            const isInRange = selectedDate >= startDate && selectedDate <= endDate;
+            const isPublished = task.status !== 'draft';
+
             const isAssignedToCurrentClass = currentClassId
                 ? task.selectedRoomIds?.includes(currentClassId)
                 : true;
-            return isInDateRange && isAssignedToCurrentClass;
-        });
 
-        return filtered;
+            return startDate && endDate && isInRange && isPublished && isAssignedToCurrentClass;
+        });
     }, [hierarchicalTasks, selectedDate, currentClassId]);
 
     // Get available parents
@@ -1020,7 +1026,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         <div className="text-slate-300 dark:text-gray-600 text-xs mt-1">Create a task to get started.</div>
                                     </div>
                                 ) : (() => {
-                                    return hierarchicalTasks.map((task) => {
+                                    return filteredTasks.map((task) => {
                                         const TypeIconSmall = getTypeIcon(task.type);
 
                                         const isEditing = editingTaskId === task.id;
@@ -1070,7 +1076,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     {/* Number + Type Icon - stacked vertically, left aligned */}
                                                     <div className="flex flex-col items-start shrink-0 w-8">
                                                         <span className="text-xs font-bold text-gray-400 text-left">
-                                                            {getHierarchicalNumber(task, tasks, selectedDate)}
+                                                            {getHierarchicalNumber(task, filteredTasks, selectedDate)}
                                                         </span>
                                                         <span className={`w-6 h-6 rounded-md flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
                                                             <TypeIconSmall size={12} />

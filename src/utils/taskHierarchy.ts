@@ -33,19 +33,8 @@ export const getHierarchicalNumber = (
         ? allTasks.filter(t => t.parentId === task.parentId)
         : allTasks.filter(t => !t.parentId);
 
-    // Sort: for root tasks, due-today first, then ongoing (by presentationOrder)
-    if (forDate && !task.parentId) {
-        siblings.sort((a, b) => {
-            const aOngoing = isOngoingTask(a, forDate);
-            const bOngoing = isOngoingTask(b, forDate);
-            // If one is ongoing and one isn't, ongoing goes after
-            if (aOngoing !== bOngoing) return aOngoing ? 1 : -1;
-            // Otherwise sort by presentation order
-            return (a.presentationOrder || 0) - (b.presentationOrder || 0);
-        });
-    } else {
-        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-    }
+    // Strictly sort by presentation order to ensure numbering stays consistent with manual reordering
+    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
 
     const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
 

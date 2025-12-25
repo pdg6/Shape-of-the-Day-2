@@ -186,6 +186,9 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
     };
 
     const handleDelete = async (taskId: string, deleteChildren: boolean = true) => {
+        const user = auth.currentUser;
+        if (!user) return;
+
         const message = deleteChildren
             ? "Are you sure? This will delete the item and all its children."
             : "Are you sure? Children will become standalone root items.";
@@ -194,7 +197,7 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
 
         setIsSubmitting(true);
         try {
-            await deleteTaskWithChildren(taskId, deleteChildren);
+            await deleteTaskWithChildren(user.uid, taskId, deleteChildren);
             handleSuccess("Task deleted.");
             if (editingTaskId === taskId) resetForm();
         } catch (error) {

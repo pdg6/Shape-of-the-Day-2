@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, onSnapshot, query, deleteDoc, doc } from 'firebase/firestore';
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
-import { db } from '../../firebase';
+import { db, auth } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
 import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
@@ -109,7 +109,8 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
     // Fetch Active Tasks for the Class - ONLY tasks active TODAY
     useEffect(() => {
-        if (!currentClassId) return;
+        const user = auth.currentUser;
+        if (!currentClassId || !user) return;
 
         const unsubscribe = subscribeToClassroomTasks(currentClassId, (taskData: Task[]) => {
             // Filter to only show tasks that are active TODAY
@@ -122,7 +123,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                 return isActiveToday && task.status !== 'draft';
             });
             setTasks(todaysTasks);
-        });
+        }, user.uid);
 
         return () => unsubscribe();
     }, [currentClassId, today]);

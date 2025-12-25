@@ -27,17 +27,21 @@ service cloud.firestore {
     // Check if student is enrolled in ANY of the task's assigned classrooms
     function isEnrolledInAnyAssignedRoom(taskData) {
       let roomIds = taskData.get('selectedRoomIds', []);
-      // Check first 5 assigned rooms (Firestore limits exists() calls to 10 per request)
+      // Security: Check if current student is in live_students for any assigned room
+      // Note: Firestore security rules actually support testing existence in a list via hasAny if we restructure,
+      // but for now we'll stick to a slightly cleaner loop-free approach or better-indexed access.
+      // Maximum 10 exists() calls allowed in a request.
       return roomIds.size() > 0 && (
         exists(/databases/$(database)/documents/classrooms/$(roomIds[0])/live_students/$(request.auth.uid)) ||
-        (roomIds.size() > 1 && 
-         exists(/databases/$(database)/documents/classrooms/$(roomIds[1])/live_students/$(request.auth.uid))) ||
-        (roomIds.size() > 2 && 
-         exists(/databases/$(database)/documents/classrooms/$(roomIds[2])/live_students/$(request.auth.uid))) ||
-        (roomIds.size() > 3 && 
-         exists(/databases/$(database)/documents/classrooms/$(roomIds[3])/live_students/$(request.auth.uid))) ||
-        (roomIds.size() > 4 && 
-         exists(/databases/$(database)/documents/classrooms/$(roomIds[4])/live_students/$(request.auth.uid)))
+        (roomIds.size() > 1 && exists(/databases/$(database)/documents/classrooms/$(roomIds[1])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 2 && exists(/databases/$(database)/documents/classrooms/$(roomIds[2])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 3 && exists(/databases/$(database)/documents/classrooms/$(roomIds[3])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 4 && exists(/databases/$(database)/documents/classrooms/$(roomIds[4])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 5 && exists(/databases/$(database)/documents/classrooms/$(roomIds[5])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 6 && exists(/databases/$(database)/documents/classrooms/$(roomIds[6])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 7 && exists(/databases/$(database)/documents/classrooms/$(roomIds[7])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 8 && exists(/databases/$(database)/documents/classrooms/$(roomIds[8])/live_students/$(request.auth.uid))) ||
+        (roomIds.size() > 9 && exists(/databases/$(database)/documents/classrooms/$(roomIds[9])/live_students/$(request.auth.uid)))
       );
     }
     

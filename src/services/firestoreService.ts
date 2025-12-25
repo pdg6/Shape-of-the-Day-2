@@ -182,11 +182,13 @@ export const saveTask = async (
 /**
  * Get all tasks for a classroom (from root collection)
  * @param {string} classroomId 
- * @returns {Promise<Array>}
+ * @param {string} teacherId - Required: filter by teacher for security
+ * @returns {Promise<Task[]>}
  */
-export const getClassroomTasks = async (classroomId: string): Promise<Task[]> => {
+export const getClassroomTasks = async (classroomId: string, teacherId: string): Promise<Task[]> => {
     const q = query(
         collection(db, 'tasks').withConverter(taskConverter),
+        where('teacherId', '==', teacherId),
         where('selectedRoomIds', 'array-contains', classroomId),
         orderBy('presentationOrder', 'asc')
     );
@@ -199,32 +201,35 @@ export const getClassroomTasks = async (classroomId: string): Promise<Task[]> =>
  * Subscribe to classroom tasks with real-time updates
  * @param {string} classroomId 
  * @param {Function} callback 
- * @param {string} [teacherId] - Optional: filter by teacher if classroomId is empty
+ * @param {string} teacherId - Required: filter by teacher for security
  * @returns {Unsubscribe}
  */
 export const subscribeToClassroomTasks = (
     classroomId: string,
     callback: (tasks: Task[]) => void,
-    teacherId?: string
+    teacherId: string
 ): Unsubscribe => {
+    if (!teacherId) {
+        console.warn('subscribeToClassroomTasks called without teacherId');
+        callback([]);
+        return () => { };
+    }
+
     let q;
 
     if (classroomId) {
-        q = query(
-            collection(db, 'tasks').withConverter(taskConverter),
-            where('selectedRoomIds', 'array-contains', classroomId),
-            orderBy('presentationOrder', 'asc')
-        );
-    } else if (teacherId) {
+        // Query by classroom AND teacher for security
         q = query(
             collection(db, 'tasks').withConverter(taskConverter),
             where('teacherId', '==', teacherId),
+            where('selectedRoomIds', 'array-contains', classroomId),
             orderBy('presentationOrder', 'asc')
         );
     } else {
-        // Fallback to all tasks if neither ID is provided
+        // Query by teacher only
         q = query(
             collection(db, 'tasks').withConverter(taskConverter),
+            where('teacherId', '==', teacherId),
             orderBy('presentationOrder', 'asc')
         );
     }
@@ -326,9 +331,10 @@ export const getStudentProfile = async (studentId: string): Promise<Student | nu
 /**
  * Get a task with all its descendants (children, grandchildren, etc.)
  * @param {string} taskId - The root task ID
- * @returns {Promise<{task: Object, descendants: Array}>}
+ * @param {string} teacherId - Required: filter by teacher for security
+ * @returns {Promise<{task: Task, descendants: Task[]}>}
  */
-export const getTaskWithChildren = async (taskId: string): Promise<{ task: Task; descendants: Task[] }> => {
+export const getTaskWithChildren = async (taskId: string, teacherId: string): Promise<{ task: Task; descendants: Task[] }> => {
     const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
     const snapshot = await getDoc(taskRef);
 
@@ -338,10 +344,16 @@ export const getTaskWithChildren = async (taskId: string): Promise<{ task: Task;
 
     const task = snapshot.data();
 
+    // Verify ownership
+    if (task.teacherId !== teacherId) {
+        throw new Error('Permission denied');
+    }
+
     // Recursive function to get all descendants
     const fetchDescendants = async (parentId: string): Promise<Task[]> => {
         const q = query(
             collection(db, 'tasks').withConverter(taskConverter),
+            where('teacherId', '==', teacherId),
             where('parentId', '==', parentId)
         );
         const childSnapshot = await getDocs(q);
@@ -369,15 +381,17 @@ export interface DuplicateOptions {
 
 /**
  * Duplicate a task and optionally all its children
+ * @param {string} teacherId - The teacher's ID
  * @param {string} taskId - The task to duplicate
  * @param {DuplicateOptions} options - Options for duplication
  * @returns {Promise<{newTaskId: string, childMap: Record<string, string>}>}
  */
 export const duplicateTask = async (
+    teacherId: string,
     taskId: string,
     options: DuplicateOptions = {}
 ): Promise<{ newTaskId: string; childMap: Record<string, string> }> => {
-    const { task, descendants } = await getTaskWithChildren(taskId);
+    const { task, descendants } = await getTaskWithChildren(taskId, teacherId);
     const batch = writeBatch(db);
     const childMap: Record<string, string> = {}; // Old ID -> New ID
 
@@ -442,18 +456,20 @@ export const duplicateTask = async (
 
 /**
  * Move a task to a new parent (changes hierarchy)
+ * @param {string} teacherId - The teacher's ID
  * @param {string} taskId - The task to move
  * @param {string | null} newParentId - New parent ID (null for root level)
  * @param {Task | null} newParent - The new parent task object (for path building)
  * @returns {Promise<void>}
  */
 export const moveTaskToParent = async (
+    teacherId: string,
     taskId: string,
     newParentId: string | null,
     newParent: Task | null = null
 ): Promise<void> => {
     // Get the task and all its descendants to update their paths
-    const { task, descendants } = await getTaskWithChildren(taskId);
+    const { task, descendants } = await getTaskWithChildren(taskId, teacherId);
     const batch = writeBatch(db);
 
     // 1. Update the task itself
@@ -530,17 +546,18 @@ export const moveTaskToParent = async (
  * Delete a task and optionally all its children.
  * If children are NOT deleted, they (and their descendants) are re-parented.
  * 
+ * @param {string} teacherId - The teacher's ID
  * @param {string} taskId - The task to delete
  * @param {boolean} deleteChildren - Whether to delete children (default: true)
- * @param {Task[]} allTasks - Optional: current local tasks to avoid extra fetches
  * @returns {Promise<number>} Number of tasks deleted
  */
 export const deleteTaskWithChildren = async (
+    teacherId: string,
     taskId: string,
     deleteChildren: boolean = true
 ): Promise<number> => {
     // 1. Get the task and its descendants
-    const { task, descendants } = await getTaskWithChildren(taskId);
+    const { task, descendants } = await getTaskWithChildren(taskId, teacherId);
     const batch = writeBatch(db);
     let count = 0;
 
@@ -770,15 +787,22 @@ export const getTaskQuestions = async (
 };
 
 /**
- * Migration: Un-nest all assignments from projects
+ * Migration: Un-nest all assignments from projects for a specific teacher
+ * @param {string} teacherId - The teacher's ID
  * @returns {Promise<{updated: number, errors: string[]}>} Migration result
  */
-export const unNestAssignmentsFromProjects = async (): Promise<{ updated: number; errors: string[] }> => {
+export const unNestAssignmentsFromProjects = async (teacherId: string): Promise<{ updated: number; errors: string[] }> => {
     const result = { updated: 0, errors: [] as string[] };
+
+    if (!teacherId) {
+        result.errors.push('Migration failed: No teacherId provided');
+        return result;
+    }
 
     try {
         const q = query(
             collection(db, 'tasks').withConverter(taskConverter),
+            where('teacherId', '==', teacherId),
             where('type', '==', 'assignment')
         );
 

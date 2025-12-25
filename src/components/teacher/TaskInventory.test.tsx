@@ -1,23 +1,22 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('../../firebase', () => ({
-  auth: {
-    currentUser: {
-      uid: 'test-uid',
-    },
-  },
-  db: {},
+  auth: { currentUser: { uid: 'test-uid' } },
+  db: { type: 'firestore' },
+}));
+
+jest.mock('firebase/firestore', () => ({
+  getFirestore: jest.fn(),
   collection: jest.fn(),
-  onSnapshot: jest.fn((query, callback) => {
-    callback({
-      forEach: (callback) => {
-        // empty
-      },
-    });
-    return jest.fn();
-  }),
   query: jest.fn(),
   where: jest.fn(),
+  orderBy: jest.fn(),
+  onSnapshot: jest.fn((q, cb) => {
+    cb({ forEach: () => { } });
+    return jest.fn();
+  }),
+  addDoc: jest.fn(),
+  serverTimestamp: jest.fn(),
 }));
 
 jest.mock('../../store/classStore', () => ({

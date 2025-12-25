@@ -4,7 +4,7 @@ schemaVersion: "v1"
 
 # Cloud Run runtime settings
 runConfig:
-  minInstances: 0  # Allow scaling to zero for cost efficiency (pay-as-you-go)
+  minInstances: 1  # Reduce cold starts (keep one instance warm)
   maxInstances: 10 # Cap scaling to prevent runaway costs
   memory: "512Mi"  # Sufficient for a Vite/React SPA SSR/Static environment
   cpu: 1

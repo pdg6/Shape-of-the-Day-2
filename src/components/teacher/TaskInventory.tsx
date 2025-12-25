@@ -519,7 +519,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
         }
 
         try {
-            const deletedCount = await deleteTaskWithChildren(task.id, true);
+            const deletedCount = await deleteTaskWithChildren(auth.currentUser!.uid, task.id, true);
             handleSuccess(`Deleted ${deletedCount} item${deletedCount > 1 ? 's' : ''}`);
         } catch (error) {
             console.error('Error deleting task:', error);
@@ -774,6 +774,9 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
 
                         {/* Saved Searches Dropdown */}
                         <Select<string>
+                            value={null}
+                            nullable={true}
+                            placeholder="Saved Searches..."
                             onChange={(value) => {
                                 if (value) {
                                     const savedSearch = savedSearches.find(search => search.name === value);
@@ -789,7 +792,6 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 value: search.name,
                                 label: search.name,
                             }))}
-                            placeholder="Saved Searches"
                         />
 
                         {/* Classroom Filter */}

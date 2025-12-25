@@ -1,0 +1,58 @@
+﻿
+> shape-of-the-day@0.0.0 test
+> jest src/components/teacher/TaskInventory.test.tsx
+
+  console.log
+    jest.setup.js executed
+
+      at Object.<anonymous> (jest.setup.js:1:9)
+
+node.exe : ts-jest[config] (WARN) 
+[94mmessage[0m[90m TS151001: [0mIf you 
+have issues related to imports, you should 
+consider setting `esModuleInterop` to `true` 
+in your TypeScript configuration file (usually 
+`tsconfig.json`). See https://blogs.msdn.micros
+oft.com/typescript/2018/01/31/announcing-typesc
+ript-2-7/#easier-ecmascript-module-interoperabi
+lity for more information.
+At line:1 char:1
++ & "C:\nvm4w\nodejs/node.exe" 
+"C:\nvm4w\nodejs/node_modules/npm/bin/np ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (t 
+   s-jest[config]...re information.:String) [  
+  ], RemoteException
+    + FullyQualifiedErrorId : NativeCommandErr 
+   or
+ 
+FAIL 
+src/components/teacher/TaskInventory.test.tsx
+  TaskInventory
+    ├ù should render the search input (33 ms)
+    ├ù should filter tasks based on search 
+query (3 ms)
+
+  ΓùÅ TaskInventory ΓÇ║ should render the 
+search input
+
+    FirebaseError: Expected first argument to 
+collection() to be a CollectionReference, a 
+DocumentReference or FirebaseFirestore
+
+
+  ΓùÅ TaskInventory ΓÇ║ should filter tasks 
+based on search query
+
+    FirebaseError: Expected first argument to 
+collection() to be a CollectionReference, a 
+DocumentReference or FirebaseFirestore
+
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        1.776 s
+Ran all test suites matching 
+src/components/teacher/TaskInventory.test.tsx.

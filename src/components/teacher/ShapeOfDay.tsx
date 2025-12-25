@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useClassStore } from '../../store/classStore';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../firebase';
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';
@@ -10,40 +9,14 @@ import {
     File, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation,
     Maximize2, Minimize2, Pencil
 } from 'lucide-react';
-import { ItemType, Attachment } from '../../types';
+import { ItemType, Task, TaskStatus } from '../../types';
 import { format, parse, isValid } from 'date-fns';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 import { DatePicker } from '../shared/DatePicker';
+import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 
 // --- Types ---
-import { LinkAttachment } from '../../types';
 
-interface Task {
-    id: string;
-    title: string;
-    description: string;
-    // Legacy single link (for backwards compatibility)
-    linkURL?: string;
-    linkTitle?: string;
-    // New multiple links support
-    links?: LinkAttachment[];
-    imageURL: string;
-    startDate: string;
-    endDate: string;
-    selectedRoomIds: string[];
-    presentationOrder: number;
-    createdAt: any;
-    status?: 'draft' | 'published' | 'done';
-    // Hierarchy fields
-    type: ItemType;
-    parentId: string | null;
-    rootId: string | null;
-    path: string[];
-    pathTitles: string[];
-    childIds: string[];
-    // Attachments
-    attachments?: Attachment[];
-}
 
 // Get file icon based on MIME type
 const getFileIcon = (mimeType: string) => {
@@ -138,45 +111,6 @@ const flattenTree = (nodes: TaskNode[], depth = 0): TaskNode[] => {
     return result;
 };
 
-// Check if a task is "ongoing" (multi-day and not due on the selected date)
-const isOngoingTask = (task: Task, forDate: string): boolean => {
-    if (!task.startDate || !task.endDate) return false;
-    // Multi-day task (spans more than one day) and not due on the selected date
-    return task.startDate !== task.endDate && task.endDate !== forDate;
-};
-
-// Get hierarchical number like "1.2.1" for nested tasks
-// Numbers all tasks in display order (ongoing tasks come after due tasks but still get sequential numbers)
-const getHierarchicalNumber = (task: Task, allTasks: Task[], forDate?: string): string => {
-    // Get siblings - all root tasks or all children of the same parent
-    // Note: We don't filter by date here since we want sequential numbering based on display order
-    const siblings = task.parentId
-        ? allTasks.filter(t => t.parentId === task.parentId)
-        : allTasks.filter(t => !t.parentId);
-
-    // Sort: due-today first (by presentationOrder), then ongoing (by presentationOrder)
-    if (forDate && !task.parentId) {
-        siblings.sort((a, b) => {
-            const aOngoing = isOngoingTask(a, forDate);
-            const bOngoing = isOngoingTask(b, forDate);
-            // If one is ongoing and one isn't, ongoing goes after
-            if (aOngoing !== bOngoing) return aOngoing ? 1 : -1;
-            // Otherwise sort by presentation order
-            return (a.presentationOrder || 0) - (b.presentationOrder || 0);
-        });
-    } else {
-        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-    }
-
-    const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
-
-    if (!task.parentId) return String(myIndex);
-
-    const parent = allTasks.find(t => t.id === task.parentId);
-    if (!parent) return String(myIndex);
-
-    return `${getHierarchicalNumber(parent, allTasks, forDate)}.${myIndex}`;
-};
 
 // Task card component with indentation and hierarchy info
 interface TaskCardProps {
@@ -546,8 +480,14 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         const unsubscribe = subscribeToClassroomTasks(currentClassId, (tasks) => {
             const taskData: Task[] = [];
             tasks.forEach(data => {
-                // Filter by selected date range and exclude drafts
-                if (selectedDate >= (data.startDate || '') && selectedDate <= (data.endDate || selectedDate) && data.status !== 'draft') {
+                // Tightened Filter: Must have both dates, and within range
+                const startDate = data.startDate || '';
+                const endDate = data.endDate || '';
+
+                const isInRange = selectedDate >= startDate && selectedDate <= endDate;
+                const isPublished = data.status !== 'draft';
+
+                if (startDate && endDate && isInRange && isPublished) {
                     taskData.push({
                         ...data,
                         type: data.type || 'task',
@@ -556,7 +496,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                         path: data.path || [],
                         pathTitles: data.pathTitles || [],
                         childIds: data.childIds || [],
-                        status: data.status,
+                        status: (data.status as TaskStatus) || 'todo',
                         attachments: data.attachments || [],
                     } as Task);
                 }
@@ -565,7 +505,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
             // Sorting is now handled by the service (orderBy presentationOrder)
             setTasks(taskData);
             setLoading(false);
-        });
+        }, user.uid);
 
         return () => unsubscribe();
     }, [currentClassId, user, selectedDate]);
@@ -573,26 +513,10 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     // Build hierarchical structure
     const taskTree = useMemo(() => buildTaskTree(tasks), [tasks]);
 
-    // Flatten for display - sort ongoing tasks to bottom, always show all children (no collapse)
+    // Flatten for display - sort all root tasks by presentation order, always show all children (no collapse)
     const displayTasks = useMemo(() => {
-        // Separate root nodes into due-today and ongoing
-        const dueToday: TaskNode[] = [];
-        const ongoing: TaskNode[] = [];
-
-        taskTree.forEach(node => {
-            if (isOngoingTask(node.task, selectedDate)) {
-                ongoing.push(node);
-            } else {
-                dueToday.push(node);
-            }
-        });
-
-        // Sort each group by presentation order
-        dueToday.sort((a, b) => (a.task.presentationOrder || 0) - (b.task.presentationOrder || 0));
-        ongoing.sort((a, b) => (a.task.presentationOrder || 0) - (b.task.presentationOrder || 0));
-
-        // Combine: due-today first, then ongoing
-        const sortedRoots = [...dueToday, ...ongoing];
+        // Sort all root nodes by presentation order strictly
+        const sortedRoots = [...taskTree].sort((a, b) => (a.task.presentationOrder || 0) - (b.task.presentationOrder || 0));
 
         const flatten = (nodes: TaskNode[], depth = 0): TaskNode[] => {
             const result: TaskNode[] = [];

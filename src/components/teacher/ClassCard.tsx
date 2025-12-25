@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Classroom } from '../../types';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { db, auth } from '../../firebase';
 import { Copy, Edit2, BarChart2, Check, Calendar, ListTodo, Presentation } from 'lucide-react';
 import { toDateString } from '../../utils/dateHelpers';
 
@@ -74,7 +74,8 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                 const today = toDateString();
                 const q = query(
                     collection(db, 'tasks'),
-                    where('selectedRoomIds', 'array-contains', classroom.id)
+                    where('selectedRoomIds', 'array-contains', classroom.id),
+                    where('teacherId', '==', auth.currentUser?.uid)
                 );
                 const snapshot = await getDocs(q);
 

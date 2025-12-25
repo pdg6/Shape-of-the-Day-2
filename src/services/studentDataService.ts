@@ -245,9 +245,9 @@ class StudentDataService {
     private startHeartbeat(): void {
         if (this.heartbeatInterval) return;
 
-        console.log('[StudentData] Starting heartbeat (every 60s)');
+        console.log('[StudentData] Starting heartbeat (every 5m)');
         this.sendHeartbeat(); // Initial heartbeat
-        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 60000);
+        this.heartbeatInterval = setInterval(() => this.sendHeartbeat(), 300000);
     }
 
     private stopHeartbeat(): void {

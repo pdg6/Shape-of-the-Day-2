@@ -337,30 +337,26 @@ export const cleanupInactiveStudents = onSchedule('every 30 minutes', async (eve
     let totalDeleted = 0;
 
     try {
-        // 1. Get all classrooms
-        const classroomsSnapshot = await db.collection('classrooms').get();
-        console.log(`[Cleanup] Checking ${classroomsSnapshot.size} classrooms`);
+        // 1. Query all inactive students across ALL classrooms using Collection Group query
+        // This is significantly more efficient than iterating through classrooms (N+1 query pattern)
+        const inactiveSnapshot = await db.collectionGroup('live_students')
+            .where('lastSeen', '<', threshold)
+            .get();
 
-        for (const classDoc of classroomsSnapshot.docs) {
-            const liveStudentsRef = classDoc.ref.collection('live_students');
-
-            // 2. Query students in this class with lastSeen < threshold
-            const inactiveSnapshot = await liveStudentsRef
-                .where('lastSeen', '<', threshold)
-                .get();
-
-            if (inactiveSnapshot.empty) continue;
-
-            console.log(`[Cleanup] Deleting ${inactiveSnapshot.size} students from class ${classDoc.id}`);
-
-            // 3. Batch delete
-            const batch = db.batch();
-            inactiveSnapshot.forEach(doc => {
-                batch.delete(doc.ref);
-                totalDeleted++;
-            });
-            await batch.commit();
+        if (inactiveSnapshot.empty) {
+            console.log('[Cleanup] No inactive students found');
+            return;
         }
+
+        console.log(`[Cleanup] Found ${inactiveSnapshot.size} inactive students to remove`);
+
+        // 2. Batch delete (limit 500 per batch for Firestore safety)
+        const batch = db.batch();
+        inactiveSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+            totalDeleted++;
+        });
+        await batch.commit();
 
         console.log(`[Cleanup] Finished. Total students deleted: ${totalDeleted}`);
     } catch (error) {
