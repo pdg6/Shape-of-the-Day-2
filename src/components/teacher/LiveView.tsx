@@ -4,10 +4,11 @@ import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { db, auth } from '../../firebase';
 import { useClassStore } from '../../store/classStore';
 import { LiveStudent, Task } from '../../types';
-import { CheckCircle, Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
+import { Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../shared/Button';
 import TaskProgressIcons from './TaskProgressIcons';
+import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 
 /**
  * LiveView Component
@@ -189,7 +190,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500 overflow-hidden">
             {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
             <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
                 {/* Left: Label + Class Name + Active Count */}
@@ -303,7 +304,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
 const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-slate-300 dark:border-gray-700 overflow-hidden shadow-sm">
+        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-slate-300 dark:border-gray-700 overflow-hidden shadow-layered transition-shadow duration-300">
             <table className="w-full text-left">
                 <thead className="bg-gray-50 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
                     <tr>
@@ -367,78 +368,163 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
 const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ tasks, students }) => {
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-12 text-gray-500">
-                <p>No tasks assigned to this class yet.</p>
+            <div className="text-center py-12 text-gray-500 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
+                <Activity className="w-12 h-12 mb-4 opacity-20 mx-auto" />
+                <p>No tasks scheduled for today.</p>
             </div>
         );
     }
 
+    // Sort tasks by presentation order strictly to match other views
+    const sortedTasks = [...tasks].sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks.map(task => {
-                // Calculate stats for this task using taskStatuses (per-task status tracking)
-                const studentsCompleted = students.filter(s =>
-                    s.taskStatuses?.[task.id] === 'done'
-                );
+        <div className="flex-1 flex overflow-x-auto pb-6 gap-6 custom-scrollbar snap-x">
+            {sortedTasks.map(task => {
+                // Calculate stats for this task
+                const helpStudents = students.filter(s => s.taskStatuses?.[task.id] === 'help');
+                const inProgressStudents = students.filter(s => s.taskStatuses?.[task.id] === 'in_progress');
+                const studentsCompleted = students.filter(s => s.taskStatuses?.[task.id] === 'done');
+                const totalWorking = helpStudents.length + inProgressStudents.length + studentsCompleted.length;
 
-                // Help status - taskStatuses uses unified 'help' status
-                const helpStudents = students.filter(s =>
-                    s.taskStatuses?.[task.id] === 'help'
-                );
-
-                const inProgressStudents = students.filter(s =>
-                    s.taskStatuses?.[task.id] === 'in_progress'
-                );
-
-                // Students actively working on this task (union of help + in_progress)
-                const activeStudents = [...helpStudents, ...inProgressStudents];
-
-                // Determine Card Styling
-                let borderColor = 'border-slate-300 dark:border-gray-700';
-                let bgColor = 'bg-brand-lightSurface dark:bg-brand-darkSurface';
-                let opacity = 'opacity-100';
-
-                if (helpStudents.length > 0) {
-                    borderColor = 'border-amber-500';
-                    bgColor = 'bg-amber-50 dark:bg-amber-900/10';
-                } else if (activeStudents.length > 0) {
-                    borderColor = 'border-brand-accent'; // In Progress
-                } else if (studentsCompleted.length === students.length && students.length > 0) {
-                    borderColor = 'border-brand-accent/50';
-                    bgColor = 'bg-brand-accent/5';
-                    opacity = 'opacity-60 grayscale'; // Greyed out effect
-                }
+                // Column styling based on activity
+                const hasActivity = totalWorking > 0;
+                const hasHelp = helpStudents.length > 0;
 
                 return (
-                    <div key={task.id} className={`rounded-xl border-2 shadow-sm p-5 transition-all duration-300 hover:shadow-lg ${borderColor} ${bgColor} ${opacity}`}>
-                        <div className="flex justify-between items-start mb-4">
-                            <h3 className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-2">
+                    <div
+                        key={task.id}
+                        className={`
+                            flex-shrink-0 w-72 snap-start flex flex-col h-full
+                            bg-brand-lightSurface dark:bg-brand-darkSurface 
+                            rounded-xl border-2 transition-all duration-300
+                            ${hasHelp
+                                ? 'border-amber-500 shadow-layered-lg shadow-amber-500/10 scale-[1.01]'
+                                : hasActivity
+                                    ? 'border-brand-accent shadow-layered'
+                                    : 'border-slate-300 dark:border-gray-700 opacity-60 shadow-sm'}
+                        `}
+                    >
+                        {/* Column Header */}
+                        <div className={`p-4 border-b-2 flex flex-col gap-3 ${hasHelp ? 'border-amber-100 dark:border-amber-900/30 bg-amber-50/50 dark:bg-amber-900/5' : 'border-slate-100 dark:border-gray-800'}`}>
+                            <div className="flex items-center justify-between">
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded shadow-sm ${hasHelp ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                                    TASK {getHierarchicalNumber(task, tasks)}
+                                </span>
+                                {hasHelp && (
+                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">
+                                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                                        ALERT
+                                    </div>
+                                )}
+                                {hasActivity && !hasHelp && (
+                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-brand-accent uppercase tracking-widest">
+                                        <span className="w-2 h-2 bg-brand-accent rounded-full animate-pulse" />
+                                        LIVE
+                                    </div>
+                                )}
+                            </div>
+
+                            <h3 className="font-black text-base text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-2 leading-tight tracking-tight uppercase">
                                 {task.title}
                             </h3>
-                            {studentsCompleted.length === students.length && students.length > 0 && (
-                                <CheckCircle className="w-6 h-6 text-brand-accent" />
+                        </div>
+
+                        {/* Student Buckets - Scrollable area */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-gray-50/30 dark:bg-gray-900/10">
+                            {/* HELP BUCKET */}
+                            <StudentBucketColumn
+                                label="Needs Help"
+                                students={helpStudents}
+                                color="bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/20"
+                                badgeColor="bg-red-500 text-white"
+                                textColor="text-red-700 dark:text-red-400"
+                            />
+
+                            {/* WORKING BUCKET */}
+                            <StudentBucketColumn
+                                label="Working"
+                                students={inProgressStudents}
+                                color="bg-emerald-50 dark:bg-emerald-900/10 border-emerald-100 dark:border-emerald-900/20"
+                                badgeColor="bg-emerald-500 text-white"
+                                textColor="text-emerald-700 dark:text-emerald-400"
+                            />
+
+                            {/* DONE BUCKET */}
+                            <StudentBucketColumn
+                                label="Done"
+                                students={studentsCompleted}
+                                color="bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-900/20"
+                                badgeColor="bg-blue-500 text-white"
+                                textColor="text-blue-700 dark:text-blue-400"
+                            />
+
+                            {!hasActivity && (
+                                <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-30 mt-12">
+                                    <Activity size={40} className="mb-3" />
+                                    <span className="text-xs font-black uppercase tracking-widest">Idle</span>
+                                </div>
                             )}
                         </div>
 
-                        {/* Progress Bar for this Task */}
-                        <div className="mb-4">
-                            <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
-                                <span>Class Progress</span>
-                                <span>{Math.round((studentsCompleted.length / (students.length || 1)) * 100)}%</span>
+                        {/* Footer Statistics */}
+                        <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl border-t border-gray-100 dark:border-gray-800 space-y-4">
+                            {/* Engagement Metric */}
+                            <div className="space-y-1.5">
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-brand-textDarkPrimary dark:text-white uppercase tracking-widest">Engagement</span>
+                                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary bg-white dark:bg-gray-900 px-1.5 rounded border border-black/5">
+                                            {Math.round((totalWorking / (students.length || 1)) * 100)}%
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-gray-400 leading-tight">Students who have started</span>
+                                </div>
+                                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-brand-accent/60 transition-all duration-500 w-[var(--engagement-width)]"
+                                        style={{ '--engagement-width': `${(totalWorking / (students.length || 1)) * 100}%` } as React.CSSProperties}
+                                    />
+                                </div>
                             </div>
-                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-brand-accent rounded-full transition-all duration-500"
-                                    style={{ width: `${(studentsCompleted.length / (students.length || 1)) * 100}%` }}
-                                />
-                            </div>
-                        </div>
 
-                        {/* Student Buckets - unified Help instead of Stuck/Question */}
-                        <div className="space-y-2">
-                            <StudentBucket label="Needs Help" count={helpStudents.length} students={helpStudents} color="text-amber-600 bg-amber-100" />
-                            <StudentBucket label="Working" count={inProgressStudents.length} students={inProgressStudents} color="text-brand-accent bg-brand-accent/10" />
-                            <StudentBucket label="Done" count={studentsCompleted.length} students={studentsCompleted} color="text-brand-accent bg-brand-accent/20" />
+                            {/* Friction Metric */}
+                            <div className="space-y-1.5">
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-brand-textDarkPrimary dark:text-white uppercase tracking-widest">Friction</span>
+                                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary bg-white dark:bg-gray-900 px-1.5 rounded border border-black/5">
+                                            {totalWorking > 0 ? Math.round((helpStudents.length / (helpStudents.length + inProgressStudents.length || 1)) * 100) : 0}%
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-gray-400 leading-tight">Active students needing help</span>
+                                </div>
+                                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-brand-accent/60 transition-all duration-500 w-[var(--friction-width)]"
+                                        style={{ '--friction-width': `${totalWorking > 0 ? (helpStudents.length / (helpStudents.length + inProgressStudents.length || 1)) * 100 : 0}%` } as React.CSSProperties}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Main Completion Progress */}
+                            <div className="space-y-1.5">
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-brand-textDarkPrimary dark:text-white uppercase tracking-widest">Completion</span>
+                                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary bg-white dark:bg-gray-900 px-1.5 rounded border border-black/5">
+                                            {Math.round((studentsCompleted.length / (students.length || 1)) * 100)}%
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-gray-400 leading-tight">Total finished for this task</span>
+                                </div>
+                                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-brand-accent/60 transition-all duration-500 w-[var(--completion-width)]"
+                                        style={{ '--completion-width': `${(studentsCompleted.length / (students.length || 1)) * 100}%` } as React.CSSProperties}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 );
@@ -447,19 +533,40 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
     );
 };
 
+const StudentBucketColumn: React.FC<{
+    label: string,
+    students: LiveStudent[],
+    color: string,
+    badgeColor: string,
+    textColor: string
+}> = ({ label, students, color, badgeColor, textColor }) => {
+    if (students.length === 0) return null;
 
-const StudentBucket: React.FC<{ label: string, count: number, students: LiveStudent[], color: string }> = ({ label, count, students, color }) => {
-    if (count === 0) return null;
     return (
-        <div className="flex items-start gap-2 text-sm">
-            <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase w-20 shrink-0 text-center ${color}`}>
-                {label} ({count})
-            </span>
-            <div className="flex flex-wrap gap-1 flex-1">
+        <div className={`rounded-lg border-2 p-3 ${color} animate-in slide-in-from-top-2 duration-300`}>
+            <div className="flex items-center justify-between mb-3">
+                <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${badgeColor}`}>
+                    {label}
+                </span>
+                <span className={`text-xs font-bold ${textColor}`}>
+                    {students.length}
+                </span>
+            </div>
+            <div className="space-y-2">
                 {students.map(s => (
-                    <span key={s.uid} className="text-xs text-gray-600 dark:text-gray-400 bg-white dark:bg-black/20 px-1.5 rounded border border-black/5 dark:border-white/5">
-                        {s.displayName}
-                    </span>
+                    <div
+                        key={s.uid}
+                        className="bg-white dark:bg-gray-900 p-2.5 rounded-lg border border-black/5 dark:border-white/5 shadow-sm flex flex-col gap-1"
+                    >
+                        <span className="text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            {s.displayName}
+                        </span>
+                        {s.currentMessage && (
+                            <span className="text-[10px] italic text-gray-500 dark:text-gray-400 line-clamp-2 leading-tight">
+                                "{s.currentMessage}"
+                            </span>
+                        )}
+                    </div>
                 ))}
             </div>
         </div>

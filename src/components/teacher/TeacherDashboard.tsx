@@ -218,7 +218,7 @@ const TeacherDashboard: React.FC = () => {
                                     bg-brand-lightSurface dark:bg-brand-darkSurface
                                     focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
                                     ${activeTab === item.id
-                                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5 shadow-sm'
+                                            ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary bg-brand-accent/5 shadow-sm border-slate-300 dark:border-transparent'
                                             : 'border-slate-300 dark:border-transparent text-brand-textDarkSecondary hover:border-slate-400 dark:hover:border-gray-600'
                                         }
                                     ${isCollapsed ? 'lg:w-12 lg:h-12 lg:justify-center w-full h-12' : 'w-full h-12'}
@@ -297,7 +297,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('create')}
-                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${reportsSubTab === 'analytics' ? 'text-brand-accent' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-gray-200'}`}
+                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${tasksSubTab === 'create' ? 'text-brand-accent bg-brand-accent/5' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-gray-200'}`}
                                                 >
                                                     Create
                                                 </button>
@@ -305,7 +305,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('browse')}
-                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${tasksSubTab === 'browse' ? 'text-brand-accent' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${tasksSubTab === 'browse' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                                 >
                                                     Inventory
                                                 </button>
@@ -327,7 +327,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setLiveViewSubTab('tasks')}
-                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${liveViewSubTab === 'tasks' ? 'text-brand-accent' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${liveViewSubTab === 'tasks' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                                 >
                                                     By Task
                                                 </button>
@@ -335,7 +335,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setLiveViewSubTab('students')}
-                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${liveViewSubTab === 'students' ? 'text-brand-accent' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${liveViewSubTab === 'students' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                                 >
                                                     By Student
                                                 </button>
@@ -357,7 +357,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setReportsSubTab('calendar')}
-                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${reportsSubTab === 'calendar' ? 'text-brand-accent' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${reportsSubTab === 'calendar' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                                 >
                                                     Calendar
                                                 </button>
@@ -365,7 +365,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setReportsSubTab('analytics')}
-                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${reportsSubTab === 'analytics' ? 'text-brand-accent' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                                                    className={`w-full text-left p-2 text-sm rounded-lg font-medium transition-colors focus:outline-none focus:text-brand-accent ${reportsSubTab === 'analytics' ? 'text-brand-accent bg-brand-accent/5' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                                                 >
                                                     Analytics
                                                 </button>

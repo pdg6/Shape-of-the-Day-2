@@ -112,7 +112,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     return (
                         <div
                             key={task.id}
-                            className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-lg border-2 ${borderClass} transition-all duration-200 hover:brightness-95 dark:hover:brightness-110`}
+                            className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-lg border-2 ${borderClass} shadow-layered-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-layered hover:brightness-95 dark:hover:brightness-110`}
                         >
                             {/* Import Button - Top Right */}
                             {onImportTask && !hideImportButtons && (

@@ -47,6 +47,17 @@
     /* Amber */
     --color-status-complete: #3B82F6;
     /* Blue-500 (brighter) */
+
+    /* Elevation Shadows - Layered Ambient Occlusion */
+    --shadow-layered-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-layered: 0 4px 6px rgba(0, 0, 0, 0.05), 0 12px 24px rgba(0, 0, 0, 0.05), 0 24px 48px rgba(0, 0, 0, 0.05);
+    --shadow-layered-lg: 0 15px 30px rgba(0, 0, 0, 0.08), 0 30px 60px rgba(0, 0, 0, 0.1);
+}
+
+@variant dark (&:where(.dark, .dark *)) {
+    --shadow-layered-sm: 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-layered: 0 4px 20px rgba(29, 78, 216, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-layered-lg: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
@@ -304,18 +315,24 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         @apply hover:border-brand-accent dark:hover:border-brand-accent;
         @apply active:scale-[0.98];
         /* Light mode: Layered soft shadows for tactile depth */
-        box-shadow:
-            0 1px 2px rgba(0, 0, 0, 0.03),
-            0 4px 8px rgba(0, 0, 0, 0.05),
-            0 8px 16px rgba(0, 0, 0, 0.03);
+        box-shadow: var(--shadow-layered);
     }
 
     .card-interactive:hover {
         transform: translateY(-2px);
-        box-shadow:
-            0 2px 4px rgba(0, 0, 0, 0.04),
-            0 8px 16px rgba(0, 0, 0, 0.08),
-            0 16px 32px rgba(0, 0, 0, 0.05);
+        box-shadow: var(--shadow-layered-lg);
+    }
+
+    .shadow-layered-sm {
+        box-shadow: var(--shadow-layered-sm);
+    }
+
+    .shadow-layered {
+        box-shadow: var(--shadow-layered);
+    }
+
+    .shadow-layered-lg {
+        box-shadow: var(--shadow-layered-lg);
     }
 
     /* Dark mode: Rim light + accent glow for premium glassy feel */
@@ -346,10 +363,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
         @apply rounded-xl border border-slate-200/50 dark:border-gray-700;
         /* Light mode: Layered soft shadows for tactile depth */
-        box-shadow:
-            0 1px 2px rgba(0, 0, 0, 0.03),
-            0 4px 8px rgba(0, 0, 0, 0.05),
-            0 8px 16px rgba(0, 0, 0, 0.03);
+        box-shadow: var(--shadow-layered);
     }
 
     /* Dark mode: Rim light + accent glow for premium glassy feel */
@@ -542,7 +556,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     .card-base {
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
         @apply border-2 border-slate-200 dark:border-gray-700;
-        @apply rounded-xl transition-colors;
+        @apply rounded-xl transition-all shadow-layered-sm;
     }
 
     /* Responsive padding using min() - shrinks on mobile, caps on desktop */

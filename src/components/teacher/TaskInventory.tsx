@@ -21,7 +21,7 @@ import { db, auth } from '../../firebase';
 import { Classroom, ItemType, Task, ALLOWED_CHILD_TYPES } from '../../types';
 import { useClassStore } from '../../store/classStore';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
-import { toDateString } from '../../utils/dateHelpers';
+import { format } from 'date-fns';
 import { deleteTaskWithChildren } from '../../services/firestoreService';
 import { DatePicker } from '../shared/DatePicker';
 import { Select } from '../shared/Select';
@@ -103,11 +103,9 @@ function TreeItem({
     const children = allTasks.filter(t => t.parentId === task.id);
     const hasChildren = children.length > 0;
     const isExpanded = expandedIds.has(task.id);
-    const progress = hasChildren ? getProgress(task.id) : null;
 
     // Check if this task type can have children
     const allowedChildTypes = ALLOWED_CHILD_TYPES[task.type];
-    const canHaveChildren = allowedChildTypes && allowedChildTypes.length > 0;
     const isQuickAddActive = quickAddParentId === task.id;
     const quickAddInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,8 +122,9 @@ function TreeItem({
                 className={`
                     group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all
                     hover:bg-gray-50 dark:hover:bg-gray-800
+                    pl-[var(--depth-padding)]
                 `}
-                style={{ paddingLeft: `${depth * 20 + 8}px` }}
+                style={{ '--depth-padding': `${depth * 20 + 8}px` } as React.CSSProperties}
             >
                 {/* Expand/Collapse Toggle */}
                 <button
@@ -198,8 +197,8 @@ function TreeItem({
             {/* Quick Add Input Row */}
             {isQuickAddActive && (
                 <div
-                    className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg mx-2 mb-1 border-2 border-dashed border-green-300 dark:border-green-700"
-                    style={{ marginLeft: `${(depth + 1) * 20 + 8}px` }}
+                    className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg mx-2 mb-1 border-2 border-dashed border-green-300 dark:border-green-700 ml-[var(--depth-margin)]"
+                    style={{ '--depth-margin': `${(depth + 1) * 20 + 8}px` } as React.CSSProperties}
                 >
                     <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(allowedChildTypes[0] || 'task')}`}>
                         {(() => {
@@ -588,8 +587,8 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                 path,
                 pathTitles,
                 linkURL: '',
-                startDate: parentTask.startDate || toDateString(),
-                endDate: parentTask.endDate || toDateString(),
+                startDate: parentTask.startDate || format(new Date(), 'yyyy-MM-dd'),
+                endDate: parentTask.endDate || format(new Date(), 'yyyy-MM-dd'),
                 selectedRoomIds: parentTask.selectedRoomIds || [],
                 teacherId: auth.currentUser.uid,
                 presentationOrder: maxOrder + 1,
@@ -605,7 +604,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
             setQuickAddParentId(null);
             setQuickAddTitle('');
         } catch (error) {
-            console.error("Error creating quick add task:", error);
+            console.error('Error adding item:', error);
             handleError("Failed to create item.");
         } finally {
             setIsQuickAddSaving(false);
@@ -622,10 +621,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
         setCalendarOffset(prev => prev + (direction === 'left' ? -1 : 1));
     };
 
-    // Reset calendar to show today
-    const resetCalendarToToday = () => {
-        setCalendarOffset(0);
-    };
+    // removed unused variables
 
     const handleCalendarMouseDown = (e: React.MouseEvent) => {
         if (!calendarRef.current) return;

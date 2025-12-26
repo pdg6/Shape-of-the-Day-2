@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { format, parse, isValid } from 'date-fns';
 
 import 'react-day-picker/style.css';
 
@@ -594,9 +595,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                         <span className="text-fluid-base font-bold whitespace-nowrap">
                             <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
-                                {selectedDate === toDateString()
-                                    ? 'Today'
-                                    : new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                                {(() => {
+                                    const d = new Date(selectedDate + 'T00:00:00');
+                                    return isValid(d) ? format(d, 'MMM d') : selectedDate;
+                                })()}
                             </span>
                             <span className="text-gray-400">{' '}To Do List</span>
                         </span>
@@ -623,7 +625,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     {/* LEFT PANEL: Task Editor - flex-1 to fill space on mobile */}
                     <div className="flex-1 min-h-0 lg:col-span-3 flex flex-col lg:overflow-y-auto custom-scrollbar">
                         {/* Main Form Card */}
-                        <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg border-2 border-slate-300 dark:border-gray-700 shadow-md dark:shadow-none p-4 space-y-4 flex-1 flex flex-col relative z-40">
+                        <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg border-2 border-slate-300 dark:border-gray-700 shadow-layered p-4 space-y-4 flex-1 flex flex-col relative z-40">
                             {/* Save State Indicator - top right */}
                             <div className="absolute top-3 right-3 z-10">
                                 {saveState === 'saving' && (

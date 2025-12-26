@@ -507,11 +507,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
         <div
             className={`group relative bg-brand-lightSurface dark:bg-brand-darkSurface 
                 rounded-xl border-2 border-gray-300 dark:border-gray-600 
-                hover:border-brand-accent/50 hover:shadow-sm hover:shadow-brand-accent/5
+                hover:border-brand-accent/50 shadow-layered
                 pt-1.5 pb-4 px-5
-                transition-all duration-200
-                hover:-translate-y-0.5 select-none
-                ${isDone ? 'opacity-60' : ''}`}
+                transition-all duration-300
+                hover:-translate-y-0.5 hover:shadow-layered-lg select-none
+                ${isDone ? 'opacity-60 shadow-layered-sm' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
                 width: `calc(100% - ${indent}px)`

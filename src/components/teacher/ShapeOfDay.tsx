@@ -179,10 +179,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
             className={`group bg-brand-lightSurface dark:bg-brand-darkSurface 
                 border-2 border-slate-300 dark:border-gray-700 rounded-xl p-5
                 border-l-4 ${typeBorderColor}
-                transition-all duration-300
-                hover:border-brand-accent hover:shadow-2xl hover:shadow-slate-400/20
+                transition-all duration-300 shadow-layered
+                hover:border-brand-accent hover:shadow-layered-lg
                 hover:-translate-y-0.5 relative select-none
-                ${task.status === 'done' ? 'opacity-60' : ''}`}
+                ${task.status === 'done' ? 'opacity-60 shadow-layered-sm' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
                 width: `calc(100% - ${indent}px)`
@@ -592,11 +592,9 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                             />
                             <span className="text-fluid-base font-bold whitespace-nowrap">
                                 <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
-                                    {selectedDate === today
-                                        ? 'Today'
-                                        : isValid(parsedDate) ? format(parsedDate, 'EEE, MMM d') : selectedDate}
+                                    {isValid(parsedDate) ? format(parsedDate, 'MMM d') : selectedDate}
                                 </span>
-                                <span className="text-gray-400">{' '}Schedule</span>
+                                <span className="text-gray-400">{' '}Shape of the Day</span>
                             </span>
                             <button
                                 onClick={() => onNavigate?.('live', 'students')}

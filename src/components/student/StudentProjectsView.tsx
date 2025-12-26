@@ -356,7 +356,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-1">
                     {title}
                 </h3>
-                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden p-1">
+                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-layered p-1">
                     {nodes.map((node, idx) => renderNode(node, `${title}-${idx}`, false))}
                 </div>
             </div>
