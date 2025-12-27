@@ -52,8 +52,8 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
     // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
-            <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-center mb-6">
-                <p className="text-gray-400 dark:text-gray-500">No tasks scheduled for this day.</p>
+            <div className="bg-brand-lightSurface dark:bg-[#1a1d24] p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center mb-6 shadow-layered-sm">
+                <p className="text-gray-400 dark:text-gray-500 font-medium">No tasks scheduled for this day.</p>
             </div>
         );
     }
@@ -66,22 +66,22 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                 </h3>
                 {!hideImportButtons && (
                     allTasksImported ? (
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-accent/10 text-brand-accent border-2 border-brand-accent/30">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-accent/10 text-brand-accent border border-brand-accent/30 font-bold text-sm tracking-tight">
                             <Check className="w-4 h-4" />
-                            <span className="font-medium hidden sm:inline">All Added</span>
-                            <span className="font-medium sm:hidden">Added</span>
+                            <span className="hidden sm:inline">ALL ADDED</span>
+                            <span className="sm:hidden">ADDED</span>
                         </div>
                     ) : (
                         <button
                             onClick={onImport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-2 border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all bg-gray-100 dark:bg-[#151921] text-gray-600 dark:text-gray-400 border border-slate-200 dark:border-white/10 hover:border-brand-accent/30 hover:shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent active:bg-brand-accent/10 font-bold text-sm tracking-tight"
                         >
                             <Download className="w-4 h-4" />
-                            <span className="font-medium hidden sm:inline">
-                                {someTasksImported ? 'Import Remaining' : 'Import All'}
+                            <span className="hidden sm:inline">
+                                {someTasksImported ? 'IMPORT REMAINING' : 'IMPORT ALL'}
                             </span>
-                            <span className="font-medium sm:hidden">
-                                {someTasksImported ? 'Rest' : 'All'}
+                            <span className="sm:hidden">
+                                {someTasksImported ? 'REST' : 'ALL'}
                             </span>
                         </button>
                     )

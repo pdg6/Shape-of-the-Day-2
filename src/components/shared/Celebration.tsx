@@ -20,9 +20,9 @@ interface ConfettiPiece {
 /**
  * Confetti animation component
  */
-export const Confetti: React.FC<{ active: boolean; duration?: number }> = ({ 
-    active, 
-    duration = 3000 
+export const Confetti: React.FC<{ active: boolean; duration?: number }> = ({
+    active,
+    duration = 3000
 }) => {
     const [pieces, setPieces] = useState<ConfettiPiece[]>([]);
     const [isVisible, setIsVisible] = useState(false);
@@ -63,7 +63,7 @@ export const Confetti: React.FC<{ active: boolean; duration?: number }> = ({
     if (!isVisible || pieces.length === 0) return null;
 
     return (
-        <div 
+        <div
             className="fixed inset-0 pointer-events-none z-[2000] overflow-hidden"
             aria-hidden="true"
         >
@@ -151,23 +151,23 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
     return (
         <>
             <Confetti active={showConfetti} />
-            <div 
+            <div
                 className="fixed inset-0 z-[1500] flex items-center justify-center p-4"
                 onClick={type === 'milestone' ? undefined : onClose}
             >
                 {/* Backdrop */}
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-                
+
                 {/* Modal */}
-                <div 
-                    className="relative bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 shadow-2xl p-8 text-center max-w-sm w-full animate-celebration-pop"
+                <div
+                    className="relative bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered-lg p-8 text-center max-w-sm w-full animate-celebration-pop"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Animated icon */}
                     <div className="mb-4 animate-bounce-gentle">
                         {getIcon()}
                     </div>
-                    
+
                     {/* Message */}
                     <h2 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2">
                         {message || getDefaultMessage()}
@@ -175,17 +175,17 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
                     <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                         {subMessage || getDefaultSubMessage()}
                     </p>
-                    
+
                     {/* Close button for milestone type */}
                     {type === 'milestone' && (
                         <button
                             onClick={onClose}
-                            className="mt-6 px-6 py-2 bg-brand-accent text-white font-bold rounded-md hover:bg-brand-accent/90 transition-colors"
+                            className="mt-6 px-6 py-2 bg-brand-accent text-white font-bold rounded-xl hover:bg-brand-accent/90 transition-all active:scale-[0.98] shadow-layered-sm tracking-tight"
                         >
-                            Awesome!
+                            AWESOME!
                         </button>
                     )}
-                    
+
                     {/* Auto-close indicator for other types */}
                     {type !== 'milestone' && (
                         <div className="mt-4 text-xs text-gray-400">
@@ -203,7 +203,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
  */
 export const TaskCompleteAnimation: React.FC<{ show: boolean }> = ({ show }) => {
     if (!show) return null;
-    
+
     return (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
             <div className="animate-ping-once">
@@ -231,17 +231,17 @@ export const ProgressCelebration: React.FC<ProgressCelebrationProps> = ({
     useEffect(() => {
         // Check for milestone crossings
         const milestones = [25, 50, 75, 100];
-        
+
         for (const milestone of milestones) {
             if (previousProgress < milestone && progress >= milestone) {
                 setMilestoneType(milestone.toString() as '25' | '50' | '75' | '100');
                 setShowCelebration(true);
-                
+
                 const timer = setTimeout(() => {
                     setShowCelebration(false);
                     setMilestoneType(null);
                 }, 2000);
-                
+
                 return () => clearTimeout(timer);
             }
         }

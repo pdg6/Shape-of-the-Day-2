@@ -64,7 +64,7 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
             onClick={onClose}
         >
             <div
-                className="bg-brand-darkSurface dark:bg-brand-darkSurface rounded-xl shadow-2xl w-full max-w-md p-8 transition-all duration-300 border-2 border-gray-200 dark:border-gray-700 relative"
+                className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered w-full max-w-md p-8 transition-all duration-300 border border-slate-200 dark:border-white/5 relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Close Button (only shown if onClose prop is provided) */}
@@ -94,9 +94,9 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                             autoComplete="off"
                             spellCheck={false}
                             className={`
-                                input-base input-focus text-lg text-center tracking-[0.5em] rounded-lg
-                                placeholder:tracking-normal placeholder:font-sans
-                                ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50' : ''}
+                                input-base input-focus text-lg text-center tracking-[0.5em] rounded-xl
+                                placeholder:tracking-normal placeholder:font-sans bg-gray-100 dark:bg-[#151921]
+                                ${error ? 'border-red-300 focus:border-red-500 focus:ring-red-200 dark:border-red-500/50' : 'border-slate-200 dark:border-white/5 shadow-layered-sm'}
                             `}
                             autoFocus
                             enterKeyHint="go"
@@ -110,9 +110,9 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                         type="submit"
                         disabled={!validateName(sanitizeName(name)).valid}
                         onClick={(e) => e.stopPropagation()}
-                        className="btn-primary-green text-lg"
+                        className="w-full bg-brand-accent hover:bg-brand-accent/90 text-white font-bold py-3 rounded-xl shadow-layered transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed text-lg tracking-tight"
                     >
-                        Join Class
+                        JOIN CLASS
                     </button>
                 </form>
             </div>

@@ -176,12 +176,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
     return (
         <div
-            className={`group bg-brand-lightSurface dark:bg-brand-darkSurface 
-                border-2 border-slate-300 dark:border-gray-700 rounded-xl p-5
+            className={`group bg-brand-lightSurface dark:bg-[#1a1d24] 
+                border border-slate-200 dark:border-white/5 rounded-2xl p-5
                 border-l-4 ${typeBorderColor}
-                transition-all duration-300 shadow-layered
+                transition-all duration-300 shadow-layered lift-hover
                 hover:border-brand-accent hover:shadow-layered-lg
-                hover:-translate-y-0.5 relative select-none
+                relative select-none
                 ${task.status === 'done' ? 'opacity-60 shadow-layered-sm' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
@@ -572,12 +572,12 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
     return (
         <div
             ref={containerRef}
-            className={`h-full flex flex-col space-y-3 overflow-y-auto custom-scrollbar p-1 pt-4
+            className={`h-full flex flex-col space-y-3 overflow-visible custom-scrollbar p-1 pt-4
                 ${isFullscreen ? 'bg-brand-light dark:bg-brand-dark p-6' : ''}`}
         >
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shrink-0">
+            <div className="w-full bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered shrink-0 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -598,7 +598,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                             </span>
                             <button
                                 onClick={() => onNavigate?.('live', 'students')}
-                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-fluid-md font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-fluid-md font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer glow-emerald/10 hover:glow-emerald/20 shadow-layered-sm"
                             >
                                 <Users size={12} />
                                 <span>{activeStudentCount} Active</span>
@@ -651,7 +651,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 {loading ? (
                     <div className="text-center py-12 text-gray-400">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
-                    <div className="text-center py-12 text-brand-textDarkSecondary italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
+                    <div className="text-center py-12 text-brand-textDarkSecondary bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
                         No tasks scheduled for this date.
                     </div>
                 ) : (

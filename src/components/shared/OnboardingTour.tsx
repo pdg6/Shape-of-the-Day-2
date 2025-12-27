@@ -250,11 +250,11 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
         if (target && step.position !== 'center') {
             const rect = target.getBoundingClientRect();
             setTargetRect(rect);
-            
+
             // Calculate tooltip position based on target
             let top = 0;
             let left = 0;
-            
+
             switch (step.position) {
                 case 'top':
                     top = rect.top - 20;
@@ -273,7 +273,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                     left = rect.right + 20;
                     break;
             }
-            
+
             setPosition({ top, left });
         }
     }, [step]);
@@ -288,11 +288,11 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
         <div className="fixed inset-0 z-[1000]" role="dialog" aria-modal="true" aria-label="Tour guide">
             {/* Backdrop with spotlight */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onSkip} />
-            
+
             {/* Spotlight on target element */}
             {targetRect && !isCentered && (
                 <div
-                    className="absolute border-2 border-brand-accent rounded-lg shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-300"
+                    className="absolute border border-brand-accent rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-300"
                     style={{
                         top: targetRect.top - 8,
                         left: targetRect.left - 8,
@@ -301,12 +301,12 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                     }}
                 />
             )}
-            
+
             {/* Tooltip */}
             <div
                 className={`
-                    absolute bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-2xl
-                    border-2 border-brand-accent p-5 w-80 max-w-[90vw]
+                    absolute bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered-lg
+                    border border-slate-200 dark:border-white/10 p-5 w-80 max-w-[90vw]
                     transition-all duration-300 ease-out
                     ${isCentered ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}
                 `}
@@ -314,9 +314,9 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                     top: position.top,
                     left: position.left,
                     transform: step.position === 'top' ? 'translate(-50%, -100%)' :
-                               step.position === 'bottom' ? 'translate(-50%, 0)' :
-                               step.position === 'left' ? 'translate(-100%, -50%)' :
-                               'translate(0, -50%)'
+                        step.position === 'bottom' ? 'translate(-50%, 0)' :
+                            step.position === 'left' ? 'translate(-100%, -50%)' :
+                                'translate(0, -50%)'
                 } : undefined}
             >
                 {/* Close button */}
@@ -327,7 +327,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                 >
                     <X className="w-4 h-4" />
                 </button>
-                
+
                 {/* Content */}
                 <div className="pr-6">
                     {step.icon && (
@@ -340,21 +340,21 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                         {step.content}
                     </p>
                 </div>
-                
+
                 {/* Progress bar (Goal-Gradient Effect) */}
                 <div className="mb-4">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1">
+                    <div className="flex justify-between text-xs text-gray-500 mb-1.5 font-medium">
                         <span>Step {currentStep + 1} of {totalSteps}</span>
                         <span>{Math.round(progress)}% complete</span>
                     </div>
-                    <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
+                    <div className="h-1.5 bg-slate-200 dark:bg-[#151921] rounded-full overflow-hidden">
+                        <div
                             className="h-full bg-brand-accent transition-all duration-300 ease-out rounded-full"
                             style={{ width: `${progress}%` }}
                         />
                     </div>
                 </div>
-                
+
                 {/* Navigation */}
                 <div className="flex items-center justify-between gap-3">
                     <button
@@ -363,29 +363,29 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                     >
                         Skip tour
                     </button>
-                    
+
                     <div className="flex gap-2">
                         {!isFirstStep && (
                             <button
                                 onClick={onPrev}
-                                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-brand-accent hover:bg-brand-accent/10 rounded-md transition-colors"
+                                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-brand-accent hover:bg-brand-accent/5 rounded-xl transition-all border border-transparent hover:border-brand-accent/30"
                             >
                                 <ChevronLeft className="w-4 h-4" />
-                                Back
+                                BACK
                             </button>
                         )}
                         <button
                             onClick={onNext}
-                            className="flex items-center gap-1 px-4 py-2 text-sm font-bold bg-brand-accent text-white rounded-md hover:bg-brand-accent/90 transition-colors"
+                            className="flex items-center gap-1 px-4 py-2 text-sm font-bold bg-brand-accent text-white rounded-xl hover:bg-brand-accent/90 transition-all active:scale-[0.98] shadow-layered-sm tracking-tight"
                         >
                             {isLastStep ? (
                                 <>
                                     <Check className="w-4 h-4" />
-                                    Done
+                                    DONE
                                 </>
                             ) : (
                                 <>
-                                    Next
+                                    NEXT
                                     <ChevronRight className="w-4 h-4" />
                                 </>
                             )}
@@ -422,8 +422,8 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }
             <button
                 onClick={handleClick}
                 className={`
-                    p-2 rounded-md text-gray-500 hover:text-brand-accent hover:bg-gray-100 
-                    dark:hover:bg-gray-800 transition-all
+                    p-2 rounded-xl text-gray-500 hover:text-brand-accent hover:bg-slate-100 
+                    dark:hover:bg-[#151921] transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/5
                     ${className}
                 `}
                 title="Help & Tour"
@@ -434,9 +434,9 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-accent rounded-full animate-pulse" />
                 )}
             </button>
-            
+
             {showMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 py-2 z-50">
+                <div className="absolute right-0 mt-3 w-48 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered-lg border border-slate-200 dark:border-white/5 py-2 z-50">
                     <button
                         onClick={() => { startTour('teacher-welcome'); setShowMenu(false); }}
                         className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

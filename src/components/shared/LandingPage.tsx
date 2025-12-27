@@ -41,11 +41,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </p>
             </div>
 
-            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl shadow-lg border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 overflow-hidden">
                 {/* Tabs for switching modes */}
                 <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-md mx-6">
                     <div
-                        className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-brand-darkSurface rounded-lg shadow-sm transition-all duration-300 ease-out ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
+                        className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-[#151921] rounded-lg shadow-layered-sm transition-all duration-300 ease-out ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
                             }`}
                     />
                     <button

@@ -58,7 +58,7 @@ const getStatusColors = (status: string | undefined): { bg: string; text: string
             };
         default: // todo, draft, undefined
             return {
-                bg: 'bg-gray-200 dark:bg-gray-700',
+                bg: 'bg-slate-200 dark:bg-[#151921]',
                 text: 'text-gray-500 dark:text-gray-400',
                 border: 'border-gray-300 dark:border-gray-600'
             };

@@ -541,8 +541,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 className={`
                                                     flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
                                                     ${isActive
-                                                        ? 'bg-slate-200 dark:bg-gray-700 text-brand-textDarkPrimary dark:text-gray-200 border border-slate-300 dark:border-gray-600'
-                                                        : 'bg-slate-50 dark:bg-gray-800/50 text-brand-textDarkSecondary dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-gray-800 hover:text-brand-textDarkPrimary dark:hover:text-gray-300 border border-transparent'}
+                                                        ? 'bg-slate-200 dark:bg-white/10 text-brand-textDarkPrimary dark:text-gray-200 border border-slate-300 dark:border-white/10'
+                                                        : 'bg-slate-50 dark:bg-[#151921] text-brand-textDarkSecondary dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-[#1a1d24] hover:text-brand-textDarkPrimary dark:hover:text-gray-300 border border-transparent'}
                                                 `}
                                             >
                                                 <span className="font-bold">{hierNum}.</span>
@@ -619,13 +619,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             </div>
 
             {/* Main Content - flex layout on mobile, grid on desktop */}
-            <div className="flex-1 min-h-0 flex flex-col lg:block overflow-hidden">
-                <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6 lg:h-full overflow-y-auto lg:overflow-hidden">
+            <div className="flex-1 min-h-0 flex flex-col lg:block overflow-visible">
+                <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6 lg:h-full overflow-y-auto lg:overflow-visible">
 
                     {/* LEFT PANEL: Task Editor - flex-1 to fill space on mobile */}
                     <div className="flex-1 min-h-0 lg:col-span-3 flex flex-col lg:overflow-y-auto custom-scrollbar">
                         {/* Main Form Card */}
-                        <div className="w-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-lg border-2 border-slate-300 dark:border-gray-700 shadow-layered p-4 space-y-4 flex-1 flex flex-col relative z-40">
+                        <div className="w-full bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 space-y-4 flex-1 flex flex-col relative z-40 lift-hover">
                             {/* Save State Indicator - top right */}
                             <div className="absolute top-3 right-3 z-10">
                                 {saveState === 'saving' && (
@@ -773,7 +773,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             {/* Description Container with embedded Upload/Link buttons */}
                             <div className="flex-1 min-h-[120px] relative">
                                 <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 rounded-md border-2 border-slate-400 dark:border-gray-500 focus-within:border-slate-500 dark:focus-within:border-gray-400 bg-slate-200 dark:bg-gray-800/70 shadow-inner overflow-y-auto transition-colors">
+                                    <div className="flex-1 rounded-2xl border border-slate-200 dark:border-white/5 focus-within:border-brand-accent/30 dark:focus-within:border-brand-accent/30 bg-slate-50 dark:bg-[#151921] shadow-inner-sm overflow-y-auto transition-all duration-300">
                                         <RichTextEditor
                                             value={activeFormData.description}
                                             onChange={(value) => updateActiveCard('description', value)}
@@ -825,10 +825,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 )}
                                                 <button
                                                     onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
                                                     title="Remove attachment"
                                                 >
-                                                    <X size={10} />
+                                                    <X size={12} />
                                                 </button>
                                             </div>
                                         ))}
@@ -850,10 +850,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 </a>
                                                 <button
                                                     onClick={() => hookRemoveLink(link.id)}
-                                                    className="p-0.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 rounded shrink-0"
+                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
                                                     title="Remove link"
                                                 >
-                                                    <X size={10} />
+                                                    <X size={12} />
                                                 </button>
                                             </div>
                                         ))}
@@ -866,7 +866,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         )}
                                         {/* Upload & Link buttons - Always visible now for better UX */}
                                         <div className="flex items-center gap-3">
-                                            <div className="relative py-2.5 px-4 min-h-[44px] rounded-md border-2 border-slate-400 dark:border-gray-500 bg-slate-50 dark:bg-gray-800/30 shadow-sm hover:bg-white dark:hover:bg-gray-800/50 hover:border-brand-accent dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group cursor-pointer">
+                                            <div className="relative py-2 px-4 min-h-[40px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 shadow-layered-sm hover:shadow-layered-md hover:scale-[1.02] hover:border-brand-accent/50 transition-all duration-300 group cursor-pointer">
                                                 <input
                                                     ref={fileInputRef}
                                                     type="file"
@@ -877,9 +877,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     title="Upload files"
                                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                 />
-                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-slate-500 group-hover:text-slate-700 dark:group-hover:text-gray-300'}`}>
+                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-slate-500 dark:text-gray-400 group-hover:text-brand-accent'}`}>
                                                     {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
-                                                    <span className="text-sm font-medium">{isUploading ? 'Uploading...' : 'Upload'}</span>
+                                                    <span className="text-sm font-bold tracking-tight">{isUploading ? 'Uploading...' : 'Upload'}</span>
                                                 </div>
                                             </div>
                                             <button
@@ -888,11 +888,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     const url = prompt('Enter URL:');
                                                     if (url) addLink(url);
                                                 }}
-                                                className="py-2.5 px-4 min-h-[44px] rounded-md border-2 border-slate-400 dark:border-gray-500 bg-slate-50 dark:bg-gray-800/30 shadow-sm hover:bg-white dark:hover:bg-gray-800/50 hover:border-slate-500 dark:hover:border-gray-400 hover:scale-105 hover:shadow-md transition-all duration-200 group"
+                                                className="py-2 px-4 min-h-[40px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 shadow-layered-sm hover:shadow-layered-md hover:scale-[1.02] hover:border-brand-accent/50 transition-all duration-300 group"
                                             >
-                                                <div className="flex items-center justify-center gap-2 text-slate-500 group-hover:text-slate-700 dark:group-hover:text-gray-300 transition-colors">
+                                                <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-gray-400 group-hover:text-brand-accent transition-colors">
                                                     <LinkIcon size={16} />
-                                                    <span className="text-sm font-medium">Add Link</span>
+                                                    <span className="text-sm font-bold tracking-tight">Add Link</span>
                                                 </div>
                                             </button>
                                         </div>
@@ -967,8 +967,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     </div>
 
                     {/* RIGHT PANEL: Task List - shrink-0 on mobile so form gets the space */}
-                    <div className="shrink-0 lg:col-span-1 flex flex-col lg:h-full lg:overflow-hidden">
-                        <div className="flex flex-col justify-end lg:justify-between overflow-hidden pb-2 lg:pb-0 lg:h-full lg:bg-brand-lightSurface lg:dark:bg-brand-darkSurface lg:border-2 lg:border-slate-300 lg:dark:border-gray-700 lg:rounded-lg lg:shadow-md lg:dark:shadow-none lg:p-3">
+                    <div className="shrink-0 lg:col-span-1 flex flex-col lg:h-full lg:overflow-visible">
+                        <div className="flex flex-col justify-end lg:justify-between overflow-visible pb-2 lg:pb-0 lg:h-full lg:p-0">
 
 
                             {/* Mobile Overlay - closes accordion when clicking outside */}
@@ -981,7 +981,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             )}
 
                             {/* Mobile Accordion Header for Task List - only visible on mobile */}
-                            <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                            <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-[#1a1d24]">
                                 {/* Left: Date Picker - Full display for more presence */}
                                 <DatePicker
                                     value={selectedDate}
@@ -1013,7 +1013,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
-                                overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-brand-lightSurface dark:bg-brand-darkSurface
+                                overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-brand-lightSurface dark:bg-transparent
                                 lg:flex-1 lg:min-h-0 lg:pt-0 lg:pb-4 lg:bg-transparent
                                 ${isMobileTasksOpen ? 'flex-1 pt-3 pb-4 rounded-lg' : 'max-h-0 lg:max-h-none overflow-hidden'}
                                 transition-all duration-300 ease-in-out
@@ -1047,10 +1047,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 }}
                                                 style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
                                                 className={`
-                                                group relative p-3 rounded-lg border-2 transition-all cursor-pointer
+                                                group relative p-3 rounded-xl border transition-all cursor-pointer lift-hover
                                                 ${isEditing
-                                                        ? 'border-gray-400 dark:border-gray-500 shadow-md bg-white dark:bg-gray-800'
-                                                        : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 bg-brand-lightSurface dark:bg-brand-darkSurface'}
+                                                        ? 'border-brand-accent/50 shadow-layered-lg bg-white dark:bg-[#1a1d24]'
+                                                        : 'border-slate-200 dark:border-white/5 hover:border-brand-accent/30 bg-brand-lightSurface dark:bg-[#1a1d24] shadow-layered'}
                                             `}
                                             >
 

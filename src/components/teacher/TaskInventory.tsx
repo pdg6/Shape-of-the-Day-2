@@ -132,7 +132,7 @@ function TreeItem({
                         e.stopPropagation();
                         onToggleExpand(task.id);
                     }}
-                    className={`p-1 rounded transition-all ${hasChildren ? 'hover:bg-gray-200 dark:hover:bg-gray-700' : 'opacity-0'}`}
+                    className={`p-1 rounded-lg transition-all ${hasChildren ? 'hover:bg-slate-200 dark:hover:bg-white/5' : 'opacity-0'}`}
                     disabled={!hasChildren}
                 >
                     {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -186,7 +186,7 @@ function TreeItem({
                             e.stopPropagation();
                             onCopyToBoard(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-brand-accent transition-all flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-slate-200 dark:hover:bg-[#151921] text-gray-400 hover:text-brand-accent transition-all flex items-center justify-center border border-transparent hover:border-slate-300 dark:hover:border-white/5"
                         title="Copy to Task Board"
                     >
                         <Copy size={14} />
@@ -227,7 +227,7 @@ function TreeItem({
                             }, 150);
                         }}
                         placeholder={`New ${getTypeLabel(allowedChildTypes[0] || 'task').toLowerCase()} title...`}
-                        className="flex-1 px-2 py-1 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="flex-1 px-2 py-1 text-sm bg-white dark:bg-[#1a1d24] border border-slate-200 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                         disabled={isQuickAddSaving}
                     />
                     {isQuickAddSaving ? (
@@ -826,11 +826,11 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             <button
                                 onClick={() => setFilterDate(null)}
                                 className={`
-                                flex-shrink-0 px-4 py-2 rounded-md border-2 font-bold text-sm transition-all select-none cursor-pointer
-                                focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95
+                                flex-shrink-0 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all duration-300 transition-float hover:-translate-y-0.5 select-none cursor-pointer
+                                focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 shadow-layered-sm
                                 ${filterDate === null
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                        : 'border-gray-400 dark:border-gray-600 text-gray-500 hover:border-gray-600 dark:hover:border-gray-400'
+                                        : 'border-slate-200 dark:border-white/10 text-gray-500 hover:border-slate-400 dark:hover:border-white/20'
                                     }
                             `}
                             >
@@ -840,7 +840,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             {/* Left Arrow */}
                             <button
                                 onClick={() => navigateCalendar('left')}
-                                className="flex-shrink-0 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                                 title="Previous week"
                             >
                                 <ChevronLeft size={18} />
@@ -909,7 +909,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             {/* Right Arrow */}
                             <button
                                 onClick={() => navigateCalendar('right')}
-                                className="flex-shrink-0 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-all"
+                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                                 title="Next week"
                             >
                                 <ChevronRight size={18} />

@@ -8,7 +8,7 @@ import React from 'react';
  */
 const StudentRoster: React.FC = () => {
     return (
-        <div className="bg-brand-lightSurface dark:bg-brand-darkSurface p-6 rounded-xl shadow-sm border-2 border-gray-200 dark:border-gray-800 transition-colors duration-200">
+        <div className="bg-brand-lightSurface dark:bg-[#1a1d24] p-6 rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 transition-colors duration-200">
             <h2 className="text-xl font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">Student Roster</h2>
             <p className="text-gray-600 dark:text-brand-textSecondary">Manage students and attendance.</p>
         </div>

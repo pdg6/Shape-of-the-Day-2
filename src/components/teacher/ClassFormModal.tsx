@@ -112,7 +112,7 @@ export const ClassFormModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-modal flex items-center justify-center p-4">
-            <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 p-6 transition-transform duration-200">
+            <div className="bg-brand-lightSurface dark:bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 p-6 transition-transform duration-200">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
                     <button onClick={() => setIsClassModalOpen(false)}><X className="w-6 h-6 text-gray-500" /></button>
@@ -120,7 +120,7 @@ export const ClassFormModal: React.FC = () => {
                 {/* Law of Common Region: Group related fields visually */}
                 <div className="space-y-4">
                     {/* Basic Info Section - Grouped with border */}
-                    <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700 space-y-4">
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#151921] border border-gray-100 dark:border-white/5 space-y-4">
                         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Basic Information</h4>
                         <div>
                             <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Class Name <span className="text-red-500">*</span></label>
@@ -158,7 +158,7 @@ export const ClassFormModal: React.FC = () => {
                     </div>
 
                     {/* Appearance Section - Separate visual group */}
-                    <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border-2 border-gray-100 dark:border-gray-700">
+                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#151921] border border-gray-100 dark:border-white/5">
                         <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Appearance</h4>
                         <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Theme Color</label>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">This color will accent both teacher and student views</p>
@@ -181,7 +181,7 @@ export const ClassFormModal: React.FC = () => {
                     {/* Primary action button - Large touch target */}
                     <button
                         onClick={handleSaveClass}
-                        className="w-full py-3 bg-brand-accent text-white font-bold rounded-md mt-4 hover:opacity-90 transition-all"
+                        className="w-full py-3 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:border-brand-accent/40 font-bold rounded-xl mt-4 transition-all duration-300 transition-float hover:-translate-y-0.5 shadow-layered-sm"
                     >
                         {editingClass ? 'Save Changes' : 'Create Class'}
                     </button>
@@ -189,7 +189,7 @@ export const ClassFormModal: React.FC = () => {
                     {editingClass && (
                         <button
                             onClick={handleDeleteClass}
-                            className="w-full py-3 bg-red-50 text-red-500 font-bold rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-red-500/10 dark:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/40 font-bold rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 shadow-layered-sm flex items-center justify-center gap-2 mt-4"
                         >
                             <Trash2 className="w-4 h-4" />
                             Delete Class

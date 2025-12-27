@@ -129,18 +129,18 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
     };
 
     return (
-        <div className="code-block-wrapper relative rounded-md border-2 border-gray-400 dark:border-gray-600 my-3 transition-colors hover:border-gray-600 dark:hover:border-gray-400 w-full max-w-full">
+        <div className="code-block-wrapper relative rounded-xl border border-slate-200 dark:border-white/10 my-4 transition-all hover:border-slate-300 dark:hover:border-white/20 w-full max-w-full overflow-hidden shadow-layered-sm">
             {/* Copy button - React controlled */}
             <button
                 onClick={handleCopy}
                 aria-label={copied ? 'Copied to clipboard' : 'Copy code to clipboard'}
-                className={`absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-md border-2 
+                className={`absolute top-2 right-2 flex items-center gap-1.5 px-3 py-1 rounded-xl border 
                     ${copied
                         ? 'border-green-400 text-green-400'
-                        : 'border-gray-600 text-gray-400 hover:border-gray-400 hover:text-white hover:bg-gray-700'
+                        : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white hover:bg-white/5'
                     }
-                    bg-gray-800/90 backdrop-blur-sm transition-all 
-                    focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 z-10`}
+                    bg-[#1a1d24]/90 backdrop-blur-sm transition-all font-bold text-xs tracking-tight
+                    focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 z-10`}
             >
                 {copied ? (
                     <>

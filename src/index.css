@@ -3,9 +3,12 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-    /* Brand Colors - Warm Slate Palette */
-    --color-brand-dark: #10100eff;
-    --color-brand-darkSurface: #10100eff;
+    /* Brand Colors - Floating Tiles Dark Palette */
+    --color-brand-dark: #0f1115;
+    --color-brand-darkSurface: #1a1d24;
+    --color-bg-tile: #1a1d24;
+    --color-bg-tile-alt: #151921;
+    --color-border-subtle: rgba(255, 255, 255, 0.05);
     --color-brand-light: #E2E8F0;
     /* Slate-200 - Darker background for elevation contrast */
     --color-brand-lightSurface: #F1F5F9;
@@ -54,11 +57,21 @@
     --shadow-layered-lg: 0 15px 30px rgba(0, 0, 0, 0.08), 0 30px 60px rgba(0, 0, 0, 0.1);
 }
 
-@variant dark (&:where(.dark, .dark *)) {
-    --shadow-layered-sm: 0 1px 0 rgba(255, 255, 255, 0.05);
-    --shadow-layered: 0 4px 20px rgba(29, 78, 216, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    --shadow-layered-lg: 0 20px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+/* Dark mode shadow overrides */
+.dark {
+    --shadow-layered-sm:
+        0 2px 4px -1px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+    --shadow-layered:
+        0 10px 15px -3px rgba(0, 0, 0, 0.5),
+        0 4px 6px -2px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+    --shadow-layered-lg:
+        0 20px 30px -5px rgba(0, 0, 0, 0.6),
+        0 8px 10px -3px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
 }
+
 
 /* ============================================
    CSS Custom Properties (Design Tokens)
@@ -119,6 +132,30 @@ body {
     @apply bg-brand-light text-brand-textDarkPrimary dark:bg-brand-dark dark:text-brand-textPrimary antialiased;
     cursor: default;
     caret-color: transparent;
+}
+
+/* ============================================
+   Custom Scrollbar (Dark Theme per Floating Tiles)
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-brand-dark, #0f1115);
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #0f1115;
 }
 
 /* Text cursor only on actual text input elements */
@@ -310,7 +347,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        ============================================ */
     .card-interactive {
         @apply rounded-xl border transition-all duration-200 cursor-pointer;
-        @apply border-slate-200/50 dark:border-gray-700;
+        @apply border-slate-200/50 dark:border-white/5;
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
         @apply hover:border-brand-accent dark:hover:border-brand-accent;
         @apply active:scale-[0.98];
@@ -335,6 +372,40 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         box-shadow: var(--shadow-layered-lg);
     }
 
+    /* ============================================
+       Floating Tiles: Premium Effect Utilities
+       ============================================ */
+
+    /* Rim Light: Edge highlight for physical depth */
+    .rim-light {
+        box-shadow:
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Glass Panel: Glassmorphism effect */
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Lift Hover: Weightless interactive feedback with shadow expansion */
+    .lift-hover {
+        transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1),
+            border-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .lift-hover:hover {
+        transform: translateY(-8px);
+        box-shadow:
+            0 20px 40px -8px rgba(0, 0, 0, 0.6),
+            0 8px 16px -4px rgba(0, 0, 0, 0.4),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+    }
+
     /* Dark mode: Rim light + accent glow for premium glassy feel */
     .dark .card-interactive {
         box-shadow:
@@ -354,14 +425,98 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         @apply shadow-lg shadow-brand-accent/15 dark:shadow-brand-accent/10;
     }
 
+    /* ============================================
+       Neon/Glow Effects for Active States
+       ============================================ */
+    .glow-blue {
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4), inset 0 0 5px rgba(59, 130, 246, 0.2);
+    }
+
+    .glow-emerald {
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 5px rgba(16, 185, 129, 0.2);
+    }
+
+    .glow-red {
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.4), inset 0 0 5px rgba(239, 68, 68, 0.2);
+    }
+
+    .glow-amber {
+        box-shadow: 0 0 15px rgba(245, 158, 11, 0.4), inset 0 0 5px rgba(245, 158, 11, 0.2);
+    }
+
+    .glow-purple {
+        box-shadow: 0 0 15px rgba(168, 85, 247, 0.4), inset 0 0 5px rgba(168, 85, 247, 0.2);
+    }
+
+    /* ============================================
+       Background Patterns & Blobs
+       ============================================ */
+    .bg-dots {
+        background-image: radial-gradient(rgba(51, 65, 85, 0.2) 1px, transparent 1px);
+        background-size: 24px 24px;
+    }
+
+    .dark .bg-dots {
+        background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    }
+
+    .gradient-blob {
+        @apply absolute rounded-full blur-3xl mix-blend-screen pointer-events-none opacity-20 dark:opacity-10;
+        z-index: 0;
+    }
+
+    .blob-accent {
+        @apply w-96 h-96 bg-brand-accent/30;
+    }
+
+    .blob-purple {
+        @apply w-80 h-80 bg-purple-500/20 animate-pulse;
+    }
+
+    .blob-blue {
+        @apply w-[500px] h-[500px] bg-blue-500/10;
+    }
+
+    /* App Container for structural depth */
+    .app-container {
+        @apply relative h-full w-full overflow-hidden flex;
+        background-color: var(--color-brand-light);
+    }
+
+    .dark .app-container {
+        background-color: var(--color-brand-dark);
+    }
+
+    /* ============================================
+       Background Patterns (Empty/Preview States)
+       ============================================ */
+    .bg-pattern-dots {
+        background-image: radial-gradient(#334155 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+
+    /* ============================================
+       Navigation Active State
+       ============================================ */
+    .nav-item-active {
+        @apply text-brand-accent bg-brand-accent/5 border-l-4 border-brand-accent shadow-layered-sm;
+        transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+        @apply dark:bg-brand-accent/10;
+    }
+
+    .nav-item-hover {
+        @apply hover:bg-slate-100 dark:hover:bg-white/5 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:border-l-4 hover:border-slate-300 dark:hover:border-white/10;
+        transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     .divider-industrial {
-        @apply border-slate-200 dark:border-gray-700/30;
+        @apply border-slate-200 dark:border-white/5;
     }
 
     /* Card with elevation - for form cards and content panels */
     .card-elevated {
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
-        @apply rounded-xl border border-slate-200/50 dark:border-gray-700;
+        @apply rounded-2xl border border-slate-200/50 dark:border-white/5;
         /* Light mode: Layered soft shadows for tactile depth */
         box-shadow: var(--shadow-layered);
     }
@@ -435,19 +590,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        Skeleton Loading Placeholder
        ============================================ */
     .skeleton {
-        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse;
+        @apply bg-slate-200 dark:bg-white/5 rounded animate-pulse;
     }
 
     .skeleton-text {
-        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-4 w-full;
+        @apply bg-slate-200 dark:bg-white/5 rounded animate-pulse h-4 w-full;
     }
 
     .skeleton-text-sm {
-        @apply bg-gray-200 dark:bg-gray-700 rounded animate-pulse h-3 w-3/4;
+        @apply bg-slate-200 dark:bg-white/5 rounded animate-pulse h-3 w-3/4;
     }
 
     .skeleton-card {
-        @apply bg-gray-200 dark:bg-gray-700 animate-pulse h-20 w-full rounded-xl;
+        @apply bg-slate-200 dark:bg-white/5 animate-pulse h-20 w-full rounded-2xl;
     }
 
     /* ============================================
@@ -555,8 +710,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     .card-base {
         @apply bg-brand-lightSurface dark:bg-brand-darkSurface;
-        @apply border-2 border-slate-200 dark:border-gray-700;
-        @apply rounded-xl transition-all shadow-layered-sm;
+        @apply border border-slate-200 dark:border-white/5;
+        @apply rounded-2xl transition-all shadow-layered-sm;
     }
 
     /* Responsive padding using min() - shrinks on mobile, caps on desktop */

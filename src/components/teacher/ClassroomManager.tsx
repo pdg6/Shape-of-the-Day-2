@@ -278,7 +278,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                             {/* Summary / Create Card - Moved to end */}
                             {/* Summary / Create Card - Refactored to match ClassCard */}
-                            <div className="flex h-full bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-slate-300 dark:border-gray-700 shadow-sm overflow-hidden min-h-[160px]">
+                            <div className="flex h-full bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered overflow-hidden min-h-[160px]">
                                 {/* Main Content (Left Side) */}
                                 <div className="flex-1 flex flex-col min-w-0">
                                     {/* Header */}
@@ -345,7 +345,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 {internalTab === 'history' && (
                     <div className="h-full flex flex-col">
                         {/* History Toolbar */}
-                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-xl border-2 border-slate-300 dark:border-gray-700 shadow-sm">
+                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-[#1a1d24] p-4 rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <Button
@@ -434,7 +434,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             <>
                                 {/* KPI Tiles */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="card-base p-6">
+                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg. Session</span>
                                             <Clock className="w-5 h-5 text-brand-accent" />
@@ -445,7 +445,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="card-base p-6">
+                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Completion Rate</span>
                                             <CheckCircle className="w-5 h-5 text-green-500" />
@@ -455,7 +455,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="card-base p-6">
+                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stuck Rate</span>
                                             <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -466,7 +466,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="card-base p-6">
+                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Students</span>
                                             <Users className="w-5 h-5 text-purple-500" />
@@ -481,7 +481,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 {/* Charts Row */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Task Difficulty */}
-                                    <div className="card-base p-6">
+                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
                                         <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-brand-accent" />
                                             Most Challenging Tasks
@@ -513,7 +513,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
 
                                     {/* Engagement Trend */}
-                                    <div className="card-base p-6 flex flex-col">
+                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 flex flex-col">
                                         <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <BarChart3 className="w-5 h-5 text-brand-accent" />
                                             Activity (Last 7 Days)
@@ -541,7 +541,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </div>
 
                                 {/* Needs Support */}
-                                <div className="card-base p-6">
+                                <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
                                     <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                         <AlertCircle className="w-5 h-5 text-red-500" />
                                         Students Needing Support
@@ -572,8 +572,8 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {/* Daily Summary Modal */}
             {showDaySummary && selectedDate && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-4xl max-h-[90vh] rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700 flex flex-col transition-transform duration-200">
-                        <div className="p-6 border-b-2 border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800 rounded-t-xl">
+                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 flex flex-col transition-transform duration-200">
+                        <div className="p-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-gray-50 dark:bg-[#151921] rounded-t-2xl">
                             <h3 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {classrooms.find(c => c.id === currentClassId)?.name || 'Class'}'s schedule for {format(selectedDate, 'EEEE, MMMM do, yyyy')}
                             </h3>
@@ -616,9 +616,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
 
                                     {/* Student List Table */}
-                                    <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                                    <div className="border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden">
                                         <table className="w-full text-left">
-                                            <thead className="bg-gray-100 dark:bg-gray-800 border-b-2 border-gray-200 dark:border-gray-700">
+                                            <thead className="bg-gray-100 dark:bg-[#151921] border-b border-slate-200 dark:border-white/5">
                                                 <tr>
                                                     <th className="p-4 text-xs font-bold text-gray-500 uppercase">Student Name</th>
                                                     <th className="p-4 text-xs font-bold text-gray-500 uppercase">Session Duration</th>
@@ -638,7 +638,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                         <td className="p-4">
                                                             <div className="flex flex-wrap gap-2">
                                                                 {log.taskPerformance.map((t, i) => (
-                                                                    <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded text-xs border-2 border-gray-200 dark:border-gray-700" title={t.title}>
+                                                                    <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-[#151921] rounded text-xs border border-slate-200 dark:border-white/5" title={t.title}>
                                                                         {t.title.substring(0, 15)}{t.title.length > 15 ? '...' : ''}
                                                                         {t.statusWasStuck && <span className="ml-1 text-amber-500">⚠️</span>}
                                                                     </span>

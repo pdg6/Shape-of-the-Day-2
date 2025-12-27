@@ -361,7 +361,11 @@ const StudentView: React.FC<StudentViewProps> = ({
     };
 
     return (
-        <div className="h-full flex overflow-hidden bg-brand-light dark:bg-brand-dark text-brand-textDarkPrimary dark:text-brand-textPrimary transition-colors duration-300">
+        <div className="app-container bg-dots">
+            {/* Decorative Background Blobs */}
+            <div className="gradient-blob blob-accent top-[-20%] right-[-10%]" />
+            <div className="gradient-blob blob-purple bottom-[5%] left-[10%]" />
+            <div className="gradient-blob blob-blue top-[15%] left-[-5%]" />
             {/* Responsive Sidebar - Desktop static, Mobile slide-in */}
             <StudentSidebar
                 tasksCompleted={tasksCompleted}
@@ -378,7 +382,7 @@ const StudentView: React.FC<StudentViewProps> = ({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Header */}
-                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b-2 border-slate-300 dark:border-gray-700">
+                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-slate-200 dark:border-white/5 shadow-layered-sm">
                     {/* Left: Hamburger Menu */}
                     <button
                         onClick={() => setIsMobileSidebarOpen(true)}
@@ -441,7 +445,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         classroomId={classId}
                                     />
                                 ) : (
-                                    <div className="text-center py-12 text-brand-textDarkSecondary italic bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
+                                    <div className="text-center py-12 text-brand-textDarkSecondary italic bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
                                         <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
                                             {previewTasks.length > 0
                                                 ? "Import these tasks to start working on them."
@@ -552,8 +556,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     classroomId={classId}
                                 />
                             ) : (
-                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-slate-300 dark:border-gray-700">
-                                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
+                                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary font-medium">
                                         {previewTasks.length > 0
                                             ? "Import these tasks to start working on them."
                                             : "No tasks scheduled for this day."}

@@ -59,11 +59,11 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             <aside className={`
                 fixed md:static inset-y-0 left-0 z-50
                 ${isCollapsed ? 'md:w-20' : 'md:w-72'} w-72
-                bg-brand-lightSurface dark:bg-brand-darkSurface
+                bg-brand-lightSurface dark:bg-[#1a1d24]
                 transform transition-transform duration-300 ease-in-out
                 flex flex-col h-full overflow-hidden
                 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                shadow-lg md:shadow-none
+                border-r border-slate-200 dark:border-white/5
             `}
                 aria-label="Student navigation"
             >
@@ -91,7 +91,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     {/* Mobile Close Button */}
                     <button
                         onClick={onMobileClose}
-                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                         aria-label="Close navigation menu"
                     >
                         <X className="w-5 h-5" />
@@ -106,24 +106,24 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                                 <button
                                     onClick={() => handleTabChange(item.id)}
                                     className={`
-                                        flex-1 relative flex items-center rounded-lg transition-all duration-200 font-bold border-2
-                                        bg-brand-lightSurface dark:bg-brand-darkSurface
-                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-brand-darkSurface
+                                        flex-1 relative flex items-center rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold border
+                                        bg-brand-lightSurface dark:bg-[#1a1d24]
+                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 shadow-layered-sm
                                         ${activeTab === item.id
-                                            ? 'border-brand-accent text-brand-accent'
-                                            : 'border-transparent hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                            ? 'nav-item-active min-h-[48px]'
+                                            : 'nav-item-hover text-brand-textDarkSecondary dark:text-gray-400 border-transparent hover:border-slate-200 dark:hover:border-white/5 shadow-none hover:shadow-layered-sm min-h-[48px]'
                                         }
-                                        ${isCollapsed ? 'md:w-12 md:h-12 md:justify-center' : ''} w-full h-12
+                                        ${isCollapsed ? 'md:w-12 md:justify-center' : ''} w-full h-12
                                     `}
                                     title={isCollapsed ? item.label : undefined}
                                     aria-label={item.label}
                                 >
-                                    <div className="flex items-center justify-center w-12 shrink-0">
+                                    <div className="flex items-center justify-center w-12 shrink-0 transition-transform duration-300 group-hover:scale-110">
                                         <item.icon className="w-5 h-5" />
                                     </div>
                                     <span className={`
-                                        whitespace-nowrap transition-all duration-200
-                                        ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100'}
+                                        whitespace-nowrap transition-all duration-300 ease-in-out tracking-tight
+                                        ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100 ml-1'}
                                     `}>
                                         {item.label}
                                     </span>
@@ -136,11 +136,11 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 {/* Progress Card */}
                 <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-3 ${isCollapsed ? 'md:hidden' : ''}`}>
                     {totalTasks > 0 && (
-                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border-2 border-gray-100 dark:border-gray-700">
+                        <div className="bg-gray-50 dark:bg-[#151921] rounded-xl p-3 border border-gray-100 dark:border-white/5">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Today's Progress</span>
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Today's Progress</span>
                                 {tasksCompleted === totalTasks && (
-                                    <span className="text-xs font-bold text-green-500">🎉 Complete!</span>
+                                    <span className="text-xs font-bold text-green-500 font-mono tracking-tighter">🎉 COMPLETE</span>
                                 )}
                             </div>
                             <ProgressBar
@@ -162,42 +162,42 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         aria-controls="student-sidebar-nav"
                         aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                         className={`
-                            hidden md:flex group items-center h-10 rounded-lg transition-all duration-200 font-bold
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30
+                            hidden md:flex group items-center h-10 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold border border-transparent
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 hover:border-slate-200 dark:hover:border-white/5 hover:bg-white dark:hover:bg-white/5 shadow-none hover:shadow-layered-sm
                             ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
                         `}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
-                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-accent">
+                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-accent transition-transform duration-300 group-hover:scale-110">
                             {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
                         </div>
                         <span className={`
-                            whitespace-nowrap transition-all duration-200 flex-1 text-left
-                            text-gray-500 group-hover:text-brand-accent
+                            whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left tracking-tight
+                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
                             ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                         `}>
                             Collapse
                         </span>
                     </button>
 
-                    <div className={`h-px bg-gray-200 dark:bg-gray-700 ${isCollapsed ? 'md:mx-1' : ''}`} />
+                    <div className={`h-px bg-gray-200 dark:bg-white/5 ${isCollapsed ? 'md:mx-1' : ''}`} />
 
                     {/* Settings Button */}
                     <button
                         onClick={onOpenSettings}
                         className={`
-                            group flex items-center h-10 rounded-lg transition-all duration-200 font-bold
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30
+                            group flex items-center h-10 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold border border-transparent
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 hover:border-slate-200 dark:hover:border-white/5 hover:bg-white dark:hover:bg-white/5 shadow-none hover:shadow-layered-sm
                             ${isCollapsed ? 'md:w-12 md:justify-center' : ''} w-full
                         `}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
-                        <div className="flex items-center justify-center w-12 shrink-0 text-gray-500 group-hover:text-brand-accent">
-                            <Settings className="w-5 h-5" />
+                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textDarkSecondary dark:text-gray-400 transition-colors group-hover:text-brand-accent">
+                            <Settings className="w-5 h-5 transition-transform duration-300 group-hover:rotate-45" />
                         </div>
                         <span className={`
-                            whitespace-nowrap transition-all duration-200 flex-1 text-left
-                            text-gray-500 group-hover:text-brand-textDarkPrimary dark:group-hover:text-brand-textPrimary
+                            whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left tracking-tight
+                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
                             ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100'}
                         `}>
                             Settings

@@ -32,8 +32,8 @@ const STATUS_ACTIONS: StatusAction[] = [
         icon: RotateCcw,
         activeColor: 'text-gray-500',
         underlineColor: 'decoration-gray-300',
-        hover: 'hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800',
-        borderColor: 'border-gray-200 dark:border-gray-700'
+        hover: 'hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-[#151921]',
+        borderColor: 'border-slate-200 dark:border-white/5'
     },
     {
         id: 'help',
@@ -192,11 +192,11 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="help-modal-title"
-                className="bg-brand-lightSurface dark:bg-brand-darkSurface w-full max-w-md rounded-xl shadow-2xl border-2 border-status-question transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
+                className="bg-brand-lightSurface dark:bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-layered-lg border border-status-question transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex items-start justify-between p-4 border-b border-gray-100 dark:border-white/5">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <HelpCircle className="w-5 h-5 text-status-question" />
@@ -505,12 +505,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
 
     return (
         <div
-            className={`group relative bg-brand-lightSurface dark:bg-brand-darkSurface 
-                rounded-xl border-2 border-gray-300 dark:border-gray-600 
-                hover:border-brand-accent/50 shadow-layered
+            className={`group relative bg-brand-lightSurface dark:bg-[#1a1d24] 
+                rounded-2xl border border-slate-200 dark:border-white/5 
+                hover:border-brand-accent/50 shadow-layered lift-hover
                 pt-1.5 pb-4 px-5
                 transition-all duration-300
-                hover:-translate-y-0.5 hover:shadow-layered-lg select-none
+                hover:shadow-layered-lg select-none
                 ${isDone ? 'opacity-60 shadow-layered-sm' : ''}`}
             style={{
                 marginLeft: `${indent}px`,
@@ -604,15 +604,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                         }}
                                         title={action.label}
                                         aria-label={action.label}
-                                        className={`p-1.5 rounded-lg transition-all duration-150 ease-out
-                                            min-w-[32px] min-h-[32px] flex items-center justify-center
-                                            focus:outline-none
+                                        className={`transition-all duration-300 transition-float hover:-translate-y-0.5
+                                            p-2 rounded-xl flex items-center justify-center border shadow-layered-sm focus:outline-none min-w-[36px] min-h-[36px]
+                                            ${isActive
+                                                ? `${action.activeColor} bg-white dark:bg-[#1a1d24] border-slate-200 dark:border-white/10`
+                                                : `text-gray-400 dark:text-gray-500 bg-transparent border-transparent hover:bg-white dark:hover:bg-white/5 hover:border-slate-200 dark:hover:border-white/10 shadow-none hover:shadow-layered-sm`
+                                            }
                                             ${isHighlighted ? action.activeColor : ''}
-                                            ${getHighlightStyle()}
-                                            ${!isHighlighted && (isActive
-                                                ? `${action.activeColor} bg-white dark:bg-brand-darkSurface shadow-sm`
-                                                : `text-gray-400 dark:text-gray-500 ${action.hover}`
-                                            )}`}
+                                            ${getHighlightStyle()}`}
                                     >
                                         <Icon className={`w-5 h-5 ${isActive || isHighlighted ? 'stroke-[2.5px]' : 'stroke-2'}`} />
                                     </button>
@@ -911,7 +910,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
 
     if (tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 w-full text-center">
+            <div className="flex flex-col items-center justify-center py-16 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 w-full text-center shadow-layered-sm">
                 <div className="w-16 h-16 bg-brand-light dark:bg-brand-dark rounded-full flex items-center justify-center mb-4">
                     <CheckCircle className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                 </div>

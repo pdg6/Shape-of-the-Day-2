@@ -99,14 +99,14 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                 <div className="flex gap-2">
                     <button
                         onClick={() => scroll('left')}
-                        className="p-3 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                         aria-label="Previous Month"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => scroll('right')}
-                        className="p-3 hover:bg-brand-light dark:hover:bg-brand-dark rounded-full text-brand-textDarkSecondary dark:text-brand-textSecondary transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                         aria-label="Next Month"
                     >
                         <ChevronRight className="w-5 h-5" />
@@ -134,12 +134,12 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-lg border-2 transition-all duration-200 outline-none
-                focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20
-                ${isSelected
-                                    ? 'bg-brand-lightSurface dark:bg-brand-darkSurface border-brand-accent shadow-sm scale-105 z-10'
-                                    : 'bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-gray-600 dark:hover:border-gray-400'}
-              `}
+                                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-xl border transition-all duration-300 transition-float hover:-translate-y-0.5 outline-none
+                                focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
+                                ${isSelected
+                                    ? 'bg-brand-lightSurface dark:bg-brand-accent/10 border-brand-accent shadow-layered-sm scale-105 z-10'
+                                    : 'bg-brand-lightSurface dark:bg-[#1a1d24] text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-slate-300 dark:hover:border-white/10 shadow-none hover:shadow-layered-sm'}
+                            `}
                         >
                             <span className={`text-xs font-medium mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>
                                 {day}

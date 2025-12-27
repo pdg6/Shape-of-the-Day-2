@@ -162,12 +162,13 @@ export function MultiSelect<T extends string | number = string>({
                 disabled={disabled}
                 className={`
                     relative w-full cursor-pointer
-                    pl-10 pr-8 py-2.5 rounded-md text-sm font-medium
-                    border-2 transition-all duration-200
-                    bg-brand-lightSurface dark:bg-brand-darkSurface
-                    border-slate-300 dark:border-gray-600
-                    hover:bg-slate-50 dark:hover:bg-gray-800/50 hover:border-brand-accent dark:hover:border-gray-400
+                    pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
+                    border transition-all duration-300 transition-float
+                    bg-brand-lightSurface dark:bg-[#1a1d24]
+                    border-slate-200 dark:border-white/5
+                    hover:bg-slate-50 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/10
                     focus:outline-none focus:border-brand-accent
+                    shadow-layered-sm hover:-translate-y-0.5
                     disabled:opacity-50 disabled:cursor-not-allowed
                     ${value.length > 0 ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-slate-400 dark:text-gray-500'}
                     ${buttonClassName}
@@ -217,7 +218,7 @@ export function MultiSelect<T extends string | number = string>({
                 >
                     <div
                         data-multiselect-dropdown
-                        className="fixed z-[9999] overflow-hidden rounded-md border-2 border-slate-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface shadow-lg focus:outline-none"
+                        className="fixed z-[9999] overflow-hidden rounded-lg border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-[#1a1d24] shadow-layered focus:outline-none"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,
@@ -227,7 +228,7 @@ export function MultiSelect<T extends string | number = string>({
                     >
                         {/* Search Input */}
                         {showSearch && (
-                            <div className="p-2 border-b border-slate-200 dark:border-gray-700 sticky top-0 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                            <div className="p-2 border-b border-slate-200 dark:border-white/5 sticky top-0 bg-brand-lightSurface dark:bg-[#1a1d24]">
                                 <div className="relative">
                                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input
@@ -236,7 +237,7 @@ export function MultiSelect<T extends string | number = string>({
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                         placeholder="Search..."
-                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-md border border-slate-200 dark:border-gray-700 bg-slate-50 dark:bg-gray-800/50 text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-brand-accent/30"
+                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
                                         onClick={e => e.stopPropagation()}
                                         onKeyDown={e => e.stopPropagation()}
                                     />

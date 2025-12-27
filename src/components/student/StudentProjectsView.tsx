@@ -306,10 +306,10 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                                 onClick={() => handleImport(task)}
                                 disabled={isImported}
                                 className={`
-                                    p-2 rounded-md border-2 transition-all duration-200 text-sm font-medium
+                                    p-2 rounded-xl border transition-all duration-200 text-sm font-medium
                                     ${isImported
-                                        ? 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
-                                        : 'border-transparent bg-gray-100 dark:bg-gray-800 text-brand-accent hover:border-brand-accent hover:bg-brand-accent/10'
+                                        ? 'border-slate-200 dark:border-white/5 bg-gray-100 dark:bg-[#1a1d24] text-gray-400 cursor-not-allowed'
+                                        : 'border-transparent bg-gray-100 dark:bg-[#1a1d24] text-brand-accent hover:border-brand-accent/50 hover:bg-brand-accent/5'
                                     }
                                 `}
                                 title={isImported ? 'Already imported' : 'Add to today'}
@@ -322,10 +322,10 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                         {hasChildren && isParentType && (
                             <button
                                 onClick={() => importAllChildren(node)}
-                                className="px-3 py-1.5 text-xs font-semibold bg-brand-accent text-white rounded-md border-2 border-transparent hover:border-brand-accent/70 hover:shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-all duration-200"
+                                className="px-3 py-1.5 text-xs font-bold bg-brand-accent text-white rounded-xl border border-transparent hover:border-brand-accent/50 hover:shadow-layered transition-all duration-200 tracking-tight"
                                 title="Import all tasks"
                             >
-                                Import All
+                                IMPORT ALL
                             </button>
                         )}
                     </div>
@@ -335,7 +335,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 {hasChildren && isExpanded && (
                     <div className={`
                         ${isParentType
-                            ? 'border-t border-gray-200 dark:border-gray-700 bg-white/30 dark:bg-gray-900/20 py-1'
+                            ? 'border-t border-slate-200 dark:border-white/5 bg-white/30 dark:bg-[#151921] py-1'
                             : 'pl-6'}
                     `}>
                         {children.map((child, idx) => renderNode(child, `${key}-${idx}`, true))}
@@ -356,7 +356,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-1">
                     {title}
                 </h3>
-                <div className="bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden shadow-layered p-1">
+                <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-layered p-1">
                     {nodes.map((node, idx) => renderNode(node, `${title}-${idx}`, false))}
                 </div>
             </div>
@@ -385,13 +385,13 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search projects, assignments, tasks..."
-                    className="w-full pl-12 pr-4 py-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 bg-brand-lightSurface dark:bg-brand-darkSurface text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none hover:border-brand-accent/70 focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-all duration-200"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-[#151921] text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none hover:border-brand-accent/50 focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 transition-all duration-200 shadow-layered-sm"
                 />
             </div>
 
             {/* Empty State */}
             {isEmpty ? (
-                <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600">
+                <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
                     <Inbox className="w-14 h-14 mx-auto text-gray-400 mb-4" />
                     <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary text-base">
                         {searchQuery

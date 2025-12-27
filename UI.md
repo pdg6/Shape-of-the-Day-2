@@ -43,6 +43,77 @@ This application follows research-backed UX principles from [Laws of UX](https:/
 
 ---
 
+## Floating Tiles Design System (Dark Mode)
+
+The premium dark mode aesthetic uses the "Floating Tiles" pattern for depth, tactility, and interactivity.
+
+### Color Palette
+
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `bg-page` / `brand-dark` | `#0f1115` | Main page background |
+| `bg-tile` / `dark:bg-[#1a1d24]` | `#1a1d24` | Standard card/tile background |
+| `bg-tile-alt` | `#151921` | Alternate/nested tile background |
+| `border-subtle` / `dark:border-white/5` | `rgba(255,255,255,0.05)` | Generic borders |
+
+### Core Effects
+
+| Effect | Utility Class | Description |
+|--------|---------------|-------------|
+| Layered Shadows | `.shadow-layered` | Composite shadow: ambient + definition + rim |
+| Rim Light | `.rim-light` | Edge highlight for physical thickness |
+| Glass Panel | `.glass-panel` | Blur + low-opacity bg for glassmorphism |
+| Lift Hover | `.lift-hover` | Translate -4px on hover with 300ms ease-out |
+| Shine Effect | `.shine-effect` | Animated gloss highlight on hover |
+
+### Neon Glow Effects
+
+For active states, progress bars, or emphasis:
+
+| Class | Color |
+|-------|-------|
+| `.glow-blue` | Blue 500 |
+| `.glow-emerald` | Emerald 500 |
+| `.glow-red` | Red 500 |
+| `.glow-amber` | Amber 500 |
+
+### Interactive States
+
+**Hover Changes:**
+- Vertical translation: `-4px` (`.lift-hover`)
+- Shadow expansion: `.shadow-layered` → `.shadow-layered-lg`
+- Border light increase: `white/5` → `brand-accent/30`
+
+**Transition:**
+```css
+transition: transform 300ms ease-out, box-shadow 300ms ease-out;
+```
+
+### Geometry & Spacing
+
+| Element | Border Radius | Padding |
+|---------|---------------|---------|
+| Main Tiles | `rounded-2xl` (16px) | `p-6` (24px minimum) |
+| Buttons | `rounded-lg` (8px) | varies |
+| Icon Containers | `rounded-full` | varies |
+| Grid Gaps | — | `gap-6` to `gap-8` |
+
+### Typography (Dark Mode)
+
+| Element | Classes |
+|---------|---------|
+| Headings | `text-white font-bold tracking-tight` |
+| Body Text | `text-slate-300` or `text-slate-400` |
+| Labels | `text-xs font-medium tracking-wide uppercase` |
+
+### Additional Utilities
+
+- `.bg-pattern-dots`: Subtle dot grid for empty/preview states
+- `.nav-item-active`: Left-border accent + tint for active nav items
+- Custom scrollbar: Dark theme scrollbar styling (automatic)
+
+---
+
 ## Core Design Principles
 
 - **Solid Surfaces:** Cards and tiles use solid backgrounds (`bg-brand-lightSurface` / `dark:bg-brand-darkSurface`) to ensure readability.
@@ -255,7 +326,7 @@ Defined in `index.css` under `@theme`:
 
 ```css
 /* Brand Colors */
---color-brand-dark: #10100eff;
+--color-brand-dark: #0f1115;
 --color-brand-darkSurface: #10100eff;
 --color-brand-light: #E5E5E5;
 --color-brand-lightSurface: #FFFFFF;

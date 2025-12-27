@@ -58,7 +58,7 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
                     </span>
                 </div>
             )}
-            <div className={`w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ${sizeClasses[size]}`}>
+            <div className={`w-full bg-slate-200 dark:bg-[#151921] rounded-full overflow-hidden ${sizeClasses[size]}`}>
                 <div
                     className={`
                         ${sizeClasses[size]} rounded-full
@@ -108,7 +108,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
             <svg width={size} height={size} className="-rotate-90">
                 {/* Background circle */}
                 <circle
-                    className="text-gray-200 dark:text-gray-700"
+                    className="text-slate-200 dark:text-[#151921]"
                     strokeWidth={strokeWidth}
                     stroke="currentColor"
                     fill="transparent"
@@ -174,11 +174,11 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                                 className={`
                                     w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
                                     transition-all duration-300
-                                    ${isCompleted 
-                                        ? 'bg-green-500 text-white' 
-                                        : isCurrent 
-                                            ? 'bg-brand-accent text-white ring-4 ring-brand-accent/20' 
-                                            : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+                                    ${isCompleted
+                                        ? 'bg-green-500 text-white'
+                                        : isCurrent
+                                            ? 'bg-brand-accent text-white ring-4 ring-brand-accent/5'
+                                            : 'bg-slate-200 dark:bg-[#151921] text-gray-400'
                                     }
                                 `}
                             >
@@ -195,12 +195,12 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                                 {step.label}
                             </span>
                         </div>
-                        
+
                         {/* Connector line */}
                         {!isLast && (
                             <div className={`
                                 flex-1 h-0.5 mx-2 transition-all duration-300
-                                ${isCompleted ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}
+                                ${isCompleted ? 'bg-green-500' : 'bg-slate-200 dark:bg-[#151921]'}
                             `} />
                         )}
                     </React.Fragment>
@@ -232,7 +232,7 @@ export const TaskSummary: React.FC<TaskSummaryProps> = ({
     const allComplete = completed === total && total > 0;
 
     return (
-        <div className={`bg-brand-lightSurface dark:bg-brand-darkSurface rounded-xl p-4 border-2 border-gray-200 dark:border-gray-700 ${className}`}>
+        <div className={`bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl p-4 border border-slate-200 dark:border-white/5 shadow-layered-sm ${className}`}>
             {/* Main progress */}
             <div className="flex items-center gap-4 mb-3">
                 <CircularProgress current={completed} total={total} size={48} />

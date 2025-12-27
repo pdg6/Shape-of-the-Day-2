@@ -30,25 +30,25 @@ export const Button: React.FC<ButtonProps> = ({
     title,
     'aria-label': ariaLabel
 }) => {
-    const baseClasses = 'font-bold rounded-md transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer';
+    const baseClasses = 'font-bold rounded-xl transition-all transition-float duration-300 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer shadow-layered-sm hover:-translate-y-0.5';
 
     const variantClasses = {
-        primary: 'bg-brand-accent text-white hover:bg-brand-accent/90 focus:bg-brand-accent/90',
-        secondary: 'border-2 border-slate-400 dark:border-gray-500 text-slate-600 dark:text-gray-300 hover:border-brand-accent hover:text-brand-accent focus:border-brand-accent focus:text-brand-accent',
-        tertiary: 'text-brand-textDarkPrimary dark:text-brand-textPrimary hover:underline decoration-2',
-        icon: 'text-gray-500 hover:text-brand-accent hover:bg-gray-100 dark:hover:bg-gray-800 focus:text-brand-accent',
-        ghost: 'border-2 border-transparent text-brand-accent hover:border-brand-accent hover:bg-brand-accent/5 focus:border-brand-accent focus:bg-brand-accent/5',
-        'ghost-danger': 'border-2 border-transparent text-red-500 hover:border-red-500 hover:bg-red-500/5 focus:border-red-500 focus:bg-red-500/5',
-        'outline-primary': 'border-2 border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 focus:bg-brand-accent/10',
-        'outline-danger': 'border-2 border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 focus:bg-red-500/10',
-        'soft': 'border-2 border-brand-accent/30 bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20 focus:bg-brand-accent/20'
+        primary: 'bg-brand-accent/10 dark:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:bg-brand-accent/20 dark:hover:bg-brand-accent/30 hover:border-brand-accent/40',
+        secondary: 'background-glass dark:bg-white/5 text-brand-textDarkPrimary dark:text-brand-textPrimary border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-300 dark:hover:border-white/20',
+        tertiary: 'text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent transition-colors shadow-none hover:shadow-none hover:-translate-y-0',
+        icon: 'text-gray-500 hover:text-brand-accent transition-all hover:bg-brand-accent/5 focus:text-brand-accent shadow-none hover:shadow-none hover:-translate-y-0',
+        ghost: 'border border-transparent text-brand-accent hover:bg-brand-accent/5 focus:bg-brand-accent/5 shadow-none hover:shadow-none hover:-translate-y-0',
+        'ghost-danger': 'border border-transparent text-red-500 hover:bg-red-500/5 focus:bg-red-500/5 shadow-none hover:shadow-none hover:-translate-y-0',
+        'outline-primary': 'border border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10 focus:bg-brand-accent/10',
+        'outline-danger': 'border border-red-500 bg-transparent text-red-500 hover:bg-red-500/10 focus:bg-red-500/10',
+        'soft': 'border border-brand-accent/30 bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/20 focus:bg-brand-accent/20'
     };
 
     // Fitts's Law: Minimum 44x44px touch targets for accessibility
     const sizeClasses = {
-        sm: 'px-3 py-2 text-sm min-h-[36px] min-w-[36px]',
-        md: 'px-4 py-2.5 text-base min-h-[44px] min-w-[44px]',
-        lg: 'px-6 py-3.5 text-lg min-h-[52px] min-w-[52px]'
+        sm: 'px-3 py-1.5 text-sm min-h-[36px] min-w-[36px]',
+        md: 'px-5 py-2.5 text-base min-h-[44px] min-w-[44px]',
+        lg: 'px-7 py-3.5 text-lg min-h-[52px] min-w-[52px]'
     };
 
     const iconSizeClasses = {
