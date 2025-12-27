@@ -20,9 +20,10 @@ import { ClassCard } from './ClassCard';
 interface ClassroomManagerProps {
     activeView?: 'classes' | 'history' | 'analytics';
     onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms', subTab?: string) => void;
+    onShowJoinCode?: (classId: string) => void;
 }
 
-const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'classes', onNavigate }) => {
+const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'classes', onNavigate, onShowJoinCode }) => {
     const [internalTab, setInternalTab] = useState<'classes' | 'history' | 'analytics'>(activeView);
 
     useEffect(() => {
@@ -181,12 +182,12 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
     return (
-        <div className={`flex flex-col space-y-3 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
+        <div className={`flex flex-col space-y-4 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
             {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
             <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
                 {/* Left: Label + Current Class */}
                 <div className="flex items-baseline gap-3">
-                    <span className="text-fluid-lg font-black text-gray-400">
+                    <span className="text-fluid-lg font-black text-white">
                         {internalTab === 'classes' ? 'Classrooms:' : 'Reports:'}
                     </span>
                     <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
@@ -196,16 +197,18 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                 {/* Right: View-specific buttons */}
                 {internalTab === 'classes' ? (
-                    <Button
-                        variant="ghost"
-                        size="md"
-                        icon={Plus}
+                    <button
                         onClick={openCreateModal}
                         title="Create new class"
-                        className="flex-shrink-0 text-brand-accent"
+                        className="flex items-center gap-2 px-4 h-12 rounded-xl font-bold transition-float
+                            bg-[#1a1d24] border border-white/10 text-white
+                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                            hover:-translate-y-0.5 hover:border-brand-accent/50"
                     >
-                        Create Class
-                    </Button>
+                        <Plus className="w-5 h-5 text-brand-accent" />
+                        <span>Create Class</span>
+                    </button>
                 ) : (
                     <div className="flex items-center gap-2">
                         <Button
@@ -273,16 +276,20 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         setCurrentClassId(id);
                                         if (onNavigate) onNavigate('reports', 'analytics');
                                     }}
+                                    onShowJoinCode={(id) => {
+                                        setCurrentClassId(id);
+                                        if (onShowJoinCode) onShowJoinCode(id);
+                                    }}
                                 />
                             ))}
 
                             {/* Summary / Create Card - Moved to end */}
-                            {/* Summary / Create Card - Refactored to match ClassCard */}
-                            <div className="flex h-full bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered overflow-hidden min-h-[160px]">
+                            {/* Summary / Create Card - Glass Panel Effect */}
+                            <div className="flex h-full rounded-2xl transition-float overflow-hidden min-h-[160px] bg-white/[0.03] dark:bg-white/[0.03] backdrop-blur-md border border-white/10 shadow-layered">
                                 {/* Main Content (Left Side) */}
                                 <div className="flex-1 flex flex-col min-w-0">
                                     {/* Header */}
-                                    <div className="h-20 p-5 relative flex justify-between items-start border-b border-gray-100 dark:border-gray-800">
+                                    <div className="h-20 p-5 relative flex justify-between items-start border-b border-gray-100 dark:border-white/5">
                                         <div className="z-10 w-full min-w-0">
                                             <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight mb-1 truncate pr-2">
                                                 Overview
@@ -325,13 +332,13 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </div>
 
                                 {/* Right Sidebar Action */}
-                                <div className="flex flex-col w-[72px] border-l-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+                                <div className="flex flex-col w-[72px] border-l-2 border-gray-100 dark:border-white/5 bg-slate-50/50 dark:bg-bg-tile-alt/20">
                                     <button
                                         onClick={openCreateModal}
-                                        className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/5 hover:text-brand-accent transition-all focus:outline-none"
+                                        className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/10 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-float focus:outline-none group/create"
                                         title="Create New Class"
                                     >
-                                        <div className="p-2">
+                                        <div className="p-2 transition-float group-hover/create:-translate-y-1 group-hover/create:scale-110">
                                             <Plus className="w-6 h-6" />
                                         </div>
                                         <span className="text-[10px] font-bold uppercase text-center leading-tight">Create<br />Class</span>
@@ -345,7 +352,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 {internalTab === 'history' && (
                     <div className="h-full flex flex-col">
                         {/* History Toolbar */}
-                        <div className="flex items-center justify-between mb-6 bg-brand-lightSurface dark:bg-[#1a1d24] p-4 rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered">
+                        <div className="flex items-center justify-between mb-6 bg-white dark:bg-bg-tile p-4 rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered transition-float">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <Button
@@ -434,7 +441,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             <>
                                 {/* KPI Tiles */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
+                                    <div className="p-6 rounded-2xl levitated-tile">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg. Session</span>
                                             <Clock className="w-5 h-5 text-brand-accent" />
@@ -445,7 +452,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
+                                    <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Completion Rate</span>
                                             <CheckCircle className="w-5 h-5 text-green-500" />
@@ -455,7 +462,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
+                                    <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stuck Rate</span>
                                             <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -466,7 +473,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
+                                    <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Students</span>
                                             <Users className="w-5 h-5 text-purple-500" />
@@ -481,7 +488,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 {/* Charts Row */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Task Difficulty */}
-                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
+                                    <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-brand-accent" />
                                             Most Challenging Tasks
@@ -513,7 +520,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
 
                                     {/* Engagement Trend */}
-                                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 flex flex-col">
+                                    <div className="p-6 flex flex-col rounded-2xl levitated-tile">
                                         <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <BarChart3 className="w-5 h-5 text-brand-accent" />
                                             Activity (Last 7 Days)
@@ -541,7 +548,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </div>
 
                                 {/* Needs Support */}
-                                <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6">
+                                <div className="p-6 rounded-2xl levitated-tile">
                                     <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-6 flex items-center gap-2">
                                         <AlertCircle className="w-5 h-5 text-red-500" />
                                         Students Needing Support
@@ -572,7 +579,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {/* Daily Summary Modal */}
             {showDaySummary && selectedDate && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 flex flex-col transition-transform duration-200">
+                    <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col levitated-tile">
                         <div className="p-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-gray-50 dark:bg-[#151921] rounded-t-2xl">
                             <h3 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {classrooms.find(c => c.id === currentClassId)?.name || 'Class'}'s schedule for {format(selectedDate, 'EEEE, MMMM do, yyyy')}

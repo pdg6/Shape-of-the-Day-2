@@ -625,7 +625,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     {/* LEFT PANEL: Task Editor - flex-1 to fill space on mobile */}
                     <div className="flex-1 min-h-0 lg:col-span-3 flex flex-col lg:overflow-y-auto custom-scrollbar">
                         {/* Main Form Card */}
-                        <div className="w-full bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 space-y-4 flex-1 flex flex-col relative z-40 lift-hover">
+                        <div className="w-full bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 space-y-4 flex-1 flex flex-col relative z-40 lift-hover">
                             {/* Save State Indicator - top right */}
                             <div className="absolute top-3 right-3 z-10">
                                 {saveState === 'saving' && (

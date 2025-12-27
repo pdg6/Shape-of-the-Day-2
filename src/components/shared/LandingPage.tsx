@@ -26,7 +26,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
     const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
 
     return (
-        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden">
+        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-transparent">
             <div className="text-center mb-6 space-y-2">
                 <img
                     src="/shape of the day logo.png"
@@ -41,11 +41,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </p>
             </div>
 
-            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 overflow-hidden">
+            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-bg-tile rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 overflow-hidden">
                 {/* Tabs for switching modes */}
                 <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-md mx-6">
                     <div
-                        className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-[#151921] rounded-lg shadow-layered-sm transition-all duration-300 ease-out ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
+                        className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-bg-tile-alt rounded-lg shadow-layered-sm transition-float ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
                             }`}
                     />
                     <button
@@ -61,7 +61,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                         onClick={() => setActiveTab('teacher')}
                         className={`relative flex-1 py-2.5 text-center font-bold text-lg transition-all rounded-md z-10 ${activeTab === 'teacher'
                             ? 'text-teacher-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-float'
                             }`}
                     >
                         Teacher

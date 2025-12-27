@@ -192,7 +192,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="help-modal-title"
-                className="bg-brand-lightSurface dark:bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-layered-lg border border-status-question transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
+                className="bg-brand-lightSurface dark:bg-bg-tile w-full max-w-md rounded-2xl shadow-layered-lg border border-status-question transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
@@ -505,7 +505,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
 
     return (
         <div
-            className={`group relative bg-brand-lightSurface dark:bg-[#1a1d24] 
+            className={`group relative bg-brand-lightSurface dark:bg-bg-tile 
                 rounded-2xl border border-slate-200 dark:border-white/5 
                 hover:border-brand-accent/50 shadow-layered lift-hover
                 pt-1.5 pb-4 px-5
@@ -604,7 +604,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                         }}
                                         title={action.label}
                                         aria-label={action.label}
-                                        className={`transition-all duration-300 transition-float hover:-translate-y-0.5
+                                        className={`transition-float hover:-translate-y-0.5
                                             p-2 rounded-xl flex items-center justify-center border shadow-layered-sm focus:outline-none min-w-[36px] min-h-[36px]
                                             ${isActive
                                                 ? `${action.activeColor} bg-white dark:bg-[#1a1d24] border-slate-200 dark:border-white/10`
@@ -630,14 +630,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                     }}
                                     title="To Do - Click to change status"
                                     aria-label="Current status: To Do. Click to change."
-                                    className="px-3 h-7 rounded-md transition-all duration-300 ease-out
+                                    className="px-3 h-7 rounded-md transition-float
                                         bg-gray-500 dark:bg-gray-800/50
                                         border-2 border-gray-600 dark:border-gray-500
                                         text-white font-semibold text-sm
                                         hover:bg-gray-600 dark:hover:bg-gray-700/50
                                         focus:outline-none focus:ring-2 focus:ring-gray-400/50
                                         flex items-center justify-center
-                                        shadow-sm"
+                                        shadow-sm shadow-layered-sm"
                                 >
                                     To Do
                                 </button>

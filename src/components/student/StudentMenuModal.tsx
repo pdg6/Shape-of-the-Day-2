@@ -60,9 +60,9 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             onTabChange('tasks');
                             onClose();
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
-                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
+                            ? 'nav-item active'
+                            : 'nav-item-hover bg-bg-tile/40 text-gray-400 border-white/5'
                             }`}
                     >
                         <ListTodo size={24} />
@@ -73,9 +73,9 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             onTabChange('projects');
                             onClose();
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'projects'
-                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'projects'
+                            ? 'nav-item active'
+                            : 'nav-item-hover bg-bg-tile/40 text-gray-400 border-white/5'
                             }`}
                     >
                         <FolderOpen size={24} />
@@ -86,26 +86,26 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             onTabChange('schedule');
                             onClose();
                         }}
-                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'schedule'
-                            ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                            : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'schedule'
+                            ? 'nav-item active'
+                            : 'nav-item-hover bg-bg-tile/40 text-gray-400 border-white/5'
                             }`}
                     >
                         <CalendarDays size={24} />
                         <span className="text-xs font-bold">Schedule</span>
                     </button>
-                </div>
+                </div >
 
                 {/* Divider */}
-                <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
+                < div className="border-t border-gray-200 dark:border-gray-700 my-2" />
 
                 {/* Student Name */}
-                <button
+                < button
                     onClick={() => {
                         onEditName();
                         onClose();
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 transition-float hover:-translate-y-0.5 shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
@@ -121,10 +121,10 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         </span>
                         <span className="text-xs text-brand-accent font-medium">Edit</span>
                     </div>
-                </button>
+                </button >
 
                 {/* Class Name */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between">
+                < div className="bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 shadow-layered-sm" >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
                             <BookOpen size={20} />
@@ -136,10 +136,10 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                         {className}
                     </span>
-                </div>
+                </div >
 
                 {/* Dark/Light Mode Toggle - Near top */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between">
+                < div className="bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 shadow-layered-sm" >
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
                             {darkMode ? <Moon size={20} /> : <Sun size={20} />}
@@ -165,10 +165,10 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             `}
                         />
                     </button>
-                </div>
+                </div >
 
                 {/* Date */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between">
+                < div className="bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 shadow-layered-sm" >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
                             <Calendar size={20} />
@@ -180,10 +180,10 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                         {currentDate}
                     </span>
-                </div>
+                </div >
 
                 {/* Tasks Progress */}
-                <div className="bg-brand-light dark:bg-brand-dark rounded-lg p-3">
+                < div className="bg-bg-tile rounded-xl p-3 border border-white/5 shadow-layered-sm" >
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
@@ -207,10 +207,10 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             style={{ width: `${progressPercent}%` }}
                         />
                     </div>
-                </div>
+                </div >
 
                 {/* Sign Out Button */}
-                <button
+                < button
                     onClick={() => {
                         const confirmed = window.confirm(
                             'Sign out of this class?\n\nYour local session data will be cleared. ' +
@@ -225,7 +225,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             onClose();
                         }
                     }}
-                    className="w-full bg-brand-light dark:bg-brand-dark rounded-lg p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
+                    className="w-full bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 transition-float hover:-translate-y-0.5 shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
                 >
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
@@ -238,9 +238,9 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                         Leave class
                     </span>
-                </button>
-            </div>
-        </Modal>
+                </button >
+            </div >
+        </Modal >
     );
 };
 

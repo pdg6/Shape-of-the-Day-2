@@ -2,10 +2,6 @@
 trigger: always_on
 ---
 
----
-trigger: always_on
----
-
 # Floating Elements Design System v2.0
 
 This document defines the **ground truth** for all floating UI elements in the application. It establishes two primary component categories that serve as the foundation for the entire design:

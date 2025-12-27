@@ -265,179 +265,175 @@ export function DateRangePicker({
                     onClick={() => handleButtonClick('start')}
                     disabled={disabled}
                     className={`
-                    className={`
                         cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold
-            border transition-all duration-200 whitespace-nowrap shadow-layered-sm
-            bg-brand-lightSurface dark:bg-[#1a1d24]
-            hover:bg-slate-50 dark:hover:bg-[#151921]
-            focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
-            disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
-            ${activeField
-                ? 'border-brand-accent'
-                : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
-            ${startDate || endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
-            ${buttonClassName}
+                        border transition-all duration-200 whitespace-nowrap shadow-layered-sm
+                        bg-brand-lightSurface dark:bg-bg-tile
+                        hover:bg-slate-50 dark:hover:bg-bg-tile-alt
+                        focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
+                        disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
+                        ${activeField
+                            ? 'border-brand-accent'
+                            : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
+                        ${startDate || endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                        ${buttonClassName}
                     `}
                 >
-            {startDisplay && endDisplay
-                ? (startDisplay === endDisplay ? startDisplay : `${startDisplay} → ${endDisplay}`)
-                : 'Set dates'}
-        </button>
-    ) : (
-        <>
-            {/* Start Date Button */}
-            <button
-                ref={startButtonRef}
-                type="button"
-                onClick={() => handleButtonClick('start')}
-                disabled={disabled}
-                className={`
+                    {startDisplay && endDisplay
+                        ? (startDisplay === endDisplay ? startDisplay : `${startDisplay} → ${endDisplay}`)
+                        : 'Set dates'}
+                </button>
+            ) : (
+                <>
+                    {/* Start Date Button */}
+                    <button
+                        ref={startButtonRef}
+                        type="button"
+                        onClick={() => handleButtonClick('start')}
+                        disabled={disabled}
+                        className={`
                             relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-all duration-200 shadow-layered-sm
-                            bg-brand-lightSurface dark:bg-[#1a1d24]
-                            hover:bg-slate-50 dark:hover:bg-[#151921]
+                            bg-brand-lightSurface dark:bg-bg-tile
+                            hover:bg-slate-50 dark:hover:bg-bg-tile-alt
                             focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'start'
-                        ? 'border-brand-accent'
-                        : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
+                                ? 'border-brand-accent'
+                                : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
                             ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
-            >
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                    <CalendarIcon size={14} />
-                </span>
-                <span className="block truncate">
-                    {startDisplay || startPlaceholder}
-                </span>
-            </button>
+                    >
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                            <CalendarIcon size={14} />
+                        </span>
+                        <span className="block truncate">
+                            {startDisplay || startPlaceholder}
+                        </span>
+                    </button>
 
-            {/* Arrow indicator */}
-            <div className="flex items-center text-gray-300 dark:text-gray-600">
-                <ArrowRight size={16} />
-            </div>
+                    {/* Arrow indicator */}
+                    <div className="flex items-center text-gray-300 dark:text-gray-600">
+                        <ArrowRight size={16} />
+                    </div>
 
-            {/* End Date Button */}
-            <button
-                ref={endButtonRef}
-                type="button"
-                onClick={() => handleButtonClick('end')}
-                disabled={disabled}
-                className={`
+                    {/* End Date Button */}
+                    <button
+                        ref={endButtonRef}
+                        type="button"
+                        onClick={() => handleButtonClick('end')}
+                        disabled={disabled}
+                        className={`
                             relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-all duration-200 shadow-layered-sm
-                            bg-brand-lightSurface dark:bg-[#1a1d24]
-                            hover:bg-slate-50 dark:hover:bg-[#151921]
+                            bg-brand-lightSurface dark:bg-bg-tile
+                            hover:bg-slate-50 dark:hover:bg-bg-tile-alt
                             focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'end'
-                        ? 'border-brand-accent'
-                        : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
+                                ? 'border-brand-accent'
+                                : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
                             ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
-            >
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
-                    <CalendarIcon size={14} />
-                </span>
-                <span className="block truncate">
-                    {endDisplay || endPlaceholder}
-                </span>
-            </button>
-        </>
-    )
-}
-
-{/* Portal-rendered Calendar Popover */ }
-{
-    typeof document !== 'undefined' && activeField && createPortal(
-        <div
-            ref={popoverRef}
-            className="fixed z-[9999] bg-brand-lightSurface dark:bg-[#1a1d24] border border-slate-200 dark:border-white/10 rounded-2xl shadow-layered-lg p-3 animate-fade-in"
-            style={{
-                top: position.top,
-                left: position.left,
-            }}
-        >
-            {/* Header */}
-            <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-200 dark:border-white/5">
-                <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">
-                        {activeField === 'start' ? startLabel : endLabel}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={handleToday}
-                        className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
                     >
-                        Today
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                            <CalendarIcon size={14} />
+                        </span>
+                        <span className="block truncate">
+                            {endDisplay || endPlaceholder}
+                        </span>
                     </button>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => setActiveField(null)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                >
-                    <X size={16} />
-                </button>
-            </div>
-
-            {/* Selected Range Display */}
-            {(isStartValid || isEndValid) && (
-                <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-xs">
-                    <span className={activeField === 'start' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
-                        {startDisplay || '—'}
-                    </span>
-                    <ArrowRight size={12} className="text-gray-400" />
-                    <span className={activeField === 'end' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
-                        {endDisplay || '—'}
-                    </span>
-                </div>
+                </>
             )}
 
-            {/* Calendar */}
-            <DayPicker
-                mode="single"
-                selected={activeField === 'start' ? (isStartValid ? startDateObj : undefined) : (isEndValid ? endDateObj : undefined)}
-                onSelect={handleSelect}
-                month={calendarMonth}
-                onMonthChange={setCalendarMonth}
-                disabled={getDisabledDays()}
-                modifiers={{
-                    range_start: isStartValid ? startDateObj : undefined,
-                    range_end: isEndValid ? endDateObj : undefined,
-                    in_range: isStartValid && isEndValid ? {
-                        from: startDateObj,
-                        to: endDateObj
-                    } : undefined,
-                }}
-                modifiersClassNames={{
-                    range_start: 'bg-brand-accent text-white rounded-l-xl',
-                    range_end: 'bg-brand-accent text-white rounded-r-xl',
-                    in_range: 'bg-brand-accent/10',
-                }}
-                components={{
-                    Chevron: ({ orientation }) =>
-                        orientation === 'left'
-                            ? <ChevronLeft size={16} />
-                            : <ChevronRight size={16} />,
-                }}
-                classNames={{
-                    ...getDefaultClassNames(),
-                    root: `${getDefaultClassNames().root} rdp-custom`,
-                    disabled: 'text-gray-300 dark:text-white/10 cursor-not-allowed',
-                    outside: 'text-gray-300 dark:text-white/10 opacity-50',
-                    chevron: 'fill-gray-500 dark:fill-gray-400',
-                }}
-            />
-        </div>,
-        document.body
-    )
-}
-        </div >
+            {/* Portal-rendered Calendar Popover */}
+            {typeof document !== 'undefined' && activeField && createPortal(
+                <div
+                    ref={popoverRef}
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-bg-tile border border-slate-200 dark:border-white/10 rounded-2xl shadow-layered-lg p-3 animate-fade-in"
+                    style={{
+                        top: position.top,
+                        left: position.left,
+                    }}
+                >
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-200 dark:border-white/5">
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-semibold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">
+                                {activeField === 'start' ? startLabel : endLabel}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleToday}
+                                className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                            >
+                                Today
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setActiveField(null)}
+                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                    </div>
+
+                    {/* Selected Range Display */}
+                    {(isStartValid || isEndValid) && (
+                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-xs">
+                            <span className={activeField === 'start' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
+                                {startDisplay || '—'}
+                            </span>
+                            <ArrowRight size={12} className="text-gray-400" />
+                            <span className={activeField === 'end' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
+                                {endDisplay || '—'}
+                            </span>
+                        </div>
+                    )}
+
+                    {/* Calendar */}
+                    <DayPicker
+                        mode="single"
+                        selected={activeField === 'start' ? (isStartValid ? startDateObj : undefined) : (isEndValid ? endDateObj : undefined)}
+                        onSelect={handleSelect}
+                        month={calendarMonth}
+                        onMonthChange={setCalendarMonth}
+                        disabled={getDisabledDays()}
+                        modifiers={{
+                            range_start: isStartValid ? startDateObj : undefined,
+                            range_end: isEndValid ? endDateObj : undefined,
+                            in_range: isStartValid && isEndValid ? {
+                                from: startDateObj,
+                                to: endDateObj
+                            } : undefined,
+                        }}
+                        modifiersClassNames={{
+                            range_start: 'bg-brand-accent text-white rounded-l-xl',
+                            range_end: 'bg-brand-accent text-white rounded-r-xl',
+                            in_range: 'bg-brand-accent/10',
+                        }}
+                        components={{
+                            Chevron: ({ orientation }) =>
+                                orientation === 'left'
+                                    ? <ChevronLeft size={16} />
+                                    : <ChevronRight size={16} />,
+                        }}
+                        classNames={{
+                            ...getDefaultClassNames(),
+                            root: `${getDefaultClassNames().root} rdp-custom`,
+                            disabled: 'text-gray-300 dark:text-white/10 cursor-not-allowed',
+                            outside: 'text-gray-300 dark:text-white/10 opacity-50',
+                            chevron: 'fill-gray-500 dark:fill-gray-400',
+                        }}
+                    />
+                </div>,
+                document.body
+            )}
+        </div>
     );
 }
 

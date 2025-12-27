@@ -361,11 +361,8 @@ const StudentView: React.FC<StudentViewProps> = ({
     };
 
     return (
-        <div className="app-container bg-dots">
-            {/* Decorative Background Blobs */}
-            <div className="gradient-blob blob-accent top-[-20%] right-[-10%]" />
-            <div className="gradient-blob blob-purple bottom-[5%] left-[10%]" />
-            <div className="gradient-blob blob-blue top-[15%] left-[-5%]" />
+        <div className="app-container">
+            {/* Decorative Background Blobs removed for Gravity Background */}
             {/* Responsive Sidebar - Desktop static, Mobile slide-in */}
             <StudentSidebar
                 tasksCompleted={tasksCompleted}

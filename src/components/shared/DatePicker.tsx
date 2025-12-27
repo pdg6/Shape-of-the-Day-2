@@ -197,7 +197,7 @@ export function DatePicker({
                     disabled={disabled}
                     className={`
                         cursor-pointer p-1.5 rounded-xl transition-all duration-200
-                        hover:bg-slate-100 dark:hover:bg-[#151921] border border-transparent hover:border-slate-200 dark:hover:border-white/5
+                        hover:bg-slate-100 dark:hover:bg-bg-tile-alt border border-transparent hover:border-slate-200 dark:hover:border-white/5
                         focus:outline-none
                         disabled:opacity-50 disabled:cursor-not-allowed
                     `}
@@ -215,9 +215,9 @@ export function DatePicker({
                         relative w-full cursor-pointer
                         pl-9 pr-8 py-2.5 rounded-xl text-sm font-bold text-left
                         border transition-all duration-200 shadow-layered-sm
-                        bg-brand-lightSurface dark:bg-[#1a1d24]
+                        bg-brand-lightSurface dark:bg-bg-tile
                         border-slate-200 dark:border-white/5
-                        hover:bg-slate-50 dark:hover:bg-[#151921]
+                        hover:bg-slate-50 dark:hover:bg-bg-tile-alt
                         hover:border-slate-300 dark:hover:border-white/10
                         focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
@@ -251,7 +251,7 @@ export function DatePicker({
             {typeof document !== 'undefined' && isOpen && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-[#1a1d24] border border-slate-200 dark:border-white/10 rounded-2xl shadow-layered-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-bg-tile border border-slate-200 dark:border-white/10 rounded-2xl shadow-layered-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,

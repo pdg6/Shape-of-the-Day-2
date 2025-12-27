@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, LogOut, QrCode, BarChart2, User, BookOpen, School, ListTodo, Presentation, Activity } from 'lucide-react';
+import { Moon, Sun, LogOut, QrCode, BarChart2, User, BookOpen, School, ListTodo, Presentation, Activity, Check } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
 
 interface SettingsOverlayProps {
@@ -25,7 +25,43 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
     activeTab,
     onTabChange
 }) => {
-    const { darkMode, toggleDarkMode } = useClassStore();
+    const { darkMode, toggleDarkMode, backgroundTheme, setBackgroundTheme } = useClassStore();
+
+    const GravityThemeOption = ({ id, name, tag, bg, node }: { id: '4c' | '1a' | '1b' | '2a', name: string, tag: string, bg: string, node: string }) => {
+        const isActive = backgroundTheme === id;
+        return (
+            <button
+                onClick={() => setBackgroundTheme(id)}
+                className={`flex items-center justify-between w-full p-2 rounded-lg border transition-all duration-200 text-left ${isActive
+                    ? 'bg-brand-accent/5 border-brand-accent shadow-sm'
+                    : 'bg-transparent border-transparent hover:bg-slate-100 dark:hover:bg-white/5'
+                    }`}
+            >
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded shrink-0 border border-slate-200 dark:border-white/10 flex items-center justify-center shadow-inner" style={{ backgroundColor: bg }}>
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: node }}></div>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-sm font-bold ${isActive ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                {name}
+                            </span>
+                            <span className="text-[10px] uppercase font-bold tracking-wide text-gray-400 dark:text-gray-500 bg-black/5 dark:bg-white/5 px-1.5 rounded">
+                                {tag}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {isActive && (
+                    <div className="text-brand-accent">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                )}
+            </button>
+        );
+    };
 
     if (!isOpen) return null;
 
@@ -41,8 +77,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 onClose();
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
-                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                         >
                             <School size={20} />
@@ -54,8 +90,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 onClose();
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
-                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                         >
                             <ListTodo size={20} />
@@ -67,8 +103,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 onClose();
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
-                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                         >
                             <Presentation size={20} />
@@ -80,8 +116,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 onClose();
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
-                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                         >
                             <Activity size={20} />
@@ -93,8 +129,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 onClose();
                             }}
                             className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'reports'
-                                    ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                    : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
+                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
+                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
                                 }`}
                         >
                             <BarChart2 size={20} />
@@ -138,7 +174,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                 </div>
             )}
 
-            {/* Dark/Light Mode Toggle - Near top */}
+            {/* Theme Toggle */}
             <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
@@ -162,6 +198,49 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         `}
                     />
                 </button>
+            </div>
+
+            {/* Gravity Background Switcher */}
+            <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="p-2 rounded-lg bg-slate-500/10 text-slate-500 dark:text-slate-400">
+                        <Activity size={20} />
+                    </div>
+                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Background
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2">
+                    <GravityThemeOption
+                        id="4c"
+                        name="Neutral"
+                        tag="Balanced"
+                        bg="#171717"
+                        node="#262626"
+                    />
+                    <GravityThemeOption
+                        id="1a"
+                        name="Original"
+                        tag="Recommended"
+                        bg="#111111"
+                        node="#262626"
+                    />
+                    <GravityThemeOption
+                        id="1b"
+                        name="Soft Lift"
+                        tag="Softer"
+                        bg="#161616"
+                        node="#2A2A2A"
+                    />
+                    <GravityThemeOption
+                        id="2a"
+                        name="Deep Cut"
+                        tag="Stealth"
+                        bg="#141414"
+                        node="#000000"
+                    />
+                </div>
             </div>
 
             {/* Data & Analytics */}

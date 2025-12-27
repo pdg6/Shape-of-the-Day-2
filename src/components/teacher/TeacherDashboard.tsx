@@ -146,18 +146,15 @@ const TeacherDashboard: React.FC = () => {
                     />;
             case 'shape': return <ShapeOfDay onNavigate={handleDeepNavigation} />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
-            case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} />;
-            case 'reports': return <ClassroomManager activeView={reportsSubTab === 'calendar' ? 'history' : 'analytics'} onNavigate={handleDeepNavigation} />;
+            case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} onShowJoinCode={() => setIsJoinCodeOpen(true)} />;
+            case 'reports': return <ClassroomManager activeView={reportsSubTab === 'calendar' ? 'history' : 'analytics'} onNavigate={handleDeepNavigation} onShowJoinCode={() => setIsJoinCodeOpen(true)} />;
             default: return <TaskManager />;
         }
     };
 
     return (
-        <div className="app-container bg-dots">
-            {/* Background Blobs */}
-            <div className="gradient-blob blob-accent top-[-10%] right-[-10%]" />
-            <div className="gradient-blob blob-purple bottom-[10%] left-[20%]" />
-            <div className="gradient-blob blob-blue top-[20%] left-[-5%]" />
+        <div className="app-container">
+            {/* Background Blobs removed for Gravity Background */}
 
             {/* Mobile Sidebar Overlay */}
             <div
@@ -172,11 +169,11 @@ const TeacherDashboard: React.FC = () => {
                 className={`
                     fixed lg:static inset-y-0 left-0 z-50
                     ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64
-                    bg-brand-lightSurface dark:bg-[#1a1d24]
+                    bg-transparent
                     transform transition-transform duration-300 ease-in-out
                     flex flex-col h-full overflow-hidden
                     ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-                    border-r border-slate-200 dark:border-white/5
+                    border-none
                 `}
                 aria-label="Main navigation"
                 aria-hidden={!isSidebarOpen && typeof window !== 'undefined' && window.innerWidth < 1024 ? 'true' : 'false'}
@@ -205,7 +202,7 @@ const TeacherDashboard: React.FC = () => {
                     {/* Mobile Close Button */}
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                        className="lg:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-slate-100 dark:hover:bg-white/10 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                         aria-label="Close navigation menu"
                     >
                         <X className="w-5 h-5" />
@@ -219,11 +216,8 @@ const TeacherDashboard: React.FC = () => {
                                 <button
                                     onClick={() => handleTabChange(item.id)}
                                     className={`
-                                    group relative flex items-center rounded-xl transition-all duration-300 font-bold overflow-hidden border
-                                    ${activeTab === item.id
-                                            ? 'nav-item-active shadow-layered-sm'
-                                            : 'nav-item-hover text-brand-textDarkSecondary dark:text-gray-400 border-transparent'
-                                        }
+                                    nav-item
+                                    ${activeTab === item.id ? 'active' : ''}
                                     ${isCollapsed ? 'lg:w-12 lg:h-12 lg:justify-center w-full h-12' : 'w-full h-12 px-2'}
                                 `}
                                     title={isCollapsed ? item.label : undefined}
@@ -246,7 +240,7 @@ const TeacherDashboard: React.FC = () => {
                                         ${!isCollapsed && isClassroomsMenuOpen ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
                                     `}
                                     >
-                                        <ul className="min-h-0 overflow-hidden ml-6 border-l border-slate-200 dark:border-white/10 pl-4 space-y-1 list-none m-0 p-0 py-2">
+                                        <ul className="min-h-0 overflow-hidden ml-6 border-l border-slate-200 dark:border-white/10 pl-4 space-y-2 list-none m-0 p-0 py-2">
                                             {classrooms.map(cls => (
                                                 <li key={cls.id}>
                                                     <button
@@ -265,12 +259,36 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setIsClassModalOpen(true)}
-                                                    className="w-full text-left p-2.5 text-xs rounded-xl font-bold text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-all duration-300 transition-float hover:-translate-y-0.5 flex items-center gap-2 mt-2 group/add"
+                                                    className="w-full text-left p-2.5 text-xs rounded-xl font-bold text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-float hover:-translate-y-0.5 flex items-center gap-2 mt-2 group/add"
                                                 >
                                                     <div className="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/10 flex items-center justify-center transition-all duration-300 group-hover/add:bg-brand-accent/10 group-hover/add:scale-110 shadow-layered-sm">
                                                         <Plus size={14} className="transition-transform group-hover/add:rotate-90" />
                                                     </div>
                                                     Add Class
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+
+                                {item.id === 'shape' && (
+                                    <div
+                                        id="submenu-shape"
+                                        className={`
+                                        grid transition-[grid-template-rows,opacity] duration-300 ease-in-out
+                                        ${!isCollapsed && activeTab === 'shape' ? 'grid-rows-[1fr] opacity-100 mt-2' : 'grid-rows-[0fr] opacity-0'}
+                                    `}
+                                    >
+                                        <ul className="min-h-0 overflow-hidden ml-6 border-l border-slate-200 dark:border-white/10 pl-4 space-y-2 list-none m-0 p-0 py-2">
+                                            <li>
+                                                <button
+                                                    onClick={() => setIsJoinCodeOpen(true)}
+                                                    className="w-full text-left p-2.5 text-xs rounded-xl font-bold text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-float hover:-translate-y-0.5 flex items-center gap-2 group/join"
+                                                >
+                                                    <div className="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/10 flex items-center justify-center transition-all duration-300 group-hover/join:bg-brand-accent/10 group-hover/join:scale-110 shadow-layered-sm">
+                                                        <QrCode size={14} className="transition-transform group-hover/join:scale-110" />
+                                                    </div>
+                                                    Show Join Code
                                                 </button>
                                             </li>
                                         </ul>
@@ -374,7 +392,7 @@ const TeacherDashboard: React.FC = () => {
 
                 </nav>
 
-                <div className="px-4 pb-6 pt-4 space-y-2 shrink-0">
+                <div className="px-4 pb-4 pt-4 space-y-4 shrink-0">
                     <button
                         onClick={() => {
                             setIsCollapsed(!isCollapsed);
@@ -382,7 +400,7 @@ const TeacherDashboard: React.FC = () => {
                         }}
                         aria-expanded={!isCollapsed}
                         aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
-                        className={`hidden md:flex group relative items-center h-12 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold overflow-hidden border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 shadow-layered-sm ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
+                        className={`hidden md:flex nav-item ${isCollapsed ? 'w-12 justify-center' : 'w-full'} h-12`}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
                         <div className="flex items-center justify-center w-12 shrink-0 text-brand-textDarkSecondary dark:text-gray-400 transition-colors">
@@ -390,7 +408,8 @@ const TeacherDashboard: React.FC = () => {
                         </div>
                         <span className={`
                             whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left
-                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0 text-brand-textDarkSecondary group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200'}
+                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-1'}
+                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
                         `}>
                             Menu
                         </span>
@@ -400,28 +419,10 @@ const TeacherDashboard: React.FC = () => {
                             </div>
                         )}
                     </button>
-                    <div className={`hidden md:block h-px bg-slate-200 dark:bg-white/5 my-2 mx-1 transition-all duration-300 ${isCollapsed ? 'w-10' : 'w-auto'}`} />
-                    <button
-                        onClick={() => setIsJoinCodeOpen(true)}
-                        className={`group relative flex items-center h-12 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold overflow-hidden border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 shadow-layered-sm ${isCollapsed ? 'w-12 justify-center' : 'w-full'
-                            }`}
-                        title={isCollapsed ? 'Join Code' : undefined}
-                    >
-                        <div className="flex items-center justify-center w-12 shrink-0 transition-colors text-gray-500 dark:text-gray-400">
-                            <QrCode size={20} />
-                        </div>
-                        <span className={`
-                            whitespace-nowrap transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0'}
-                            text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-200
-                        `}>
-                            Join Code
-                        </span>
-                    </button>
 
                     <button
                         onClick={() => setIsSettingsOpen(true)}
-                        className={`group relative flex items-center h-12 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold overflow-hidden border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 shadow-layered-sm ${isCollapsed ? 'w-12 justify-center' : 'w-full'}`}
+                        className={`nav-item ${isCollapsed ? 'w-12 justify-center' : 'w-full'} h-12`}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
                         <div className="flex items-center justify-center w-12 shrink-0 text-brand-textDarkSecondary dark:text-gray-400 transition-colors">
@@ -429,33 +430,14 @@ const TeacherDashboard: React.FC = () => {
                         </div>
                         <span className={`
                             whitespace-nowrap transition-all duration-300 ease-in-out
-                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-0'}
-                            text-gray-500 group-hover:text-gray-700 dark:group-hover:text-gray-200
+                            ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-1'}
+                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
                         `}>
                             Settings
                         </span>
                     </button>
 
-                    {/* System Status Glass Panel */}
-                    {!isCollapsed && (
-                        <div className="mt-4 p-3 rounded-xl bg-white/40 dark:bg-white/5 border border-white/20 dark:border-white/10 backdrop-blur-md">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded bg-gray-100 dark:bg-white/10">System</span>
-                                <div className="flex gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <div className="flex justify-between text-[11px] font-bold">
-                                    <span className="text-gray-500 dark:text-gray-400">Class State</span>
-                                    <span className="text-emerald-500">Live</span>
-                                </div>
-                                <div className="w-full h-1 bg-gray-200 dark:bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500 w-full animate-pulse"></div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+
 
                 </div>
             </aside>

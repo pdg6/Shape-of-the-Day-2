@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 
 import LandingPage from './components/shared/LandingPage';
+import GravityBackground from './components/shared/GravityBackground';
 import StudentNameModal from './components/student/StudentNameModal';
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -19,7 +20,7 @@ const StudentView = lazy(() => import('./components/student/StudentView'));
 
 // Loading fallback component
 const LoadingSpinner = () => (
-    <div className="flex items-center justify-center h-screen bg-brand-light dark:bg-brand-dark">
+    <div className="flex items-center justify-center h-screen bg-transparent">
         <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
             <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary font-medium">Loading...</p>
@@ -192,7 +193,7 @@ function App() {
     // Show loading spinner while checking auth status
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-brand-light dark:bg-brand-dark">
+            <div className="min-h-screen flex items-center justify-center bg-transparent">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
             </div>
         );
@@ -200,7 +201,8 @@ function App() {
 
     return (
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
-            <div className="flex flex-col h-screen-safe bg-brand-lightSurface dark:bg-brand-darkSurface transition-colors duration-200">
+            <GravityBackground />
+            <div className="relative z-10 flex flex-col h-screen-safe bg-transparent transition-colors duration-200">
                 {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
                 <a href="#main-content" className="skip-link">
                     Skip to main content

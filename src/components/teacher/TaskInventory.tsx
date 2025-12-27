@@ -165,7 +165,7 @@ function TreeItem({
                             e.stopPropagation();
                             onEdit(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 transition-all flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
                         title="Edit task"
                     >
                         <Pencil size={14} />
@@ -176,7 +176,7 @@ function TreeItem({
                             e.stopPropagation();
                             onDelete(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
                         title="Delete task"
                     >
                         <Trash2 size={14} />
@@ -186,7 +186,7 @@ function TreeItem({
                             e.stopPropagation();
                             onCopyToBoard(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-slate-200 dark:hover:bg-[#151921] text-gray-400 hover:text-brand-accent transition-all flex items-center justify-center border border-transparent hover:border-slate-300 dark:hover:border-white/5"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-slate-200 dark:hover:bg-[#151921] text-gray-400 hover:text-brand-accent transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center border border-transparent hover:border-slate-300 dark:hover:border-white/5 shadow-layered-sm"
                         title="Copy to Task Board"
                     >
                         <Copy size={14} />
@@ -227,7 +227,7 @@ function TreeItem({
                             }, 150);
                         }}
                         placeholder={`New ${getTypeLabel(allowedChildTypes[0] || 'task').toLowerCase()} title...`}
-                        className="flex-1 px-2 py-1 text-sm bg-white dark:bg-[#1a1d24] border border-slate-200 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        className="flex-1 px-2 py-1 text-sm bg-brand-lightSurface dark:bg-bg-tile border border-slate-200 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                         disabled={isQuickAddSaving}
                     />
                     {isQuickAddSaving ? (
@@ -826,7 +826,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             <button
                                 onClick={() => setFilterDate(null)}
                                 className={`
-                                flex-shrink-0 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-all duration-300 transition-float hover:-translate-y-0.5 select-none cursor-pointer
+                                flex-shrink-0 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-float hover:-translate-y-0.5 select-none cursor-pointer
                                 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 shadow-layered-sm
                                 ${filterDate === null
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5'

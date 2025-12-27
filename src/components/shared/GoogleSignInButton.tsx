@@ -37,7 +37,7 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
             // w-full: Takes full width of container
             // bg-brand-darkSurface: Uses our custom theme color
             // transition-all: Smoothly animates hover/focus states
-            className="flex items-center justify-center gap-3 w-full bg-brand-lightSurface dark:bg-[#1a1d24] text-brand-textDarkPrimary dark:text-brand-textPrimary text-base font-bold py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/10 focus:outline-none shadow-layered-sm transition-all transition-float duration-300 hover:-translate-y-0.5 min-h-[56px] disabled:opacity-70 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-3 w-full bg-brand-lightSurface dark:bg-bg-tile text-brand-textDarkPrimary dark:text-brand-textPrimary text-base font-bold py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/10 focus:outline-none shadow-layered-sm transition-float hover:shadow-layered-lg hover:-translate-y-0.5 min-h-[56px] disabled:opacity-70 disabled:cursor-not-allowed"
         >
             {/* Conditional rendering: Show spinner if loading, otherwise show Google logo */}
             {isLoading ? (

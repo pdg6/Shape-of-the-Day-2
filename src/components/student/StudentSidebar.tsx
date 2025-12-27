@@ -59,11 +59,11 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             <aside className={`
                 fixed md:static inset-y-0 left-0 z-50
                 ${isCollapsed ? 'md:w-20' : 'md:w-72'} w-72
-                bg-brand-lightSurface dark:bg-[#1a1d24]
+                bg-transparent
                 transform transition-transform duration-300 ease-in-out
                 flex flex-col h-full overflow-hidden
                 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                border-r border-slate-200 dark:border-white/5
+                border-none
             `}
                 aria-label="Student navigation"
             >
@@ -100,20 +100,15 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
 
                 {/* Navigation */}
                 <nav id="student-sidebar-nav" aria-label="Student navigation" className="shrink-0 p-4">
-                    <ul className="space-y-2 list-none m-0 p-0">
+                    <ul className="space-y-1 list-none m-0 p-0">
                         {navItems.map((item) => (
                             <li key={item.id} className="flex">
                                 <button
                                     onClick={() => handleTabChange(item.id)}
                                     className={`
-                                        flex-1 relative flex items-center rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold border
-                                        bg-brand-lightSurface dark:bg-[#1a1d24]
-                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 shadow-layered-sm
-                                        ${activeTab === item.id
-                                            ? 'nav-item-active min-h-[48px]'
-                                            : 'nav-item-hover text-brand-textDarkSecondary dark:text-gray-400 border-transparent hover:border-slate-200 dark:hover:border-white/5 shadow-none hover:shadow-layered-sm min-h-[48px]'
-                                        }
-                                        ${isCollapsed ? 'md:w-12 md:justify-center' : ''} w-full h-12
+                                        nav-item
+                                        ${activeTab === item.id ? 'active' : ''}
+                                        ${isCollapsed ? 'md:w-12 md:justify-center' : 'w-full px-2'} h-12
                                     `}
                                     title={isCollapsed ? item.label : undefined}
                                     aria-label={item.label}
@@ -154,7 +149,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="shrink-0 mt-auto p-4 space-y-2 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                <div className="shrink-0 mt-auto p-4 space-y-4 bg-transparent">
                     {/* Collapse Toggle - Desktop only */}
                     <button
                         onClick={onToggleCollapse}
@@ -162,9 +157,8 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         aria-controls="student-sidebar-nav"
                         aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                         className={`
-                            hidden md:flex group items-center h-10 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold border border-transparent
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 hover:border-slate-200 dark:hover:border-white/5 hover:bg-white dark:hover:bg-white/5 shadow-none hover:shadow-layered-sm
-                            ${isCollapsed ? 'w-12 justify-center' : 'w-full'}
+                            hidden md:flex nav-item
+                            ${isCollapsed ? 'md:w-12 md:justify-center' : 'w-full px-2'} h-12
                         `}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
@@ -180,15 +174,13 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         </span>
                     </button>
 
-                    <div className={`h-px bg-gray-200 dark:bg-white/5 ${isCollapsed ? 'md:mx-1' : ''}`} />
 
                     {/* Settings Button */}
                     <button
                         onClick={onOpenSettings}
                         className={`
-                            group flex items-center h-10 rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 font-bold border border-transparent
-                            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 hover:border-slate-200 dark:hover:border-white/5 hover:bg-white dark:hover:bg-white/5 shadow-none hover:shadow-layered-sm
-                            ${isCollapsed ? 'md:w-12 md:justify-center' : ''} w-full
+                            nav-item
+                            ${isCollapsed ? 'md:w-12 md:justify-center' : 'w-full px-2'} h-12
                         `}
                         title={isCollapsed ? 'Settings' : undefined}
                     >

@@ -176,7 +176,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
     return (
         <div
-            className={`group bg-brand-lightSurface dark:bg-[#1a1d24] 
+            className={`group bg-brand-lightSurface dark:bg-bg-tile 
                 border border-slate-200 dark:border-white/5 rounded-2xl p-5
                 border-l-4 ${typeBorderColor}
                 transition-all duration-300 shadow-layered lift-hover
@@ -577,7 +577,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         >
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered shrink-0 p-6">
+            <div className="w-full bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered shrink-0 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -651,7 +651,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 {loading ? (
                     <div className="text-center py-12 text-gray-400">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
-                    <div className="text-center py-12 text-brand-textDarkSecondary bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
+                    <div className="text-center py-12 text-brand-textDarkSecondary bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
                         No tasks scheduled for this date.
                     </div>
                 ) : (

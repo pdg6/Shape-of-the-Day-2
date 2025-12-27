@@ -190,7 +190,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
     }
 
     return (
-        <div className="h-full flex flex-col space-y-6 animate-in fade-in duration-500 overflow-hidden">
+        <div className="h-full flex flex-col space-y-4 animate-in fade-in duration-500 overflow-hidden">
             {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
             <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
                 {/* Left: Label + Class Name + Active Count */}
