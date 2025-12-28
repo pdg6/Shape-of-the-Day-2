@@ -47,7 +47,6 @@ export const useClassStore = create<ClassState>((set) => ({
     activeStudentCount: 0,
     darkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') !== 'false' : true,
     isClassModalOpen: false,
-    isClassModalOpen: false,
     editingClass: null,
     backgroundTheme: typeof window !== 'undefined' ? (localStorage.getItem('backgroundTheme') as '4c' | '1a' | '1b' | '2a') || '4c' : '4c',
 

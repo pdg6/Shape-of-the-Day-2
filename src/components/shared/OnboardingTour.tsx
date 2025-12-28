@@ -1,129 +1,17 @@
-import React, { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
-import { X, ChevronLeft, ChevronRight, Check, Lightbulb, MousePointer, Keyboard, HelpCircle } from 'lucide-react';
-
-/**
- * Onboarding Tour System
- * 
- * Implements multiple UX laws:
- * - Paradox of the Active User: Users don't read manuals, they dive in
- * - Tesler's Law: Absorb complexity, provide contextual guidance
- * - Goal-Gradient Effect: Show progress toward completion
- * - Zeigarnik Effect: Incomplete tours are remembered
- */
-
-export interface TourStep {
-    id: string;
-    target: string; // CSS selector for the target element
-    title: string;
-    content: string;
-    position?: 'top' | 'bottom' | 'left' | 'right' | 'center';
-    icon?: React.ReactNode;
-    action?: {
-        label: string;
-        onClick: () => void;
-    };
-}
-
-interface TourContextType {
-    isActive: boolean;
-    currentStep: number;
-    totalSteps: number;
-    startTour: (tourId: string) => void;
-    endTour: () => void;
-    nextStep: () => void;
-    prevStep: () => void;
-    skipTour: () => void;
-    hasCompletedTour: (tourId: string) => boolean;
-}
-
-const TourContext = createContext<TourContextType | null>(null);
-
-export const useTour = () => {
-    const context = useContext(TourContext);
-    if (!context) {
-        throw new Error('useTour must be used within a TourProvider');
-    }
-    return context;
-};
-
-// Predefined tours
-const TOURS: Record<string, TourStep[]> = {
-    'teacher-welcome': [
-        {
-            id: 'welcome',
-            target: 'body',
-            title: 'Welcome to Shape of the Day! 🎉',
-            content: 'Let\'s take a quick tour to help you get started. This will only take a minute.',
-            position: 'center',
-            icon: <Lightbulb className="w-6 h-6 text-yellow-500" />
-        },
-        {
-            id: 'create-class',
-            target: '[data-tour="create-class"]',
-            title: 'Create Your First Class',
-            content: 'Start by creating a class. Students will use a unique code to join.',
-            position: 'bottom',
-            icon: <MousePointer className="w-5 h-5" />
-        },
-        {
-            id: 'add-tasks',
-            target: '[data-tour="task-manager"]',
-            title: 'Add Tasks for Students',
-            content: 'Create tasks, assignments, and projects. Drag them onto the calendar to schedule.',
-            position: 'right'
-        },
-        {
-            id: 'live-view',
-            target: '[data-tour="live-view"]',
-            title: 'Monitor in Real-Time',
-            content: 'Watch student progress live. See who needs help and who\'s completed their work.',
-            position: 'bottom'
-        },
-        {
-            id: 'keyboard-shortcuts',
-            target: 'body',
-            title: 'Pro Tip: Keyboard Shortcuts',
-            content: 'Press ? anytime to see available keyboard shortcuts for faster navigation.',
-            position: 'center',
-            icon: <Keyboard className="w-5 h-5" />
-        }
-    ],
-    'student-welcome': [
-        {
-            id: 'welcome',
-            target: 'body',
-            title: 'Welcome! 👋',
-            content: 'Here\'s a quick overview of how to use Shape of the Day.',
-            position: 'center'
-        },
-        {
-            id: 'tasks',
-            target: '[data-tour="task-list"]',
-            title: 'Your Tasks',
-            content: 'All your tasks for today appear here. Click the status buttons to update your progress.',
-            position: 'right'
-        },
-        {
-            id: 'help',
-            target: '[data-tour="help-button"]',
-            title: 'Need Help?',
-            content: 'Click "Stuck" or "Question" to notify your teacher. They\'ll see your message right away!',
-            position: 'top'
-        },
-        {
-            id: 'calendar',
-            target: '[data-tour="calendar"]',
-            title: 'Plan Ahead',
-            content: 'Check the calendar to see upcoming tasks and assignments.',
-            position: 'left'
-        }
-    ]
-};
+import React, { useState, useEffect, useCallback, ReactNode } from 'react';
+import { X, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { TourContext, TourStep, TOURS } from '../../context/tour-context';
 
 interface TourProviderProps {
     children: ReactNode;
 }
 
+/**
+ * TourProvider Component
+ * 
+ * Manages the onboarding tour state and renders the overlay.
+ * Logic is separated into tour-context.ts for Fast Refresh compatibility.
+ */
 export const TourProvider: React.FC<TourProviderProps> = ({ children }) => {
     const [isActive, setIsActive] = useState(false);
     const [currentTourId, setCurrentTourId] = useState<string | null>(null);
@@ -393,70 +281,6 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                     </div>
                 </div>
             </div>
-        </div>
-    );
-};
-
-/**
- * Help button component that can trigger tours or show help menu
- */
-interface HelpButtonProps {
-    tourId?: string;
-    className?: string;
-}
-
-export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }) => {
-    const { startTour, hasCompletedTour } = useTour();
-    const [showMenu, setShowMenu] = useState(false);
-
-    const handleClick = () => {
-        if (tourId) {
-            startTour(tourId);
-        } else {
-            setShowMenu(!showMenu);
-        }
-    };
-
-    return (
-        <div className="relative">
-            <button
-                onClick={handleClick}
-                className={`
-                    p-2 rounded-xl text-gray-500 hover:text-brand-accent hover:bg-slate-100 
-                    dark:hover:bg-[#151921] transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/5
-                    ${className}
-                `}
-                title="Help & Tour"
-                aria-label="Help and tour options"
-            >
-                <HelpCircle className="w-5 h-5" />
-                {tourId && !hasCompletedTour(tourId) && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-accent rounded-full animate-pulse" />
-                )}
-            </button>
-
-            {showMenu && (
-                <div className="absolute right-0 mt-3 w-48 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered-lg border border-slate-200 dark:border-white/5 py-2 z-50">
-                    <button
-                        onClick={() => { startTour('teacher-welcome'); setShowMenu(false); }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        Take the Tour
-                    </button>
-                    <button
-                        onClick={() => { /* Open docs */ setShowMenu(false); }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        View Documentation
-                    </button>
-                    <button
-                        onClick={() => { /* Open shortcuts */ setShowMenu(false); }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                        Keyboard Shortcuts
-                    </button>
-                </div>
-            )}
         </div>
     );
 };

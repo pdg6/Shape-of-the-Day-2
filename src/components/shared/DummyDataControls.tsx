@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth-context';
 import { loadDummyData, clearDummyData, hasDummyData, getDummyJoinCodes } from '../../services/dummyDataService';
 import toast from 'react-hot-toast';
 

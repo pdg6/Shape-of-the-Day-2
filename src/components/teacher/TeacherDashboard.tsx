@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, ListTodo, Presentation, Pencil, Calendar, PieChart, Users, ListChecks } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth-context';
 import { useClassStore } from '../../store/classStore';
 import TaskManager from './TaskManager';
 import TaskInventory from './TaskInventory';
@@ -10,6 +10,7 @@ import ClassroomManager from './ClassroomManager';
 import { ClassFormModal } from './ClassFormModal';
 import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
+import { HelpButton } from '../shared/HelpButton';
 import { Modal } from '../shared/Modal';
 // import { DummyDataControls } from '../shared/DummyDataControls';
 

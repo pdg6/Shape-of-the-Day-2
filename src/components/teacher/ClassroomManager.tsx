@@ -4,6 +4,7 @@ import { db } from '../../firebase';
 import { Classroom, AnalyticsLog } from '../../types';
 import { Plus, Calendar as CalendarIcon, Users, X, Check, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle, BookOpen } from 'lucide-react';
 import { Button } from '../shared/Button';
+import { HelpButton } from '../shared/HelpButton';
 import { handleError } from '../../utils/errorHandler';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
 import { useClassStore } from '../../store/classStore';

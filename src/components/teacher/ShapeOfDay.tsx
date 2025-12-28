@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useClassStore } from '../../store/classStore';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/auth-context';
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { toDateString } from '../../utils/dateHelpers';
 import { QRCodeSVG } from 'qrcode.react';

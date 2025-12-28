@@ -9,8 +9,9 @@ import { db } from './firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useClassStore } from './store/classStore';
 import { Classroom } from './types';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from './context/auth-context';
 import { ThemeProvider, UserRole } from './context/ThemeContext';
+import TourProvider from './components/shared/OnboardingTour';
 
 import { clearAllStudentData } from './services/storageService';
 
@@ -20,125 +21,87 @@ const StudentView = lazy(() => import('./components/student/StudentView'));
 
 // Loading fallback component
 const LoadingSpinner = () => (
-    <div className="flex items-center justify-center h-screen bg-transparent">
+    <div className="h-screen w-screen flex items-center justify-center bg-brand-lightSurface dark:bg-brand-darkSurface">
         <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
-            <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary font-medium">Loading...</p>
+            <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
+            <p className="text-sm font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary animate-pulse">
+                INITIALIZING THE DAY...
+            </p>
         </div>
     </div>
 );
 
 /**
  * App Component
- * 
+ *
  * The root component of the application. It handles:
  * 1. Global state (authentication, current view, theme).
  * 2. Routing (switching between Landing, Teacher, and Student views).
  * 3. Global layout elements (Navigation bar, Toaster).
  */
-function App() {
+const App = () => {
     // Auth Context
     const { user, loading, login, logout } = useAuth();
 
     // Global Store
     const {
-        view, setView,
-        studentName, setStudentName,
-        studentClassId: classId, setStudentClassId: setClassId,
-        studentClassroomColor, setStudentClassroomColor,
-        darkMode,
+        view,
+        setView,
+        classrooms,
+        setClassrooms,
         currentClassId,
         setCurrentClassId,
-        setClassrooms,
         resetAppState
     } = useClassStore();
 
     // Student specific UI state (local to App)
-    const [showNameModal, setShowNameModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [classroomId, setClassroomId] = useState<string | null>(null);
+    const [isStudentNameModalOpen, setIsStudentNameModalOpen] = useState(false);
 
-    // Determine user role for theming
-    const userRole: UserRole = view === 'student' ? 'student' : 'teacher';
-
-    /**
-     * Effect to apply dark mode class to the HTML element and sync browser theme-color.
-     * Persistence is handled within the store's toggleDarkMode/setDarkMode actions.
-     */
-    useEffect(() => {
-        const root = document.documentElement;
-        const themeColorMeta = document.querySelector('meta[name="theme-color"]');
-
-        if (darkMode) {
-            root.classList.add('dark');
-            root.style.colorScheme = 'dark';
-            if (themeColorMeta) {
-                themeColorMeta.setAttribute('content', '#10100e'); // --color-brand-dark
-            }
-        } else {
-            root.classList.remove('dark');
-            root.style.colorScheme = 'light';
-            if (themeColorMeta) {
-                themeColorMeta.setAttribute('content', '#F1F5F9'); // --color-brand-light (slate-100)
-            }
-        }
-        console.log('🌓 Theme synced:', darkMode ? 'dark' : 'light');
-    }, [darkMode]);
-
-    /**
-     * Effect to handle view switching based on auth.
-     * Priority: Active student session > Non-anonymous authenticated user > Landing.
-     */
+    // Initial data fetch
     useEffect(() => {
         if (!loading) {
-            // Check for active student session FIRST
-            if (classId && studentName && view !== 'teacher') {
-                setView('student');
-            } else if (user && !classId && !studentName) {
-                // Teachers (non-anonymous) go to dashboard, anonymous with no session go to landing
-                if (!user.isAnonymous) {
-                    setView('teacher');
-                } else {
-                    setView('landing');
-                }
-            } else if (view === 'teacher' && !user) {
-                setView('landing');
-            }
+            fetchClassrooms();
         }
-    }, [user, loading, view, classId, studentName, setView]);
+    }, [user, loading]);
 
-
-
-    /**
-     * Fetch Classrooms for Teacher Dashboard.
-     */
+    // Cleanup and navigation based on auth
     useEffect(() => {
-        const fetchClassrooms = async () => {
-            if (!user || view !== 'teacher') return;
-            try {
-                console.log('Fetching classrooms for teacher:', user.uid);
-                const q = query(collection(db, 'classrooms'), where('teacherId', '==', user.uid));
-                const snapshot = await getDocs(q);
-                const data: Classroom[] = [];
-                snapshot.forEach(doc => {
-                    data.push({ id: doc.id, ...doc.data() } as Classroom);
-                });
+        if (!loading && !user && view !== 'landing' && view !== 'student') {
+            setView('landing');
+        }
+    }, [user, loading]);
 
-                console.log('Total classrooms found:', data.length);
-                setClassrooms(data);
+    const fetchClassrooms = async () => {
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
 
-                const firstClass = data[0];
-                const persistedClassExists = currentClassId && data.some(c => c.id === currentClassId);
+        try {
+            const classroomsRef = collection(db, 'classrooms');
+            const q = query(classroomsRef, where('teacherId', '==', user.uid));
+            const querySnapshot = await getDocs(q);
 
-                if (data.length > 0 && !persistedClassExists && firstClass) {
-                    setCurrentClassId(firstClass.id);
-                } else if (data.length === 0) {
-                    setCurrentClassId(null);
-                }
-            } catch (error) {
-                console.error("Error fetching classrooms:", error);
+            const classroomsData: Classroom[] = [];
+            querySnapshot.forEach((doc) => {
+                classroomsData.push({ id: doc.id, ...doc.data() } as Classroom);
+            });
+
+            setClassrooms(classroomsData);
+
+            // AUTO-SELECT FIRST CLASS IF NONE SELECTED
+            if (classroomsData.length > 0 && !currentClassId) {
+                setCurrentClassId(classroomsData[0].id);
             }
-        };
-        fetchClassrooms();
-    }, [user, view, setCurrentClassId, setClassrooms, currentClassId]);
+        } catch (error) {
+            console.error('Error fetching classrooms:', error);
+            toast.error('Failed to load classrooms.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     /**
      * Handles Sign Out for both teachers and students.
@@ -201,50 +164,52 @@ function App() {
 
     return (
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
-            <GravityBackground />
-            <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent transition-colors duration-200">
-                {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
-                <a href="#main-content" className="skip-link">
-                    Skip to main content
-                </a>
+            <TourProvider>
+                <GravityBackground />
+                <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent transition-colors duration-200">
+                    {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
+                    <a href="#main-content" className="skip-link">
+                        Skip to main content
+                    </a>
 
-                <Toaster position="top-right" />
+                    <Toaster position="top-right" />
 
-                {/* Global Name Modal (can be triggered from anywhere) */}
-                {showNameModal && (
-                    <StudentNameModal
-                        onSubmit={handleNameSubmit}
-                        onClose={() => setShowNameModal(false)}
-                    />
-                )}
-
-                {/* Main Content Area - Each view manages its own header */}
-                <main id="main-content" className="flex-1 min-h-0 overflow-hidden">
-                    {view === 'landing' && (
-                        <LandingPage
-                            onLogin={login}
-                            onJoin={handleJoinRoom}
+                    {/* Global Name Modal (can be triggered from anywhere) */}
+                    {showNameModal && (
+                        <StudentNameModal
+                            onSubmit={handleNameSubmit}
+                            onClose={() => setShowNameModal(false)}
                         />
                     )}
 
-                    {view === 'teacher' && (
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <TeacherDashboard />
-                        </Suspense>
-                    )}
-                    {view === 'student' && (
-                        <Suspense fallback={<LoadingSpinner />}>
-                            <StudentView
-                                studentName={studentName}
-                                classId={classId}
-                                onEditName={() => setShowNameModal(true)}
-                                onNameSubmit={handleNameSubmit}
-                                onSignOut={handleLogout}
+                    {/* Main Content Area - Each view manages its own header */}
+                    <main id="main-content" className="flex-1 min-h-0 overflow-hidden">
+                        {view === 'landing' && (
+                            <LandingPage
+                                onLogin={login}
+                                onJoin={handleJoinRoom}
                             />
-                        </Suspense>
-                    )}
-                </main>
-            </div>
+                        )}
+
+                        {view === 'teacher' && (
+                            <Suspense fallback={<LoadingSpinner />}>
+                                <TeacherDashboard />
+                            </Suspense>
+                        )}
+                        {view === 'student' && (
+                            <Suspense fallback={<LoadingSpinner />}>
+                                <StudentView
+                                    studentName={studentName}
+                                    classId={classId}
+                                    onEditName={() => setShowNameModal(true)}
+                                    onNameSubmit={handleNameSubmit}
+                                    onSignOut={handleLogout}
+                                />
+                            </Suspense>
+                        )}
+                    </main>
+                </div>
+            </TourProvider>
         </ThemeProvider>
     );
 }

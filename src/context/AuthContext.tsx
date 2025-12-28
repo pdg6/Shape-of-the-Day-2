@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
     User,
     GoogleAuthProvider,
@@ -10,36 +10,14 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import toast from 'react-hot-toast';
-
-// ============================================================================
-// Types
-// ============================================================================
-
-interface AuthContextType {
-    user: User | null;
-    loading: boolean;
-    authError: AuthErrorType | null;
-    login: () => Promise<void>;
-    loginAnonymously: () => Promise<User | null>;
-    logout: () => Promise<void>;
-    clearAuthError: () => void;
-    refreshToken: () => Promise<boolean>;
-}
-
-type AuthErrorType = 'session_expired' | 'token_refresh_failed' | 'network_error';
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-const MAX_REFRESH_RETRIES = 3;
-const RETRY_DELAY_BASE_MS = 1000; // Exponential backoff: 1s, 2s, 4s
-
-// Session timeout: 6 hours (aligns with education app best practices)
-const SESSION_TIMEOUT_MS = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
-const SESSION_START_KEY = 'sotd_session_start';
+import {
+    AuthContext,
+    AuthErrorType,
+    MAX_REFRESH_RETRIES,
+    RETRY_DELAY_BASE_MS,
+    SESSION_TIMEOUT_MS,
+    SESSION_START_KEY
+} from './auth-context';
 
 // ============================================================================
 // Utility Functions
@@ -51,6 +29,12 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // AuthProvider Component
 // ============================================================================
 
+/**
+ * AuthProvider Component
+ * 
+ * Handles Firebase authentication state, session management, and token refresh.
+ * Core logic and hook are separated into auth-context.ts for Fast Refresh compatibility.
+ */
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -288,16 +272,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             {children}
         </AuthContext.Provider>
     );
-};
-
-// ============================================================================
-// Hook
-// ============================================================================
-
-export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
 };
