@@ -27,7 +27,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
 }) => {
     const { darkMode, toggleDarkMode, backgroundTheme, setBackgroundTheme } = useClassStore();
 
-    const GravityThemeOption = ({ id, name, tag, bg, node }: { id: '4c' | '2a' | '3a' | '5a', name: string, tag: string, bg: string, node: string }) => {
+    const GravityThemeOption = ({ id, name, tag, bg, node }: { id: '4c' | '2a' | '3a', name: string, tag: string, bg: string, node: string }) => {
         const isActive = backgroundTheme === id;
         return (
             <button
@@ -230,15 +230,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         id="3a"
                         name="Cyber"
                         tag="Neon"
-                        bg="#080a0f"
+                        bg="#0f1115"
                         node="#3b82f6"
-                    />
-                    <GravityThemeOption
-                        id="5a"
-                        name="Paper"
-                        tag="Light"
-                        bg="#f5f5f5"
-                        node="#262626"
                     />
                 </div>
             </div>

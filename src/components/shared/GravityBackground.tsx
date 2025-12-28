@@ -15,8 +15,7 @@ const GravityBackground: React.FC = () => {
     const THEMES = {
         '4c': { bg: '#0a0a0a', node: '#262626', line: '#262626' }, // Neutral
         '2a': { bg: '#050505', node: '#111111', line: '#111111' }, // Deep Cut
-        '3a': { bg: '#080a0f', node: '#3b82f6', line: '#3b82f6' }, // Cyber
-        '5a': { bg: '#f5f5f5', node: '#262626', line: '#262626' }, // Light Neutral
+        '3a': { bg: '#0f1115', node: '#3b82f6', line: '#3b82f6' }, // Cyber
     };
 
     useEffect(() => {

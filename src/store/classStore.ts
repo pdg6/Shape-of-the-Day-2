@@ -13,7 +13,7 @@ interface ClassState {
     editingClass: Classroom | null;
 
     // Theme Preference
-    backgroundTheme: '4c' | '2a' | '3a' | '5a';
+    backgroundTheme: '4c' | '2a' | '3a';
 
     // App View State
     view: 'landing' | 'teacher' | 'student';
@@ -30,7 +30,7 @@ interface ClassState {
     toggleDarkMode: () => void;
     setDarkMode: (isDark: boolean) => void;
     setIsClassModalOpen: (isOpen: boolean, editingClass?: Classroom | null) => void;
-    setBackgroundTheme: (theme: '4c' | '2a' | '3a' | '5a') => void;
+    setBackgroundTheme: (theme: '4c' | '2a' | '3a') => void;
 
     // View Actions
     setView: (view: 'landing' | 'teacher' | 'student') => void;
@@ -48,7 +48,7 @@ export const useClassStore = create<ClassState>((set) => ({
     darkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') !== 'false' : true,
     isClassModalOpen: false,
     editingClass: null,
-    backgroundTheme: typeof window !== 'undefined' ? (localStorage.getItem('backgroundTheme') as '4c' | '2a' | '3a' | '5a') || '4c' : '4c',
+    backgroundTheme: typeof window !== 'undefined' ? (localStorage.getItem('backgroundTheme') as '4c' | '2a' | '3a') || '4c' : '4c',
 
     // Initial View State
     view: 'landing',
