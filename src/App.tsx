@@ -51,7 +51,13 @@ const App = () => {
         setClassrooms,
         currentClassId,
         setCurrentClassId,
-        resetAppState
+        resetAppState,
+        studentName,
+        setStudentName,
+        studentClassId,
+        setStudentClassId,
+        studentClassroomColor,
+        setStudentClassroomColor
     } = useClassStore();
 
     // Student specific UI state (local to App)
@@ -68,10 +74,15 @@ const App = () => {
 
     // Cleanup and navigation based on auth
     useEffect(() => {
+        // Redirect to landing if user is lost (unless they are a student)
         if (!loading && !user && view !== 'landing' && view !== 'student') {
             setView('landing');
         }
-    }, [user, loading]);
+        // Redirect to teacher view if user is found and we are on landing
+        if (!loading && user && !user.isAnonymous && view === 'landing') {
+            setView('teacher');
+        }
+    }, [user, loading, view]);
 
     const fetchClassrooms = async () => {
         if (!user) {
@@ -125,7 +136,7 @@ const App = () => {
         console.log('Joining room as', name, 'ID:', joinedClassId);
 
         setStudentName(name);
-        setClassId(joinedClassId);
+        setStudentClassId(joinedClassId);
 
         // Fetch classroom color for theme
         try {
@@ -147,7 +158,7 @@ const App = () => {
      */
     const handleNameSubmit = (name: string) => {
         setStudentName(name);
-        setShowNameModal(false);
+        setIsStudentNameModalOpen(false);
         setView('student');
     };
 
@@ -162,6 +173,8 @@ const App = () => {
         );
     }
 
+    const userRole: UserRole = view === 'teacher' ? 'teacher' : 'student';
+
     return (
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
             <TourProvider>
@@ -175,10 +188,10 @@ const App = () => {
                     <Toaster position="top-right" />
 
                     {/* Global Name Modal (can be triggered from anywhere) */}
-                    {showNameModal && (
+                    {isStudentNameModalOpen && (
                         <StudentNameModal
                             onSubmit={handleNameSubmit}
-                            onClose={() => setShowNameModal(false)}
+                            onClose={() => setIsStudentNameModalOpen(false)}
                         />
                     )}
 
@@ -200,8 +213,8 @@ const App = () => {
                             <Suspense fallback={<LoadingSpinner />}>
                                 <StudentView
                                     studentName={studentName}
-                                    classId={classId}
-                                    onEditName={() => setShowNameModal(true)}
+                                    classId={studentClassId}
+                                    onEditName={() => setIsStudentNameModalOpen(true)}
                                     onNameSubmit={handleNameSubmit}
                                     onSignOut={handleLogout}
                                 />

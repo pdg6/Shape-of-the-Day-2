@@ -573,7 +573,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         <div
             ref={containerRef}
             className={`h-full flex flex-col space-y-3 overflow-visible custom-scrollbar p-1 pt-4
-                ${isFullscreen ? 'bg-brand-light dark:bg-brand-dark p-6' : ''}`}
+                ${isFullscreen ? 'bg-transparent p-6' : ''}`}
         >
 
             {/* --- HEADER CARD (Compact) --- */}

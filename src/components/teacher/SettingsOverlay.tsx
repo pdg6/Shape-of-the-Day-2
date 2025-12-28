@@ -27,7 +27,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
 }) => {
     const { darkMode, toggleDarkMode, backgroundTheme, setBackgroundTheme } = useClassStore();
 
-    const GravityThemeOption = ({ id, name, tag, bg, node }: { id: '4c' | '1a' | '1b' | '2a', name: string, tag: string, bg: string, node: string }) => {
+    const GravityThemeOption = ({ id, name, tag, bg, node }: { id: '4c' | '2a' | '3a' | '5a', name: string, tag: string, bg: string, node: string }) => {
         const isActive = backgroundTheme === id;
         return (
             <button
@@ -215,30 +215,30 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                     <GravityThemeOption
                         id="4c"
                         name="Neutral"
-                        tag="Balanced"
-                        bg="#171717"
+                        tag="Default"
+                        bg="#0a0a0a"
                         node="#262626"
-                    />
-                    <GravityThemeOption
-                        id="1a"
-                        name="Original"
-                        tag="Recommended"
-                        bg="#111111"
-                        node="#262626"
-                    />
-                    <GravityThemeOption
-                        id="1b"
-                        name="Soft Lift"
-                        tag="Softer"
-                        bg="#161616"
-                        node="#2A2A2A"
                     />
                     <GravityThemeOption
                         id="2a"
                         name="Deep Cut"
-                        tag="Stealth"
-                        bg="#141414"
-                        node="#000000"
+                        tag="Dark"
+                        bg="#050505"
+                        node="#111111"
+                    />
+                    <GravityThemeOption
+                        id="3a"
+                        name="Cyber"
+                        tag="Neon"
+                        bg="#080a0f"
+                        node="#3b82f6"
+                    />
+                    <GravityThemeOption
+                        id="5a"
+                        name="Paper"
+                        tag="Light"
+                        bg="#f5f5f5"
+                        node="#262626"
                     />
                 </div>
             </div>

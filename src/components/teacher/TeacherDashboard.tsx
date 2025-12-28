@@ -185,7 +185,7 @@ const TeacherDashboard: React.FC = () => {
     };
 
     return (
-        <div className="flex h-full w-full bg-[#0f1115] text-[#F2EFEA] font-inter overflow-hidden select-none">
+        <div className="flex h-full w-full bg-transparent text-[#F2EFEA] font-inter overflow-hidden select-none">
             {/* Background Blobs removed for Gravity Background */}
 
             {/* Mobile Sidebar Overlay */}
