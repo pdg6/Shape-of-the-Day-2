@@ -200,7 +200,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                     <button
                         onClick={openCreateModal}
                         title="Create new class"
-                        className="flex items-center gap-2 px-4 h-12 rounded-xl font-bold transition-float
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float self-end
                             bg-[#1a1d24] border border-white/10 text-white
                             shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
                             hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
@@ -210,7 +210,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                         <span>Create Class</span>
                     </button>
                 ) : (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end">
                         <Button
                             variant="ghost"
                             size="md"

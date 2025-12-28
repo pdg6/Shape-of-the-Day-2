@@ -266,15 +266,18 @@ export function DateRangePicker({
                     disabled={disabled}
                     className={`
                         cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold
-                        border transition-all duration-200 whitespace-nowrap shadow-layered-sm
-                        bg-brand-lightSurface dark:bg-bg-tile
-                        hover:bg-slate-50 dark:hover:bg-bg-tile-alt
-                        focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
+                        border transition-all duration-200 whitespace-nowrap transition-float
+                        bg-[#1a1d24]
+                        shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                        hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                        hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                        focus:outline-none focus:border-brand-accent
+                        min-h-[44px] flex items-center
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                         ${activeField
                             ? 'border-brand-accent'
-                            : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
-                        ${startDate || endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                            : 'border-white/10'}
+                        ${startDate || endDate ? 'text-brand-textPrimary' : 'text-slate-400'}
                         ${buttonClassName}
                     `}
                 >
@@ -291,21 +294,24 @@ export function DateRangePicker({
                         onClick={() => handleButtonClick('start')}
                         disabled={disabled}
                         className={`
-                            relative flex-1 cursor-pointer
+                            group relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
-                            border transition-all duration-200 shadow-layered-sm
-                            bg-brand-lightSurface dark:bg-bg-tile
-                            hover:bg-slate-50 dark:hover:bg-bg-tile-alt
-                            focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
+                            border transition-all duration-200 transition-float
+                            bg-[#1a1d24]
+                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                            hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                            focus:outline-none focus:border-brand-accent
+                            min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'start'
                                 ? 'border-brand-accent'
-                                : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
-                            ${startDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                                : 'border-white/10'}
+                            ${startDate ? 'text-brand-textPrimary' : 'text-slate-400'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
                     >
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors group-hover:text-brand-accent">
                             <CalendarIcon size={14} />
                         </span>
                         <span className="block truncate">
@@ -325,21 +331,24 @@ export function DateRangePicker({
                         onClick={() => handleButtonClick('end')}
                         disabled={disabled}
                         className={`
-                            relative flex-1 cursor-pointer
+                            group relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
-                            border transition-all duration-200 shadow-layered-sm
-                            bg-brand-lightSurface dark:bg-bg-tile
-                            hover:bg-slate-50 dark:hover:bg-bg-tile-alt
-                            focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
+                            border transition-all duration-200 transition-float
+                            bg-[#1a1d24]
+                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                            hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                            focus:outline-none focus:border-brand-accent
+                            min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'end'
                                 ? 'border-brand-accent'
-                                : 'border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10'}
-                            ${endDate ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                                : 'border-white/10'}
+                            ${endDate ? 'text-brand-textPrimary' : 'text-slate-400'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
                     >
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors group-hover:text-brand-accent">
                             <CalendarIcon size={14} />
                         </span>
                         <span className="block truncate">

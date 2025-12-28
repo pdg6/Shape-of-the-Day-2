@@ -507,13 +507,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const currentClass = rooms.find(r => r.id === currentClassId);
 
     return (
-        <div className="flex-1 h-full flex flex-col space-y-4">
+        <div className="flex-1 min-h-0 flex flex-col space-y-4">
             {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
-            <div className="hidden lg:grid h-16 shrink-0 grid-cols-1 lg:grid-cols-4 gap-6 items-center">
-                {/* Left 3 columns: Tasks label + Current Class + Drafts + New Task Button */}
-                <div className="lg:col-span-3 flex items-center gap-3">
+            <div className="hidden lg:grid lg:grid-cols-4 h-16 shrink-0 items-center gap-6">
+                {/* Left Section (3 cols): Label + Current Class + Drafts + New Task */}
+                <div className="lg:col-span-3 flex items-center gap-6">
                     <div className="flex items-baseline gap-3 shrink-0">
-                        <span className="text-fluid-lg font-black text-gray-400">
+                        <span className="text-fluid-lg font-black text-white">
                             Tasks:
                         </span>
                         <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
@@ -528,7 +528,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             return (
                                 <>
                                     {drafts.length > 0 && (
-                                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Drafts:</span>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Drafts:</span>
                                     )}
                                     {drafts.slice(0, 4).map(draft => {
                                         const isActive = editingTaskId === draft.id;
@@ -558,20 +558,22 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         })()}
                     </div>
 
-                    {/* New Task Button - pushed to right of left section */}
-                    <Button
-                        variant="ghost"
-                        size="md"
-                        icon={Plus}
+                    {/* New Task Button - floating button pattern, aligned to right of 3-col section */}
+                    <button
                         onClick={resetForm}
                         title="Create new task"
-                        className="shrink-0 text-brand-accent"
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float ml-auto
+                            bg-[#1a1d24] border border-white/10 text-white
+                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                            hover:-translate-y-0.5 hover:border-brand-accent/50"
                     >
-                        New Task
-                    </Button>
+                        <Plus className="w-5 h-5 text-brand-accent" />
+                        <span>New Task</span>
+                    </button>
                 </div>
 
-                {/* Right column: Shape of the Day Date Navigation */}
+                {/* Right column (1 col): Shape of the Day Date Navigation */}
                 <div className="lg:col-span-1 flex items-center justify-center gap-2">
                     <button
                         onClick={() => {
@@ -579,7 +581,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             prev.setDate(prev.getDate() - 1);
                             setSelectedDate(toDateString(prev));
                         }}
-                        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 focus:bg-gray-100 dark:focus:bg-gray-800/50 transition-all focus:outline-none"
+                        className="p-2 rounded-xl transition-float text-slate-400 border border-transparent
+                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:-translate-y-0.5 hover:shadow-layered-sm
+                            focus:outline-none"
                         aria-label="Previous day"
                     >
                         <ChevronLeft size={16} />
@@ -600,7 +604,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                     return isValid(d) ? format(d, 'MMM d') : selectedDate;
                                 })()}
                             </span>
-                            <span className="text-gray-400">{' '}To Do List</span>
+                            <span className="text-gray-400">{' '}Schedule</span>
                         </span>
                     </div>
 
@@ -610,7 +614,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             next.setDate(next.getDate() + 1);
                             setSelectedDate(toDateString(next));
                         }}
-                        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 focus:bg-gray-100 dark:focus:bg-gray-800/50 transition-all focus:outline-none"
+                        className="p-2 rounded-xl transition-float text-slate-400 border border-transparent
+                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:-translate-y-0.5 hover:shadow-layered-sm
+                            focus:outline-none"
                         aria-label="Next day"
                     >
                         <ChevronRight size={16} />
@@ -618,14 +624,13 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 </div>
             </div>
 
-            {/* Main Content - flex layout on mobile, grid on desktop */}
-            <div className="flex-1 min-h-0 flex flex-col lg:block overflow-visible">
-                <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6 lg:h-full overflow-y-auto lg:overflow-visible">
+            <div className="flex-1 min-h-0 flex flex-col">
+                <div className="flex-1 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
 
-                    {/* LEFT PANEL: Task Editor - flex-1 to fill space on mobile */}
-                    <div className="flex-1 min-h-0 lg:col-span-3 flex flex-col lg:overflow-y-auto custom-scrollbar">
-                        {/* Main Form Card */}
-                        <div className="w-full bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 space-y-4 flex-1 flex flex-col relative z-40 lift-hover">
+                    {/* LEFT PANEL: Task Editor */}
+                    <div className="flex-1 lg:col-span-3 flex flex-col">
+                        {/* Main Form Card - levitated-tile pattern matches Classroom cards and Side Menu buttons */}
+                        <div className={`w-full rounded-2xl transition-float p-6 space-y-4 flex-1 flex flex-col relative z-40 levitated-tile ${editingTaskId ? 'active' : ''}`}>
                             {/* Save State Indicator - top right */}
                             <div className="absolute top-3 right-3 z-10">
                                 {saveState === 'saving' && (
@@ -640,17 +645,151 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                 )}
                             </div>
 
-                            {/* Title Input */}
-                            <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider shrink-0">Title</span>
-                                <div className="flex-1">
-                                    <input
-                                        type="text"
-                                        value={activeFormData.title}
-                                        onChange={(e) => updateActiveCard('title', e.target.value)}
-                                        placeholder="Task Title"
-                                        className="w-full text-xl font-bold bg-transparent border-0 border-b-2 border-transparent hover:border-slate-300 focus:border-brand-accent focus:ring-0 focus:outline-none px-2 py-1 transition-all placeholder-slate-400 dark:placeholder-gray-600 text-brand-textDarkPrimary dark:text-brand-textPrimary"
-                                    />
+                            {/* Title Input - inset box matching description */}
+                            <div className="rounded-xl border border-white/5 focus-within:border-brand-accent/30 bg-[#151921] transition-all duration-300
+                                shadow-[inset_0_2px_4px_-1px_rgba(0,0,0,0.4),inset_0_1px_2px_0_rgba(0,0,0,0.2)]">
+                                <input
+                                    type="text"
+                                    value={activeFormData.title}
+                                    onChange={(e) => updateActiveCard('title', e.target.value)}
+                                    placeholder="Title for this task, assignment, or project..."
+                                    className="w-full text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder-white/40 text-brand-textPrimary"
+                                />
+                            </div>
+
+                            {/* Description & Attachments Section */}
+                            <div className="flex-1 min-h-[120px] relative">
+                                <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
+                                    <div className="flex-1 rounded-xl border border-white/5 focus-within:border-brand-accent/30 bg-[#151921] overflow-y-auto transition-all duration-300
+                                        shadow-[inset_0_2px_4px_-1px_rgba(0,0,0,0.4),inset_0_1px_2px_0_rgba(0,0,0,0.2)]"
+                                    >
+                                        <RichTextEditor
+                                            value={activeFormData.description}
+                                            onChange={(value) => updateActiveCard('description', value)}
+                                            onDrop={handleFileDrop}
+                                            placeholder="Describe this task..."
+                                            secondaryPlaceholder="Add text, links, or drag files here"
+                                            className="h-full text-brand-textPrimary text-sm"
+                                        />
+                                    </div>
+                                    {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
+                                    <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
+                                        {/* Inline attachments with image thumbnails */}
+                                        {activeFormData.attachments && activeFormData.attachments.map(attachment => (
+                                            <div
+                                                key={attachment.id}
+                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-[#1a1d24] rounded-lg border border-white/10 shadow-layered-sm text-xs group hover:-translate-y-0.5 transition-float cursor-default"
+                                                title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
+                                            >
+                                                {attachment.mimeType.startsWith('image/') ? (
+                                                    /* Image thumbnail preview */
+                                                    <a
+                                                        href={attachment.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                                    >
+                                                        <img
+                                                            src={attachment.url}
+                                                            alt={attachment.filename}
+                                                            className="w-10 h-10 object-cover rounded border border-white/10"
+                                                        />
+                                                        <span className="text-white truncate max-w-[80px]">
+                                                            {attachment.filename}
+                                                        </span>
+                                                    </a>
+                                                ) : (
+                                                    /* Non-image file icon */
+                                                    <>
+                                                        <FileIcon size={12} className="text-gray-400" />
+                                                        <a
+                                                            href={attachment.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-white hover:text-brand-accent truncate max-w-[100px]"
+                                                        >
+                                                            {attachment.filename}
+                                                        </a>
+                                                    </>
+                                                )}
+                                                <button
+                                                    onClick={() => removeAttachment(attachment.id)}
+                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
+                                                    title="Remove attachment"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {/* Inline links display - Multiple links */}
+                                        {activeFormData.links && activeFormData.links.map((link) => (
+                                            <div
+                                                key={link.id}
+                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#1a1d24] rounded-lg border border-white/10 shadow-layered-sm text-xs max-w-[280px] hover:-translate-y-0.5 transition-float"
+                                            >
+                                                <LinkIcon size={12} className="text-blue-500 shrink-0" />
+                                                <a
+                                                    href={link.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-white hover:text-brand-accent truncate"
+                                                    title={link.url}
+                                                >
+                                                    {link.title || (() => { try { return new URL(link.url).hostname; } catch { return link.url; } })()}
+                                                </a>
+                                                <button
+                                                    onClick={() => hookRemoveLink(link.id)}
+                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
+                                                    title="Remove link"
+                                                >
+                                                    <X size={12} />
+                                                </button>
+                                            </div>
+                                        ))}
+                                        {/* Loading indicator while fetching link metadata */}
+                                        {isLoadingLinkTitle && (
+                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400">
+                                                <Loader size={12} className="animate-spin" />
+                                                <span>Fetching title...</span>
+                                            </div>
+                                        )}
+                                        {/* Upload & Link buttons - Nested tile button pattern matching ClassCard */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
+                                                rounded-xl border cursor-pointer
+                                                bg-[#1a1d24] border-white/10 hover:border-brand-accent/50
+                                                text-slate-400 hover:text-white hover:bg-[#1e2128]">
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    multiple
+                                                    accept={ALLOWED_FILE_TYPES.join(',')}
+                                                    onChange={handleFileSelect}
+                                                    disabled={isUploading}
+                                                    title="Upload files"
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                />
+                                                {isUploading ? <Loader size={16} className="animate-spin text-brand-accent" /> : <Upload size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />}
+                                                <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-white">
+                                                    {isUploading ? 'Wait...' : 'Upload'}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const url = prompt('Enter URL:');
+                                                    if (url) addLink(url);
+                                                }}
+                                                className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
+                                                    rounded-xl border
+                                                    bg-[#1a1d24] border-white/10 hover:border-brand-accent/50
+                                                    text-slate-400 hover:text-white hover:bg-[#1e2128]"
+                                            >
+                                                <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
+                                                <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-white">Link</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -658,7 +797,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             <div className="flex items-end gap-2 lg:gap-4">
                                 {/* TYPE */}
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Type</span>
+                                    <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">Type</span>
                                     <div className="w-full lg:w-[160px]">
                                         <Select<ItemType>
                                             value={activeFormData.type}
@@ -671,15 +810,15 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             }))}
                                             icon={getTypeIcon(activeFormData.type)}
                                             iconColor={getTypeHexColor(activeFormData.type)}
-                                            buttonClassName="font-bold py-1 text-sm"
+                                            buttonClassName="text-sm"
                                         />
                                     </div>
                                 </div>
 
                                 {/* CONNECTIONS - narrower on mobile */}
                                 <div className="flex flex-col gap-1 shrink-0">
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Link</span>
-                                    <div className="w-24 lg:w-[160px]">
+                                    <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">Subtask</span>
+                                    <div className="w-24 lg:w-[44px]">
                                         <Select<string>
                                             value={activeFormData.parentId}
                                             onChange={async (value) => {
@@ -731,18 +870,21 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     iconColor: getTypeHexColor(parent.type),
                                                 })),
                                             ]}
-                                            placeholder="..."
-                                            icon={LinkIcon}
+                                            placeholder=""
+                                            icon={Plus}
                                             nullable
                                             searchable
-                                            buttonClassName="py-1 text-sm"
+                                            hideText
+                                            hideChevron
+                                            iconSize={22}
+                                            buttonClassName="lg:px-0"
                                         />
                                     </div>
                                 </div>
 
                                 {/* DATE RANGE - compact on mobile, separate buttons on desktop */}
                                 <div className="flex flex-col gap-1 ml-auto">
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider hidden lg:block">Dates</span>
+                                    <span className="text-[9px] font-black text-white/50 uppercase tracking-widest hidden lg:block">Dates</span>
                                     {/* Desktop: Separate start/end buttons */}
                                     <div className="hidden lg:block">
                                         <DateRangePicker
@@ -769,142 +911,12 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                     </div>
                                 </div>
                             </div>
-                            {/* Description & Attachments Section */}
-                            {/* Description Container with embedded Upload/Link buttons */}
-                            <div className="flex-1 min-h-[120px] relative">
-                                <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 rounded-2xl border border-slate-200 dark:border-white/5 focus-within:border-brand-accent/30 dark:focus-within:border-brand-accent/30 bg-slate-50 dark:bg-[#151921] shadow-inner-sm overflow-y-auto transition-all duration-300">
-                                        <RichTextEditor
-                                            value={activeFormData.description}
-                                            onChange={(value) => updateActiveCard('description', value)}
-                                            onDrop={handleFileDrop}
-                                            placeholder="Describe this task..."
-                                            secondaryPlaceholder="Add text, links, or drag files here"
-                                            className="h-full text-brand-textDarkPrimary dark:text-brand-textPrimary text-sm"
-                                        />
-                                    </div>
-                                    {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                    <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
-                                        {/* Inline attachments with image thumbnails */}
-                                        {activeFormData.attachments && activeFormData.attachments.map(attachment => (
-                                            <div
-                                                key={attachment.id}
-                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-slate-200 dark:border-gray-600 text-xs group hover:scale-[1.02] transition-transform cursor-default"
-                                                title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
-                                            >
-                                                {attachment.mimeType.startsWith('image/') ? (
-                                                    /* Image thumbnail preview */
-                                                    <a
-                                                        href={attachment.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                                                    >
-                                                        <img
-                                                            src={attachment.url}
-                                                            alt={attachment.filename}
-                                                            className="w-10 h-10 object-cover rounded border border-slate-200 dark:border-gray-600"
-                                                        />
-                                                        <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[80px]">
-                                                            {attachment.filename}
-                                                        </span>
-                                                    </a>
-                                                ) : (
-                                                    /* Non-image file icon */
-                                                    <>
-                                                        <FileIcon size={12} className="text-gray-500" />
-                                                        <a
-                                                            href={attachment.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
-                                                        >
-                                                            {attachment.filename}
-                                                        </a>
-                                                    </>
-                                                )}
-                                                <button
-                                                    onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
-                                                    title="Remove attachment"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {/* Inline links display - Multiple links */}
-                                        {activeFormData.links && activeFormData.links.map((link) => (
-                                            <div
-                                                key={link.id}
-                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white dark:bg-gray-800 rounded-md border border-gray-400 dark:border-gray-600 text-xs max-w-[280px]"
-                                            >
-                                                <LinkIcon size={12} className="text-blue-500 shrink-0" />
-                                                <a
-                                                    href={link.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-brand-textDarkPrimary dark:text-brand-textPrimary hover:text-brand-accent truncate"
-                                                    title={link.url}
-                                                >
-                                                    {link.title || (() => { try { return new URL(link.url).hostname; } catch { return link.url; } })()}
-                                                </a>
-                                                <button
-                                                    onClick={() => hookRemoveLink(link.id)}
-                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500 rounded-lg transition-all"
-                                                    title="Remove link"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {/* Loading indicator while fetching link metadata */}
-                                        {isLoadingLinkTitle && (
-                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-400">
-                                                <Loader size={12} className="animate-spin" />
-                                                <span>Fetching title...</span>
-                                            </div>
-                                        )}
-                                        {/* Upload & Link buttons - Always visible now for better UX */}
-                                        <div className="flex items-center gap-3">
-                                            <div className="relative py-2 px-4 min-h-[40px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 shadow-layered-sm hover:shadow-layered-md hover:scale-[1.02] hover:border-brand-accent/50 transition-all duration-300 group cursor-pointer">
-                                                <input
-                                                    ref={fileInputRef}
-                                                    type="file"
-                                                    multiple
-                                                    accept={ALLOWED_FILE_TYPES.join(',')}
-                                                    onChange={handleFileSelect}
-                                                    disabled={isUploading}
-                                                    title="Upload files"
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                <div className={`flex items-center justify-center gap-2 transition-colors ${isUploading ? 'text-brand-accent' : 'text-slate-500 dark:text-gray-400 group-hover:text-brand-accent'}`}>
-                                                    {isUploading ? <Loader size={16} className="animate-spin" /> : <Upload size={16} />}
-                                                    <span className="text-sm font-bold tracking-tight">{isUploading ? 'Uploading...' : 'Upload'}</span>
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const url = prompt('Enter URL:');
-                                                    if (url) addLink(url);
-                                                }}
-                                                className="py-2 px-4 min-h-[40px] rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 shadow-layered-sm hover:shadow-layered-md hover:scale-[1.02] hover:border-brand-accent/50 transition-all duration-300 group"
-                                            >
-                                                <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-gray-400 group-hover:text-brand-accent transition-colors">
-                                                    <LinkIcon size={16} />
-                                                    <span className="text-sm font-bold tracking-tight">Add Link</span>
-                                                </div>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
                             {/* Action Row: Class Selector + Delete/Save buttons */}
                             <div className="pt-1 flex items-end justify-between gap-4">
                                 {/* Left: Class Selector */}
                                 <div className="flex flex-col gap-1">
-                                    <span className="text-[10px] font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider">Add to Class:</span>
+                                    <span className="text-[9px] font-black text-white/50 uppercase tracking-widest">Add to Class:</span>
                                     <div className="w-[200px]">
                                         {loadingRooms ? (
                                             <Loader className="w-4 h-4 animate-spin text-gray-400" />
@@ -929,26 +941,26 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                                 {/* Right: Action Buttons */}
                                 <div className="flex items-center gap-2">
-                                    {/* Delete Button - always visible for existing tasks (drafts can be deleted) */}
+                                    {/* Delete Button - unified with Section X pattern */}
                                     {!isNewTask && (
                                         <button
                                             type="button"
                                             onClick={() => handleDelete(editingTaskId!)}
                                             disabled={isSubmitting}
-                                            className="px-4 py-2.5 min-h-[44px] rounded-md text-sm font-medium border-2 border-gray-400 dark:border-gray-600 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-red-500 hover:border-red-400 transition-all disabled:opacity-50"
+                                            className="group/btn relative flex flex-col items-center justify-center gap-1.5 py-2.5 px-4 min-w-[72px]
+                                                rounded-xl transition-float border
+                                                bg-[#1a1d24] shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                                                hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5
+                                                text-slate-400 hover:text-white hover:bg-[#1e2128] border-white/10 hover:border-red-400/50
+                                                disabled:opacity-50"
                                         >
-                                            <span className="flex items-center gap-2">
-                                                <Trash2 size={16} />
-                                                Delete
-                                            </span>
+                                            <Trash2 size={16} className="w-4 h-4 transition-colors group-hover/btn:text-red-500" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-white">Delete</span>
                                         </button>
                                     )}
 
-                                    {/* Save Button - Primary CTA */}
-                                    <Button
-                                        variant="primary"
-                                        size="md"
-                                        icon={isSubmitting ? Loader : Check}
+                                    {/* Save Button - Section VI.C Content Header Action Button pattern */}
+                                    <button
                                         onClick={async () => {
                                             if (!activeFormData.title.trim()) {
                                                 handleError(new Error("⚠️ Please include a title before saving."));
@@ -956,19 +968,29 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             }
                                             await handleSave();
                                         }}
-                                        disabled={isSubmitting}
-                                        className="min-w-[100px]"
+                                        disabled={isSubmitting || !activeFormData.title.trim()}
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float
+                                            bg-[#1a1d24] border border-white/10 text-white
+                                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                                            hover:-translate-y-0.5 hover:border-brand-accent/50
+                                            disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Save
-                                    </Button>
+                                        {isSubmitting ? (
+                                            <Loader className="w-5 h-5 animate-spin text-brand-accent" />
+                                        ) : (
+                                            <Check className="w-5 h-5 text-brand-accent" />
+                                        )}
+                                        <span>{isSubmitting ? 'Saving...' : 'Save'}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* RIGHT PANEL: Task List - shrink-0 on mobile so form gets the space */}
-                    <div className="shrink-0 lg:col-span-1 flex flex-col lg:h-full lg:overflow-visible">
-                        <div className="flex flex-col justify-end lg:justify-between overflow-visible pb-2 lg:pb-0 lg:h-full lg:p-0">
+                    {/* RIGHT PANEL: Task List */}
+                    <div className="shrink-0 lg:col-span-1 flex flex-col">
+                        <div className="flex flex-col justify-end lg:justify-between overflow-visible pb-2 lg:pb-0 lg:p-0">
 
 
                             {/* Mobile Overlay - closes accordion when clicking outside */}
@@ -1014,7 +1036,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
                                 overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-brand-lightSurface dark:bg-transparent
-                                lg:flex-1 lg:min-h-0 lg:pt-0 lg:pb-4 lg:bg-transparent
+                                lg:overflow-visible lg:pt-0 lg:pb-4 lg:bg-transparent
                                 ${isMobileTasksOpen ? 'flex-1 pt-3 pb-4 rounded-lg' : 'max-h-0 lg:max-h-none overflow-hidden'}
                                 transition-all duration-300 ease-in-out
                             `}>
@@ -1047,10 +1069,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 }}
                                                 style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
                                                 className={`
-                                                group relative p-3 rounded-xl border transition-all cursor-pointer lift-hover
-                                                ${isEditing
-                                                        ? 'border-brand-accent/50 shadow-layered-lg bg-white dark:bg-[#1a1d24]'
-                                                        : 'border-slate-200 dark:border-white/5 hover:border-brand-accent/30 bg-brand-lightSurface dark:bg-[#1a1d24] shadow-layered'}
+                                                group relative p-3 rounded-xl transition-float cursor-pointer levitated-tile
+                                                ${isEditing ? 'active' : ''}
                                             `}
                                             >
 
@@ -1061,7 +1081,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                             onClick={() => handleReorder(task.id, 'up')}
                                                             disabled={siblingIndex === 0}
                                                             title="Move up"
-                                                            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-400 hover:text-brand-accent focus:bg-gray-100 dark:focus:bg-gray-800/50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors focus:outline-none"
+                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-slate-400 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-slate-400 focus:outline-none"
                                                         >
                                                             <ArrowUp size={14} />
                                                         </button>
@@ -1069,7 +1089,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                             onClick={() => handleReorder(task.id, 'down')}
                                                             disabled={siblingIndex === siblings.length - 1}
                                                             title="Move down"
-                                                            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800/50 text-gray-400 hover:text-brand-accent focus:bg-gray-100 dark:focus:bg-gray-800/50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-colors focus:outline-none"
+                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-slate-400 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-slate-400 focus:outline-none"
                                                         >
                                                             <ArrowDown size={14} />
                                                         </button>
@@ -1080,14 +1100,14 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         <span className="text-xs font-bold text-gray-400 text-left">
                                                             {getHierarchicalNumber(task, filteredTasks, selectedDate)}
                                                         </span>
-                                                        <span className={`w-6 h-6 rounded-md flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
+                                                        <span className={`w-6 h-6 rounded-lg flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
                                                             <TypeIconSmall size={12} />
                                                         </span>
                                                     </div>
 
                                                     {/* Content: Title + Due Date */}
                                                     <div className="flex-1 min-w-0">
-                                                        <h5 className="font-bold text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary line-clamp-1">
+                                                        <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-white' : 'text-brand-textPrimary/90'}`}>
                                                             {task.title}
                                                         </h5>
 
@@ -1114,7 +1134,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         )}
                                                         {/* Draft indicator for drafts */}
                                                         {task.status === 'draft' && (
-                                                            <div className="px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 rounded">
+                                                            <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md">
                                                                 Draft
                                                             </div>
                                                         )}
@@ -1127,10 +1147,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                                     e.preventDefault();
                                                                     handleAddSubtask(task);
                                                                 }}
-                                                                className="p-1 rounded-md text-brand-accent hover:bg-brand-accent/10 focus:bg-brand-accent/10 transition-all opacity-0 group-hover:opacity-100 focus:outline-none"
+                                                                className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-slate-400 shadow-layered-sm opacity-0 group-hover:opacity-100 hover:shadow-layered hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50 focus:outline-none"
                                                                 title="Add subtask"
                                                             >
-                                                                <Plus size={14} />
+                                                                <Plus size={14} className="transition-colors group-hover/btn:text-brand-accent" />
                                                             </button>
                                                         )}
                                                     </div>
@@ -1144,6 +1164,6 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

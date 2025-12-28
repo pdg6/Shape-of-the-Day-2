@@ -2,7 +2,7 @@
 trigger: always_on
 ---
 
-UI Rules
+# Floating Elements Design System v3.0
 
 This document defines the **ground truth** for all UI elements in the application, based on the Classrooms page implementation. It establishes component categories that serve as the foundation for the entire design.
 
@@ -367,4 +367,306 @@ Key properties:
 
 ## XIII. EXTERNAL DEPENDENCIES
 
-- **Icons**: Lucide React
+- **Icons**: Lucide React (`lucide-react`)
+- **Fonts**: Inter via Google Fonts
+- **Charts**: Chart.js (optional)
+
+---
+
+## XIV. QUICK REFERENCE
+
+### Header Action Button
+```
+flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float self-end
+bg-[#1a1d24] border border-white/10 text-white
+shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+hover:-translate-y-0.5 hover:border-brand-accent/50
+```
+
+### Floating Tile
+```
+rounded-2xl levitated-tile
+active: .levitated-tile.active
+```
+
+### Nested Tile Button
+```
+flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 px-1
+rounded-xl transition-float border bg-[#1a1d24] border-white/10
+shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+hover:-translate-y-0.5 hover:bg-[#1e2128] hover:border-brand-accent/50
+hover:text-white group-hover:text-brand-accent (for icons)
+```
+
+### Submenu Item
+```
+w-full text-left p-2.5 text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border
+text-gray-400 hover:text-brand-accent hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm
+active: text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm
+```
+
+---
+
+## XV. BUTTON COMPONENT VARIANTS (Ground Truth: Button.tsx)
+
+### A. Base Classes (All Variants)
+```
+font-bold rounded-xl transition-float focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed
+flex items-center justify-center active:scale-95 select-none cursor-pointer
+shadow-layered-sm hover:shadow-layered-lg hover:-translate-y-0.5
+```
+
+### B. Size Classes
+
+| Size | Padding | Min Height | Usage |
+|------|---------|------------|-------|
+| `sm` | `px-3 py-1.5` | `min-h-[36px]` | Compact buttons |
+| `md` | `px-5 py-2.5` | `min-h-[44px]` | Default (Fitts's Law compliant) |
+| `lg` | `px-7 py-3.5` | `min-h-[52px]` | Primary CTAs |
+
+### C. Variant Classes
+
+```css
+/* Primary - Accent background tint */
+primary: bg-brand-accent/10 dark:bg-brand-accent/20 text-brand-accent border border-brand-accent/20
+         hover:bg-brand-accent/20 dark:hover:bg-brand-accent/30 hover:border-brand-accent/40
+
+/* Secondary - Glass/neutral */
+secondary: bg-white/5 text-brand-textPrimary border border-white/5
+           hover:bg-white/10 hover:border-white/20
+
+/* Tertiary - Text only, no lift */
+tertiary: text-brand-textPrimary hover:text-brand-accent
+          shadow-none hover:shadow-none hover:-translate-y-0
+
+/* Ghost - Minimal, no shadow */
+ghost: border border-transparent text-brand-accent hover:bg-brand-accent/5
+       shadow-none hover:shadow-none hover:-translate-y-0
+
+/* Ghost Danger - Red variant */
+ghost-danger: border border-transparent text-red-500 hover:bg-red-500/5
+              shadow-none hover:shadow-none hover:-translate-y-0
+
+/* Outline Primary */
+outline-primary: border border-brand-accent bg-transparent text-brand-accent
+                 hover:bg-brand-accent/10
+
+/* Outline Danger */
+outline-danger: border border-red-500 bg-transparent text-red-500
+                hover:bg-red-500/10
+
+/* Soft - Branded soft button */
+soft: border border-brand-accent/30 bg-brand-accent/10 text-brand-accent
+      hover:bg-brand-accent/20
+```
+
+### D. Icon Sizes
+
+| Button Size | Icon Size |
+|-------------|-----------|
+| `sm` | 16px |
+| `md` | 20px |
+| `lg` | 24px |
+
+---
+
+## XVI. STATUS INDICATORS
+
+### A. Online Indicator (Pulsing)
+```tsx
+<span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" />
+```
+
+### B. Offline Indicator
+```tsx
+<span className="w-2 h-2 rounded-full bg-gray-300 dark:bg-white/10" />
+```
+
+### C. Task Status Colors
+
+| Status | Color | Tailwind |
+|--------|-------|----------|
+| Help Requested | Red | `bg-red-500` |
+| In Progress | Emerald | `bg-emerald-500` |
+| Done | Blue | `bg-brand-accent` |
+| Not Started | Gray | `bg-gray-300 dark:bg-white/10` |
+
+---
+
+## XVII. MODAL PATTERN (Ground Truth: Modal.tsx)
+
+### A. Overlay Backdrop
+```tsx
+<div className="fixed inset-0 z-100 bg-black/60 backdrop-blur-sm transition-opacity duration-200">
+```
+
+### B. Modal Container
+```tsx
+<div className="max-w-md w-full bg-brand-lightSurface dark:bg-bg-tile rounded-2xl 
+    border border-slate-200 dark:border-white/5 shadow-layered 
+    absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto">
+```
+
+### C. Modal Header
+```tsx
+<div className="flex items-center justify-between px-6 pt-6 pb-4">
+    <h2 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+        {title}
+    </h2>
+    <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 
+        rounded-full hover:bg-slate-100 dark:hover:bg-white/10 
+        transition-float hover:-translate-y-0.5 shadow-none hover:shadow-layered-sm
+        border border-transparent hover:border-slate-200 dark:hover:border-white/10">
+        <X className="w-5 h-5" />
+    </button>
+</div>
+```
+
+### D. Width Options
+
+| Size | Class | Usage |
+|------|-------|-------|
+| `sm` | `max-w-sm` | Small dialogs |
+| `md` | `max-w-md` | Default |
+| `lg` | `max-w-lg` | Forms |
+| `xl` | `max-w-xl` | Large content |
+| `2xl` | `max-w-2xl` | Full-width modals |
+
+---
+
+## XVIII. SELECT / FORM INPUT (Ground Truth: Select.tsx)
+
+### A. Select Button
+```tsx
+<button className="relative w-full cursor-pointer
+    pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
+    border border-slate-200 dark:border-white/5
+    bg-brand-lightSurface dark:bg-bg-tile
+    hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/10
+    focus:outline-none focus:border-brand-accent
+    shadow-layered-sm hover:-translate-y-0.5 transition-float">
+```
+
+### B. Dropdown Container
+```tsx
+<div className="fixed z-[9999] overflow-hidden rounded-lg 
+    border border-slate-200 dark:border-white/5 
+    bg-brand-lightSurface dark:bg-bg-tile shadow-layered">
+```
+
+### C. Dropdown Option
+```tsx
+<div className="relative cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm
+    hover:bg-gray-100 dark:hover:bg-gray-800
+    text-brand-textDarkPrimary dark:text-brand-textPrimary">
+```
+
+### D. Search Input (in dropdown)
+```tsx
+<input className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl 
+    border border-slate-200 dark:border-white/10 
+    bg-slate-50 dark:bg-white/5 
+    text-brand-textDarkPrimary dark:text-brand-textPrimary 
+    placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20" />
+```
+
+---
+
+## XIX. GLASS PANEL (Overlay Variant)
+
+For differentiated containers like overview cards or overlays.
+
+```css
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-layered);
+}
+```
+
+---
+
+## XX. SCROLLBAR STYLING
+
+```css
+::-webkit-scrollbar { 
+    width: 8px; 
+}
+
+::-webkit-scrollbar-track { 
+    background: #0f1115; 
+}
+
+::-webkit-scrollbar-thumb { 
+    background: #334155; 
+    border-radius: 4px; 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+    background: #475569; 
+}
+```
+
+Tailwind utility class: `.custom-scrollbar`
+
+---
+
+## XXI. CARD HOVER COLOR STATES
+
+### A. Dynamic Border Color (ClassCard)
+
+Cards can have a dynamic `borderColor` based on the class's assigned color:
+
+```tsx
+<div 
+    className="levitated-tile"
+    style={{ borderColor: isHovered ? cardColor : undefined }}
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
+>
+```
+
+### B. Selection States
+
+| State | Border | Text | Background |
+|-------|--------|------|------------|
+| Default | `border-white/10` | `text-brand-textPrimary` | `bg-[#1a1d24]` |
+| Hovered | Dynamic color or `border-brand-accent/50` | `text-white` | `bg-[#1e2128]` |
+| Selected | `border-top: 0.5px solid #3b82f6` | `text-white` | `bg-[#1a1d24]` |
+| Selected+Hovered | Dynamic color | `text-white` | `bg-[#1e2128]` |
+
+---
+
+## XXII. COMPLETE QUICK REFERENCE
+
+### All Button Variants (copy-paste ready)
+```
+/* Primary */
+bg-brand-accent/10 text-brand-accent border-brand-accent/20 hover:bg-brand-accent/20
+
+/* Secondary */  
+bg-white/5 text-brand-textPrimary border-white/5 hover:bg-white/10
+
+/* Ghost (no shadow/lift) */
+text-brand-accent hover:bg-brand-accent/5 shadow-none hover:shadow-none hover:-translate-y-0
+
+/* Tertiary (text only) */
+text-brand-textPrimary hover:text-brand-accent shadow-none hover:-translate-y-0
+```
+
+### Status Dots
+```
+/* Online */ w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse
+/* Offline */ w-2 h-2 rounded-full bg-gray-300 dark:bg-white/10
+```
+
+### Modal Close Button
+```
+p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full
+hover:bg-slate-100 dark:hover:bg-white/10 transition-float hover:-translate-y-0.5
+shadow-none hover:shadow-layered-sm border border-transparent hover:border-white/10
+```

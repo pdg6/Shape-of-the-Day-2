@@ -202,7 +202,7 @@ function App() {
     return (
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
             <GravityBackground />
-            <div className="relative z-10 flex flex-col h-screen-safe bg-transparent transition-colors duration-200">
+            <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent transition-colors duration-200">
                 {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
                 <a href="#main-content" className="skip-link">
                     Skip to main content

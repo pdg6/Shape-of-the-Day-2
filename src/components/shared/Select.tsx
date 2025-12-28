@@ -28,6 +28,9 @@ interface SelectProps<T = string> {
     buttonClassName?: string;
     // For colored borders/text based on selection
     colorClasses?: string;
+    iconSize?: number;
+    hideText?: boolean;
+    hideChevron?: boolean;
 }
 
 /**
@@ -56,6 +59,9 @@ export function Select<T extends string | number = string>({
     className = '',
     buttonClassName = '',
     colorClasses = '',
+    iconSize = 18,
+    hideText = false,
+    hideChevron = false,
 }: SelectProps<T>) {
     const [search, setSearch] = useState('');
     const buttonRef = useRef<HTMLButtonElement>(null);
@@ -136,41 +142,47 @@ export function Select<T extends string | number = string>({
                             ref={buttonRef}
                             onClick={updatePosition}
                             className={`
-                                relative w-full cursor-pointer
+                                group relative w-full cursor-pointer
                                 pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
                                 border transition-all duration-300 transition-float
-                                bg-brand-lightSurface dark:bg-bg-tile
-                                hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/10
+                                bg-[#1a1d24] text-slate-400
+                                shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
+                                hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
+                                hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
                                 focus:outline-none focus:border-brand-accent
-                                shadow-layered-sm hover:-translate-y-0.5
+                                min-h-[44px] flex items-center
                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                ${colorClasses || 'border-slate-200 dark:border-white/5'}
-                                ${value ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-slate-400 dark:text-gray-500'}
+                                ${colorClasses || 'border-white/10'}
+                                ${value ? 'text-brand-textPrimary' : 'text-slate-400'}
                                 ${buttonClassName}
                             `}
                         >
                             {/* Left Icon */}
                             {SelectedIcon && (
                                 <span
-                                    className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                                    className={`absolute top-1/2 -translate-y-1/2 pointer-events-none transition-colors group-hover:text-brand-accent ${hideText ? 'left-1/2 -translate-x-1/2' : 'left-3'}`}
                                     style={{ color: displayIconColor }}
                                 >
-                                    <SelectedIcon size={18} />
+                                    <SelectedIcon size={iconSize} />
                                 </span>
                             )}
 
                             {/* Selected Value or Placeholder */}
-                            <span className="block truncate text-left">
-                                {selectedOption?.label || placeholder}
-                            </span>
+                            {!hideText && (
+                                <span className="block truncate text-left">
+                                    {selectedOption?.label || placeholder}
+                                </span>
+                            )}
 
                             {/* Chevron */}
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                <ChevronDown
-                                    size={16}
-                                    className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-                                />
-                            </span>
+                            {!hideChevron && (
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 transition-colors group-hover:text-brand-accent">
+                                    <ChevronDown
+                                        size={16}
+                                        className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+                                    />
+                                </span>
+                            )}
                         </Listbox.Button>
 
                         {/* Portal-rendered dropdown */}

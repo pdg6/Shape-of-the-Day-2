@@ -211,7 +211,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                 </div>
 
                 {/* Right: View Toggle Buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end">
                     <Button
                         variant="ghost"
                         size="md"
