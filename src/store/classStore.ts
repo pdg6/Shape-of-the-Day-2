@@ -3,6 +3,15 @@ import { Classroom } from '../types';
 
 const CURRENT_CLASS_KEY = 'currentClassId';
 
+export interface BackgroundSettings {
+    bgColor: string;
+    particleColor: string;
+    particlesEnabled: boolean;
+    particleEffect: 'none' | 'grid' | 'magnetic' | 'orbit' | 'swarm_small' | 'swarm_large' | 'gravity';
+    particleOpacity: number;
+    textColor: string;
+}
+
 interface ClassState {
     currentClassId: string | null;
     classrooms: Classroom[];
@@ -13,7 +22,7 @@ interface ClassState {
     editingClass: Classroom | null;
 
     // Theme Preference
-    backgroundTheme: '4c' | '2a' | '3a';
+    backgroundSettings: BackgroundSettings;
 
     // App View State
     view: 'landing' | 'teacher' | 'student';
@@ -30,7 +39,7 @@ interface ClassState {
     toggleDarkMode: () => void;
     setDarkMode: (isDark: boolean) => void;
     setIsClassModalOpen: (isOpen: boolean, editingClass?: Classroom | null) => void;
-    setBackgroundTheme: (theme: '4c' | '2a' | '3a') => void;
+    setBackgroundSettings: (settings: Partial<BackgroundSettings>) => void;
 
     // View Actions
     setView: (view: 'landing' | 'teacher' | 'student') => void;
@@ -48,7 +57,34 @@ export const useClassStore = create<ClassState>((set) => ({
     darkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') !== 'false' : true,
     isClassModalOpen: false,
     editingClass: null,
-    backgroundTheme: typeof window !== 'undefined' ? (localStorage.getItem('backgroundTheme') as '4c' | '2a' | '3a') || '4c' : '4c',
+    backgroundSettings: (() => {
+        const defaultSettings = {
+            bgColor: '#0f1115',
+            particleColor: 'multi',
+            particlesEnabled: true,
+            particleEffect: 'orbit' as const,
+            particleOpacity: 0.25,
+            textColor: '#F2EFEA'
+        };
+
+        if (typeof window === 'undefined') return defaultSettings;
+
+        const saved = localStorage.getItem('backgroundSettings');
+        if (saved) {
+            try {
+                return { ...defaultSettings, ...JSON.parse(saved) };
+            } catch (e) {
+                return defaultSettings;
+            }
+        }
+
+        // Migration from old backgroundTheme
+        const oldTheme = localStorage.getItem('backgroundTheme');
+        if (oldTheme === '2a') return { ...defaultSettings, bgColor: '#050505', particleColor: '#111111' };
+        if (oldTheme === '3a') return { ...defaultSettings, bgColor: '#0f1115', particleColor: '#3b82f6', particleEffect: 'grid' as const };
+
+        return defaultSettings;
+    })(),
 
     // Initial View State
     view: 'landing',
@@ -77,10 +113,13 @@ export const useClassStore = create<ClassState>((set) => ({
         set({ darkMode: isDark });
     },
     setIsClassModalOpen: (isOpen, editingClass = null) => set({ isClassModalOpen: isOpen, editingClass }),
-    setBackgroundTheme: (theme) => {
-        if (typeof window !== 'undefined') localStorage.setItem('backgroundTheme', theme);
-        set({ backgroundTheme: theme });
-    },
+    setBackgroundSettings: (settings) => set((state) => {
+        const newSettings = { ...state.backgroundSettings, ...settings };
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('backgroundSettings', JSON.stringify(newSettings));
+        }
+        return { backgroundSettings: newSettings };
+    }),
 
     // View State Actions
     setView: (view) => set({ view }),

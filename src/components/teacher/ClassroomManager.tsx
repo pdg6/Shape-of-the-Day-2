@@ -188,7 +188,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
                 {/* Left: Label + Current Class */}
                 <div className="flex items-baseline gap-3">
-                    <span className="text-fluid-lg font-black text-white">
+                    <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
                         {internalTab === 'classes' ? 'Classrooms:' : 'Reports:'}
                     </span>
                     <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">

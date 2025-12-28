@@ -721,7 +721,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                 {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
                 <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between px-4">
                     <div className="flex items-baseline gap-3">
-                        <span className="text-fluid-lg font-black text-gray-400">
+                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
                             Tasks:
                         </span>
                         <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">

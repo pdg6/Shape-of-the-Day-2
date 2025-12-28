@@ -594,7 +594,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                                 <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
                                     {isValid(parsedDate) ? format(parsedDate, 'MMM d') : selectedDate}
                                 </span>
-                                <span className="text-gray-400">{' '}Shape of the Day</span>
+                                <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">{' '}Shape of the Day</span>
                             </span>
                             <button
                                 onClick={() => onNavigate?.('live', 'students')}
@@ -621,12 +621,12 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                     {/* Right: Connection Info (Compact) */}
                     <div className="shrink-0 flex items-center gap-4">
                         <div className="text-right">
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Join at</p>
+                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary uppercase tracking-wider mb-0.5">Join at</p>
                             <p className="text-base font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
                                 shapeoftheday.app/join
                             </p>
 
-                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-0.5">Class Code</p>
+                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary uppercase tracking-wider mb-0.5">Class Code</p>
                             <div className="text-3xl font-mono font-black text-brand-accent tracking-widest leading-none">
                                 {currentClass.joinCode}
                             </div>

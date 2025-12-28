@@ -196,7 +196,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                 {/* Left: Label + Class Name + Active Count */}
                 <div className="flex items-center gap-3">
                     <div className="flex items-baseline gap-3">
-                        <span className="text-fluid-lg font-black text-gray-400">
+                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
                             Live View:
                         </span>
                         <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">

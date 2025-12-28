@@ -522,7 +522,7 @@ const TeacherDashboard: React.FC = () => {
                             <Menu className="w-6 h-6" />
                         </button>
                         <h1 className="flex items-baseline gap-1.5 text-xl font-black truncate">
-                            <span className="text-gray-400">
+                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                 {activeTab === 'tasks' ? (tasksSubTab === 'create' ? 'Tasks:' : 'Inventory:')
                                     : activeTab === 'shape' ? 'Shape:'
                                         : activeTab === 'live' ? 'Live:'
