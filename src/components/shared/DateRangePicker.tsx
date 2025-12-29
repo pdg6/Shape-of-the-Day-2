@@ -268,9 +268,9 @@ export function DateRangePicker({
                         cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold
                         border transition-all duration-200 whitespace-nowrap transition-float
                         bg-[#1a1d24]
-                        shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                        hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                        hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                        shadow-layered-sm
+                        hover:shadow-layered-lg
+                        button-lift-dynamic hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
                         focus:outline-none focus:border-brand-accent
                         min-h-[44px] flex items-center
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
@@ -298,9 +298,9 @@ export function DateRangePicker({
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-all duration-200 transition-float
                             bg-[#1a1d24]
-                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                            hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                            shadow-layered-sm
+                            hover:shadow-layered-lg
+                            button-lift-dynamic hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
                             min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
@@ -335,9 +335,9 @@ export function DateRangePicker({
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-all duration-200 transition-float
                             bg-[#1a1d24]
-                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                            hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                            shadow-layered-sm
+                            hover:shadow-layered-lg
+                            button-lift-dynamic hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
                             min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight

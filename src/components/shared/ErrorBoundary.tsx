@@ -33,19 +33,20 @@ class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-                    <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-2xl w-full border border-red-200 dark:border-red-900">
-                        <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">
+                <div className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] p-6">
+                    <div className="bg-[var(--color-bg-tile)] p-10 rounded-2xl shadow-layered max-w-2xl w-full border border-[var(--color-border-subtle)] relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
+                        <h1 className="text-3xl font-black text-red-600 mb-6 uppercase tracking-tight">
                             Something went wrong
                         </h1>
 
                         <div className="mb-6">
-                            <p className="text-gray-700 dark:text-gray-300 mb-2">
+                            <p className="text-brand-textSecondary mb-4 font-bold">
                                 The application encountered an unexpected error.
                             </p>
                             {this.state.error && (
-                                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded border border-red-100 dark:border-red-900/50 overflow-auto max-h-60">
-                                    <p className="font-mono text-sm text-red-800 dark:text-red-300 whitespace-pre-wrap">
+                                <div className="bg-red-500/5 p-5 rounded-xl border border-red-500/20 overflow-auto max-h-60 mb-8 shadow-inner-layered">
+                                    <p className="font-mono text-xs text-red-600/80 whitespace-pre-wrap leading-relaxed">
                                         {this.state.error.toString()}
                                     </p>
                                 </div>
@@ -64,18 +65,18 @@ class ErrorBoundary extends Component<Props, State> {
                                     localStorage.clear();
                                     window.location.reload();
                                 }}
-                                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md transition-colors font-medium"
+                                className="px-6 py-3 bg-[var(--color-bg-tile-alt)] hover:bg-[var(--color-bg-tile-hover)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-xl transition-float font-black text-[10px] uppercase tracking-widest shadow-layered-sm button-lift-dynamic"
                             >
-                                Clear Cache & Reload
+                                Reload App
                             </button>
                         </div>
 
                         {this.state.errorInfo && (
-                            <details className="mt-6 text-xs text-gray-500 dark:text-gray-400">
-                                <summary className="cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 mb-2">
-                                    Component Stack
+                            <details className="mt-8 text-[10px] text-brand-textMuted font-black uppercase tracking-widest">
+                                <summary className="cursor-pointer hover:text-brand-textSecondary mb-3 transition-colors">
+                                    Advanced Error Details
                                 </summary>
-                                <pre className="whitespace-pre-wrap overflow-auto max-h-40 p-2 bg-gray-50 dark:bg-gray-900 rounded">
+                                <pre className="whitespace-pre-wrap overflow-auto max-h-40 p-4 bg-[var(--color-bg-tile-alt)] rounded-xl border border-[var(--color-border-subtle)] text-brand-textSecondary normal-case tracking-normal">
                                     {this.state.errorInfo.componentStack}
                                 </pre>
                             </details>

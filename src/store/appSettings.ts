@@ -13,6 +13,9 @@ export interface BackgroundSettings {
     secondaryTheme: string;     // 'stone' | 'ash' | 'pewter' | 'lead' | 'graphite'
     tileTheme: string;          // 'onyx' | 'slate' | 'graphite' | 'cloud' | 'glacier'
     elevationLevel: 'whisper' | 'gentle' | 'float' | 'lift' | 'dramatic';
+    borderStyle: 'auto' | 'accent' | 'ghost' | 'glass' | 'vibrant';
+    horizonEtching: boolean;
+    glowEffect: boolean;
 }
 
 interface ClassState {
@@ -20,7 +23,6 @@ interface ClassState {
     classrooms: Classroom[];
     isSidebarOpen: boolean;
     activeStudentCount: number;
-    darkMode: boolean;
     isClassModalOpen: boolean;
     editingClass: Classroom | null;
 
@@ -39,8 +41,6 @@ interface ClassState {
     toggleSidebar: () => void;
     setSidebarOpen: (isOpen: boolean) => void;
     setActiveStudentCount: (count: number) => void;
-    toggleDarkMode: () => void;
-    setDarkMode: (isDark: boolean) => void;
     setIsClassModalOpen: (isOpen: boolean, editingClass?: Classroom | null) => void;
     setBackgroundSettings: (settings: Partial<BackgroundSettings>) => void;
 
@@ -57,7 +57,6 @@ export const useClassStore = create<ClassState>((set) => ({
     classrooms: [],
     isSidebarOpen: false,
     activeStudentCount: 0,
-    darkMode: typeof window !== 'undefined' ? localStorage.getItem('darkMode') !== 'false' : true,
     isClassModalOpen: false,
     editingClass: null,
     backgroundSettings: (() => {
@@ -70,7 +69,10 @@ export const useClassStore = create<ClassState>((set) => ({
             primaryTheme: 'white',    // Position 1 (Lightest)
             secondaryTheme: 'slate', // Position 1 (Lightest)
             tileTheme: 'onyx',       // Position 1 (Darkest)
-            elevationLevel: 'gentle' // Default: mild floating
+            elevationLevel: 'gentle', // Default: mild floating
+            borderStyle: 'auto',
+            horizonEtching: true,
+            glowEffect: true
         };
 
         if (typeof window === 'undefined') return defaultSettings;
@@ -129,15 +131,6 @@ export const useClassStore = create<ClassState>((set) => ({
     toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
     setSidebarOpen: (isOpen) => set({ isSidebarOpen: isOpen }),
     setActiveStudentCount: (count) => set({ activeStudentCount: count }),
-    toggleDarkMode: () => set((state) => {
-        const nextDark = !state.darkMode;
-        if (typeof window !== 'undefined') localStorage.setItem('darkMode', String(nextDark));
-        return { darkMode: nextDark };
-    }),
-    setDarkMode: (isDark: boolean) => {
-        if (typeof window !== 'undefined') localStorage.setItem('darkMode', String(isDark));
-        set({ darkMode: isDark });
-    },
     setIsClassModalOpen: (isOpen, editingClass = null) => set({ isClassModalOpen: isOpen, editingClass }),
     setBackgroundSettings: (settings) => set((state) => {
         const newSettings = { ...state.backgroundSettings, ...settings };

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { ChevronRight } from 'lucide-react';
-import { useClassStore } from '../../store/classStore';
+import { useClassStore } from '../../store/appSettings';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { LiveStudent } from '../../types';
@@ -99,7 +99,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
             aria-label="Class connection panel"
             aria-hidden={!isSidebarOpen}
             className={`
-                fixed right-0 top-[64px] h-[calc(100dvh-64px)] w-80 bg-brand-lightSurface dark:bg-[#1a1d24] shadow-2xl transition-transform duration-300 ease-in-out z-sidebar
+                fixed right-0 top-[64px] h-[calc(100dvh-64px)] w-80 bg-[var(--color-bg-tile)] shadow-2xl transition-transform duration-300 ease-in-out z-50
                 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'}
             `}
         >
@@ -107,12 +107,12 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                 {/* Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* QR Code Section */}
-                    <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-gray-50/50 dark:bg-[#151921]/20">
+                    <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-[var(--color-bg-tile-alt)]/50">
 
                         {/* Join URL */}
                         <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-lg border border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-fluid-xs text-brand-accent uppercase tracking-wider font-semibold mb-1">Join at</span>
-                            <span className="text-xl font-mono text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            <span className="text-xl font-mono text-brand-textPrimary">
                                 shape-of-the-day.com
                             </span>
                         </div>
@@ -120,12 +120,12 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                         {/* Class Code */}
                         <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-lg border border-brand-accent/20 bg-brand-accent/5">
                             <span className="text-fluid-xs text-brand-accent uppercase tracking-wider font-semibold mb-1">Class Code</span>
-                            <span className="text-xl font-mono font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
+                            <span className="text-xl font-mono font-bold text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
                             </span>
                         </div>
 
-                        <div className="w-48 aspect-square bg-white p-3 rounded-lg border border-gray-200 dark:border-white/5 shadow-layered-sm mt-2">
+                        <div className="w-48 aspect-square bg-white p-3 rounded-lg border border-[var(--color-border-subtle)] shadow-layered-sm mt-2">
                             <QRCodeSVG
                                 value={joinUrl}
                                 style={{ width: '100%', height: '100%' }}
@@ -136,9 +136,9 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                     </div>
 
                     {/* Live Roster Section */}
-                    <div className="flex-1 overflow-y-auto bg-brand-lightSurface dark:bg-[#1a1d24]">
+                    <div className="flex-1 overflow-y-auto bg-[var(--color-bg-tile)]">
                         <div className="p-4 space-y-2">
-                            <h3 className="text-fluid-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-brand-lightSurface dark:bg-[#1a1d24] py-2 z-10">
+                            <h3 className="text-fluid-xs font-bold text-brand-textMuted uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-[var(--color-bg-tile)] py-2 z-10">
                                 <span>Live Students</span>
                                 <span className="bg-brand-accent/10 text-brand-accent px-2 py-0.5 rounded-full text-fluid-xs font-bold">
                                     {liveStudents.length}
@@ -146,14 +146,14 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                             </h3>
 
                             {liveStudents.length === 0 ? (
-                                <div className="text-center py-8 text-gray-400 text-fluid-sm italic">
+                                <div className="text-center py-8 text-brand-textMuted text-fluid-sm italic">
                                     Waiting for students...
                                 </div>
                             ) : (
                                 liveStudents.map((student) => (
                                     <div
                                         key={student.uid}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border border-gray-200 dark:border-white/5 hover:border-brand-accent/30 bg-white dark:bg-[#151921] hover:shadow-layered-sm group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border border-[var(--color-border-subtle)] hover:border-brand-accent/30 bg-[var(--color-bg-tile-alt)] hover:shadow-layered-sm group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
                                         tabIndex={0}
                                         role="listitem"
                                     >
@@ -161,15 +161,15 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                             {student.displayName.charAt(0).toUpperCase()}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-fluid-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                            <p className="text-fluid-sm font-medium text-brand-textPrimary truncate">
                                                 {student.displayName}
                                             </p>
-                                            <p className="text-fluid-xs text-gray-500 truncate">
+                                            <p className="text-fluid-xs text-brand-textMuted truncate">
                                                 {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
                                             </p>
                                         </div>
                                         <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${(student.currentStatus === 'stuck' || student.currentStatus === 'question' || student.currentStatus === 'help')
-                                            ? 'bg-amber-500 animate-pulse ring-2 ring-amber-100 dark:ring-amber-900/30' :
+                                            ? 'bg-amber-500 animate-pulse ring-2 ring-amber-500/10' :
                                             student.currentStatus === 'done' ? 'bg-blue-500' :
                                                 'bg-emerald-500'
                                             }`} />
@@ -181,11 +181,11 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                 </div>
 
                 {/* Footer with Close Button */}
-                <div className="p-4 bg-brand-lightSurface dark:bg-[#1a1d24]">
+                <div className="p-4 bg-[var(--color-bg-tile)]">
                     <button
                         ref={closeButtonRef}
                         onClick={() => setSidebarOpen(false)}
-                        className="w-full flex items-center justify-center gap-2 p-3 text-gray-500 hover:text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-all font-medium"
+                        className="w-full flex items-center justify-center gap-2 p-3 text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10 rounded-xl transition-all font-medium"
                         title="Close Sidebar"
                         aria-label="Close connection panel"
                     >

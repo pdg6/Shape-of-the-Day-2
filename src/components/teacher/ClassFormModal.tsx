@@ -4,7 +4,7 @@ import { db, auth } from '../../firebase';
 import { Classroom } from '../../types';
 import { X, Trash2 } from 'lucide-react';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
-import { useClassStore } from '../../store/classStore';
+import { useClassStore } from '../../store/appSettings';
 import { themeColors } from '../../styles/tokens';
 import { generateSecureCode } from '../../utils/security';
 
@@ -111,19 +111,19 @@ export const ClassFormModal: React.FC = () => {
     if (!isClassModalOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-modal flex items-center justify-center p-4">
-            <div className="bg-brand-lightSurface dark:bg-[#1a1d24] w-full max-w-md rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 p-6 transition-transform duration-200">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-[var(--color-bg-tile)] w-full max-w-md rounded-2xl shadow-layered border border-[var(--color-border-subtle)] p-6 transition-transform duration-200">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
-                    <button onClick={() => setIsClassModalOpen(false)}><X className="w-6 h-6 text-gray-500" /></button>
+                    <h3 className="text-xl font-bold text-brand-textPrimary">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
+                    <button onClick={() => setIsClassModalOpen(false)}><X className="w-6 h-6 text-brand-textSecondary" /></button>
                 </div>
                 {/* Law of Common Region: Group related fields visually */}
                 <div className="space-y-4">
                     {/* Basic Info Section - Grouped with border */}
-                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#151921] border border-gray-100 dark:border-white/5 space-y-4">
-                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Basic Information</h4>
+                    <div className="p-4 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] space-y-4">
+                        <h4 className="text-xs font-bold text-brand-textMuted uppercase tracking-wider mb-3">Basic Information</h4>
                         <div>
-                            <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Class Name <span className="text-red-500">*</span></label>
+                            <label className="block text-sm font-bold mb-1 text-brand-textSecondary">Class Name <span className="text-red-500">*</span></label>
                             <input
                                 type="text"
                                 value={formData.name}
@@ -135,7 +135,7 @@ export const ClassFormModal: React.FC = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Subject</label>
+                                <label className="block text-sm font-bold mb-1 text-brand-textSecondary">Subject</label>
                                 <input
                                     type="text"
                                     value={formData.subject}
@@ -145,7 +145,7 @@ export const ClassFormModal: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Grade Level</label>
+                                <label className="block text-sm font-bold mb-1 text-brand-textSecondary">Grade Level</label>
                                 <input
                                     type="text"
                                     value={formData.gradeLevel}
@@ -158,10 +158,10 @@ export const ClassFormModal: React.FC = () => {
                     </div>
 
                     {/* Appearance Section - Separate visual group */}
-                    <div className="p-4 rounded-xl bg-gray-50 dark:bg-[#151921] border border-gray-100 dark:border-white/5">
-                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Appearance</h4>
-                        <label className="block text-sm font-bold mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary">Theme Color</label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">This color will accent both teacher and student views</p>
+                    <div className="p-4 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)]">
+                        <h4 className="text-xs font-bold text-brand-textMuted uppercase tracking-wider mb-3">Appearance</h4>
+                        <label className="block text-sm font-bold mb-1 text-brand-textSecondary">Theme Color</label>
+                        <p className="text-xs text-brand-textMuted mb-2">This color will accent both teacher and student views</p>
                         <div className="flex flex-wrap gap-2">
                             {themeColors.classroomOptions.map(color => (
                                 <button
@@ -181,7 +181,7 @@ export const ClassFormModal: React.FC = () => {
                     {/* Primary action button - Large touch target */}
                     <button
                         onClick={handleSaveClass}
-                        className="w-full py-3 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:border-brand-accent/40 font-bold rounded-xl mt-4 transition-all duration-300 transition-float hover:-translate-y-0.5 shadow-layered-sm"
+                        className="w-full py-3 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:border-brand-accent/40 font-bold rounded-xl mt-4 transition-all duration-300 transition-float button-lift-dynamic shadow-layered-sm"
                     >
                         {editingClass ? 'Save Changes' : 'Create Class'}
                     </button>
@@ -189,7 +189,7 @@ export const ClassFormModal: React.FC = () => {
                     {editingClass && (
                         <button
                             onClick={handleDeleteClass}
-                            className="w-full py-3 bg-red-500/10 dark:bg-red-500/20 text-red-500 border border-red-500/20 hover:border-red-500/40 font-bold rounded-xl transition-all duration-300 transition-float hover:-translate-y-0.5 shadow-layered-sm flex items-center justify-center gap-2 mt-4"
+                            className="w-full py-3 bg-red-500/10 text-red-500 border border-red-500/20 hover:border-red-500/40 font-bold rounded-xl transition-all duration-300 transition-float button-lift-dynamic shadow-layered-sm flex items-center justify-center gap-2 mt-4"
                         >
                             <Trash2 className="w-4 h-4" />
                             Delete Class

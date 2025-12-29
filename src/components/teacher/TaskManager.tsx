@@ -38,7 +38,7 @@ import { httpsCallable } from 'firebase/functions';
 import { db, auth, storage, functions } from '../../firebase';
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { ItemType, Task, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
-import { useClassStore } from '../../store/classStore';
+import { useClassStore } from '../../store/appSettings';
 import { useTaskManager } from '../../hooks/useTaskManager';
 import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 
@@ -516,7 +516,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         <span className="text-fluid-lg font-black text-brand-textPrimary">
                             Tasks:
                         </span>
-                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                        <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
                             {currentClass?.name || 'All Classes'}
                         </span>
                     </div>
@@ -541,8 +541,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 className={`
                                                     flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
                                                     ${isActive
-                                                        ? 'bg-slate-200 dark:bg-white/10 text-brand-textDarkPrimary dark:text-gray-200 border border-slate-300 dark:border-white/10'
-                                                        : 'bg-slate-50 dark:bg-[#151921] text-brand-textDarkSecondary dark:text-gray-500 hover:bg-slate-100 dark:hover:bg-[#1a1d24] hover:text-brand-textDarkPrimary dark:hover:text-gray-300 border border-transparent'}
+                                                        ? 'bg-[var(--color-bg-tile-hover)] text-brand-textPrimary border border-[var(--color-border-subtle)]'
+                                                        : 'bg-black/5 text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary border border-transparent'}
                                                 `}
                                             >
                                                 <span className="font-bold">{hierNum}.</span>
@@ -563,10 +563,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         onClick={resetForm}
                         title="Create new task"
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float ml-auto
-                            bg-[#1a1d24] border border-white/10 text-brand-textPrimary
-                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                            hover:-translate-y-0.5 hover:border-brand-accent/50"
+                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                            shadow-layered
+                            hover:shadow-layered-lg
+                            button-lift-dynamic hover:border-brand-accent/50"
                     >
                         <Plus className="w-5 h-5 text-brand-accent" />
                         <span>New Task</span>
@@ -582,7 +582,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             setSelectedDate(toDateString(prev));
                         }}
                         className="p-2 rounded-xl transition-float text-brand-textSecondary border border-transparent
-                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:-translate-y-0.5 hover:shadow-layered-sm
+                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 button-lift-dynamic hover:shadow-layered-sm
                             focus:outline-none"
                         aria-label="Previous day"
                     >
@@ -598,7 +598,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         />
 
                         <span className="text-fluid-base font-bold whitespace-nowrap">
-                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
+                            <span className="text-brand-textPrimary underline decoration-brand-accent">
                                 {(() => {
                                     const d = new Date(selectedDate + 'T00:00:00');
                                     return isValid(d) ? format(d, 'MMM d') : selectedDate;
@@ -615,7 +615,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             setSelectedDate(toDateString(next));
                         }}
                         className="p-2 rounded-xl transition-float text-brand-textSecondary border border-transparent
-                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:-translate-y-0.5 hover:shadow-layered-sm
+                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 button-lift-dynamic hover:shadow-layered-sm
                             focus:outline-none"
                         aria-label="Next day"
                     >
@@ -629,7 +629,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                     {/* LEFT PANEL: Task Editor */}
                     <div className="flex-1 lg:col-span-3 flex flex-col">
-                        {/* Main Form Card - levitated-tile pattern matches Classroom cards and Side Menu buttons */}
+                        {/* Main Form Card - Standard tile color, description/title boxes are transparent */}
                         <div className={`w-full rounded-2xl transition-float p-6 space-y-4 flex-1 flex flex-col relative z-40 levitated-tile ${editingTaskId ? 'active' : ''}`}>
                             {/* Save State Indicator - top right */}
                             <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
@@ -643,8 +643,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             </div>
 
                             {/* Title Input - inset box matching description */}
-                            <div className="rounded-xl border border-white/5 focus-within:border-white/20 background-glass dark:bg-white/5 transition-all duration-300
-                                shadow-[inset_0_2px_4px_-1px_rgba(0,0,0,0.4),inset_0_1px_2px_0_rgba(0,0,0,0.2)]">
+                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] transition-all duration-300
+                                shadow-layered-sm">
                                 <input
                                     type="text"
                                     value={activeFormData.title}
@@ -657,8 +657,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             {/* Description & Attachments Section */}
                             <div className="flex-1 min-h-[120px] relative">
                                 <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 rounded-xl border border-white/5 focus-within:border-white/20 background-glass dark:bg-white/5 overflow-y-auto transition-all duration-300
-                                        shadow-[inset_0_2px_4px_-1px_rgba(0,0,0,0.4),inset_0_1px_2px_0_rgba(0,0,0,0.2)]"
+                                    <div className="flex-1 rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] overflow-y-auto transition-all duration-300
+                                        shadow-layered-sm"
                                     >
                                         <RichTextEditor
                                             value={activeFormData.description}
@@ -675,7 +675,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         {activeFormData.attachments && activeFormData.attachments.map(attachment => (
                                             <div
                                                 key={attachment.id}
-                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-[#1a1d24] rounded-lg border border-white/10 shadow-layered-sm text-xs group hover:-translate-y-0.5 transition-float cursor-default"
+                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-[var(--color-bg-tile)] rounded-lg border border-[var(--color-border-subtle)] shadow-layered-sm text-xs group button-lift-dynamic transition-float cursor-default"
                                                 title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                             >
                                                 {attachment.mimeType.startsWith('image/') ? (
@@ -711,7 +711,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 )}
                                                 <button
                                                     onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-brand-textSecondary hover:text-red-500 rounded-lg transition-all"
+                                                    className="p-1 hover:bg-red-500/10 text-brand-textSecondary hover:text-red-500 rounded-lg transition-all"
                                                     title="Remove attachment"
                                                 >
                                                     <X size={12} />
@@ -722,7 +722,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         {activeFormData.links && activeFormData.links.map((link) => (
                                             <div
                                                 key={link.id}
-                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#1a1d24] rounded-lg border border-white/10 shadow-layered-sm text-xs max-w-[280px] hover:-translate-y-0.5 transition-float"
+                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[var(--color-bg-tile)] rounded-lg border border-[var(--color-border-subtle)] shadow-layered-sm text-xs max-w-[280px] button-lift-dynamic transition-float"
                                             >
                                                 <LinkIcon size={12} className="text-blue-500 shrink-0" />
                                                 <a
@@ -736,7 +736,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 </a>
                                                 <button
                                                     onClick={() => hookRemoveLink(link.id)}
-                                                    className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-brand-textSecondary hover:text-red-500 rounded-lg transition-all"
+                                                    className="p-1 hover:bg-red-500/10 text-brand-textSecondary hover:text-red-500 rounded-lg transition-all"
                                                     title="Remove link"
                                                 >
                                                     <X size={12} />
@@ -754,8 +754,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         <div className="flex items-center gap-2">
                                             <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
                                                 rounded-xl border cursor-pointer
-                                                bg-[#1a1d24] border-white/10 hover:border-brand-accent/50
-                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[#1e2128]">
+                                                bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] hover:border-brand-accent/50
+                                                shadow-layered-sm hover:shadow-layered-lg
+                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]">
                                                 <input
                                                     ref={fileInputRef}
                                                     type="file"
@@ -779,8 +780,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 }}
                                                 className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
                                                     rounded-xl border
-                                                    bg-[#1a1d24] border-white/10 hover:border-brand-accent/50
-                                                    text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[#1e2128]"
+                                                    bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] hover:border-brand-accent/50
+                                                    shadow-layered-sm hover:shadow-layered-lg
+                                                    text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]"
                                             >
                                                 <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Link</span>
@@ -946,8 +948,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             disabled={isSubmitting}
                                             className="group/btn relative flex flex-col items-center justify-center gap-1.5 py-2.5 px-4 min-w-[72px]
                                                 rounded-xl transition-float border
-                                                bg-[#1a1d24] shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                                                hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5
+                                                bg-[#1a1d24] shadow-layered-sm
+                                                hover:shadow-layered-lg button-lift-dynamic
                                                 text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[#1e2128] border-white/10 hover:border-red-400/50
                                                 disabled:opacity-50"
                                         >
@@ -968,9 +970,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         disabled={isSubmitting || !activeFormData.title.trim()}
                                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float
                                             bg-[#1a1d24] border border-white/10 text-brand-textPrimary
-                                            shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                                            hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                                            hover:-translate-y-0.5 hover:border-brand-accent/50
+                                            shadow-layered-sm
+                                            hover:shadow-layered-lg
+                                            button-lift-dynamic hover:border-brand-accent/50
                                             disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {isSubmitting ? (
@@ -1000,7 +1002,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             )}
 
                             {/* Mobile Accordion Header for Task List - only visible on mobile */}
-                            <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-[#1a1d24]">
+                            <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile)]">
                                 {/* Left: Date Picker - Full display for more presence */}
                                 <DatePicker
                                     value={selectedDate}
@@ -1013,14 +1015,14 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                     <span className="font-medium text-brand-textSecondary">
                                         Tasks:
                                     </span>
-                                    <span className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{filteredTasks.length}</span>
+                                    <span className="font-bold text-brand-textPrimary">{filteredTasks.length}</span>
                                 </div>
 
                                 {/* Right: Expand/collapse toggle */}
                                 <button
                                     type="button"
                                     onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
-                                    className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                    className="p-1 rounded hover:bg-[var(--color-bg-tile-hover)] transition-colors"
                                     title={isMobileTasksOpen ? "Close tasks list" : "Open tasks list"}
                                 >
                                     <ChevronDown
@@ -1032,7 +1034,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
-                                overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-brand-lightSurface dark:bg-transparent
+                                overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-[var(--color-bg-tile)] lg:bg-transparent
                                 lg:overflow-visible lg:pt-0 lg:pb-4 lg:bg-transparent
                                 ${isMobileTasksOpen ? 'flex-1 pt-3 pb-4 rounded-lg' : 'max-h-0 lg:max-h-none overflow-hidden'}
                                 transition-all duration-300 ease-in-out
@@ -1078,7 +1080,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                             onClick={() => handleReorder(task.id, 'up')}
                                                             disabled={siblingIndex === 0}
                                                             title="Move up"
-                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-brand-textSecondary focus:outline-none"
+                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-brand-textSecondary focus:outline-none"
                                                         >
                                                             <ArrowUp size={14} />
                                                         </button>
@@ -1086,7 +1088,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                             onClick={() => handleReorder(task.id, 'down')}
                                                             disabled={siblingIndex === siblings.length - 1}
                                                             title="Move down"
-                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)] hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5 hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-brand-textSecondary focus:outline-none"
+                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-brand-textSecondary focus:outline-none"
                                                         >
                                                             <ArrowDown size={14} />
                                                         </button>
@@ -1131,7 +1133,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         )}
                                                         {/* Draft indicator for drafts */}
                                                         {task.status === 'draft' && (
-                                                            <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-brand-textSecondary bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-md">
+                                                            <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-brand-textSecondary bg-[var(--color-bg-tile-hover)] border border-[var(--color-border-subtle)] rounded-md">
                                                                 Draft
                                                             </div>
                                                         )}
@@ -1144,7 +1146,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                                     e.preventDefault();
                                                                     handleAddSubtask(task);
                                                                 }}
-                                                                className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm opacity-0 group-hover:opacity-100 hover:shadow-layered hover:-translate-y-0.5 hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 focus:outline-none"
+                                                                className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm opacity-0 group-hover:opacity-100 hover:shadow-layered button-lift-dynamic hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 focus:outline-none"
                                                                 title="Add subtask"
                                                             >
                                                                 <Plus size={14} className="transition-colors group-hover/btn:text-brand-accent" />

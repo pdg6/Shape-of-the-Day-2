@@ -379,7 +379,7 @@ const StudentView: React.FC<StudentViewProps> = ({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Header */}
-                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-slate-200 dark:border-white/5 shadow-layered-sm">
+                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-[var(--color-border-subtle)] shadow-layered-sm">
                     {/* Left: Hamburger Menu */}
                     <button
                         onClick={() => setIsMobileSidebarOpen(true)}
@@ -391,7 +391,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     </button>
 
                     {/* Center: Class Name */}
-                    <h1 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-2 decoration-brand-accent">
+                    <h1 className="text-xl font-bold text-brand-textPrimary truncate underline decoration-2 underline-offset-2 decoration-brand-accent">
                         {currentClassName}
                     </h1>
                     {/* Right: Progress donut */}
@@ -413,7 +413,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             <div className="max-w-4xl mx-auto">
                                 {/* Desktop Inline Content Header */}
                                 <div className="h-16 shrink-0 flex items-center justify-between">
-                                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
+                                    <h1 className="text-fluid-xl font-bold text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
                                         {currentClassName}
                                     </h1>
                                     <CircularProgress
@@ -442,8 +442,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         classroomId={classId}
                                     />
                                 ) : (
-                                    <div className="text-center py-12 text-brand-textDarkSecondary italic bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
-                                        <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                    <div className="text-center py-12 italic bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+                                        <p className="text-brand-textSecondary">
                                             {previewTasks.length > 0
                                                 ? "Import these tasks to start working on them."
                                                 : "No tasks scheduled for this day."}
@@ -457,7 +457,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             <div className="max-w-4xl mx-auto">
                                 {/* Desktop Inline Content Header */}
                                 <div className="h-16 shrink-0 flex items-center justify-between pr-[22px]">
-                                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
+                                    <h1 className="text-fluid-xl font-bold text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
                                         {currentClassName}
                                     </h1>
                                     <div className="flex items-center gap-3 shrink-0">
@@ -485,7 +485,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                             <div className="max-w-4xl mx-auto">
                                 {/* Desktop Inline Content Header */}
                                 <div className="h-16 shrink-0 flex items-center justify-between pr-[22px]">
-                                    <h1 className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
+                                    <h1 className="text-fluid-xl font-bold text-brand-textPrimary truncate underline decoration-2 underline-offset-4 decoration-brand-accent">
                                         {currentClassName}
                                     </h1>
                                     <div className="flex items-center gap-3 shrink-0">
@@ -508,7 +508,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     />
                                 </div>
                                 <div className="mt-6">
-                                    <h3 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                    <h3 className="text-fluid-lg font-bold mb-4 text-brand-textPrimary">
                                         Tasks for {isToday ? 'Today' : new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                     </h3>
                                     {scheduleLoading ? (
@@ -553,8 +553,8 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     classroomId={classId}
                                 />
                             ) : (
-                                <div className="text-center py-12 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
-                                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary font-medium">
+                                <div className="text-center py-12 bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+                                    <p className="text-brand-textSecondary font-medium">
                                         {previewTasks.length > 0
                                             ? "Import these tasks to start working on them."
                                             : "No tasks scheduled for this day."}
@@ -564,7 +564,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                         </div>
                     ) : mobileTab === 'projects' ? (
                         <div>
-                            <h2 className="text-fluid-lg font-bold mb-4 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            <h2 className="text-fluid-lg font-bold mb-4 text-brand-textPrimary">
                                 Projects & Assignments
                             </h2>
                             <StudentProjectsView
@@ -582,7 +582,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                 />
                             </div>
                             <div className="mt-4">
-                                <h3 className="text-fluid-lg font-bold mb-3 text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                <h3 className="text-fluid-lg font-bold mb-3 text-brand-textPrimary">
                                     {isToday ? "Today's Tasks" : `Tasks for ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`}
                                 </h3>
                                 {scheduleLoading ? (

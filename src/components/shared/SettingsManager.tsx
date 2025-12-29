@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { useClassStore } from '../../store/classStore';
+import { useClassStore } from '../../store/appSettings';
 
 /**
- * GravityBackground Component
+ * SettingsManager Component
  * 
- * An interactive canvas-based particle system.
- * Hover to attract particles, click to repel them.
+ * Applies theme settings as CSS variables and renders the interactive particle background.
  */
-const GravityBackground: React.FC = () => {
+const SettingsManager: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { backgroundSettings } = useClassStore();
 
@@ -121,6 +120,39 @@ const GravityBackground: React.FC = () => {
         const tile = TILE_THEMES[backgroundSettings.tileTheme || 'onyx'] || TILE_THEMES['onyx'];
         const elevation = ELEVATION_PRESETS[backgroundSettings.elevationLevel || 'gentle'] || ELEVATION_PRESETS['gentle'];
 
+        // 1.5 Calculate Dynamic Border & Hover Colors
+        const isDarkTile = ['onyx', 'slate', 'graphite'].includes(backgroundSettings.tileTheme || 'onyx');
+
+        let borderSubtle = tile.border;
+        let borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+        let tileHover = isDarkTile ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
+        let horizonHighlight = backgroundSettings.horizonEtching ? 'var(--color-brand-accent)' : 'transparent';
+        let glowOpacity = backgroundSettings.glowEffect ? (isDarkTile ? '0.06' : '0.04') : '0';
+
+        // Apply Border Style Presets
+        switch (backgroundSettings.borderStyle) {
+            case 'accent':
+                borderSubtle = 'rgba(29, 78, 216, 0.2)';
+                borderStrong = 'rgba(29, 78, 216, 0.4)';
+                break;
+            case 'ghost':
+                borderSubtle = isDarkTile ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
+                borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
+                break;
+            case 'glass':
+                borderSubtle = isDarkTile ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)';
+                borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.25)' : 'rgba(0, 0, 0, 0.2)';
+                break;
+            case 'vibrant':
+                borderSubtle = isDarkTile ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+                borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)';
+                break;
+            case 'auto':
+            default:
+                // Keep defaults
+                break;
+        }
+
         // 2. Inject CSS Variables
         // Primary Theme (Headers, Active - "The Active Voice")
         root.style.setProperty('--text-primary-ink', primary.ink);   // Darker/Dimmer (Ink)
@@ -134,8 +166,16 @@ const GravityBackground: React.FC = () => {
         root.style.setProperty('--color-brand-textMuted', secondary.ink);
 
         // Tile Theme (Surfaces, Cards, Navigation)
-        root.style.setProperty('--color-bg-tile', tile.tile);
-        root.style.setProperty('--color-bg-tile-alt', tile.tileAlt);
+        root.style.setProperty('--color-bg-tile', tile?.tile || '#1a1d24');
+        root.style.setProperty('--color-bg-tile-alt', tile?.tileAlt || '#151921');
+        root.style.setProperty('--color-bg-tile-hover', tileHover);
+
+        // Borders and Visual Fidelity
+        root.style.setProperty('--color-border-subtle', borderSubtle);
+        root.style.setProperty('--color-border-strong', borderStrong);
+        root.style.setProperty('--color-horizon-highlight', horizonHighlight);
+        root.style.setProperty('--glow-opacity', glowOpacity);
+
         // Map legacy utilities to dynamic tile colors for consistency
         root.style.setProperty('--color-brand-darkSurface', tile.tile);
         root.style.setProperty('--color-brand-lightSurface', tile.tile);
@@ -148,11 +188,7 @@ const GravityBackground: React.FC = () => {
         root.style.setProperty('--shadow-layered', elevation.shadow);
         root.style.setProperty('--shadow-layered-lg', elevation.shadowLg);
 
-        // Important: Update border opacity context if switching between Light/Dark tiles
-        // But for now, just let standard borders exist. The Tile Border is usually handled by individual components, 
-        // but levitated-tile uses --color-bg-tile background.
-
-    }, [backgroundSettings.primaryTheme, backgroundSettings.secondaryTheme, backgroundSettings.tileTheme, backgroundSettings.elevationLevel]);
+    }, [backgroundSettings]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -556,4 +592,4 @@ const GravityBackground: React.FC = () => {
     );
 };
 
-export default GravityBackground;
+export default SettingsManager;

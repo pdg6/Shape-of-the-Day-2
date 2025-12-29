@@ -19,7 +19,7 @@ import {
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom, ItemType, Task, ALLOWED_CHILD_TYPES } from '../../types';
-import { useClassStore } from '../../store/classStore';
+import { useClassStore } from '../../store/appSettings';
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { format } from 'date-fns';
 import { deleteTaskWithChildren } from '../../services/firestoreService';
@@ -121,7 +121,7 @@ function TreeItem({
             <div
                 className={`
                     group flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all
-                    hover:bg-gray-50 dark:hover:bg-gray-800
+                    hover:bg-[var(--color-bg-tile-hover)]
                     pl-[var(--depth-padding)]
                 `}
                 style={{ '--depth-padding': `${depth * 20 + 8}px` } as React.CSSProperties}
@@ -132,7 +132,7 @@ function TreeItem({
                         e.stopPropagation();
                         onToggleExpand(task.id);
                     }}
-                    className={`p-1 rounded-lg transition-all ${hasChildren ? 'hover:bg-slate-200 dark:hover:bg-white/5' : 'opacity-0'}`}
+                    className={`p-1 rounded-lg transition-all ${hasChildren ? 'hover:bg-[var(--color-bg-tile-hover)]' : 'opacity-0'}`}
                     disabled={!hasChildren}
                 >
                     {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
@@ -146,7 +146,7 @@ function TreeItem({
                 {/* Title & Info */}
                 <div className="flex-1 min-w-0" onClick={() => onEdit(task)}>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-sm text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <span className="font-medium text-sm text-brand-textPrimary">
                             {task.title}
                         </span>
                         {task.status === 'done' && (
@@ -165,7 +165,7 @@ function TreeItem({
                             e.stopPropagation();
                             onEdit(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-brand-textSecondary hover:text-blue-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-500/10 text-brand-textSecondary hover:text-blue-500 transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center"
                         title="Edit task"
                     >
                         <Pencil size={14} />
@@ -176,7 +176,7 @@ function TreeItem({
                             e.stopPropagation();
                             onDelete(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-brand-textSecondary hover:text-red-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-500/10 text-brand-textSecondary hover:text-red-500 transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center"
                         title="Delete task"
                     >
                         <Trash2 size={14} />
@@ -186,7 +186,7 @@ function TreeItem({
                             e.stopPropagation();
                             onCopyToBoard(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-slate-200 dark:hover:bg-[#151921] text-brand-textSecondary hover:text-brand-accent transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center border border-transparent hover:border-slate-300 dark:hover:border-white/5 shadow-layered-sm"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-[var(--color-bg-tile-hover)] text-brand-textSecondary hover:text-brand-accent transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
                         title="Copy to Task Board"
                     >
                         <Copy size={14} />
@@ -197,7 +197,7 @@ function TreeItem({
             {/* Quick Add Input Row */}
             {isQuickAddActive && (
                 <div
-                    className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg mx-2 mb-1 border-2 border-dashed border-green-300 dark:border-green-700 ml-[var(--depth-margin)]"
+                    className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg mx-2 mb-1 border-2 border-dashed border-green-500/30 ml-[var(--depth-margin)]"
                     style={{ '--depth-margin': `${(depth + 1) * 20 + 8}px` } as React.CSSProperties}
                 >
                     <span className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(allowedChildTypes[0] || 'task')}`}>
@@ -227,7 +227,7 @@ function TreeItem({
                             }, 150);
                         }}
                         placeholder={`New ${getTypeLabel(allowedChildTypes[0] || 'task').toLowerCase()} title...`}
-                        className="flex-1 px-2 py-1 text-sm bg-brand-lightSurface dark:bg-bg-tile border border-slate-200 dark:border-white/5 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        className="flex-1 px-2 py-1 text-sm bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
                         disabled={isQuickAddSaving}
                     />
                     {isQuickAddSaving ? (
@@ -721,10 +721,10 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                 {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
                 <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between px-4">
                     <div className="flex items-baseline gap-3">
-                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <span className="text-fluid-lg font-black text-brand-textPrimary">
                             Tasks:
                         </span>
-                        <span className="text-fluid-lg font-black text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                        <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
                             Inventory
                         </span>
                     </div>
@@ -742,7 +742,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 placeholder="Search tasks..."
-                                className="w-full pl-9 pr-3 py-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent transition-all"
+                                className="w-full pl-9 pr-3 py-2 rounded-lg border-2 border-[var(--color-border-subtle)] bg-transparent text-sm font-medium text-brand-textPrimary placeholder-brand-textMuted hover:border-[var(--color-border-strong)] focus:outline-none focus:border-brand-accent transition-all"
                             />
                         </div>
 
@@ -763,7 +763,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                     setSavedSearches([...savedSearches, newSavedSearch]);
                                 }
                             }}
-                            className="p-2 rounded-lg border-2 border-gray-400 dark:border-gray-600 bg-transparent text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:border-brand-accent transition-all"
+                            className="p-2 rounded-lg border-2 border-[var(--color-border-subtle)] bg-transparent text-sm font-medium text-brand-textPrimary placeholder-brand-textMuted hover:border-[var(--color-border-strong)] focus:outline-none focus:border-brand-accent transition-all"
                         >
                             Save Search
                         </button>
@@ -826,11 +826,11 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             <button
                                 onClick={() => setFilterDate(null)}
                                 className={`
-                                flex-shrink-0 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-float hover:-translate-y-0.5 select-none cursor-pointer
+                                flex-shrink-0 px-4 py-2 rounded-xl border-2 font-bold text-sm transition-float button-lift-dynamic select-none cursor-pointer
                                 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 shadow-layered-sm
                                 ${filterDate === null
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                        : 'border-slate-200 dark:border-white/10 text-brand-textSecondary hover:border-slate-400 dark:hover:border-white/20'
+                                        : 'border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-[var(--color-border-strong)]'
                                     }
                             `}
                             >
@@ -840,7 +840,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             {/* Left Arrow */}
                             <button
                                 onClick={() => navigateCalendar('left')}
-                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
                                 title="Previous week"
                             >
                                 <ChevronLeft size={18} />
@@ -878,13 +878,13 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                             w-14 h-16 rounded-md transition-all
                                             ${isSelected
                                                     ? 'bg-brand-accent/20'
-                                                    : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}
+                                                    : 'hover:bg-[var(--color-bg-tile-hover)]'}
                                         `}
                                         >
                                             <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2' : 'text-brand-textSecondary'}`}>
                                                 {dayName}
                                             </span>
-                                            <span className={`text-xl font-bold ${isSelected ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                            <span className={`text-xl font-bold ${isSelected ? 'text-brand-accent' : 'text-brand-textPrimary'}`}>
                                                 {dayNum}
                                             </span>
                                             {/* Task counts - colored dots */}
@@ -909,7 +909,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             {/* Right Arrow */}
                             <button
                                 onClick={() => navigateCalendar('right')}
-                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
                                 title="Next week"
                             >
                                 <ChevronRight size={18} />
@@ -930,7 +930,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                 <div className="flex-1 min-h-0 min-w-0 overflow-y-auto p-4">
                     {/* Mobile Tab Selector - only visible on small screens */}
                     <div className="lg:hidden mb-4">
-                        <div className="flex rounded-lg border-2 border-gray-400 dark:border-gray-600 p-1 bg-brand-lightSurface dark:bg-brand-darkSurface">
+                        <div className="flex rounded-lg border-2 border-[var(--color-border-subtle)] p-1 bg-[var(--color-bg-tile-alt)]">
                             <button
                                 onClick={() => setMobileActiveTab('projects')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'projects'
@@ -975,7 +975,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('project')}`}>
                                     <FolderOpen size={16} />
                                 </span>
-                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                <h3 className="font-bold text-brand-textPrimary">
                                     Projects
                                 </h3>
                                 <span className="text-xs text-brand-textSecondary font-medium">
@@ -1044,10 +1044,10 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
                                     <FileText size={16} />
                                 </span>
-                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                <h3 className="font-bold text-brand-textPrimary">
                                     Assignments
                                 </h3>
-                                <span className="text-xs text-gray-400 font-medium">
+                                <span className="text-xs text-brand-textMuted font-medium">
                                     {groupedTasks.assignments.length}
                                 </span>
                                 {groupedTasks.assignments.some(a => a.childIds?.length > 0) && (
@@ -1065,7 +1065,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                                 setExpandedIds(prev => new Set([...prev, ...assignmentIds]));
                                             }
                                         }}
-                                        className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                        className="ml-auto flex items-center gap-1 text-xs text-brand-textMuted hover:text-brand-textPrimary transition-colors"
                                     >
                                         {groupedTasks.assignments.filter(a => a.childIds?.length > 0).every(a => expandedIds.has(a.id)) ? (
                                             <><span>Collapse</span><ChevronUp size={14} /></>
@@ -1077,7 +1077,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             </div>
 
                             {groupedTasks.assignments.length === 0 ? (
-                                <p className="text-center text-sm text-gray-400 py-8 italic">
+                                <p className="text-center text-sm text-brand-textMuted py-8 italic">
                                     No standalone assignments
                                 </p>
                             ) : (
@@ -1113,10 +1113,10 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('task')}`}>
                                     <ListChecks size={16} />
                                 </span>
-                                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                <h3 className="font-bold text-brand-textPrimary">
                                     Tasks
                                 </h3>
-                                <span className="text-xs text-gray-400 font-medium">
+                                <span className="text-xs text-brand-textMuted font-medium">
                                     {groupedTasks.standaloneTasks.length}
                                 </span>
                                 {groupedTasks.standaloneTasks.some(t => t.childIds?.length > 0) && (
@@ -1134,7 +1134,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                                 setExpandedIds(prev => new Set([...prev, ...taskIds]));
                                             }
                                         }}
-                                        className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                        className="ml-auto flex items-center gap-1 text-xs text-brand-textMuted hover:text-brand-textPrimary transition-colors"
                                     >
                                         {groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).every(t => expandedIds.has(t.id)) ? (
                                             <><span>Collapse</span><ChevronUp size={14} /></>
@@ -1146,7 +1146,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             </div>
 
                             {groupedTasks.standaloneTasks.length === 0 ? (
-                                <p className="text-center text-sm text-gray-400 py-8 italic">
+                                <p className="text-center text-sm text-brand-textMuted py-8 italic">
                                     No tasks found
                                 </p>
                             ) : (

@@ -80,10 +80,10 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                             transition-all duration-300 ease-in-out
                             ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100'}
                         `}>
-                            <span className="font-bold text-base text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap leading-tight">
+                            <span className="font-bold text-base text-brand-textPrimary whitespace-nowrap leading-tight">
                                 Shape of the Day
                             </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap leading-tight">
+                            <span className="text-brand-textSecondary whitespace-nowrap leading-tight">
                                 {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                             </span>
                         </div>
@@ -91,7 +91,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     {/* Mobile Close Button */}
                     <button
                         onClick={onMobileClose}
-                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
                         aria-label="Close navigation menu"
                     >
                         <X className="w-5 h-5" />
@@ -131,11 +131,11 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 {/* Progress Card */}
                 <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-3 ${isCollapsed ? 'md:hidden' : ''}`}>
                     {totalTasks > 0 && (
-                        <div className="bg-gray-50 dark:bg-[#151921] rounded-xl p-3 border border-gray-100 dark:border-white/5">
+                        <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 border border-[var(--color-border-subtle)] shadow-layered-sm">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Today's Progress</span>
+                                <span className="text-[10px] font-black text-brand-textMuted uppercase tracking-wider">Today's Progress</span>
                                 {tasksCompleted === totalTasks && (
-                                    <span className="text-xs font-bold text-green-500 font-mono tracking-tighter">🎉 COMPLETE</span>
+                                    <span className="text-[10px] font-black text-emerald-500 tracking-tighter">🎉 COMPLETE</span>
                                 )}
                             </div>
                             <ProgressBar
@@ -167,7 +167,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         </div>
                         <span className={`
                             whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left tracking-tight
-                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
+                            text-brand-textSecondary group-hover:text-brand-textPrimary
                             ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}
                         `}>
                             Collapse
@@ -184,12 +184,12 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                         `}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
-                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textDarkSecondary dark:text-gray-400 transition-colors group-hover:text-brand-accent">
+                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textSecondary transition-colors group-hover:text-brand-accent">
                             <Settings className="w-5 h-5 transition-transform duration-300 group-hover:rotate-45" />
                         </div>
                         <span className={`
                             whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left tracking-tight
-                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
+                            text-brand-textSecondary group-hover:text-brand-textPrimary
                             ${isCollapsed ? 'md:w-0 md:opacity-0' : 'opacity-100'}
                         `}>
                             Settings

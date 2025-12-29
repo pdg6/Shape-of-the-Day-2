@@ -24,6 +24,24 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
 };
 
 /**
+ * Sign in with Email and Password
+ * @param email 
+ * @param password 
+ * @returns Promise resolving to UserCredential
+ */
+export const signInWithEmail = async (email: string, password: string): Promise<UserCredential> => {
+    try {
+        // Dynamic import to avoid unused import errors if we weren't using it before
+        const { signInWithEmailAndPassword } = await import('firebase/auth');
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        return result;
+    } catch (error) {
+        console.error('Error signing in with Email:', error);
+        throw error;
+    }
+};
+
+/**
  * Sign out the current user
  */
 export const signOut = async (): Promise<void> => {

@@ -146,9 +146,9 @@ export function Select<T extends string | number = string>({
                                 pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
                                 border transition-all duration-300 transition-float
                                 bg-brand-tile text-brand-textSecondary
-                                shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
-                                hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                                hover:-translate-y-0.5 hover:text-brand-textPrimary hover:bg-brand-tile-alt hover:border-brand-accent/50
+                                shadow-layered-sm
+                                hover:shadow-layered-lg
+                                button-lift-dynamic hover:text-brand-textPrimary hover:bg-brand-tile-alt hover:border-brand-accent/50
                                 focus:outline-none focus:border-brand-accent
                                 min-h-[44px] flex items-center
                                 disabled:opacity-50 disabled:cursor-not-allowed
@@ -196,7 +196,7 @@ export function Select<T extends string | number = string>({
                             >
                                 <Listbox.Options
                                     static
-                                    className="fixed z-[9999] overflow-hidden rounded-lg border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-brand-tile shadow-layered focus:outline-none"
+                                    className="fixed z-[9999] overflow-hidden rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile)] shadow-layered focus:outline-none"
                                     style={{
                                         top: dropdownPosition.top,
                                         left: dropdownPosition.left,
@@ -206,7 +206,7 @@ export function Select<T extends string | number = string>({
                                 >
                                     {/* Search Input */}
                                     {showSearch && (
-                                        <div className="p-2 border-b border-slate-200 dark:border-white/5 sticky top-0 bg-brand-lightSurface dark:bg-brand-tile">
+                                        <div className="p-2 border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-bg-tile)]">
                                             <div className="relative">
                                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary" />
                                                 <input
@@ -215,7 +215,7 @@ export function Select<T extends string | number = string>({
                                                     value={search}
                                                     onChange={e => setSearch(e.target.value)}
                                                     placeholder="Search..."
-                                                    className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
+                                                    className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
                                                     onClick={e => e.stopPropagation()}
                                                     onKeyDown={e => e.stopPropagation()}
                                                 />
@@ -242,7 +242,7 @@ export function Select<T extends string | number = string>({
                                                 value={null}
                                                 className={({ active }) => `
                                                     relative cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm
-                                                    ${active ? 'bg-gray-100 dark:bg-gray-800' : ''}
+                                                    ${active ? 'bg-[var(--color-bg-tile-hover)]' : ''}
                                                     text-brand-textSecondary italic
                                                 `}
                                             >
@@ -269,7 +269,7 @@ export function Select<T extends string | number = string>({
                                                     disabled={option.disabled}
                                                     className={({ active, disabled: optDisabled }) => `
                                                         relative cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm
-                                                    ${active ? 'bg-gray-100 dark:bg-gray-800' : ''}
+                                                    ${active ? 'bg-[var(--color-bg-tile-hover)]' : ''}
                                                     ${optDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                                                     text-brand-textPrimary
                                                 `}

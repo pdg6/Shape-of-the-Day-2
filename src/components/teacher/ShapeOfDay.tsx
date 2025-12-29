@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useClassStore } from '../../store/classStore';
+import { useClassStore } from '../../store/appSettings';
 import { useAuth } from '../../context/auth-context';
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { toDateString } from '../../utils/dateHelpers';
@@ -176,10 +176,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
     return (
         <div
-            className={`group bg-brand-lightSurface dark:bg-bg-tile 
-                border border-slate-200 dark:border-white/5 rounded-2xl p-5
+            className={`group bg-[var(--color-bg-tile)] 
+                border border-[var(--color-border-subtle)] rounded-2xl p-5
                 border-l-4 ${typeBorderColor}
-                transition-all duration-300 shadow-layered lift-hover
+                transition-all duration-300 shadow-layered
                 hover:border-brand-accent hover:shadow-layered-lg
                 relative select-none
                 ${task.status === 'done' ? 'opacity-60 shadow-layered-sm' : ''}`}
@@ -224,7 +224,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                     onMouseEnter={handleHoverEnter}
                     onMouseLeave={handleHoverLeave}
                 >
-                    <span className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
+                    <span className={`text-xl font-black text-brand-textPrimary leading-tight
                         underline decoration-2 underline-offset-4
                         ${task.type === 'project' ? 'decoration-purple-500' : ''}
                         ${task.type === 'assignment' ? 'decoration-blue-500' : ''}
@@ -251,8 +251,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                 <div className="flex-1 min-w-0">
                     {/* Title + Due Date Row */}
                     <div className="flex items-baseline gap-3">
-                        <h3 className={`text-xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight
-                            ${task.status === 'done' ? 'line-through decoration-2 decoration-gray-400' : ''}`}>
+                        <h3 className={`text-xl font-black text-brand-textPrimary leading-tight
+                            ${task.status === 'done' ? 'line-through decoration-2 decoration-brand-textSecondary' : ''}`}>
                             {task.title}
                         </h3>
                         {task.endDate && (
@@ -271,7 +271,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                             <div className="flex items-center gap-2 text-xs text-brand-textSecondary">
                                 <span className="font-medium">{completedChildren}/{childTasks.length} complete</span>
                             </div>
-                            <div className="mt-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div className="mt-1 h-1.5 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-brand-accent rounded-full transition-all duration-300"
                                     style={{ width: `${childTasks.length > 0 ? (completedChildren / childTasks.length) * 100 : 0}%` }}
@@ -289,10 +289,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                     key={`desc-${task.id}-${isDescriptionExpanded}`}
                                     html={task.description}
                                     isExpanded={isDescriptionExpanded}
-                                    className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary"
                                 />
                             ) : (
-                                <div className={`text-base text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                                <div className={`text-base text-brand-textSecondary whitespace-pre-wrap ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
                                     {task.description}
                                 </div>
                             )}
@@ -315,7 +314,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         <img
                                             src={task.imageURL}
                                             alt=""
-                                            className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-brand-accent transition-colors"
                                             loading="lazy"
                                         />
                                     </a>
@@ -333,7 +332,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         <img
                                             src={img.url}
                                             alt={img.filename}
-                                            className="w-20 h-20 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-brand-accent transition-colors"
                                             loading="lazy"
                                         />
                                     </a>
@@ -355,7 +354,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         >
                                             <ExternalLink size={16} className="text-brand-accent shrink-0" />
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                                <span className="text-sm font-medium text-brand-textPrimary truncate">
                                                     {link.title || getUrlDomain(link.url)}
                                                 </span>
                                                 {link.title && (
@@ -380,11 +379,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                     >
                                         <ExternalLink size={16} className="text-brand-accent shrink-0" />
                                         <div className="flex flex-col min-w-0">
-                                            <span className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                                            <span className="text-sm font-medium text-brand-textPrimary truncate">
                                                 {task.linkTitle || getUrlDomain(task.linkURL)}
                                             </span>
                                             {task.linkTitle && (
-                                                <span className="text-xs text-gray-400">
+                                                <span className="text-xs text-brand-textSecondary">
                                                     {getUrlDomain(task.linkURL)}
                                                 </span>
                                             )}
@@ -403,7 +402,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 px-3 py-2 rounded-lg
-                                                bg-brand-lightSurface dark:bg-brand-darkSurface border-2 border-slate-300 dark:border-gray-700
+                                                bg-[var(--color-bg-tile-hover)] border-2 border-[var(--color-border-subtle)]
                                                 text-sm font-medium hover:border-brand-accent hover:shadow-lg transition-all"
                                             title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                             onClick={(e) => e.stopPropagation()}
@@ -577,7 +576,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         >
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered shrink-0 p-6">
+            <div className="w-full bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered shrink-0 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -591,10 +590,10 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                                 className="z-10"
                             />
                             <span className="text-fluid-base font-bold whitespace-nowrap">
-                                <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent">
+                                <span className="text-brand-textPrimary underline decoration-brand-accent">
                                     {isValid(parsedDate) ? format(parsedDate, 'MMM d') : selectedDate}
                                 </span>
-                                <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">{' '}Shape of the Day</span>
+                                <span className="text-brand-textPrimary">{' '}Shape of the Day</span>
                             </span>
                             <button
                                 onClick={() => onNavigate?.('live', 'students')}
@@ -613,7 +612,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                                 {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                             </button>
                         </div>
-                        <h1 className="text-fluid-3xl font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight leading-tight">
+                        <h1 className="text-fluid-3xl font-black text-brand-textPrimary tracking-tight leading-tight">
                             {currentClass.name}
                         </h1>
                     </div>
@@ -621,19 +620,19 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                     {/* Right: Connection Info (Compact) */}
                     <div className="shrink-0 flex items-center gap-4">
                         <div className="text-right">
-                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary uppercase tracking-wider mb-0.5">Join at</p>
-                            <p className="text-base font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
+                            <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Join at</p>
+                            <p className="text-base font-medium text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
                                 shapeoftheday.app/join
                             </p>
 
-                            <p className="text-xs font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary uppercase tracking-wider mb-0.5">Class Code</p>
+                            <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Class Code</p>
                             <div className="text-3xl font-mono font-black text-brand-accent tracking-widest leading-none">
                                 {currentClass.joinCode}
                             </div>
                         </div>
 
                         {/* QR Code */}
-                        <div className="bg-white p-1.5 rounded-lg shadow-sm border border-gray-100">
+                        <div className="bg-white p-1.5 rounded-lg shadow-sm border border-[var(--color-border-subtle)]">
                             <QRCodeSVG
                                 value={`${joinUrl}?code=${currentClass.joinCode}`}
                                 size={80}
@@ -651,7 +650,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 {loading ? (
                     <div className="text-center py-12 text-brand-textSecondary">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
-                    <div className="text-center py-12 text-brand-textDarkSecondary bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
+                    <div className="text-center py-12 text-brand-textSecondary bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)]">
                         No tasks scheduled for this date.
                     </div>
                 ) : (

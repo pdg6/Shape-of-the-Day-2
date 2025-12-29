@@ -30,11 +30,11 @@ export const Button: React.FC<ButtonProps> = ({
     title,
     'aria-label': ariaLabel
 }) => {
-    const baseClasses = 'font-bold rounded-xl transition-float focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer shadow-layered-sm hover:shadow-layered-lg hover:-translate-y-0.5';
+    const baseClasses = 'font-bold rounded-xl transition-float focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer shadow-layered-sm button-lift-dynamic';
 
     const variantClasses = {
-        primary: 'bg-brand-accent/10 dark:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:bg-brand-accent/20 dark:hover:bg-brand-accent/30 hover:border-brand-accent/40',
-        secondary: 'background-glass dark:bg-white/5 text-brand-textPrimary border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/10 hover:border-slate-300 dark:hover:border-white/20',
+        primary: 'bg-brand-accent/10 text-brand-accent border border-brand-accent/20 hover:bg-brand-accent/20 hover:border-brand-accent/40',
+        secondary: 'background-glass bg-[var(--color-bg-tile-alt)]/50 text-brand-textPrimary border border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-strong)]',
         tertiary: 'text-brand-textPrimary hover:text-brand-accent transition-colors shadow-none hover:shadow-none hover:-translate-y-0',
         icon: 'text-brand-textSecondary hover:text-brand-accent transition-all hover:bg-brand-accent/5 focus:text-brand-accent shadow-none hover:shadow-none hover:-translate-y-0',
         ghost: 'border border-transparent text-brand-accent hover:bg-brand-accent/5 focus:bg-brand-accent/5 shadow-none hover:shadow-none hover:-translate-y-0',

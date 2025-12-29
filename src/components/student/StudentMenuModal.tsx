@@ -1,6 +1,6 @@
 import React from 'react';
-import { Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle, ListTodo, FolderOpen, CalendarDays } from 'lucide-react';
-import { useClassStore } from '../../store/classStore';
+import { Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle, ListTodo, FolderOpen, CalendarDays, Settings, Palette, Layers, Box, Zap, Trash2, Edit3, Monitor, Sparkles } from 'lucide-react';
+import { useClassStore } from '../../store/appSettings';
 import { Modal } from '../shared/Modal';
 
 interface StudentMenuModalProps {
@@ -39,7 +39,8 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
     activeTab,
     onTabChange
 }) => {
-    const { darkMode, toggleDarkMode } = useClassStore();
+    const { backgroundSettings, setBackgroundSettings, resetSettings } = useClassStore();
+    const [activeSettingsTab, setActiveSettingsTab] = React.useState<'nav' | 'theme'>('nav');
 
     const tasksLeft = totalTasks - tasksCompleted;
     const progressPercent = totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0;
@@ -52,196 +53,261 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Menu">
-            <div className="space-y-3">
-                {/* Navigation Section */}
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                    <button
-                        onClick={() => {
-                            onTabChange('tasks');
-                            onClose();
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
-                            ? 'nav-item active'
-                            : 'nav-item-hover bg-bg-tile/40 text-gray-400 border-white/5'
-                            }`}
-                    >
-                        <ListTodo size={24} />
-                        <span className="text-xs font-bold">Tasks</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            onTabChange('projects');
-                            onClose();
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'projects'
-                            ? 'nav-item active'
-                            : 'nav-item-hover bg-bg-tile/40 text-gray-400 border-white/5'
-                            }`}
-                    >
-                        <FolderOpen size={24} />
-                        <span className="text-xs font-bold">Projects</span>
-                    </button>
-                    <button
-                        onClick={() => {
-                            onTabChange('schedule');
-                            onClose();
-                        }}
-                        className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'schedule'
-                            ? 'nav-item active'
-                            : 'nav-item-hover bg-bg-tile/40 text-gray-400 border-white/5'
-                            }`}
-                    >
-                        <CalendarDays size={24} />
-                        <span className="text-xs font-bold">Schedule</span>
-                    </button>
-                </div >
-
-                {/* Divider */}
-                < div className="border-t border-gray-200 dark:border-gray-700 my-2" />
-
-                {/* Student Name */}
-                < button
-                    onClick={() => {
-                        onEditName();
-                        onClose();
-                    }}
-                    className="w-full bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 transition-float hover:-translate-y-0.5 shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+            <div className="flex gap-2 mb-6 p-1 bg-[var(--color-bg-tile-alt)] rounded-xl border border-[var(--color-border-subtle)]">
+                <button
+                    onClick={() => setActiveSettingsTab('nav')}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-float ${activeSettingsTab === 'nav' ? 'bg-[var(--color-bg-tile)] text-brand-accent shadow-layered-sm border border-[var(--color-border-subtle)]' : 'text-brand-textMuted hover:text-brand-textSecondary'}`}
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
-                            <User size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            Student
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {studentName}
-                        </span>
-                        <span className="text-xs text-brand-accent font-medium">Edit</span>
-                    </div>
-                </button >
+                    Navigation
+                </button>
+                <button
+                    onClick={() => setActiveSettingsTab('theme')}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-float ${activeSettingsTab === 'theme' ? 'bg-[var(--color-bg-tile)] text-brand-accent shadow-layered-sm border border-[var(--color-border-subtle)]' : 'text-brand-textMuted hover:text-brand-textSecondary'}`}
+                >
+                    Appearance
+                </button>
+            </div>
 
-                {/* Class Name */}
-                < div className="bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 shadow-layered-sm" >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
-                            <BookOpen size={20} />
+            <div className="space-y-4">
+                {activeSettingsTab === 'nav' ? (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Navigation Section */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <button
+                                onClick={() => {
+                                    onTabChange('tasks');
+                                    onClose();
+                                }}
+                                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
+                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-accent shadow-layered-sm'
+                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)]'
+                                    }`}
+                            >
+                                <ListTodo size={24} />
+                                <span className="text-[10px] font-black uppercase tracking-wider">Tasks</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onTabChange('projects');
+                                    onClose();
+                                }}
+                                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'projects'
+                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-accent shadow-layered-sm'
+                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)]'
+                                    }`}
+                            >
+                                <FolderOpen size={24} />
+                                <span className="text-[10px] font-black uppercase tracking-wider">Projects</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onTabChange('schedule');
+                                    onClose();
+                                }}
+                                className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'schedule'
+                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-accent shadow-layered-sm'
+                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)]'
+                                    }`}
+                            >
+                                <CalendarDays size={24} />
+                                <span className="text-[10px] font-black uppercase tracking-wider">Schedule</span>
+                            </button>
                         </div>
-                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            Class
-                        </span>
-                    </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {className}
-                    </span>
-                </div >
 
-                {/* Dark/Light Mode Toggle - Near top */}
-                < div className="bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 shadow-layered-sm" >
-                    <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
-                            {darkMode ? <Moon size={20} /> : <Sun size={20} />}
-                        </div>
-                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            Theme
-                        </span>
-                    </div>
-                    <button
-                        onClick={toggleDarkMode}
-                        role="switch"
-                        aria-checked={darkMode}
-                        aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                        className={`
-                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                            ${darkMode ? 'bg-brand-accent' : 'bg-gray-300 border border-gray-400'}
-                        `}
-                    >
-                        <span
-                            className={`
-                                inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
-                                ${darkMode ? 'translate-x-6' : 'translate-x-1'}
-                            `}
-                        />
-                    </button>
-                </div >
+                        {/* Divider */}
+                        <div className="h-px bg-[var(--color-border-subtle)] my-2" />
 
-                {/* Date */}
-                < div className="bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 shadow-layered-sm" >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
-                            <Calendar size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            Date
-                        </span>
-                    </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {currentDate}
-                    </span>
-                </div >
+                        {/* Student Info Cards */}
+                        <div className="space-y-2">
+                            {/* Student Name */}
+                            <button
+                                onClick={() => {
+                                    onEditName();
+                                    onClose();
+                                }}
+                                className="w-full bg-[var(--color-bg-tile)] rounded-xl p-3 flex items-center justify-between border border-[var(--color-border-subtle)] transition-float button-lift-dynamic shadow-layered-sm group"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent group-hover:scale-110 transition-transform">
+                                        <User size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Student</p>
+                                        <p className="font-bold text-brand-textPrimary">{studentName}</p>
+                                    </div>
+                                </div>
+                                <Edit3 size={16} className="text-brand-textMuted group-hover:text-brand-accent transition-colors" />
+                            </button>
 
-                {/* Tasks Progress */}
-                < div className="bg-bg-tile rounded-xl p-3 border border-white/5 shadow-layered-sm" >
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
-                                <CheckCircle size={20} />
+                            {/* Class Name */}
+                            <div className="bg-[var(--color-bg-tile)] rounded-xl p-3 flex items-center justify-between border border-[var(--color-border-subtle)] shadow-layered-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                                        <BookOpen size={20} />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Classroom</p>
+                                        <p className="font-bold text-brand-textPrimary">{className}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                                Progress
-                            </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {tasksLeft} left
-                            </span>
-                            <span className="text-sm font-bold text-brand-accent">{progressPercent}%</span>
-                        </div>
-                    </div>
-                    {/* Progress Bar */}
-                    <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-brand-accent rounded-full transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div >
 
-                {/* Sign Out Button */}
-                < button
-                    onClick={() => {
-                        const confirmed = window.confirm(
-                            'Sign out of this class?\n\nYour local session data will be cleared. ' +
-                            'Your progress has been saved to the server.'
-                        );
-                        if (confirmed) {
-                            // Explicitly clear session storage keys to prevent auto-login
-                            sessionStorage.removeItem('studentName');
-                            sessionStorage.removeItem('studentClassId');
-                            sessionStorage.removeItem('studentClassroomColor');
-                            onSignOut();
-                            onClose();
-                        }
-                    }}
-                    className="w-full bg-bg-tile rounded-xl p-3 flex items-center justify-between border border-white/5 transition-float hover:-translate-y-0.5 shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
-                            <LogOut size={20} />
+                        {/* Progress Section */}
+                        <div className="bg-[var(--color-bg-tile)] rounded-xl p-4 border border-[var(--color-border-subtle)] shadow-layered-sm space-y-3">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                                        <CheckCircle size={20} />
+                                    </div>
+                                    <span className="font-black uppercase tracking-widest text-xs text-brand-textPrimary">Progress</span>
+                                </div>
+                                <span className="text-sm font-black text-brand-accent">{progressPercent}%</span>
+                            </div>
+                            <div className="h-1.5 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-brand-accent rounded-full transition-all duration-1000 ease-out"
+                                    style={{ width: `${progressPercent}%` }}
+                                />
+                            </div>
+                            <p className="text-[10px] font-bold text-brand-textMuted text-center">
+                                {tasksCompleted} / {totalTasks} tasks completed
+                            </p>
                         </div>
-                        <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                            Sign Out
-                        </span>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Leave class
-                    </span>
-                </button >
-            </div >
-        </Modal >
+                ) : (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        {/* Theme Section */}
+                        <div className="space-y-4">
+                            {/* Visual Presets Info */}
+                            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 border border-[var(--color-border-subtle)]">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                                        <Sparkles size={20} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-sm font-bold text-brand-textPrimary">Visual Presets</h3>
+                                        <p className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Customize your background</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Canvas Style */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 px-1">
+                                    <Palette size={14} className="text-brand-textMuted" />
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Canvas Style</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { id: 'industrial', color: '#0f1115', particle: '#f2efea', label: 'Industrial' },
+                                        { id: 'midnight', color: '#020617', particle: '#3b82f6', label: 'Midnight' },
+                                        { id: 'ocean', color: '#082f49', particle: '#0ea5e9', label: 'Ocean' },
+                                        { id: 'emerald', color: '#064e3b', particle: '#10b981', label: 'Emerald' }
+                                    ].map(preset => (
+                                        <button
+                                            key={preset.id}
+                                            onClick={() => setBackgroundSettings({
+                                                bgColor: preset.color,
+                                                particleColor: preset.particle
+                                            })}
+                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.bgColor === preset.color ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tile Theme */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 px-1">
+                                    <Layers size={14} className="text-brand-textMuted" />
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Tile Aesthetics</span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {[
+                                        { id: 'onyx', label: 'Onyx' },
+                                        { id: 'slate', label: 'Slate' },
+                                        { id: 'glacier', label: 'Glacier' }
+                                    ].map(theme => (
+                                        <button
+                                            key={theme.id}
+                                            onClick={() => setBackgroundSettings({ tileTheme: theme.id as any })}
+                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.tileTheme === theme.id ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                        >
+                                            {theme.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Elevation */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 px-1">
+                                    <Box size={14} className="text-brand-textMuted" />
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Physics / Elevation</span>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['gentle', 'float', 'lift'].map(level => (
+                                        <button
+                                            key={level}
+                                            onClick={() => setBackgroundSettings({ elevationLevel: level as any })}
+                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.elevationLevel === level ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                        >
+                                            {level}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Particles Toggle */}
+                            <button
+                                onClick={() => setBackgroundSettings({ particlesEnabled: !backgroundSettings.particlesEnabled })}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-float ${backgroundSettings.particlesEnabled ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-layered-sm' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary'}`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Zap size={18} className={backgroundSettings.particlesEnabled ? 'animate-pulse' : ''} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Dynamic Particles</span>
+                                </div>
+                                <div className={`w-10 h-5 rounded-full relative transition-colors ${backgroundSettings.particlesEnabled ? 'bg-brand-accent' : 'bg-slate-700'}`}>
+                                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${backgroundSettings.particlesEnabled ? 'right-1' : 'left-1'}`} />
+                                </div>
+                            </button>
+
+                            {/* Reset Button */}
+                            <button
+                                onClick={resetSettings}
+                                className="w-full py-3 px-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-red-500 hover:border-red-500/50 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Trash2 size={14} />
+                                Reset to Defaults
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Shared Logout Action */}
+                <div className="pt-4 mt-2 border-t border-[var(--color-border-subtle)]">
+                    <button
+                        onClick={() => {
+                            if (window.confirm('Sign out of this class?')) {
+                                sessionStorage.removeItem('studentName');
+                                sessionStorage.removeItem('studentClassId');
+                                onSignOut();
+                                onClose();
+                            }
+                        }}
+                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-xl p-4 flex items-center justify-center gap-3 transition-float button-lift-dynamic border border-red-500/20 shadow-layered-sm font-black uppercase tracking-widest text-xs"
+                    >
+                        <LogOut size={18} />
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </div>
+        </Modal>
     );
+};
 };
 
 export default StudentMenuModal;

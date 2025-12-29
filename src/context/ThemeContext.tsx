@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useClassStore } from '../store/classStore';
+import { useClassStore } from '../store/appSettings';
 import {
     ThemeContext,
     UserRole,

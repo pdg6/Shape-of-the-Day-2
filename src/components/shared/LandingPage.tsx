@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LayoutDashboard, GraduationCap } from 'lucide-react';
 import GoogleSignInButton from './GoogleSignInButton';
+import EmailLoginForm from './EmailLoginForm';
 import JoinRoom from './JoinRoom';
 
 /**
@@ -33,35 +34,35 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                     alt="Shape of the Day"
                     className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-2"
                 />
-                <h1 className="text-2xl md:text-4xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-tight">
+                <h1 className="text-3xl md:text-5xl font-black text-brand-textPrimary tracking-tighter uppercase">
                     Shape of the Day
                 </h1>
-                <p className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-md mx-auto">
+                <p className="text-[10px] font-black text-brand-textMuted uppercase tracking-[0.2em] max-w-md mx-auto">
                     A digital organizer for teachers and students
                 </p>
             </div>
 
-            <div className="w-full max-w-sm bg-brand-lightSurface dark:bg-bg-tile rounded-2xl shadow-layered border border-slate-200 dark:border-white/5 overflow-hidden">
+            <div className="w-full max-w-sm bg-[var(--color-bg-tile)] rounded-2xl shadow-layered border border-[var(--color-border-subtle)] overflow-hidden">
                 {/* Tabs for switching modes */}
-                <div className="relative flex p-1 bg-brand-light dark:bg-brand-dark rounded-md mx-6">
+                <div className="relative flex p-1.5 bg-[var(--color-bg-tile-alt)] rounded-xl mx-6 mt-6 mb-2 border border-[var(--color-border-subtle)]">
                     <div
-                        className={`absolute inset-y-1 w-[calc(50%-4px)] bg-white dark:bg-bg-tile-alt rounded-lg shadow-layered-sm transition-float ${activeTab === 'student' ? 'left-1' : 'left-[calc(50%+4px)]'
+                        className={`absolute inset-y-1.5 w-[calc(50%-6px)] bg-[var(--color-bg-tile)] rounded-lg shadow-layered-sm border border-[var(--color-border-subtle)] transition-float ${activeTab === 'student' ? 'left-1.5' : 'left-[calc(50%+4.5px)]'
                             }`}
                     />
                     <button
                         onClick={() => setActiveTab('student')}
-                        className={`relative flex-1 py-2.5 text-center font-bold text-lg transition-all rounded-md z-10 ${activeTab === 'student'
-                            ? 'text-student-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50'
+                        className={`relative flex-1 py-2 text-center font-black text-xs uppercase tracking-widest transition-all rounded-lg z-10 ${activeTab === 'student'
+                            ? 'text-brand-accent'
+                            : 'text-brand-textMuted hover:text-brand-textSecondary'
                             }`}
                     >
                         Student
                     </button>
                     <button
                         onClick={() => setActiveTab('teacher')}
-                        className={`relative flex-1 py-2.5 text-center font-bold text-lg transition-all rounded-md z-10 ${activeTab === 'teacher'
-                            ? 'text-teacher-accent'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-float'
+                        className={`relative flex-1 py-2 text-center font-black text-xs uppercase tracking-widest transition-all rounded-lg z-10 ${activeTab === 'teacher'
+                            ? 'text-brand-accent'
+                            : 'text-brand-textMuted hover:text-brand-textSecondary transition-float'
                             }`}
                     >
                         Teacher
@@ -72,23 +73,41 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 <div className="pt-4 pb-6 px-6">
                     {activeTab === 'student' ? (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
-                            <div className="text-student-accent">
-                                <GraduationCap className="w-8 h-8" />
+                            <div className="text-brand-accent">
+                                <GraduationCap className="w-10 h-10" />
                             </div>
                             <div>
-                                <p className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary">Join a room to see your daily tasks.</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-textSecondary">Join a room to see your daily tasks.</p>
                             </div>
                             <JoinRoom onJoin={onJoin} />
                         </div>
                     ) : (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="text-teacher-accent">
-                                <LayoutDashboard className="w-8 h-8" />
+                            <div className="text-brand-accent">
+                                <LayoutDashboard className="w-10 h-10" />
                             </div>
                             <div>
-                                <p className="text-base text-brand-textDarkSecondary dark:text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
                             </div>
-                            <GoogleSignInButton onClick={onLogin} />
+                            <div>
+
+                            </div>
+
+                            {/* Auth Options */}
+                            <div className="w-full max-w-[280px] space-y-4">
+                                <GoogleSignInButton onClick={onLogin} />
+
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-[var(--color-border-subtle)]"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                                        <span className="bg-[var(--color-bg-tile)] px-3 text-brand-textMuted">Or continue with</span>
+                                    </div>
+                                </div>
+
+                                <EmailLoginForm />
+                            </div>
                         </div>
                     )}
                 </div>

@@ -83,7 +83,7 @@ export const Modal: React.FC<ModalProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-100 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
             onClick={onClose}
         >
             <div
@@ -91,17 +91,17 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
+                className={`${widthClasses[maxWidth]} w-full bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
                 onClick={e => e.stopPropagation()}
             >
                 {!hideHeader && (
                     <div className="flex items-center justify-between px-6 pt-6 pb-4">
-                        <h2 id={titleId} className="text-fluid-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <h2 id={titleId} className="text-fluid-xl font-bold text-brand-textPrimary">
                             {title}
                         </h2>
                         <button
                             onClick={onClose}
-                            className="p-2 text-brand-textSecondary hover:text-brand-textPrimary rounded-full hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 shadow-none hover:shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none border border-transparent hover:border-slate-200 dark:hover:border-white/10"
+                            className="p-2 text-brand-textSecondary hover:text-brand-textPrimary rounded-full hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic shadow-none hover:shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none border border-transparent hover:border-[var(--color-border-subtle)]"
                             aria-label="Close"
                         >
                             <X className="w-5 h-5" />

@@ -27,8 +27,8 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }
             <button
                 onClick={handleClick}
                 className={`
-                    p-2 rounded-xl text-gray-500 hover:text-brand-accent hover:bg-slate-100 
-                    dark:hover:bg-[#151921] transition-all border border-transparent hover:border-slate-200 dark:hover:border-white/5
+                    p-2 rounded-xl text-brand-textMuted hover:text-brand-accent hover:bg-[var(--color-bg-tile-alt)] 
+                    transition-float border border-transparent hover:border-[var(--color-border-subtle)] button-lift-dynamic
                     ${className}
                 `}
                 title="Help & Tour"
@@ -41,22 +41,22 @@ export const HelpButton: React.FC<HelpButtonProps> = ({ tourId, className = '' }
             </button>
 
             {showMenu && (
-                <div className="absolute right-0 mt-3 w-48 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered-lg border border-slate-200 dark:border-white/5 py-2 z-50">
+                <div className="absolute right-0 mt-3 w-56 bg-[var(--color-bg-tile)] rounded-2xl shadow-layered-lg border border-[var(--color-border-subtle)] py-2.5 z-tooltip animate-in fade-in slide-in-from-top-2 duration-200">
                     <button
                         onClick={() => { startTour('teacher-welcome'); setShowMenu(false); }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="w-full px-4 py-2 text-left text-[10px] font-black uppercase tracking-widest text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary transition-colors"
                     >
                         Take the Tour
                     </button>
                     <button
                         onClick={() => { /* Open docs */ setShowMenu(false); }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="w-full px-4 py-2 text-left text-[10px] font-black uppercase tracking-widest text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary transition-colors"
                     >
                         View Documentation
                     </button>
                     <button
                         onClick={() => { /* Open shortcuts */ setShowMenu(false); }}
-                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="w-full px-4 py-2 text-left text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textSecondary transition-colors"
                     >
                         Keyboard Shortcuts
                     </button>

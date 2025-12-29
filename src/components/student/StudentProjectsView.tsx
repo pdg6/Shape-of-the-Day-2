@@ -34,26 +34,26 @@ const TYPE_CONFIG: Record<ItemType, {
     project: {
         icon: FolderOpen,
         label: 'Project',
-        color: 'text-purple-600 dark:text-purple-400',
-        bgColor: 'bg-purple-100 dark:bg-purple-900/30'
+        color: 'text-purple-500',
+        bgColor: 'bg-purple-500/10'
     },
     assignment: {
         icon: FileText,
         label: 'Assignment',
-        color: 'text-blue-600 dark:text-blue-400',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/30'
+        color: 'text-blue-500',
+        bgColor: 'bg-blue-500/10'
     },
     task: {
         icon: CheckSquare,
         label: 'Task',
-        color: 'text-green-600 dark:text-green-400',
-        bgColor: 'bg-green-100 dark:bg-green-900/30'
+        color: 'text-emerald-500',
+        bgColor: 'bg-emerald-500/10'
     },
     subtask: {
         icon: CheckSquare,
         label: 'Subtask',
-        color: 'text-gray-600 dark:text-gray-400',
-        bgColor: 'bg-gray-100 dark:bg-gray-700/30'
+        color: 'text-brand-textSecondary',
+        bgColor: 'bg-[var(--color-bg-tile-alt)]'
     },
 };
 
@@ -235,8 +235,8 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     ${isParentType && hasChildren ? `
                         rounded-xl overflow-hidden
                         ${isExpanded
-                            ? 'border-2 border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20'
-                            : 'border-2 border-transparent hover:border-gray-600 dark:hover:border-gray-400'}
+                            ? 'border-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]'
+                            : 'border-2 border-transparent hover:border-brand-accent/30'}
                     ` : ''}
                     transition-all duration-200
                 `}
@@ -249,10 +249,10 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                             rounded-lg
                             ${isNested ? 'mx-2 my-1' : ''}
                             border-2 border-transparent
-                            hover:border-gray-600 dark:hover:border-gray-400
-                            hover:bg-gray-50 dark:hover:bg-gray-800/50
+                            hover:border-brand-accent/30
+                            hover:bg-[var(--color-bg-tile-hover)]
                         ` : `
-                            ${isExpanded ? 'bg-white/60 dark:bg-gray-900/40' : ''}
+                            ${isExpanded ? 'bg-[var(--color-bg-tile-hover)]' : ''}
                         `}
                         transition-all duration-200
                     `}
@@ -262,13 +262,13 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     {hasChildren ? (
                         <button
                             onClick={() => toggleExpand(task.id)}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all duration-200"
+                            className="p-1.5 rounded-lg hover:bg-[var(--color-bg-tile-hover)] transition-all duration-200"
                             aria-label={isExpanded ? 'Collapse' : 'Expand'}
                         >
                             {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                <ChevronDown className="w-4 h-4 text-brand-textSecondary" />
                             ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                <ChevronRight className="w-4 h-4 text-brand-textSecondary" />
                             )}
                         </button>
                     ) : (
@@ -283,7 +283,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <span className="font-semibold text-brand-textDarkPrimary dark:text-brand-textPrimary truncate">
+                            <span className="font-bold text-brand-textPrimary truncate">
                                 {task.title}
                             </span>
                             <span className={`text-xs px-2 py-1 rounded-full font-medium ${config.bgColor} ${config.color}`}>
@@ -292,7 +292,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                         </div>
                         {/* Breadcrumb */}
                         {task.pathTitles && task.pathTitles.length > 0 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+                            <div className="text-[10px] font-black text-brand-textMuted uppercase tracking-wider truncate mt-0.5">
                                 {task.pathTitles.join(' → ')}
                             </div>
                         )}
@@ -308,8 +308,8 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                                 className={`
                                     p-2 rounded-xl border transition-all duration-200 text-sm font-medium
                                     ${isImported
-                                        ? 'border-slate-200 dark:border-white/5 bg-gray-100 dark:bg-[#1a1d24] text-gray-400 cursor-not-allowed'
-                                        : 'border-transparent bg-gray-100 dark:bg-[#1a1d24] text-brand-accent hover:border-brand-accent/50 hover:bg-brand-accent/5'
+                                        ? 'border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-brand-textSecondary cursor-not-allowed'
+                                        : 'border-transparent bg-[var(--color-bg-tile-alt)] text-brand-accent hover:border-brand-accent/50 hover:bg-brand-accent/5'
                                     }
                                 `}
                                 title={isImported ? 'Already imported' : 'Add to today'}
@@ -322,7 +322,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                         {hasChildren && isParentType && (
                             <button
                                 onClick={() => importAllChildren(node)}
-                                className="px-3 py-1.5 text-xs font-bold bg-brand-accent text-white rounded-xl border border-transparent hover:border-brand-accent/50 hover:shadow-layered transition-all duration-200 tracking-tight"
+                                className="px-3 py-1.5 text-[10px] font-black bg-brand-accent text-white rounded-xl border border-transparent hover:border-brand-accent/50 hover:shadow-layered transition-all duration-200 tracking-widest uppercase"
                                 title="Import all tasks"
                             >
                                 IMPORT ALL
@@ -335,7 +335,7 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
                 {hasChildren && isExpanded && (
                     <div className={`
                         ${isParentType
-                            ? 'border-t border-slate-200 dark:border-white/5 bg-white/30 dark:bg-[#151921] py-1'
+                            ? 'border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] py-1'
                             : 'pl-6'}
                     `}>
                         {children.map((child, idx) => renderNode(child, `${key}-${idx}`, true))}
@@ -353,10 +353,10 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
 
         return (
             <div className="mb-6">
-                <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-1">
+                <h3 className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-3 px-1">
                     {title}
                 </h3>
-                <div className="bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-layered p-1">
+                <div className="bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden shadow-layered p-1">
                     {nodes.map((node, idx) => renderNode(node, `${title}-${idx}`, false))}
                 </div>
             </div>
@@ -379,21 +379,21 @@ const StudentProjectsView: React.FC<StudentProjectsViewProps> = ({
         <div className="space-y-6">
             {/* Search Bar */}
             <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-textMuted" />
                 <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search projects, assignments, tasks..."
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-[#151921] text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-gray-400 focus:outline-none hover:border-brand-accent/50 focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 transition-all duration-200 shadow-layered-sm"
+                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-brand-textPrimary placeholder-brand-textMuted focus:outline-none hover:border-brand-accent/50 focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 transition-all duration-200 shadow-layered-sm"
                 />
             </div>
 
             {/* Empty State */}
             {isEmpty ? (
-                <div className="text-center py-16 px-6 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
-                    <Inbox className="w-14 h-14 mx-auto text-gray-400 mb-4" />
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary text-base">
+                <div className="text-center py-16 px-6 bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+                    <Inbox className="w-14 h-14 mx-auto text-brand-textSecondary mb-4" />
+                    <p className="text-brand-textSecondary text-base">
                         {searchQuery
                             ? 'No results found for your search.'
                             : 'No projects or assignments available yet.'}

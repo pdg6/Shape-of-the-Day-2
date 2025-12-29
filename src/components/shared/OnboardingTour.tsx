@@ -193,8 +193,8 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
             {/* Tooltip */}
             <div
                 className={`
-                    absolute bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl shadow-layered-lg
-                    border border-slate-200 dark:border-white/10 p-5 w-80 max-w-[90vw]
+                    absolute bg-[var(--color-bg-tile)] rounded-2xl shadow-layered-lg
+                    border border-[var(--color-border-subtle)] p-6 w-80 max-w-[90vw] animate-in fade-in zoom-in-95 duration-200
                     transition-all duration-300 ease-out
                     ${isCentered ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}
                 `}
@@ -210,7 +210,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="absolute top-4 right-4 p-1.5 text-brand-textMuted hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] rounded-lg transition-colors"
                     aria-label="Close tour"
                 >
                     <X className="w-4 h-4" />
@@ -221,63 +221,65 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                     {step.icon && (
                         <div className="mb-3 text-brand-accent">{step.icon}</div>
                     )}
-                    <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2">
-                        {step.title}
-                    </h3>
-                    <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary mb-4">
-                        {step.content}
-                    </p>
-                </div>
-
-                {/* Progress bar (Goal-Gradient Effect) */}
-                <div className="mb-4">
-                    <div className="flex justify-between text-xs text-gray-500 mb-1.5 font-medium">
-                        <span>Step {currentStep + 1} of {totalSteps}</span>
-                        <span>{Math.round(progress)}% complete</span>
+                    <div className="mb-4">
+                        <h3 className="text-lg font-black text-brand-textPrimary mb-1 uppercase tracking-tight">
+                            {step.title}
+                        </h3>
+                        <p className="text-xs text-brand-textSecondary leading-relaxed">
+                            {step.content}
+                        </p>
                     </div>
-                    <div className="h-1.5 bg-slate-200 dark:bg-[#151921] rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-brand-accent transition-all duration-300 ease-out rounded-full"
-                            style={{ width: `${progress}%` }}
-                        />
+
+                    {/* Progress bar (Goal-Gradient Effect) */}
+                    <div className="mb-6 space-y-2">
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-brand-textMuted px-0.5">
+                            <span>Progress</span>
+                            <span>{currentStep + 1} / {totalSteps}</span>
+                        </div>
+                        <div className="h-1.5 bg-[var(--color-bg-tile-alt)] rounded-full border border-[var(--color-border-subtle)] overflow-hidden">
+                            <div
+                                className="h-full bg-brand-accent transition-all duration-500"
+                                style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
+                            />
+                        </div>
                     </div>
-                </div>
 
-                {/* Navigation */}
-                <div className="flex items-center justify-between gap-3">
-                    <button
-                        onClick={onSkip}
-                        className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                    >
-                        Skip tour
-                    </button>
-
-                    <div className="flex gap-2">
-                        {!isFirstStep && (
-                            <button
-                                onClick={onPrev}
-                                className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-brand-accent hover:bg-brand-accent/5 rounded-xl transition-all border border-transparent hover:border-brand-accent/30"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                                BACK
-                            </button>
-                        )}
+                    {/* Navigation */}
+                    <div className="flex items-center justify-between gap-3">
                         <button
-                            onClick={onNext}
-                            className="flex items-center gap-1 px-4 py-2 text-sm font-bold bg-brand-accent text-white rounded-xl hover:bg-brand-accent/90 transition-all active:scale-[0.98] shadow-layered-sm tracking-tight"
+                            onClick={onClose}
+                            className="text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-brand-textSecondary transition-colors"
                         >
-                            {isLastStep ? (
-                                <>
-                                    <Check className="w-4 h-4" />
-                                    DONE
-                                </>
-                            ) : (
-                                <>
-                                    NEXT
-                                    <ChevronRight className="w-4 h-4" />
-                                </>
-                            )}
+                            Skip tour
                         </button>
+
+                        <div className="flex gap-2">
+                            {!isFirstStep && (
+                                <button
+                                    onClick={onPrev}
+                                    className="flex items-center gap-1 px-3 py-2 text-sm font-bold text-brand-accent hover:bg-brand-accent/5 rounded-xl transition-all border border-transparent hover:border-brand-accent/30"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    BACK
+                                </button>
+                            )}
+                            <button
+                                onClick={onNext}
+                                className="flex items-center gap-1 px-4 py-2 text-sm font-bold bg-brand-accent text-white rounded-xl hover:bg-brand-accent/90 transition-all active:scale-[0.98] shadow-layered-sm tracking-tight"
+                            >
+                                {isLastStep ? (
+                                    <>
+                                        <Check className="w-4 h-4" />
+                                        DONE
+                                    </>
+                                ) : (
+                                    <>
+                                        NEXT
+                                        <ChevronRight className="w-4 h-4" />
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

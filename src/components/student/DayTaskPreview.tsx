@@ -52,16 +52,16 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
     // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
-            <div className="bg-brand-lightSurface dark:bg-[#1a1d24] p-6 rounded-2xl border border-dashed border-slate-200 dark:border-white/10 text-center mb-6 shadow-layered-sm">
-                <p className="text-gray-400 dark:text-gray-500 font-medium">No tasks scheduled for this day.</p>
+            <div className="bg-[var(--color-bg-tile)] p-6 rounded-2xl border border-dashed border-[var(--color-border-subtle)] text-center mb-6 shadow-layered-sm">
+                <p className="text-brand-textSecondary font-medium">No tasks scheduled for this day.</p>
             </div>
         );
     }
 
     return (
         <div className="mb-6 w-full max-w-3xl mx-auto">
-            <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+            <div className="flex items-center justify-between mb-4 px-1">
+                <h3 className="font-bold text-brand-textPrimary">
                     Tasks for {new Date(date).toLocaleDateString()}
                 </h3>
                 {!hideImportButtons && (
@@ -74,14 +74,14 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     ) : (
                         <button
                             onClick={onImport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all bg-gray-100 dark:bg-[#151921] text-gray-600 dark:text-gray-400 border border-slate-200 dark:border-white/10 hover:border-brand-accent/30 hover:shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent active:bg-brand-accent/10 font-bold text-sm tracking-tight"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border border-[var(--color-border-subtle)] hover:border-brand-accent/50 hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary transition-float button-lift-dynamic font-bold text-xs uppercase tracking-widest shadow-layered-sm"
                         >
                             <Download className="w-4 h-4" />
                             <span className="hidden sm:inline">
-                                {someTasksImported ? 'IMPORT REMAINING' : 'IMPORT ALL'}
+                                {someTasksImported ? 'Import Remaining' : 'Import All'}
                             </span>
                             <span className="sm:hidden">
-                                {someTasksImported ? 'REST' : 'ALL'}
+                                {someTasksImported ? 'Remaining' : 'All'}
                             </span>
                         </button>
                     )
@@ -97,13 +97,13 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                             case 'stuck':
                             case 'question':
                             case 'help':
-                                return 'border-amber-300 dark:border-amber-800';
+                                return 'border-status-stuck/30';
                             case 'in_progress':
-                                return 'border-emerald-300 dark:border-emerald-800';
+                                return 'border-status-progress/30';
                             case 'done':
-                                return 'border-blue-300 dark:border-blue-800';
+                                return 'border-status-complete/30';
                             default: // 'todo'
-                                return 'border-gray-200 dark:border-gray-700';
+                                return 'border-[var(--color-border-subtle)]';
                         }
                     };
 
@@ -112,7 +112,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     return (
                         <div
                             key={task.id}
-                            className={`relative bg-brand-lightSurface dark:bg-brand-darkSurface p-4 rounded-lg border-2 ${borderClass} shadow-layered-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-layered hover:brightness-95 dark:hover:brightness-110`}
+                            className={`relative bg-[var(--color-bg-tile)] p-4 rounded-xl border border-[var(--color-border-subtle)] ${borderClass} shadow-layered-sm transition-float lift-dynamic hover:shadow-layered hover:border-brand-accent/50`}
                         >
                             {/* Import Button - Top Right */}
                             {onImportTask && !hideImportButtons && (
@@ -127,7 +127,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                                 ) : (
                                     <button
                                         onClick={() => onImportTask(task)}
-                                        className="absolute top-3 right-3 p-2 rounded-lg transition-all bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-2 border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-accent focus:border-brand-accent active:bg-brand-accent/10 active:text-brand-accent"
+                                        className="absolute top-3 right-3 p-2 rounded-lg transition-float bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border border-[var(--color-border-subtle)] hover:text-brand-accent hover:border-brand-accent/50 button-lift-dynamic"
                                         title="Import this task"
                                         aria-label={`Import ${task.title}`}
                                     >
@@ -139,19 +139,19 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                             {/* Task Content */}
                             <div className="pr-12">
                                 {/* Title */}
-                                <h4 className="font-bold text-base text-gray-600 dark:text-gray-400 mb-2">
+                                <h4 className="font-bold text-base text-brand-textPrimary mb-2">
                                     {task.title}
                                 </h4>
 
                                 {/* Date Information */}
-                                <div className="flex flex-wrap gap-3 text-xs">
-                                    <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-500">
-                                        <span className="font-medium">Assigned:</span>
+                                <div className="flex flex-wrap gap-3 text-[10px] font-black uppercase tracking-wider">
+                                    <div className="flex items-center gap-1.5 text-brand-textSecondary">
+                                        <span className="text-brand-textMuted lowercase font-bold">Assigned:</span>
                                         <span>{formatDate(date)}</span>
                                     </div>
                                     {task.dueDate && (
-                                        <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-500">
-                                            <span className="font-medium">Due:</span>
+                                        <div className="flex items-center gap-1.5 text-brand-textSecondary">
+                                            <span className="text-brand-textMuted lowercase font-bold">Due:</span>
                                             <span>{formatDate(task.dueDate)}</span>
                                         </div>
                                     )}

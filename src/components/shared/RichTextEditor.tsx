@@ -43,8 +43,8 @@ const ToolbarButton = ({ onClick, isActive, disabled, children, title }: Toolbar
         className={`
             p-1.5 rounded transition-colors
             ${isActive
-                ? 'bg-brand-accent/20 text-brand-accent'
-                : 'text-slate-500 hover:text-slate-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}
+                ? 'bg-[var(--color-bg-tile-hover)] text-brand-textPrimary'
+                : 'text-brand-textMuted hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
     >
@@ -75,7 +75,7 @@ export function RichTextEditor({
         content: value,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[160px] px-4 pt-4 pb-4 caret-brand-textPrimary',
+                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[160px] px-5 py-4 caret-brand-accent text-brand-textPrimary',
             },
         },
         onUpdate: ({ editor }) => {
@@ -150,7 +150,7 @@ export function RichTextEditor({
 
     return (
         <div
-            className={`rich-text-editor flex flex-col h-full relative ${className}`}
+            className={`flex flex-col rounded-2xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
@@ -158,7 +158,7 @@ export function RichTextEditor({
             onPaste={handlePaste}
         >
             {/* Toolbar */}
-            <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-white/5 background-glass dark:bg-white/5 rounded-t-md">
+            <div className="flex flex-wrap items-center gap-1 p-2 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] rounded-t-2xl">
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     isActive={editor.isActive('bold')}
@@ -174,7 +174,7 @@ export function RichTextEditor({
                     <Italic size={16} />
                 </ToolbarButton>
 
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-1" />
+                <div className="w-px h-4 bg-[var(--color-border-subtle)] mx-1" />
 
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -198,7 +198,7 @@ export function RichTextEditor({
                     <ListOrdered size={16} />
                 </ToolbarButton>
 
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-500 mx-1" />
+                <div className="w-px h-4 bg-[var(--color-border-subtle)] mx-1" />
 
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -248,7 +248,7 @@ export function RichTextEditor({
             {/* Drag-and-Drop Overlay */}
             {isDragging && (
                 <div className="absolute inset-0 bg-brand-accent/5 border-2 border-dashed border-brand-accent rounded-md flex items-center justify-center z-10 pointer-events-none">
-                    <div className="text-brand-accent font-medium text-sm bg-white dark:bg-gray-900 px-4 py-2 rounded-md shadow-lg">
+                    <div className="text-brand-accent font-black text-[10px] uppercase tracking-widest bg-[var(--color-bg-tile)] px-4 py-2 rounded-lg border border-brand-accent/20 shadow-layered-lg">
                         Drop files here
                     </div>
                 </div>

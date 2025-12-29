@@ -45,6 +45,7 @@
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.9.6",
     "recharts": "^3.5.0",
+    "ripgrep-node": "^1.0.0",
     "serve": "^14.2.5",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",

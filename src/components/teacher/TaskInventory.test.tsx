@@ -19,7 +19,7 @@ jest.mock('firebase/firestore', () => ({
   serverTimestamp: jest.fn(),
 }));
 
-jest.mock('../../store/classStore', () => ({
+jest.mock('../../store/appSettings', () => ({
   useClassStore: jest.fn(() => ({
     classrooms: [],
   })),

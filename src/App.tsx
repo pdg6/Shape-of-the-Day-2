@@ -3,11 +3,11 @@ import { Toaster } from 'react-hot-toast';
 import toast from 'react-hot-toast';
 
 import LandingPage from './components/shared/LandingPage';
-import GravityBackground from './components/shared/GravityBackground';
+import SettingsManager from './components/shared/SettingsManager';
 import StudentNameModal from './components/student/StudentNameModal';
 import { db } from './firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { useClassStore } from './store/classStore';
+import { useClassStore } from './store/appSettings';
 import { Classroom } from './types';
 import { useAuth } from './context/auth-context';
 import { ThemeProvider, UserRole } from './context/ThemeContext';
@@ -178,7 +178,7 @@ const App = () => {
     return (
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
             <TourProvider>
-                <GravityBackground />
+                <SettingsManager />
                 <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent transition-colors duration-200">
                     {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
                     <a href="#main-content" className="skip-link">

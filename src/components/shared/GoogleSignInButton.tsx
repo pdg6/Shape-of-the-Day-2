@@ -32,16 +32,10 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         <button
             onClick={onClick}
             disabled={isLoading || disabled}
-            // Tailwind classes for styling:
-            // flex/items-center/justify-center: Centers content
-            // w-full: Takes full width of container
-            // bg-brand-darkSurface: Uses our custom theme color
-            // transition-all: Smoothly animates hover/focus states
-            className="flex items-center justify-center gap-3 w-full bg-brand-lightSurface dark:bg-bg-tile text-brand-textDarkPrimary dark:text-brand-textPrimary text-base font-bold py-2.5 px-4 rounded-xl border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/5 hover:border-slate-300 dark:hover:border-white/10 focus:outline-none shadow-layered-sm transition-float hover:shadow-layered-lg hover:-translate-y-0.5 min-h-[56px] disabled:opacity-70 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-3 w-full bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-sm font-black uppercase tracking-widest py-3.5 px-6 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 outline-none shadow-layered-sm transition-float hover:shadow-layered-lg button-lift-dynamic min-h-[56px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            {/* Conditional rendering: Show spinner if loading, otherwise show Google logo */}
             {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
+                <Loader2 className="w-5 h-5 animate-spin text-brand-accent" />
             ) : (
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path

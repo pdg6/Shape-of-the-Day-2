@@ -91,22 +91,22 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
     };
 
     return (
-        <div className="card-base p-4 mb-6 transition-colors">
-            <div className="flex items-center justify-between mb-4 px-7">
-                <h2 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+        <div className="levitated-tile p-5 rounded-2xl">
+            <div className="flex items-center justify-between mb-4 px-2">
+                <h2 className="text-lg font-bold text-brand-textPrimary">
                     {new Date().toLocaleString('default', { month: 'long' })} Schedule
                 </h2>
                 <div className="flex gap-2">
                     <button
                         onClick={() => scroll('left')}
-                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
                         aria-label="Previous Month"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => scroll('right')}
-                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
                         aria-label="Next Month"
                     >
                         <ChevronRight className="w-5 h-5" />
@@ -134,17 +134,17 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-xl border transition-all duration-300 transition-float hover:-translate-y-0.5 outline-none
+                                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-xl border transition-all duration-300 transition-float button-lift-dynamic outline-none
                                 focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
                                 ${isSelected
-                                    ? 'bg-brand-lightSurface dark:bg-brand-accent/10 border-brand-accent shadow-layered-sm scale-105 z-10'
-                                    : 'bg-brand-lightSurface dark:bg-[#1a1d24] text-brand-textDarkSecondary dark:text-brand-textSecondary border-transparent hover:border-slate-300 dark:hover:border-white/10 shadow-none hover:shadow-layered-sm'}
+                                    ? 'bg-brand-accent/10 border-brand-accent shadow-layered-sm scale-105 z-10'
+                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-transparent hover:border-[var(--color-border-subtle)] shadow-none hover:shadow-layered-sm'}
                             `}
                         >
-                            <span className={`text-xs font-medium mb-1 text-brand-textDarkSecondary dark:text-brand-textSecondary ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>
+                            <span className={`text-xs font-medium mb-1 text-brand-textSecondary ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>
                                 {day}
                             </span>
-                            <span className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            <span className="text-xl font-bold text-brand-textPrimary">
                                 {date}
                             </span>
                         </button>
@@ -156,3 +156,4 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
 };
 
 export default MiniCalendar;
+```

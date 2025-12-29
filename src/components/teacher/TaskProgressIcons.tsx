@@ -40,27 +40,27 @@ const getStatusColors = (status: string | undefined): { bg: string; text: string
     switch (normalizedStatus) {
         case 'help':
             return {
-                bg: 'bg-red-500',
+                bg: 'bg-[var(--color-status-stuck)]',
                 text: 'text-white',
                 border: 'border-red-600'
             };
         case 'in_progress':
             return {
-                bg: 'bg-emerald-500',
+                bg: 'bg-[var(--color-status-progress)]',
                 text: 'text-white',
                 border: 'border-emerald-600'
             };
         case 'done':
             return {
-                bg: 'bg-blue-500',
+                bg: 'bg-[var(--color-status-complete)]',
                 text: 'text-white',
                 border: 'border-blue-600'
             };
         default: // todo, draft, undefined
             return {
-                bg: 'bg-slate-200 dark:bg-[#151921]',
-                text: 'text-gray-500 dark:text-gray-400',
-                border: 'border-gray-300 dark:border-gray-600'
+                bg: 'bg-[var(--color-bg-tile-alt)]',
+                text: 'text-brand-textSecondary',
+                border: 'border-[var(--color-border-subtle)]'
             };
     }
 };
@@ -102,7 +102,7 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
 
     if (totalTasks === 0) {
         return (
-            <span className="text-xs text-gray-400 italic">No tasks</span>
+            <span className="text-xs text-brand-textMuted italic">No tasks</span>
         );
     }
 
@@ -114,8 +114,8 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
                     onClick={scrollLeft}
                     disabled={scrollPosition === 0}
                     className={`p-1 rounded transition-colors ${scrollPosition === 0
-                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? 'text-brand-textSecondary/30 cursor-not-allowed'
+                        : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]'
                         }`}
                     aria-label="Scroll left"
                 >
@@ -159,15 +159,15 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
                                 className="
                                     absolute bottom-full left-1/2 -translate-x-1/2 mb-2
                                     px-2 py-1
-                                    bg-gray-900 dark:bg-gray-100
-                                    text-white dark:text-gray-900
+                                    bg-[var(--color-bg-tile-alt)]
+                                    text-brand-textPrimary
                                     text-xs font-medium
-                                    rounded-md shadow-lg
+                                    rounded-md shadow-lg border border-[var(--color-border-subtle)]
                                     whitespace-nowrap
                                     opacity-0 invisible
                                     group-hover:opacity-100 group-hover:visible
                                     transition-all duration-200
-                                    z-tooltip
+                                    z-50
                                     pointer-events-none
                                     max-w-[200px] truncate
                                 "
@@ -178,7 +178,7 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
                                     className="
                                         absolute top-full left-1/2 -translate-x-1/2
                                         border-4 border-transparent
-                                        border-t-gray-900 dark:border-t-gray-100
+                                        border-t-[var(--color-bg-tile-alt)]
                                     "
                                 />
                             </div>
@@ -193,8 +193,8 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
                     onClick={scrollRight}
                     disabled={scrollPosition >= maxScrollPosition}
                     className={`p-1 rounded transition-colors ${scrollPosition >= maxScrollPosition
-                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'
+                        ? 'text-brand-textSecondary/30 cursor-not-allowed'
+                        : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]'
                         }`}
                     aria-label="Scroll right"
                 >
@@ -204,7 +204,7 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
 
             {/* Scroll indicator (if scrollable) */}
             {showScrollButtons && (
-                <span className="text-xs text-gray-400 ml-1">
+                <span className="text-xs text-brand-textMuted ml-1">
                     {scrollPosition + 1}-{Math.min(scrollPosition + maxVisible, totalTasks)}/{totalTasks}
                 </span>
             )}

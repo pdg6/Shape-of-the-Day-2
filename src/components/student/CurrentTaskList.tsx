@@ -30,10 +30,10 @@ const STATUS_ACTIONS: StatusAction[] = [
         id: 'todo',
         label: 'To Do',
         icon: RotateCcw,
-        activeColor: 'text-gray-500',
-        underlineColor: 'decoration-gray-300',
-        hover: 'hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-[#151921]',
-        borderColor: 'border-slate-200 dark:border-white/5'
+        activeColor: 'text-brand-textSecondary',
+        underlineColor: 'decoration-brand-textMuted',
+        hover: 'hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]',
+        borderColor: 'border-[var(--color-border-subtle)]'
     },
     {
         id: 'help',
@@ -192,26 +192,26 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="help-modal-title"
-                className="bg-brand-lightSurface dark:bg-bg-tile w-full max-w-md rounded-2xl shadow-layered-lg border border-status-question transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
+                className="bg-[var(--color-bg-tile)] w-full max-w-md rounded-2xl shadow-layered-lg border border-[var(--color-border-subtle)] transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-start justify-between p-4 border-b border-gray-100 dark:border-white/5">
+                <div className="flex items-start justify-between p-4 border-b border-[var(--color-border-subtle)]">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <HelpCircle className="w-5 h-5 text-status-question" />
-                            <h2 id="help-modal-title" className="font-bold text-lg text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary">
                                 Need Help?
                             </h2>
                         </div>
-                        <p className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                        <p className="text-sm text-brand-textSecondary">
                             {task.title}
                         </p>
                     </div>
                     <button
                         ref={closeButtonRef}
                         onClick={onClose}
-                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                        className="p-1 text-brand-textMuted hover:text-brand-textPrimary transition-colors"
                         aria-label="Close"
                     >
                         <X className="w-5 h-5" />
@@ -220,15 +220,15 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
 
                 {/* Previous Questions */}
                 {(previousQuestions.length > 0 || submittedQuestions.length > 0) && (
-                    <div className="px-4 pt-3 max-h-32 overflow-y-auto border-b border-gray-100 dark:border-gray-800">
+                    <div className="px-4 pt-3 max-h-32 overflow-y-auto border-b border-[var(--color-border-subtle)]">
                         <div className="flex items-center gap-2 mb-2">
-                            <MessageCircle size={14} className="text-gray-400" />
-                            <span className="text-xs font-medium text-gray-500 uppercase">Previous Requests</span>
+                            <MessageCircle size={14} className="text-brand-textMuted" />
+                            <span className="text-xs font-black text-brand-textMuted uppercase">Previous Requests</span>
                         </div>
                         <div className="space-y-2 pb-3">
                             {previousQuestions.map((q, idx) => (
-                                <div key={q.id || idx} className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
-                                    <span className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                                <div key={q.id || idx} className="text-xs bg-[var(--color-bg-tile-alt)] p-2 rounded-lg border border-[var(--color-border-subtle)]">
+                                    <span className="text-brand-textSecondary">
                                         "{q.question}"
                                     </span>
                                     {q.resolved && q.teacherResponse && (
@@ -239,8 +239,8 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                                 </div>
                             ))}
                             {submittedQuestions.map((q, idx) => (
-                                <div key={`new-${idx}`} className="text-xs bg-green-50 dark:bg-green-900/20 p-2 rounded-lg border border-green-200 dark:border-green-800">
-                                    <span className="text-green-700 dark:text-green-400">
+                                <div key={`new-${idx}`} className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                                    <span className="text-emerald-500">
                                         âœ“ "{q}" (just submitted)
                                     </span>
                                 </div>
@@ -251,7 +251,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
 
                 {/* Pre-defined Options */}
                 <div className="px-4 pt-4">
-                    <p className="text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2">
+                    <p className="text-sm font-bold text-brand-textPrimary mb-2">
                         What kind of help do you need?
                     </p>
                     <div className="flex flex-wrap gap-2">
@@ -259,9 +259,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                             <button
                                 key={option.id}
                                 onClick={() => handleOptionSelect(option)}
-                                className={`px-3 py-1.5 rounded-full text-sm font-medium border-2 transition-all ${selectedOption === option.id
+                                className={`px-3 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${selectedOption === option.id
                                     ? 'bg-status-question/10 text-status-question border-status-question'
-                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:border-status-question/50'
+                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:border-status-question/50'
                                     }`}
                             >
                                 {option.label}
@@ -272,11 +272,11 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
 
                 {/* Content */}
                 <div className="p-4 flex-1 overflow-y-auto">
-                    <label className="block text-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">
+                    <label className="block text-sm font-bold text-brand-textPrimary mb-1">
                         Tell your teacher more:
                     </label>
                     {/* PRIVACY: Teacher visibility warning */}
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mb-2 flex items-center gap-1">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-status-stuck mb-2 flex items-center gap-1">
                         <span>âš ï¸</span>
                         <span>Your teacher will see this message</span>
                     </p>
@@ -288,7 +288,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                             maxLength={maxChars}
                             autoComplete="off"
                             spellCheck={true}
-                            className="w-full h-24 p-3 rounded-lg bg-brand-light dark:bg-brand-dark border-2 border-gray-200 dark:border-gray-700 text-brand-textDarkPrimary dark:text-brand-textPrimary focus:ring-2 focus:ring-offset-2 focus:ring-status-question dark:focus:ring-offset-brand-darkSurface focus:border-status-question resize-none transition-all outline-none"
+                            className="w-full h-24 p-3 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
                             autoFocus
                             data-testid="help-input"
                         />
@@ -299,17 +299,17 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-between gap-3">
+                <div className="p-4 border-t border-[var(--color-border-subtle)] flex justify-between gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-brand-light dark:bg-brand-dark hover:bg-gray-100 dark:hover:bg-gray-800 text-brand-textDarkPrimary dark:text-brand-textPrimary rounded-lg text-sm font-medium transition-colors"
+                        className="px-4 py-2 bg-[var(--color-bg-tile-alt)] hover:bg-[var(--color-bg-tile-hover)] text-brand-textPrimary rounded-xl text-sm font-bold transition-float button-lift-dynamic border border-[var(--color-border-subtle)] shadow-layered-sm"
                     >
                         Close
                     </button>
                     <button
                         onClick={handleSubmitHelp}
                         disabled={!comment.trim() || isSubmitting}
-                        className="flex items-center gap-2 px-4 py-2 bg-status-question hover:bg-status-question/90 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white disabled:text-gray-500 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed"
+                        className="flex items-center gap-2 px-4 py-2 bg-status-question hover:bg-status-question/90 disabled:bg-[var(--color-bg-tile-alt)] text-white disabled:text-brand-textMuted rounded-lg text-sm font-bold transition-colors disabled:cursor-not-allowed uppercase tracking-wider"
                         data-testid="submit-help-btn"
                     >
                         {isSubmitting ? (
@@ -505,9 +505,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
 
     return (
         <div
-            className={`group relative bg-brand-lightSurface dark:bg-bg-tile 
-                rounded-2xl border border-slate-200 dark:border-white/5 
-                hover:border-brand-accent/50 shadow-layered lift-hover
+            className={`group relative bg-[var(--color-bg-tile)] 
+                rounded-2xl border border-[var(--color-border-subtle)] 
+                hover:border-brand-accent/50 shadow-layered lift-dynamic
                 pt-1.5 pb-4 px-5
                 transition-all duration-300
                 hover:shadow-layered-lg select-none
@@ -530,12 +530,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                 {/* Text Group - number and title only (faded when done) */}
                 <div className={`flex items-baseline gap-2 flex-1 min-w-0 ${isDone ? 'opacity-60' : ''}`}>
                     {/* Task Number - underlined with status color, positioned up 4px */}
-                    <span className={`text-sm font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary shrink-0 underline decoration-2 underline-offset-[3px] relative -top-1 ${activeAction.underlineColor}`}>
+                    <span className={`text-sm font-bold text-brand-textPrimary shrink-0 underline decoration-2 underline-offset-[3px] relative -top-1 ${activeAction.underlineColor}`}>
                         {hierarchicalNumber}
                     </span>
 
                     {/* Title - matching ShapeOfDay styling */}
-                    <h3 className={`text-xl font-black leading-tight truncate flex-1 min-w-0 ${isDone ? 'text-gray-500 line-through decoration-2' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                    <h3 className={`text-xl font-black leading-tight truncate flex-1 min-w-0 ${isDone ? 'text-brand-textMuted line-through decoration-2' : 'text-brand-textPrimary'}`}>
                         {task.title}
                     </h3>
                 </div>
@@ -567,7 +567,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                 >
                     {/* Date (if exists) */}
                     {(assignedDate || task.dueDate) && (
-                        <span className={`text-sm text-gray-400 dark:text-gray-500 font-semibold ${isDone ? 'opacity-60' : ''}`}>
+                        <span className={`text-sm text-brand-textSecondary font-semibold ${isDone ? 'opacity-60' : ''}`}>
                             {formatDateRange(assignedDate, task.dueDate)}
                         </span>
                     )}
@@ -587,7 +587,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                 const getHighlightStyle = () => {
                                     if (!isHighlighted) return '';
                                     switch (action.id) {
-                                        case 'todo': return 'ring-2 ring-gray-400 bg-gray-100 dark:bg-gray-700';
+                                        case 'todo': return 'ring-2 ring-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]';
                                         case 'help': return 'ring-2 ring-status-stuck bg-status-stuck/20';
                                         case 'in_progress': return 'ring-2 ring-status-progress bg-status-progress/20';
                                         case 'done': return 'ring-2 ring-status-complete bg-status-complete/20';
@@ -604,11 +604,11 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                         }}
                                         title={action.label}
                                         aria-label={action.label}
-                                        className={`transition-float hover:-translate-y-0.5
+                                        className={`transition-float button-lift-dynamic
                                             p-2 rounded-xl flex items-center justify-center border shadow-layered-sm focus:outline-none min-w-[36px] min-h-[36px]
                                             ${isActive
-                                                ? `${action.activeColor} bg-white dark:bg-[#1a1d24] border-slate-200 dark:border-white/10`
-                                                : `text-gray-400 dark:text-gray-500 bg-transparent border-transparent hover:bg-white dark:hover:bg-white/5 hover:border-slate-200 dark:hover:border-white/10 shadow-none hover:shadow-layered-sm`
+                                                ? `${action.activeColor} bg-[var(--color-bg-tile)] border-[var(--color-border-strong)]`
+                                                : `text-brand-textSecondary bg-transparent border-transparent hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-subtle)] shadow-none hover:shadow-layered-sm`
                                             }
                                             ${isHighlighted ? action.activeColor : ''}
                                             ${getHighlightStyle()}`}
@@ -631,13 +631,13 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                     title="To Do - Click to change status"
                                     aria-label="Current status: To Do. Click to change."
                                     className="px-3 h-7 rounded-md transition-float
-                                        bg-gray-500 dark:bg-gray-800/50
-                                        border-2 border-gray-600 dark:border-gray-500
-                                        text-white font-semibold text-sm
-                                        hover:bg-gray-600 dark:hover:bg-gray-700/50
-                                        focus:outline-none focus:ring-2 focus:ring-gray-400/50
+                                        bg-[var(--color-bg-tile-alt)] text-brand-textSecondary
+                                        border border-[var(--color-border-subtle)]
+                                        font-bold text-sm
+                                        hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-strong)] hover:text-brand-textPrimary
+                                        focus:outline-none focus:ring-2 focus:ring-brand-accent/20
                                         flex items-center justify-center
-                                        shadow-sm shadow-layered-sm"
+                                        shadow-layered-sm button-lift-dynamic"
                                 >
                                     To Do
                                 </button>
@@ -678,10 +678,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                 key={`desc-${task.id}-${isExpanded}`}
                                 html={task.description}
                                 isExpanded={isExpanded}
-                                className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary"
+                                className="text-sm text-brand-textSecondary"
                             />
                         ) : (
-                            <p className={`text-sm leading-relaxed text-brand-textDarkSecondary dark:text-brand-textSecondary whitespace-pre-wrap ${!isExpanded ? 'line-clamp-2' : ''}`}>
+                            <p className={`text-sm leading-relaxed text-brand-textSecondary whitespace-pre-wrap ${!isExpanded ? 'line-clamp-2' : ''}`}>
                                 {task.description}
                             </p>
                         )}
@@ -692,7 +692,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
             {/* Comment/Help Request - Only when expanded */}
             {isExpanded && task.comment && (
                 <div className={`mt-3 ${isDone ? 'opacity-60' : ''}`}>
-                    <div className="text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary italic bg-status-stuck/10 p-3 rounded-lg border border-status-stuck/20 flex items-start gap-2">
+                    <div className="text-xs text-brand-textSecondary italic bg-status-stuck/10 p-3 rounded-xl border border-status-stuck/20 flex items-start gap-2">
                         <HelpCircle size={14} className="text-status-stuck shrink-0 mt-0.5" />
                         <span>"{task.comment}"</span>
                     </div>
@@ -701,8 +701,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
 
             {/* Resources Section - Only when expanded */}
             {hasResources && isExpanded && (
-                <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
-                    <p className="text-xs font-medium text-gray-400 uppercase mb-2">Resources</p>
+                <div className="mt-4 pt-3 border-t border-[var(--color-border-subtle)]">
+                    <p className="text-[10px] font-black text-brand-textMuted uppercase mb-2">Resources</p>
                     <div className="flex flex-wrap items-center gap-2">
                         {/* Image Thumbnails */}
                         {imageAttachments.map((img) => (
@@ -718,7 +718,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                 <img
                                     src={img.url}
                                     alt={img.filename}
-                                    className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-brand-accent transition-colors"
+                                    className="w-16 h-16 object-cover rounded-xl border border-[var(--color-border-subtle)] hover:border-brand-accent transition-colors"
                                     loading="lazy"
                                 />
                             </a>
@@ -739,7 +739,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <ExternalLink size={14} className="text-brand-accent shrink-0" />
-                                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[120px]">
+                                    <span className="font-bold text-brand-textPrimary truncate max-w-[120px]">
                                         {link.title || getUrlDomain(link.url)}
                                     </span>
                                 </a>
@@ -756,7 +756,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <ExternalLink size={14} className="text-brand-accent shrink-0" />
-                                <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary truncate max-w-[120px]">
+                                <span className="font-bold text-brand-textPrimary truncate max-w-[120px]">
                                     {task.linkTitle || getUrlDomain(task.linkURL)}
                                 </span>
                             </a>
@@ -772,14 +772,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                                     href={attachment.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg
-                                                bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
-                                                text-sm font-medium hover:border-brand-accent transition-colors"
+                                    className="flex items-center gap-2 px-3 py-2 rounded-xl
+                                                bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)]
+                                                text-sm font-bold hover:border-brand-accent transition-float button-lift-dynamic shadow-layered-sm"
                                     title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <FileIcon size={14} className={`shrink-0 ${iconColor}`} />
-                                    <span className="truncate max-w-[100px] text-gray-700 dark:text-gray-300">{attachment.filename}</span>
+                                    <span className="truncate max-w-[100px] text-brand-textPrimary">{attachment.filename}</span>
                                 </a>
                             );
                         })}
@@ -795,7 +795,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                             e.stopPropagation();
                             onToggleExpand();
                         }}
-                        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-[var(--color-bg-tile-hover)] transition-colors"
                         aria-label={isExpanded ? 'Collapse' : 'Expand'}
                         title={isExpanded ? 'Show less' : 'Show more'}
                     >
@@ -910,12 +910,12 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
 
     if (tasks.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 w-full text-center shadow-layered-sm">
-                <div className="w-16 h-16 bg-brand-light dark:bg-brand-dark rounded-full flex items-center justify-center mb-4">
-                    <CheckCircle className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+            <div className="flex flex-col items-center justify-center py-16 bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] w-full text-center shadow-layered-sm">
+                <div className="w-16 h-16 bg-[var(--color-bg-tile-alt)] rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle className="w-8 h-8 text-brand-textMuted" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">All Caught Up!</h3>
-                <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary max-w-xs mx-auto">
+                <h3 className="text-lg font-black text-brand-textPrimary mb-1 uppercase tracking-tight">All Caught Up!</h3>
+                <p className="text-brand-textSecondary max-w-xs mx-auto text-sm">
                     You have no tasks for today. Enjoy your free time or check upcoming days.
                 </p>
             </div>

@@ -42,23 +42,23 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 
     const variantClasses = {
         default: 'bg-brand-accent',
-        success: isComplete ? 'bg-green-500' : 'bg-brand-accent',
+        success: isComplete ? 'bg-status-complete' : 'bg-brand-accent',
         gradient: 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500'
     };
 
     return (
         <div className={`${className}`}>
             {showLabel && (
-                <div className="flex justify-between items-center mb-1.5">
-                    <span className="text-xs font-medium text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                <div className="flex justify-between items-center mb-1.5 px-0.5">
+                    <span className="text-[10px] font-black text-brand-textMuted uppercase tracking-widest">
                         {current} of {total} complete
                     </span>
-                    <span className={`text-xs font-bold ${isComplete ? 'text-green-500' : 'text-brand-accent'}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${isComplete ? 'text-status-complete' : 'text-brand-accent'}`}>
                         {percentage}%
                     </span>
                 </div>
             )}
-            <div className={`w-full bg-slate-200 dark:bg-[#151921] rounded-full overflow-hidden ${sizeClasses[size]}`}>
+            <div className={`w-full bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden ${sizeClasses[size]} border border-[var(--color-border-subtle)]`}>
                 <div
                     className={`
                         ${sizeClasses[size]} rounded-full
@@ -108,7 +108,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
             <svg width={size} height={size} className="-rotate-90">
                 {/* Background circle */}
                 <circle
-                    className="text-slate-200 dark:text-[#151921]"
+                    className="text-[var(--color-bg-tile-alt)]"
                     strokeWidth={strokeWidth}
                     stroke="currentColor"
                     fill="transparent"
@@ -118,7 +118,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
                 />
                 {/* Progress circle */}
                 <circle
-                    className={`transition-all duration-500 ease-out ${isComplete ? 'text-green-500' : 'text-brand-accent'}`}
+                    className={`transition-all duration-500 ease-out ${isComplete ? 'text-status-complete' : 'text-brand-accent'}`}
                     strokeWidth={strokeWidth}
                     strokeDasharray={circumference}
                     strokeDashoffset={offset}
@@ -131,7 +131,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
                 />
             </svg>
             {showPercentage && (
-                <span className={`absolute text-xs font-bold ${isComplete ? 'text-green-500' : 'text-brand-accent'}`}>
+                <span className={`absolute text-xs font-black ${isComplete ? 'text-status-complete' : 'text-brand-accent'}`}>
                     {percentage}%
                 </span>
             )}
@@ -175,10 +175,10 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                                     w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
                                     transition-all duration-300
                                     ${isCompleted
-                                        ? 'bg-green-500 text-white'
+                                        ? 'bg-status-complete text-white'
                                         : isCurrent
-                                            ? 'bg-brand-accent text-white ring-4 ring-brand-accent/5'
-                                            : 'bg-slate-200 dark:bg-[#151921] text-gray-400'
+                                            ? 'bg-brand-accent text-white ring-4 ring-brand-accent/10'
+                                            : 'bg-[var(--color-bg-tile-alt)] text-brand-textMuted border border-[var(--color-border-subtle)]'
                                     }
                                 `}
                             >
@@ -189,8 +189,8 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                                 )}
                             </div>
                             <span className={`
-                                mt-1 text-xs font-medium whitespace-nowrap
-                                ${isCurrent ? 'text-brand-accent' : 'text-gray-500'}
+                                mt-1.5 text-[10px] font-black uppercase tracking-widest
+                                ${isCurrent ? 'text-brand-accent' : 'text-brand-textMuted'}
                             `}>
                                 {step.label}
                             </span>
@@ -199,8 +199,8 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                         {/* Connector line */}
                         {!isLast && (
                             <div className={`
-                                flex-1 h-0.5 mx-2 transition-all duration-300
-                                ${isCompleted ? 'bg-green-500' : 'bg-slate-200 dark:bg-[#151921]'}
+                                flex-1 h-0.5 mx-2 transition-all duration-300 rounded-full
+                                ${isCompleted ? 'bg-status-complete' : 'bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)]'}
                             `} />
                         )}
                     </React.Fragment>
@@ -232,37 +232,37 @@ export const TaskSummary: React.FC<TaskSummaryProps> = ({
     const allComplete = completed === total && total > 0;
 
     return (
-        <div className={`bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl p-4 border border-slate-200 dark:border-white/5 shadow-layered-sm ${className}`}>
+        <div className={`bg-[var(--color-bg-tile)] rounded-2xl p-5 border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}>
             {/* Main progress */}
-            <div className="flex items-center gap-4 mb-3">
-                <CircularProgress current={completed} total={total} size={48} />
+            <div className="flex items-center gap-5 mb-4">
+                <CircularProgress current={completed} total={total} size={52} />
                 <div>
-                    <div className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                    <div className="text-lg font-black text-brand-textPrimary uppercase tracking-tight">
                         {allComplete ? "All Done! 🎉" : `${completed}/${total} Tasks`}
                     </div>
-                    <div className="text-xs text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                    <div className="text-[10px] font-black text-brand-textMuted uppercase tracking-widest">
                         {allComplete ? "Great work today!" : `${total - completed} remaining`}
                     </div>
                 </div>
             </div>
 
             {/* Status breakdown */}
-            <div className="flex gap-3 text-xs">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-black uppercase tracking-widest">
                 {inProgress > 0 && (
-                    <div className="flex items-center gap-1 text-status-progress">
-                        <Circle className="w-3 h-3 fill-current" />
-                        <span>{inProgress} in progress</span>
+                    <div className="flex items-center gap-1.5 text-status-progress">
+                        <Circle className="w-2.5 h-2.5 fill-current" />
+                        <span>{inProgress} active</span>
                     </div>
                 )}
                 {stuck > 0 && (
-                    <div className="flex items-center gap-1 text-status-stuck">
-                        <Circle className="w-3 h-3 fill-current" />
+                    <div className="flex items-center gap-1.5 text-status-stuck">
+                        <Circle className="w-2.5 h-2.5 fill-current" />
                         <span>{stuck} stuck</span>
                     </div>
                 )}
                 {remaining > 0 && (
-                    <div className="flex items-center gap-1 text-gray-400">
-                        <Circle className="w-3 h-3" />
+                    <div className="flex items-center gap-1.5 text-brand-textMuted">
+                        <Circle className="w-2.5 h-2.5 border border-current rounded-full" />
                         <span>{remaining} to do</span>
                     </div>
                 )}

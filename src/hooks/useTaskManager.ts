@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Task, TaskFormData, ItemType, TaskStatus, Attachment, LinkAttachment } from '../types';
-import { useClassStore } from '../store/classStore';
+import { useClassStore } from '../store/appSettings';
 import { saveTask, deleteTaskWithChildren, reorderTasks } from '../services/firestoreService';
 import { auth } from '../firebase';
 import { serverTimestamp } from 'firebase/firestore';

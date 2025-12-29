@@ -22,7 +22,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 }) => (
     <div
         className={`
-            bg-slate-300 dark:bg-gray-700 rounded-lg
+            bg-[var(--color-bg-tile-alt)] rounded-lg border border-[var(--color-border-subtle)]
             ${animate ? 'animate-pulse' : ''}
             ${className}
         `}
@@ -51,7 +51,7 @@ export const SkeletonText: React.FC<{ lines?: number; className?: string }> = ({
  * Skeleton for task cards - matches TaskCard layout
  */
 export const SkeletonTaskCard: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] p-5 rounded-2xl border border-slate-200 dark:border-white/5 min-h-[160px] shadow-layered-sm">
+    <div className="bg-[var(--color-bg-tile)] p-5 rounded-2xl border border-[var(--color-border-subtle)] min-h-[160px] shadow-layered">
         <div className="flex gap-6">
             {/* Left Column */}
             <div className="flex flex-col gap-3 w-48 shrink-0">
@@ -101,7 +101,7 @@ export const SkeletonSidebar: React.FC = () => (
  * Skeleton for calendar/schedule view
  */
 export const SkeletonCalendar: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] p-4 rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered-sm">
+    <div className="bg-[var(--color-bg-tile)] p-4 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
             <Skeleton className="h-6 w-32" />
@@ -123,7 +123,7 @@ export const SkeletonCalendar: React.FC = () => (
  * Skeleton for class cards in teacher view
  */
 export const SkeletonClassCard: React.FC = () => (
-    <div className="bg-brand-lightSurface dark:bg-[#1a1d24] p-6 rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered-sm">
+    <div className="bg-[var(--color-bg-tile)] p-6 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered">
         <div className="flex items-start gap-4">
             <Skeleton className="w-12 h-12 rounded-full" />
             <div className="flex-1">
@@ -142,10 +142,10 @@ export const SkeletonClassCard: React.FC = () => (
  * Full page loading skeleton for initial app load
  */
 export const SkeletonPage: React.FC = () => (
-    <div className="h-screen flex bg-brand-light dark:bg-brand-dark">
+    <div className="h-screen flex bg-transparent">
         {/* Sidebar skeleton */}
-        <aside className="hidden md:flex flex-col w-72 bg-brand-lightSurface dark:bg-[#1a1d24] border-r border-slate-200 dark:border-white/5">
-            <div className="h-16 flex items-center px-4 border-b border-slate-200 dark:border-white/5">
+        <aside className="hidden md:flex flex-col w-72 bg-[var(--color-bg-tile)] border-r border-[var(--color-border-subtle)]">
+            <div className="h-16 flex items-center px-4 border-b border-[var(--color-border-subtle)]">
                 <Skeleton className="h-8 w-8 rounded-xl mr-2" />
                 <Skeleton className="h-6 w-32" />
             </div>

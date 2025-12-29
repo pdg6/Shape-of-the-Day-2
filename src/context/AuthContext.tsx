@@ -211,6 +211,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const loginWithEmail = async (email: string, password: string) => {
+        try {
+            await import('../services/authService').then(m => m.signInWithEmail(email, password));
+            toast.success('Successfully signed in!');
+            setAuthError(null);
+        } catch (error) {
+            console.error('Email login failed:', error);
+            toast.error('Failed to sign in. Check your credentials.');
+            throw error;
+        }
+    };
+
     const logout = async () => {
         // Set flag to prevent race conditions with auth state listeners
         isLoggingOutRef.current = true;
@@ -264,6 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             loading,
             authError,
             login,
+            loginWithEmail,
             loginAnonymously,
             logout,
             clearAuthError,

@@ -36,7 +36,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     };
 
     const variantClasses = {
-        default: 'bg-gray-900/95 text-white',
+        default: 'bg-[var(--color-bg-tile-alt)] text-brand-textPrimary border border-[var(--color-border-subtle)]',
         info: 'bg-blue-600/95 text-white',
         warning: 'bg-amber-500/95 text-gray-900'
     };
@@ -55,7 +55,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     };
 
     return (
-        <div 
+        <div
             className="relative inline-block"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -63,7 +63,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
             onBlur={handleMouseLeave}
         >
             {children}
-            <div 
+            <div
                 className={`
                     absolute z-tooltip
                     transition-all duration-200
@@ -79,13 +79,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
                 {content}
                 {/* Arrow */}
                 <div className={`
-                    absolute w-2 h-2 rotate-45
-                    ${variant === 'default' ? 'bg-gray-900/95' : 
-                      variant === 'info' ? 'bg-blue-600/95' : 'bg-amber-500/95'}
-                    ${position === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2' : ''}
-                    ${position === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2' : ''}
-                    ${position === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2' : ''}
-                    ${position === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2' : ''}
+                    absolute w-2 h-2 rotate-45 border-r border-b border-[var(--color-border-subtle)]
+                    ${variant === 'default' ? 'bg-[var(--color-bg-tile-alt)]' :
+                        variant === 'info' ? 'bg-blue-600/95' : 'bg-amber-500/95'}
+                    ${position === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2 rotate-45 border-r border-b' : ''}
+                    ${position === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2 -rotate-135 border-r border-b' : ''}
+                    ${position === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2 rotate-[-45deg] border-r border-b' : ''}
+                    ${position === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2 rotate-[135deg] border-r border-b' : ''}
                 `} />
             </div>
         </div>
@@ -102,8 +102,8 @@ interface InfoTooltipProps {
 
 export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, position = 'top' }) => (
     <Tooltip content={content} position={position} variant="info">
-        <button 
-            className="inline-flex items-center justify-center w-4 h-4 text-xs text-blue-500 bg-blue-100 dark:bg-blue-900/30 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/40 transition-colors"
+        <button
+            className="inline-flex items-center justify-center w-4 h-4 text-xs text-blue-500 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-colors"
             aria-label="More information"
         >
             ?
@@ -120,10 +120,10 @@ interface FeatureSpotlightProps {
     isNew?: boolean;
 }
 
-export const FeatureSpotlight: React.FC<FeatureSpotlightProps> = ({ 
-    children, 
-    message, 
-    isNew = true 
+export const FeatureSpotlight: React.FC<FeatureSpotlightProps> = ({
+    children,
+    message,
+    isNew = true
 }) => (
     <div className="relative">
         {children}

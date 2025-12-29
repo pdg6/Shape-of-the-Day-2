@@ -12,6 +12,7 @@ export interface AuthContextType {
     loading: boolean;
     authError: AuthErrorType | null;
     login: () => Promise<void>;
+    loginWithEmail: (email: string, password: string) => Promise<void>;
     loginAnonymously: () => Promise<User | null>;
     logout: () => Promise<void>;
     clearAuthError: () => void;

@@ -99,10 +99,10 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                         className="w-10 h-10"
                     />
                     <div className="flex items-baseline gap-2">
-                        <span className="text-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <span className="text-lg font-bold text-brand-textPrimary">
                             Shape of the Day
                         </span>
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-brand-textMuted">
                             a digital agenda for education
                         </span>
                     </div>
@@ -134,22 +134,22 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                     {/* Row 1: Class Name + Close Button */}
                     <div className="flex items-center justify-between">
                         <div className="grid grid-cols-[100px_1fr] items-baseline">
-                            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Class:</span>
+                            <span className="text-sm font-bold text-brand-textMuted uppercase tracking-wider">Class:</span>
                             <span className="text-2xl font-bold text-brand-accent">{className || 'Unnamed Class'}</span>
                         </div>
                         <button
                             onClick={onClose}
-                            className={`p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${isModalHovered ? 'opacity-100' : 'opacity-0'}`}
+                            className={`p-2 rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-tile-hover)] transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${isModalHovered ? 'opacity-100' : 'opacity-0'}`}
                             aria-label="Close"
                         >
-                            <X className="w-5 h-5 text-gray-400" />
+                            <X className="w-5 h-5 text-brand-textMuted" />
                         </button>
                     </div>
 
                     {/* Row 2: Join URL */}
                     <div className="grid grid-cols-[100px_1fr] items-baseline">
-                        <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Join at:</span>
-                        <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        <span className="text-sm font-bold text-brand-textMuted uppercase tracking-wider">Join at:</span>
+                        <span className="text-2xl font-bold text-brand-textPrimary">
                             shape-of-the-day.com
                         </span>
                     </div>
@@ -161,20 +161,20 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                         onMouseLeave={() => setIsCodeHovered(false)}
                     >
                         <div className="grid grid-cols-[100px_1fr] items-baseline">
-                            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Code:</span>
-                            <span className="text-2xl font-mono font-black text-brand-textDarkPrimary dark:text-brand-textPrimary tracking-[0.15em]">
+                            <span className="text-sm font-bold text-brand-textMuted uppercase tracking-wider">Code:</span>
+                            <span className="text-2xl font-mono font-black text-brand-textPrimary tracking-[0.15em]">
                                 {classCode}
                             </span>
                         </div>
                         <button
                             onClick={handleCopyCode}
-                            className={`p-2 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${showCopyButton ? 'opacity-100' : 'opacity-0'}`}
+                            className={`p-2 rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-tile-hover)] transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${showCopyButton ? 'opacity-100' : 'opacity-0'}`}
                             title="Copy code"
                         >
                             {copied ? (
                                 <Check className="w-5 h-5 text-green-500" />
                             ) : (
-                                <Copy className="w-5 h-5 text-gray-400" />
+                                <Copy className="w-5 h-5 text-brand-textMuted" />
                             )}
                         </button>
                     </div>
@@ -186,11 +186,11 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
 
                 <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
                     {liveStudents.length === 0 ? (
-                        <div className="flex items-center justify-center gap-3 py-8 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl">
+                        <div className="flex items-center justify-center gap-3 py-8 text-brand-textSecondary border-2 border-dashed border-[var(--color-border-subtle)] rounded-xl">
                             <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                <span className="w-2 h-2 bg-[var(--color-border-strong)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-2 h-2 bg-[var(--color-border-strong)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-2 h-2 bg-[var(--color-border-strong)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                             </div>
                             <p className="text-sm italic">Waiting for students...</p>
                         </div>
@@ -206,14 +206,14 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                                     case 'stuck':
                                     case 'question':
                                     case 'help':
-                                        bgColor = 'bg-amber-100 dark:bg-amber-900/20';
-                                        textColor = 'text-amber-600 dark:text-amber-400';
+                                        bgColor = 'bg-amber-500/10';
+                                        textColor = 'text-amber-500';
                                         dotColor = 'bg-amber-500 animate-pulse';
                                         break;
                                     case 'done':
-                                        bgColor = 'bg-blue-100 dark:bg-blue-900/20';
-                                        textColor = 'text-blue-600 dark:text-blue-400';
-                                        dotColor = 'bg-blue-500';
+                                        bgColor = 'bg-emerald-500/10';
+                                        textColor = 'text-emerald-500';
+                                        dotColor = 'bg-emerald-500';
                                         break;
                                 }
 
@@ -223,7 +223,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                                         className={`
                                             flex items-center gap-2 px-3 py-2 rounded-full
                                             ${bgColor} ${textColor}
-                                            border border-gray-200 dark:border-gray-700
+                                            border border-[var(--color-border-subtle)]
                                             transition-all duration-300
                                             ${isNew ? 'animate-celebration-pop ring-2 ring-green-500/50' : ''}
                                         `}
