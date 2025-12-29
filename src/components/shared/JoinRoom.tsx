@@ -9,9 +9,10 @@ import { sanitizeName, sanitizeCode, validateName, createRateLimiter } from '../
 interface JoinRoomProps {
     onJoin: (code: string, name: string, classId: string) => void;
     initialCode?: string; // Optional: Pre-fill code from URL
+    accentColor?: 'emerald' | 'blue'; // Optional: Accent color for the form
 }
 
-const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
+const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '', accentColor = 'emerald' }) => {
     const [code, setCode] = useState(sanitizeCode(initialCode));
     const [name, setName] = useState('');
     const [error, setError] = useState('');
@@ -161,7 +162,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
                     />
                     {/* Helpful hint for input transformations */}
                     {inputHint && (
-                        <p id="code-hint" className="text-xs text-brand-accent mt-1 text-center animate-fade-in">
+                        <p id="code-hint" className={`text-xs mt-1 text-center animate-fade-in ${accentColor === 'emerald' ? 'text-emerald-500' : 'text-blue-500'}`}>
                             ✓ {inputHint}
                         </p>
                     )}
@@ -193,7 +194,13 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '' }) => {
             <button
                 type="submit"
                 disabled={isJoining || sanitizeCode(code).length !== 6 || !validateName(sanitizeName(name)).valid}
-                className="btn-primary-green"
+                className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold transition-float
+                    border shadow-layered button-lift-dynamic
+                    disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none
+                    ${accentColor === 'emerald'
+                        ? 'bg-emerald-500 border-emerald-500 text-white hover:bg-emerald-600 hover:shadow-layered-lg'
+                        : 'bg-blue-500 border-blue-500 text-white hover:bg-blue-600 hover:shadow-layered-lg'
+                    }`}
             >
                 {isJoining ? 'Joining...' : 'Join Class'}
             </button>

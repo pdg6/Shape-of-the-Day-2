@@ -42,27 +42,25 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </p>
             </div>
 
-            <div className="w-full max-w-sm bg-[var(--color-bg-tile)] rounded-2xl shadow-layered border border-[var(--color-border-subtle)] overflow-hidden">
-                {/* Tabs for switching modes */}
-                <div className="relative flex p-1.5 bg-[var(--color-bg-tile-alt)] rounded-xl mx-6 mt-6 mb-2 border border-[var(--color-border-subtle)]">
-                    <div
-                        className={`absolute inset-y-1.5 w-[calc(50%-6px)] bg-[var(--color-bg-tile)] rounded-lg shadow-layered-sm border border-[var(--color-border-subtle)] transition-float ${activeTab === 'student' ? 'left-1.5' : 'left-[calc(50%+4.5px)]'
-                            }`}
-                    />
+            <div className="w-full max-w-sm rounded-2xl overflow-hidden levitated-tile">
+                {/* Tabs for switching modes - Redesigned as nested floating tiles */}
+                <div className="flex gap-2 p-4">
                     <button
                         onClick={() => setActiveTab('student')}
-                        className={`relative flex-1 py-2 text-center font-black text-xs uppercase tracking-widest transition-all rounded-lg z-10 ${activeTab === 'student'
-                            ? 'text-brand-accent'
-                            : 'text-brand-textMuted hover:text-brand-textSecondary'
+                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-float
+                            ${activeTab === 'student'
+                                ? 'bg-[var(--color-bg-tile)] border border-emerald-500/50 text-emerald-500 shadow-layered border-t-[0.5px] border-t-emerald-400/30'
+                                : 'bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textMuted hover:text-brand-textSecondary hover:border-[var(--color-border-strong)] shadow-layered-sm button-lift-dynamic'
                             }`}
                     >
                         Student
                     </button>
                     <button
                         onClick={() => setActiveTab('teacher')}
-                        className={`relative flex-1 py-2 text-center font-black text-xs uppercase tracking-widest transition-all rounded-lg z-10 ${activeTab === 'teacher'
-                            ? 'text-brand-accent'
-                            : 'text-brand-textMuted hover:text-brand-textSecondary transition-float'
+                        className={`flex-1 py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-float
+                            ${activeTab === 'teacher'
+                                ? 'bg-[var(--color-bg-tile)] border border-blue-500/50 text-blue-500 shadow-layered border-t-[0.5px] border-t-blue-400/30'
+                                : 'bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textMuted hover:text-brand-textSecondary hover:border-[var(--color-border-strong)] shadow-layered-sm button-lift-dynamic'
                             }`}
                     >
                         Teacher
@@ -70,20 +68,20 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                 </div>
 
                 {/* Tab Content */}
-                <div className="pt-4 pb-6 px-6">
+                <div className="pb-6 px-6">
                     {activeTab === 'student' ? (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
-                            <div className="text-brand-accent">
+                            <div className="text-emerald-500">
                                 <GraduationCap className="w-10 h-10" />
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-brand-textSecondary">Join a room to see your daily tasks.</p>
                             </div>
-                            <JoinRoom onJoin={onJoin} />
+                            <JoinRoom onJoin={onJoin} accentColor="emerald" />
                         </div>
                     ) : (
                         <div className="flex flex-col items-center text-center space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="text-brand-accent">
+                            <div className="text-blue-500">
                                 <LayoutDashboard className="w-10 h-10" />
                             </div>
                             <div>
@@ -97,7 +95,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                             <div className="w-full max-w-[280px] space-y-4">
                                 <GoogleSignInButton onClick={onLogin} />
 
-                                <div className="relative">
+                                <div className="relative py-4">
                                     <div className="absolute inset-0 flex items-center">
                                         <div className="w-full border-t border-[var(--color-border-subtle)]"></div>
                                     </div>

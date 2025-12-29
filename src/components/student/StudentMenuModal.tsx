@@ -249,7 +249,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                     <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Physics / Elevation</span>
                                 </div>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {['gentle', 'float', 'lift'].map(level => (
+                                    {['subtle', 'moderate', 'elevated'].map(level => (
                                         <button
                                             key={level}
                                             onClick={() => setBackgroundSettings({ elevationLevel: level as any })}

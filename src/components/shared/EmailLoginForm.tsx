@@ -4,7 +4,7 @@ import { Mail, Key, Loader2 } from 'lucide-react';
 
 const EmailLoginForm = () => {
     const { loginWithEmail } = useAuth();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -34,10 +34,11 @@ const EmailLoginForm = () => {
         return (
             <button
                 onClick={() => setIsExpanded(!isExpanded)} // Use isExpanded
-                className="flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-float
-                    bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] 
-                    text-brand-textSecondary hover:text-brand-textPrimary
-                    hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 shadow-layered-sm button-lift-dynamic"
+                className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl
+                    bg-[var(--color-bg-tile)] text-brand-textSecondary text-sm font-black uppercase tracking-widest
+                    border border-[var(--color-border-subtle)] shadow-layered
+                    hover:bg-[var(--color-bg-tile-hover)] hover:border-blue-500/50 hover:text-brand-textPrimary hover:shadow-layered-lg
+                    transition-float button-lift-dynamic"
             >
                 <Mail className="w-4 h-4" />
                 <span>Sign in with Email</span>
@@ -49,24 +50,24 @@ const EmailLoginForm = () => {
         <form onSubmit={handleSubmit} className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
             <div className="space-y-2">
                 <div className="relative group">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-accent transition-colors" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <input
                         type="email"
                         placeholder="Email address" // Changed placeholder
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
                         required
                     />
                 </div>
                 <div className="relative group">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-brand-accent transition-colors" />
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                     <input
                         type="password"
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
                         required
                     />
                 </div>
@@ -74,17 +75,25 @@ const EmailLoginForm = () => {
 
             {error && <p className="text-xs text-red-500 font-medium px-1">{error}</p>}
 
-            <div className="flex justify-center mt-2">
+            <div className="flex gap-2 mt-3">
                 <button
+                    type="button"
                     onClick={() => setIsExpanded(false)} // Use isExpanded
-                    className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-brand-textSecondary hover:bg-[var(--color-bg-tile-alt)] transition-colors"
+                    className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest
+                        bg-[var(--color-bg-tile-alt)] text-brand-textMuted border border-[var(--color-border-subtle)]
+                        hover:text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-strong)]
+                        transition-float shadow-layered-sm button-lift-dynamic"
                 >
                     Back
                 </button>
                 <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold text-white bg-brand-accent hover:bg-brand-accent-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold
+                        text-white bg-blue-500 border border-blue-500
+                        hover:bg-blue-600 shadow-layered
+                        transition-float button-lift-dynamic
+                        disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Sign In'}
                 </button>
@@ -95,7 +104,7 @@ const EmailLoginForm = () => {
                 <button
                     type="button"
                     onClick={fillDevCredentials}
-                    className="w-full text-[10px] text-gray-400 hover:text-brand-accent transition-colors mt-2"
+                    className="w-full text-[10px] text-gray-400 hover:text-blue-500 transition-colors mt-2"
                 >
                     Dev: Fill Test Credentials
                 </button>

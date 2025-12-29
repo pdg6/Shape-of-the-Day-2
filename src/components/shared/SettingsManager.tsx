@@ -17,50 +17,39 @@ const SettingsManager: React.FC = () => {
         // 5-Position Text Palette (Lightest → Darkest for matching with dark→light backgrounds)
         // Position 1 = Lightest (for dark BG), Position 5 = Darkest (for light BG)
         const THEME_PALETTE: Record<string, { ink: string, vibe: string }> = {
-            // Position 1: Lightest (default for dark mode)
-            'white': { ink: '#e2e8f0', vibe: '#F8FAFC' },
-            // Position 2
-            'mist': { ink: '#94a3b8', vibe: '#CBD5E1' },
-            // Position 3
-            'silver': { ink: '#64748b', vibe: '#94a3b8' },
-            // Position 4
-            'iron': { ink: '#334155', vibe: '#475569' },
-            // Position 5: Darkest (for light mode)
-            'ink': { ink: '#0f172a', vibe: '#1e293b' },
-            // Legacy mappings
-            'bone': { ink: '#e2e8f0', vibe: '#F8FAFC' },
-            'default': { ink: '#d4d0c8', vibe: '#F8FAFC' },
+            'pure': { ink: '#FFFFFF', vibe: '#FFFFFF' },
+            'silver': { ink: '#CBD5E1', vibe: '#CBD5E1' },
+            'steel': { ink: '#64748B', vibe: '#64748B' },
+            'iron': { ink: '#334155', vibe: '#334155' },
+            'ink': { ink: '#111827', vibe: '#111827' },
+            'obsidian': { ink: '#020617', vibe: '#020617' },
+            // Legacy/Fallback mappings
+            'white': { ink: '#FFFFFF', vibe: '#FFFFFF' },
+            'mist': { ink: '#CBD5E1', vibe: '#CBD5E1' },
+            'default': { ink: '#FFFFFF', vibe: '#FFFFFF' },
         };
 
         // 5-Position Secondary Text Palette
         const SECONDARY_PALETTE: Record<string, { ink: string, vibe: string }> = {
-            // Position 1: Lightest (default for dark mode)
-            'slate': { ink: '#64748b', vibe: '#94A3B8' },
-            // Position 2
-            'ash': { ink: '#475569', vibe: '#64748B' },
-            // Position 3
-            'pewter': { ink: '#334155', vibe: '#475569' },
-            // Position 4
-            'lead': { ink: '#1e293b', vibe: '#334155' },
-            // Position 5: Darkest (for light mode)
-            'graphite': { ink: '#334155', vibe: '#475569' },
-            // Legacy mappings
-            'stone': { ink: '#64748b', vibe: '#94A3B8' },
-            'default': { ink: '#78716c', vibe: '#94A3B8' },
+            'sky': { ink: '#7DD3FC', vibe: '#7DD3FC' },
+            'mist': { ink: '#E2E8F0', vibe: '#E2E8F0' },
+            'ash': { ink: '#94A3B8', vibe: '#94A3B8' },
+            'accent': { ink: '#3B82F6', vibe: '#3B82F6' },
+            'lead': { ink: '#334155', vibe: '#334155' },
+            'coal': { ink: '#1F2937', vibe: '#1F2937' },
+            // Legacy/Fallback mappings
+            'slate': { ink: '#94A3B8', vibe: '#E2E8F0' },
+            'default': { ink: '#94A3B8', vibe: '#94A3B8' },
         };
 
         // 5-Position Tile Palette (Darkest → Lightest)
         const TILE_THEMES: Record<string, { tile: string, tileAlt: string, border: string }> = {
-            // Position 1: Darkest (default)
-            'onyx': { tile: '#1a1d24', tileAlt: '#151921', border: 'rgba(255, 255, 255, 0.1)' },
-            // Position 2
-            'slate': { tile: '#1e293b', tileAlt: '#0f172a', border: 'rgba(255, 255, 255, 0.1)' },
-            // Position 3
-            'graphite': { tile: '#334155', tileAlt: '#1e293b', border: 'rgba(255, 255, 255, 0.15)' },
-            // Position 4
-            'cloud': { tile: '#e2e8f0', tileAlt: '#cbd5e1', border: 'rgba(0, 0, 0, 0.1)' },
-            // Position 5: Lightest
-            'glacier': { tile: '#ffffff', tileAlt: '#f8fafc', border: 'rgba(0, 0, 0, 0.08)' },
+            'pure': { tile: '#000000', tileAlt: '#000000', border: 'rgba(255, 255, 255, 0.1)' },
+            'onyx': { tile: '#1A1D24', tileAlt: '#151921', border: 'rgba(255, 255, 255, 0.1)' },
+            'slate': { tile: '#1E293B', tileAlt: '#0f172a', border: 'rgba(255, 255, 255, 0.1)' },
+            'glass': { tile: 'rgba(255, 255, 255, 0.008)', tileAlt: 'rgba(255, 255, 255, 0)', border: 'rgba(255, 255, 255, 0.1)' },
+            'cloud': { tile: '#E2E8F0', tileAlt: '#cbd5e1', border: 'rgba(0, 0, 0, 0.1)' },
+            'glacier': { tile: '#FFFFFF', tileAlt: '#f8fafc', border: 'rgba(0, 0, 0, 0.08)' },
         };
 
         // 5-Tier Elevation Presets (whisper → dramatic)
@@ -72,42 +61,44 @@ const SettingsManager: React.FC = () => {
             shadow: string;
             shadowLg: string;
         }> = {
-            whisper: {
+            // Option B: "Pre-Elevated + Lift" - Elements float at rest, lift higher on hover
+            // Tiles and buttons share the same elevation values for consistency
+            flat: {
                 tileDefault: '0px',
-                tileHover: '-1px',
-                buttonHover: '-1px',
-                shadowSm: '0 1px 2px rgba(0,0,0,0.03)',
-                shadow: '0 2px 6px rgba(0,0,0,0.06)',
-                shadowLg: '0 4px 12px rgba(0,0,0,0.08)'
-            },
-            gentle: {
-                tileDefault: '-1px',
                 tileHover: '0px',
-                buttonHover: '-1px',
+                buttonHover: '0px',
+                shadowSm: '0 1px 2px rgba(0,0,0,0.03)',
+                shadow: '0 2px 4px rgba(0,0,0,0.05)',
+                shadowLg: '0 4px 8px rgba(0,0,0,0.08)'
+            },
+            subtle: {
+                tileDefault: '-1px',
+                tileHover: '-2px',
+                buttonHover: '-2px',
                 shadowSm: '0 2px 4px rgba(0,0,0,0.08)',
                 shadow: '0 4px 12px rgba(0,0,0,0.1)',
                 shadowLg: '0 8px 20px rgba(0,0,0,0.12)'
             },
-            float: {
+            moderate: {
                 tileDefault: '-2px',
-                tileHover: '-1px',
-                buttonHover: '-2px',
+                tileHover: '-4px',
+                buttonHover: '-4px',
                 shadowSm: '0 2px 4px rgba(0,0,0,0.12)',
                 shadow: '0 6px 16px rgba(0,0,0,0.15)',
                 shadowLg: '0 12px 28px rgba(0,0,0,0.18)'
             },
-            lift: {
-                tileDefault: '-4px',
-                tileHover: '-3px',
-                buttonHover: '-2px',
+            elevated: {
+                tileDefault: '-3px',
+                tileHover: '-6px',
+                buttonHover: '-6px',
                 shadowSm: '0 2px 4px -1px rgba(0,0,0,0.2), inset 0 1px 0 0 rgba(255,255,255,0.05)',
                 shadow: '0 8px 20px -4px rgba(0,0,0,0.35), 0 4px 8px -2px rgba(0,0,0,0.2), inset 0 1px 0 0 rgba(255,255,255,0.08)',
                 shadowLg: '0 16px 36px -8px rgba(0,0,0,0.45), 0 6px 14px -4px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.12)'
             },
             dramatic: {
-                tileDefault: '-6px',
-                tileHover: '-4px',
-                buttonHover: '-3px',
+                tileDefault: '-4px',
+                tileHover: '-8px',
+                buttonHover: '-8px',
                 shadowSm: '0 3px 6px -1px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.08)',
                 shadow: '0 12px 28px -6px rgba(0,0,0,0.5), 0 6px 12px -3px rgba(0,0,0,0.35), inset 0 1px 0 0 rgba(255,255,255,0.1)',
                 shadowLg: '0 24px 48px -12px rgba(0,0,0,0.6), 0 10px 20px -5px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.15)'
@@ -118,16 +109,49 @@ const SettingsManager: React.FC = () => {
         const primary = THEME_PALETTE[backgroundSettings.primaryTheme] || THEME_PALETTE['default'];
         const secondary = SECONDARY_PALETTE[backgroundSettings.secondaryTheme] || SECONDARY_PALETTE['default'];
         const tile = TILE_THEMES[backgroundSettings.tileTheme || 'onyx'] || TILE_THEMES['onyx'];
-        const elevation = ELEVATION_PRESETS[backgroundSettings.elevationLevel || 'gentle'] || ELEVATION_PRESETS['gentle'];
+        const elevation = ELEVATION_PRESETS[backgroundSettings.elevationLevel || 'subtle'] || ELEVATION_PRESETS['subtle'];
 
         // 1.5 Calculate Dynamic Border & Hover Colors
-        const isDarkTile = ['onyx', 'slate', 'graphite'].includes(backgroundSettings.tileTheme || 'onyx');
+        const isDarkTile = ['pure', 'onyx', 'slate', 'glass'].includes(backgroundSettings.tileTheme || 'onyx');
 
         let borderSubtle = tile.border;
         let borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
         let tileHover = isDarkTile ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
-        let horizonHighlight = backgroundSettings.horizonEtching ? 'var(--color-brand-accent)' : 'transparent';
-        let glowOpacity = backgroundSettings.glowEffect ? (isDarkTile ? '0.06' : '0.04') : '0';
+
+        // Horizon Etch: top, left, or off
+        let horizonTop = '1px solid var(--color-border-subtle)';
+        let horizonLeft = '1px solid var(--color-border-subtle)';
+        let horizonPosition = backgroundSettings.horizonEtch || 'off';
+        let activeInsetShadow = 'none';
+
+        if (horizonPosition === 'top') {
+            horizonTop = '0.5px solid var(--color-brand-accent)';
+            activeInsetShadow = 'inset 0 3px 6px -2px rgba(29, 78, 216, 0.45)';
+        } else if (horizonPosition === 'left') {
+            horizonLeft = '0.5px solid var(--color-brand-accent)';
+            activeInsetShadow = 'inset 3px 0 6px -2px rgba(29, 78, 216, 0.45)';
+        }
+
+        // Aura Glow: Dual-Glow Model (Bloom/Nova)
+        let glowOpacity = '0';
+        let glowBlur = '0px';
+        let glowSpread = '0px';
+        let glowColor = 'rgba(59, 130, 246, 0.06)'; // accent blue base
+
+        const auraGlow = backgroundSettings.auraGlow || 'off';
+        let glowOnActive = '0';
+
+        if (auraGlow !== 'off') {
+            // Standardize on Bloom: Soft rim halo
+            glowOpacity = isDarkTile ? '0.22' : '0.18';
+            glowBlur = '12px';
+            glowSpread = '1px';
+            glowColor = 'rgba(59, 130, 246, 0.45)';
+
+            if (auraGlow === 'active') {
+                glowOnActive = '1';
+            }
+        }
 
         // Apply Border Style Presets
         switch (backgroundSettings.borderStyle) {
@@ -154,6 +178,7 @@ const SettingsManager: React.FC = () => {
         }
 
         // 2. Inject CSS Variables
+        root.style.setProperty('--color-glass-inlay-warm', 'rgba(255, 255, 255, 0.03)');
         // Primary Theme (Headers, Active - "The Active Voice")
         root.style.setProperty('--text-primary-ink', primary.ink);   // Darker/Dimmer (Ink)
         root.style.setProperty('--text-primary-vibe', primary.vibe);    // Lighter/BVright (Vibe) -> Use this for Text!
@@ -173,8 +198,15 @@ const SettingsManager: React.FC = () => {
         // Borders and Visual Fidelity
         root.style.setProperty('--color-border-subtle', borderSubtle);
         root.style.setProperty('--color-border-strong', borderStrong);
-        root.style.setProperty('--color-horizon-highlight', horizonHighlight);
         root.style.setProperty('--glow-opacity', glowOpacity);
+        root.style.setProperty('--glow-color', glowColor);
+        root.style.setProperty('--glow-blur', glowBlur);
+        root.style.setProperty('--glow-spread', glowSpread);
+        root.style.setProperty('--glow-on-active', glowOnActive);
+        root.style.setProperty('--active-inset-shadow', activeInsetShadow);
+        root.style.setProperty('--horizon-border-top', horizonTop);
+        root.style.setProperty('--horizon-border-left', horizonLeft);
+        root.style.setProperty('--tile-blur', backgroundSettings.tileTheme === 'glass' ? '8px' : '0px');
 
         // Map legacy utilities to dynamic tile colors for consistency
         root.style.setProperty('--color-brand-darkSurface', tile.tile);
@@ -187,6 +219,9 @@ const SettingsManager: React.FC = () => {
         root.style.setProperty('--shadow-layered-sm', elevation.shadowSm);
         root.style.setProperty('--shadow-layered', elevation.shadow);
         root.style.setProperty('--shadow-layered-lg', elevation.shadowLg);
+
+        // Explicitly set --bg-page to the background color setting
+        root.style.setProperty('--bg-page', backgroundSettings.bgColor);
 
     }, [backgroundSettings]);
 

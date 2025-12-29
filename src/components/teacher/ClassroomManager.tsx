@@ -453,7 +453,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered p-6 transition-float hover:shadow-layered-lg">
+                                    <div className="p-6 rounded-2xl levitated-tile">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Completion Rate</span>
                                             <CheckCircle className="w-5 h-5 text-green-500" />
@@ -463,7 +463,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered p-6 transition-float hover:shadow-layered-lg">
+                                    <div className="p-6 rounded-2xl levitated-tile">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Stuck Rate</span>
                                             <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -474,7 +474,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered p-6 transition-float hover:shadow-layered-lg">
+                                    <div className="p-6 rounded-2xl levitated-tile">
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Active Students</span>
                                             <Users className="w-5 h-5 text-purple-500" />
@@ -489,7 +489,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 {/* Charts Row */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Task Difficulty */}
-                                    <div className="bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered p-6 transition-float hover:shadow-layered-lg">
+                                    <div className="p-6 rounded-2xl levitated-tile">
                                         <h3 className="text-lg font-bold text-brand-textPrimary mb-6 flex items-center gap-2">
                                             <TrendingUp className="w-5 h-5 text-brand-accent" />
                                             Most Challenging Tasks

@@ -75,7 +75,7 @@ export function RichTextEditor({
         content: value,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[160px] px-5 py-4 caret-brand-accent text-brand-textPrimary',
+                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[160px] px-4 py-3 caret-brand-accent text-brand-textPrimary/80',
             },
         },
         onUpdate: ({ editor }) => {
@@ -150,7 +150,7 @@ export function RichTextEditor({
 
     return (
         <div
-            className={`flex flex-col rounded-2xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
+            className={`flex flex-col rounded-xl bg-[var(--color-glass-inlay-warm)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
@@ -158,7 +158,7 @@ export function RichTextEditor({
             onPaste={handlePaste}
         >
             {/* Toolbar */}
-            <div className="flex flex-wrap items-center gap-1 p-2 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] rounded-t-2xl">
+            <div className="flex flex-wrap items-center gap-1 p-2 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] rounded-t-xl">
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     isActive={editor.isActive('bold')}
@@ -234,11 +234,11 @@ export function RichTextEditor({
                 />
                 {/* Multi-line Placeholder - only show when truly empty (both editor state and value prop) */}
                 {editor.isEmpty && (!value || value === '<p></p>') && (
-                    <div className="absolute top-4 left-4 pointer-events-none">
-                        <div className="text-brand-textSecondary opacity-30 text-sm font-medium">
+                    <div className="absolute top-3 left-4 pointer-events-none">
+                        <div className="text-brand-textPrimary/50 text-base font-bold">
                             {placeholder}
                         </div>
-                        <div className="text-brand-textSecondary opacity-20 text-xs mt-1">
+                        <div className="text-brand-textPrimary/50 text-xs mt-1">
                             {secondaryPlaceholder}
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Moon, Sun, LogOut, QrCode, User, BookOpen, Check, Type, Activity, BarChart2, Layers } from 'lucide-react';
-import { useClassStore } from '../../store/appSettings';
+import { LogOut, QrCode, Check } from 'lucide-react';
+import { useClassStore, THEME_PRESETS } from '../../store/appSettings';
 
 interface SettingsOverlayProps {
     isOpen: boolean;
@@ -14,497 +14,522 @@ interface SettingsOverlayProps {
     onTabChange?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms') => void;
 }
 
+// Grid cell component - reflects visual theme settings in real-time
+const GridCell: React.FC<{
+    isSelected: boolean;
+    onClick: () => void;
+    label: string;
+    children?: React.ReactNode;
+    className?: string;
+    style?: React.CSSProperties;
+    noExample?: boolean;
+    immersive?: boolean;
+}> = ({ isSelected, onClick, label, children, className = '', style, noExample = false, immersive = false }) => {
+    const { backgroundSettings } = useClassStore();
+
+    return (
+        <button
+            onClick={onClick}
+            style={style}
+            className={`group relative flex flex-col items-center gap-1 p-1.5 rounded-lg transition-float overflow-visible
+                ${immersive ? 'justify-center min-h-[44px]' : 'items-center'}
+                ${noExample
+                    ? (isSelected ? 'border-2 border-brand-textPrimary bg-[var(--color-bg-tile)]' : 'border-2 border-transparent hover:bg-[var(--color-bg-tile-alt)]')
+                    : `bg-[var(--color-bg-tile)] border-2 shadow-layered
+                       transform translate-y-[var(--elevation-tile-default)]
+                       hover:translate-y-[var(--elevation-tile-hover)]
+                       ${isSelected ? 'border-brand-textPrimary' : 'border-[var(--color-border-subtle)]'}
+                       hover:border-brand-accent/50
+                       hover:shadow-[var(--shadow-layered-lg),0_0_var(--glow-blur)_var(--glow-spread)_var(--glow-color)]
+                      `
+                }
+                ${className}`}
+        >
+            {/* Living Example: Horizon Etch (mirrors the logic in SettingsManager) */}
+            {!noExample && backgroundSettings.horizonEtch !== 'off' && (
+                <div className="absolute inset-0 pointer-events-none rounded-lg overflow-hidden">
+                    <div
+                        className={`absolute inset-0 border-brand-accent transition-opacity duration-300
+                            ${backgroundSettings.horizonEtch === 'top' ? 'border-t-2' : 'border-l-2'}`}
+                    />
+                </div>
+            )}
+
+            {/* Living Example: Aura Glow (mirrors the logic in SettingsManager) */}
+            {!noExample && backgroundSettings.auraGlow !== 'off' && (
+                <div
+                    className="absolute inset-0 -z-10 pointer-events-none rounded-lg transition-opacity duration-500"
+                    style={{
+                        opacity: 'var(--glow-opacity)',
+                        boxShadow: `0 0 var(--glow-blur) var(--glow-spread) var(--glow-color)`
+                    }}
+                />
+            )}
+
+            <div className={`relative z-10 flex flex-col items-center w-full ${immersive ? 'justify-center' : 'gap-1'}`}>
+                {immersive ? (
+                    <span className={`text-[8px] font-bold uppercase tracking-tight leading-none text-center px-1
+                        ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}`}>
+                        {label}
+                    </span>
+                ) : (
+                    <>
+                        {children}
+                        <span className={`text-[8px] font-bold uppercase tracking-tight leading-none
+                            ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textMuted'}`}>
+                            {label}
+                        </span>
+                    </>
+                )}
+            </div>
+        </button>
+    );
+};
+
+// Row label component
+const RowLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <span className="text-[9px] font-black uppercase tracking-wider text-brand-textSecondary px-0.5 mb-1">
+        {children}
+    </span>
+);
+
 const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
     isOpen,
     onClose,
     onLogout,
     onShowJoinCode,
-    onShowData,
-    teacherName = 'Teacher',
-    className = '',
-    activeTab,
-    onTabChange
 }) => {
     const { backgroundSettings, setBackgroundSettings } = useClassStore();
 
-
     if (!isOpen) return null;
 
+    // Preset options
+    const presets = Object.entries(THEME_PRESETS).map(([id, preset]) => ({
+        id,
+        name: preset.name,
+        preview: preset.settings
+    }));
+
+    // Background options
+    const bgOptions = [
+        { id: '#000000', label: 'Stark' },
+        { id: '#050505', label: 'Void' },
+        { id: '#0F1115', label: 'Cyber' },
+        { id: '#171A21', label: 'Shadow' },
+        { id: '#C1C7D0', label: 'Ghost' },
+        { id: '#D1D5DA', label: 'Vapor' }
+    ];
+
+    // Tile options
+    const tileOptions = [
+        { id: 'pure', label: 'Pure', color: '#000000' },
+        { id: 'onyx', label: 'Onyx', color: '#1A1D24' },
+        { id: 'slate', label: 'Slate', color: '#1E293B' },
+        { id: 'glass', label: 'Glass', color: 'rgba(255, 255, 255, 0.1)' },
+        { id: 'cloud', label: 'Cloud', color: '#E2E8F0' },
+        { id: 'glacier', label: 'Glacier', color: '#FFFFFF' }
+    ];
+
+    // Primary text options
+    const primaryOptions = [
+        { id: 'pure', label: 'Pure', color: '#FFFFFF' },
+        { id: 'silver', label: 'Silver', color: '#CBD5E1' },
+        { id: 'steel', label: 'Steel', color: '#64748B' },
+        { id: 'iron', label: 'Iron', color: '#334155' },
+        { id: 'ink', label: 'Ink', color: '#111827' },
+        { id: 'obsidian', label: 'Obsidian', color: '#020617' }
+    ];
+
+    // Secondary text options
+    const secondaryOptions = [
+        { id: 'sky', label: 'Sky', color: '#7DD3FC' },
+        { id: 'mist', label: 'Mist', color: '#E2E8F0' },
+        { id: 'ash', label: 'Ash', color: '#94A3B8' },
+        { id: 'accent', label: 'Accent', color: '#3B82F6' },
+        { id: 'lead', label: 'Lead', color: '#334155' },
+        { id: 'coal', label: 'Coal', color: '#1F2937' }
+    ];
+
+    // Elevation options
+    const elevationOptions = [
+        { id: 'flat', label: 'Flat', lift: '0px', shadow: '0 2px 4px rgba(0,0,0,0.2)' },
+        { id: 'subtle', label: 'Subtle', lift: '-1px', shadow: '0 4px 12px rgba(0,0,0,0.25)' },
+        { id: 'moderate', label: 'Moderate', lift: '-2px', shadow: '0 6px 16px rgba(0,0,0,0.3)' },
+        { id: 'elevated', label: 'Elevated', lift: '-3px', shadow: '0 8px 20px rgba(0,0,0,0.35)' },
+        { id: 'dramatic', label: 'Dramatic', lift: '-4px', shadow: '0 12px 28px rgba(0,0,0,0.4)' }
+    ];
+
+    // Border options
+    const borderOptions = [
+        { id: 'auto', label: 'Auto' },
+        { id: 'accent', label: 'Accent' },
+        { id: 'ghost', label: 'Ghost' },
+        { id: 'glass', label: 'Glass' },
+        { id: 'vibrant', label: 'Vivid' }
+    ];
+
+    // Particle options - all effects
+    const particleOptions = [
+        { id: 'none', label: 'Off' },
+        { id: 'gravity', label: 'Gravity' },
+        { id: 'grid', label: 'Grid' },
+        { id: 'magnetic', label: 'Magnetic' },
+        { id: 'orbit', label: 'Orbit' },
+        { id: 'swarm_small', label: 'Swarm' },
+        { id: 'swarm_large', label: 'Big Swarm' }
+    ];
+
+    // Particle color options
+    const particleColorOptions = [
+        { id: '#262626', label: 'Onyx' },
+        { id: '#3b82f6', label: 'Accent' },
+        { id: '#cbd5e1', label: 'Slate' },
+        { id: 'multi', label: 'Vibrant' }
+    ];
+
+    const applyPreset = (presetId: string) => {
+        const preset = THEME_PRESETS[presetId];
+        if (preset) {
+            setBackgroundSettings(preset.settings);
+        }
+    };
+
+    // Check if current settings match a preset
+    const currentPresetId = Object.entries(THEME_PRESETS).find(([_, preset]) => {
+        const s = preset.settings;
+        return s.bgColor === backgroundSettings.bgColor &&
+            s.tileTheme === backgroundSettings.tileTheme &&
+            s.primaryTheme === backgroundSettings.primaryTheme;
+    })?.[0] || null;
+
     return (
-        <div className="space-y-3">
-
-
-            {/* Teacher Name */}
-            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
-                        <User size={20} />
-                    </div>
-                    <span className="font-medium text-brand-textPrimary">
-                        Teacher
-                    </span>
-                </div>
-                <span className="text-sm text-brand-textSecondary">
-                    {teacherName}
-                </span>
+        <div className="space-y-2 flex flex-col pt-0">
+            {/* Action Buttons - Top */}
+            <div className="flex gap-2 mb-3">
+                {onShowJoinCode && (
+                    <button
+                        onClick={() => { onShowJoinCode(); onClose(); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold transition-float
+                            bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)]
+                            shadow-layered transform translate-y-[var(--elevation-tile-default)]
+                            hover:translate-y-[var(--elevation-tile-hover)] hover:shadow-layered-lg hover:border-brand-accent/50"
+                    >
+                        <QrCode size={16} className="text-brand-accent" />
+                        <span className="text-xs">Join Code</span>
+                    </button>
+                )}
+                {onLogout && (
+                    <button
+                        onClick={() => { onLogout(); onClose(); }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold transition-float
+                            bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)]
+                            shadow-layered transform translate-y-[var(--elevation-tile-default)]
+                            hover:translate-y-[var(--elevation-tile-hover)] hover:shadow-layered-lg hover:border-red-500/50"
+                    >
+                        <LogOut size={16} className="text-red-500" />
+                        <span className="text-xs">Sign Out</span>
+                    </button>
+                )}
             </div>
 
-            {/* Class Name */}
-            {className && (
-                <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500">
-                            <BookOpen size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textPrimary">
-                            Class
-                        </span>
-                    </div>
-                    <span className="text-sm text-brand-textSecondary">
-                        {className}
-                    </span>
-                </div>
-            )}
+            {/* Divider */}
+            <div className="border-t border-[var(--color-border-subtle)] my-2" />
 
-            {/* Surface & Environment Controls */}
-            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 space-y-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
-                        <Activity size={20} />
-                    </div>
-                    <span className="font-medium text-brand-textPrimary">
-                        Surface & Environment
-                    </span>
-                </div>
-
-                {/* Background Color */}
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Background</label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {[
-                            { color: '#050505', label: 'Void' },
-                            { color: '#0a0a0a', label: 'Charcoal' },
-                            { color: '#0f1115', label: 'Cyber' },
-                            { color: '#64748b', label: 'Fog' },
-                            { color: '#f1f5f9', label: 'Snow' }
-                        ].map((c) => (
-                            <button
-                                key={c.color}
-                                onClick={() => setBackgroundSettings({ bgColor: c.color })}
-                                className={`flex flex-col items-center gap-1.5 p-1 rounded-lg border-2 transition-all duration-200
-                                    ${backgroundSettings.bgColor === c.color ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-[var(--color-border-subtle)] bg-transparent hover:border-[var(--color-border-strong)]'}`}
-                                title={c.label}
-                            >
-                                <div
-                                    className={`w-full h-8 rounded-md flex items-center justify-center shadow-inner border border-[var(--color-border-subtle)]`}
-                                    style={{ backgroundColor: c.color }}
-                                >
-                                    {backgroundSettings.bgColor === c.color && <Check size={14} className={c.color === '#f1f5f9' || c.color === '#64748b' ? 'text-gray-800' : 'text-brand-accent'} />}
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Tile Theme */}
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Tiles</label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {[
-                            { id: 'onyx', label: 'Onyx', color: '#1a1d24' },
-                            { id: 'slate', label: 'Slate', color: '#1e293b' },
-                            { id: 'graphite', label: 'Graphite', color: '#334155' },
-                            { id: 'cloud', label: 'Cloud', color: '#e2e8f0' },
-                            { id: 'glacier', label: 'Glacier', color: '#ffffff' }
-                        ].map((t) => (
-                            <button
-                                key={t.id}
-                                onClick={() => setBackgroundSettings({ tileTheme: t.id })}
-                                className={`flex flex-col items-center gap-1.5 p-1 rounded-lg border-2 transition-all duration-200
-                                    ${backgroundSettings.tileTheme === t.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-[var(--color-border-subtle)] bg-transparent hover:border-[var(--color-border-strong)]'}`}
-                                title={t.label}
-                            >
-                                <div
-                                    className={`w-full h-8 rounded-md flex items-center justify-center shadow-inner border border-[var(--color-border-subtle)]`}
-                                    style={{ backgroundColor: t.color }}
-                                >
-                                    {backgroundSettings.tileTheme === t.id && (
-                                        <Check size={14} className={t.id === 'cloud' || t.id === 'glacier' ? 'text-gray-800' : 'text-white'} />
-                                    )}
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* Visual Fidelity & Borders */}
-            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 space-y-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-teal-500/10 text-teal-500">
-                        <Layers size={20} />
-                    </div>
-                    <span className="font-medium text-brand-textPrimary">
-                        Visual Fidelity
-                    </span>
-                </div>
-
-                {/* Toggles */}
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)]">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary">Horizon Etch</span>
-                        <button
-                            onClick={() => setBackgroundSettings({ horizonEtching: !backgroundSettings.horizonEtching })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none 
-                                ${backgroundSettings.horizonEtching ? 'bg-brand-accent' : 'bg-[var(--color-border-subtle)]'}`}
-                        >
-                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${backgroundSettings.horizonEtching ? 'translate-x-5' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-                    <div className="flex items-center justify-between p-2 rounded-lg bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)]">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary">Aura Glow</span>
-                        <button
-                            onClick={() => setBackgroundSettings({ glowEffect: !backgroundSettings.glowEffect })}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none 
-                                ${backgroundSettings.glowEffect ? 'bg-brand-accent' : 'bg-[var(--color-border-subtle)]'}`}
-                        >
-                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${backgroundSettings.glowEffect ? 'translate-x-5' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Border Theme */}
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Border Style</label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {[
-                            { id: 'auto', label: 'Auto' },
-                            { id: 'accent', label: 'Accent' },
-                            { id: 'ghost', label: 'Ghost' },
-                            { id: 'glass', label: 'Glass' },
-                            { id: 'vibrant', label: 'Vivid' }
-                        ].map((b) => (
-                            <button
-                                key={b.id}
-                                onClick={() => setBackgroundSettings({ borderStyle: b.id as any })}
-                                className={`px-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all duration-200 border
-                                    ${backgroundSettings.borderStyle === b.id
-                                        ? 'bg-brand-accent/10 border-brand-accent text-brand-accent'
-                                        : 'bg-transparent border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-[var(--color-border-strong)]'}`}
-                            >
-                                {b.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            {/* Elevation Level */}
-            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 space-y-3">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-orange-500/10 text-orange-500">
-                        <BarChart2 size={20} />
-                    </div>
-                    <span className="font-medium text-brand-textPrimary">
-                        Elevation Level
-                    </span>
-                </div>
-                <div className="grid grid-cols-5 gap-1.5">
-                    {[
-                        { id: 'whisper', label: 'Minimal', lift: '0px' },
-                        { id: 'gentle', label: 'Soft', lift: '-1px' },
-                        { id: 'float', label: 'Normal', lift: '-2px' },
-                        { id: 'lift', label: 'High', lift: '-3px' },
-                        { id: 'dramatic', label: 'Hyper', lift: '-4px' }
-                    ].map((e) => (
-                        <button
-                            key={e.id}
-                            onClick={() => setBackgroundSettings({ elevationLevel: e.id as any })}
-                            className={`flex flex-col items-center gap-1.5 p-1 rounded-lg border-2 transition-all duration-200
-                                ${backgroundSettings.elevationLevel === e.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-[var(--color-border-subtle)] bg-transparent hover:border-[var(--color-border-strong)]'}`}
-                        >
-                            <div
-                                className={`w-full h-8 rounded-md flex items-center justify-center border border-[var(--color-border-subtle)] transition-all duration-200`}
-                                style={{
-                                    backgroundColor: 'var(--color-bg-tile, #1a1d24)',
-                                    transform: `translateY(${e.lift})`,
-                                    boxShadow: backgroundSettings.elevationLevel === e.id
-                                        ? '0 4px 12px rgba(0,0,0,0.3)'
-                                        : '0 2px 6px rgba(0,0,0,0.15)'
-                                }}
-                            >
-                                {backgroundSettings.elevationLevel === e.id && <Check size={14} className="text-white" />}
-                            </div>
-                            <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none mt-1 ${backgroundSettings.elevationLevel === e.id ? 'text-white' : 'text-brand-textSecondary'}`}>
-                                {e.label}
-                            </span>
-                        </button>
+            {/* Row 1: Presets */}
+            <div className="flex flex-col">
+                <RowLabel>Themes</RowLabel>
+                <div className="grid grid-cols-6 gap-1.5 p-1">
+                    {presets.map((p) => (
+                        <GridCell
+                            key={p.id}
+                            isSelected={currentPresetId === p.id}
+                            onClick={() => applyPreset(p.id)}
+                            label={p.name}
+                            immersive={true}
+                            style={{ backgroundColor: p.preview.bgColor }}
+                        />
                     ))}
                 </div>
             </div>
 
-            {/* Particle Effects Customization */}
-            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 space-y-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-slate-500/10 text-slate-500 dark:text-slate-400">
-                            <Activity size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textPrimary">
-                            Particles
-                        </span>
-                    </div>
-                    <button
-                        onClick={() => setBackgroundSettings({ particlesEnabled: !backgroundSettings.particlesEnabled })}
-                        className={`
-                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                            ${backgroundSettings.particlesEnabled ? 'bg-brand-accent' : 'bg-[var(--color-border-subtle)]'}
-                        `}
-                    >
-                        <span
-                            className={`
-                                inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
-                                ${backgroundSettings.particlesEnabled ? 'translate-x-6' : 'translate-x-1'}
-                            `}
+            {/* Row 2: Background */}
+            <div className="flex flex-col">
+                <RowLabel>Background</RowLabel>
+                <div className="grid grid-cols-6 gap-1.5 p-1">
+                    {bgOptions.map((bg) => (
+                        <GridCell
+                            key={bg.id}
+                            isSelected={backgroundSettings.bgColor === bg.id}
+                            onClick={() => setBackgroundSettings({ bgColor: bg.id })}
+                            label={bg.label}
+                            immersive={true}
+                            style={{ backgroundColor: bg.id }}
                         />
-                    </button>
+                    ))}
                 </div>
+            </div>
 
-                {backgroundSettings.particlesEnabled && (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
-                        {/* Mode Selection */}
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Style</label>
-                            <div className="grid grid-cols-3 gap-2">
-                                {[
-                                    { id: 'gravity', label: 'Gravity' },
-                                    { id: 'grid', label: 'Grid' },
-                                    { id: 'magnetic', label: 'Magnetic' },
-                                    { id: 'orbit', label: 'Orbit' },
-                                    { id: 'swarm_small', label: 'Swarm' },
-                                    { id: 'swarm_large', label: 'Big Swarm' }
-                                ].map((m) => (
-                                    <button
-                                        key={m.id}
-                                        onClick={() => setBackgroundSettings({ particleEffect: m.id as any })}
-                                        className={`px-1 py-2 rounded-lg text-[10px] font-bold transition-all duration-200 border
-                                            ${backgroundSettings.particleEffect === m.id
-                                                ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-sm'
-                                                : 'bg-transparent border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-[var(--color-border-strong)] hover:text-brand-textPrimary'}`}
-                                    >
-                                        {m.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+            {/* Row 3: Tiles */}
+            <div className="flex flex-col">
+                <RowLabel>Tile & Buttons</RowLabel>
+                <div className="grid grid-cols-6 gap-1.5 p-1">
+                    {tileOptions.map((t) => (
+                        <GridCell
+                            key={t.id}
+                            isSelected={backgroundSettings.tileTheme === t.id}
+                            onClick={() => setBackgroundSettings({ tileTheme: t.id })}
+                            label={t.label}
+                            immersive={true}
+                            style={t.id === 'glass'
+                                ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))', backdropFilter: 'blur(4px)' }
+                                : { backgroundColor: t.color }
+                            }
+                        />
+                    ))}
+                </div>
+            </div>
 
-                        {/* Opacity Slider */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary">Opacity</label>
-                                <span className="text-[10px] font-bold text-brand-accent">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
+            {/* Row 4: Primary Text */}
+            <div className="flex flex-col">
+                <RowLabel>Primary Text</RowLabel>
+                <div className="grid grid-cols-6 gap-1.5 p-1">
+                    {primaryOptions.map((t) => (
+                        <GridCell
+                            key={t.id}
+                            isSelected={backgroundSettings.primaryTheme === t.id}
+                            onClick={() => setBackgroundSettings({ primaryTheme: t.id })}
+                            label={t.label}
+                        >
+                            <div
+                                className="w-full h-6 rounded-md flex items-center justify-center font-black text-sm"
+                                style={{
+                                    backgroundColor: ['white', 'mist'].includes(t.id) ? '#1a1d24' : 'transparent',
+                                    color: t.color
+                                }}
+                            >
+                                Aa
                             </div>
-                            <input
-                                type="range"
-                                min="0.05"
-                                max="1.0"
-                                step="0.05"
-                                value={backgroundSettings.particleOpacity}
-                                onChange={(e) => setBackgroundSettings({ particleOpacity: parseFloat(e.target.value) })}
-                                className="w-full h-1.5 bg-[var(--color-bg-tile)] rounded-lg appearance-none cursor-pointer accent-brand-accent hover:bg-[var(--color-bg-tile-hover)] transition-colors"
+                        </GridCell>
+                    ))}
+                </div>
+            </div>
+
+            {/* Row 5: Secondary Text */}
+            <div className="flex flex-col">
+                <RowLabel>Secondary Text</RowLabel>
+                <div className="grid grid-cols-6 gap-1.5 p-1">
+                    {secondaryOptions.map((t) => (
+                        <GridCell
+                            key={t.id}
+                            isSelected={backgroundSettings.secondaryTheme === t.id}
+                            onClick={() => setBackgroundSettings({ secondaryTheme: t.id })}
+                            label={t.label}
+                        >
+                            <div
+                                className="w-full h-6 rounded-md flex items-center justify-center font-black text-sm"
+                                style={{
+                                    backgroundColor: ['slate', 'ash'].includes(t.id) ? '#1a1d24' : 'transparent',
+                                    color: t.color
+                                }}
+                            >
+                                Aa
+                            </div>
+                        </GridCell>
+                    ))}
+                </div>
+            </div>
+
+            {/* Row 6: Elevation */}
+            <div className="flex flex-col">
+                <RowLabel>Elevation</RowLabel>
+                <div className="grid grid-cols-5 gap-1.5 p-1">
+                    {elevationOptions.map((e) => (
+                        <GridCell
+                            key={e.id}
+                            isSelected={backgroundSettings.elevationLevel === e.id}
+                            onClick={() => setBackgroundSettings({ elevationLevel: e.id as any })}
+                            label={e.label}
+                            className="overflow-hidden"
+                        >
+                            <div
+                                className="w-8 h-5 rounded-sm bg-[var(--color-brand-textSecondary)]"
+                                style={{
+                                    transform: `translateY(${e.lift})`,
+                                    boxShadow: e.shadow
+                                }}
                             />
-                        </div>
+                        </GridCell>
+                    ))}
+                </div>
+            </div>
 
-                        {/* Color Presets */}
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Appearance</label>
-                            <div className="grid grid-cols-4 gap-2">
-                                {[
-                                    { color: '#262626', label: 'Onyx' },
-                                    { color: '#3b82f6', label: 'Accent' },
-                                    { color: '#cbd5e1', label: 'Slate' },
-                                    { color: 'multi', label: 'Vibrant' }
-                                ].map((c) => (
-                                    <button
-                                        key={c.color}
-                                        onClick={() => setBackgroundSettings({ particleColor: c.color })}
-                                        className={`p-2 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-1
-                                            ${backgroundSettings.particleColor === c.color ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-[var(--color-border-subtle)] bg-transparent hover:border-[var(--color-border-strong)]'}`}
-                                    >
-                                        <div className="w-full h-8 rounded-md shadow-inner mb-1 overflow-hidden"
-                                            style={{
-                                                background: c.color === 'multi'
-                                                    ? 'linear-gradient(45deg, #ef4444, #10b981, #3b82f6)'
-                                                    : c.color === '#cbd5e1' ? '#cbd5e1' : c.color
-                                            }}>
-                                            {backgroundSettings.particleColor === c.color && (
-                                                <div className="w-full h-full flex items-center justify-center bg-black/10">
-                                                    <Check size={14} className={c.color === '#cbd5e1' ? 'text-gray-800' : 'text-white'} />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.particleColor === c.color ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}`}>
-                                            {c.label}
-                                        </span>
-                                    </button>
-                                ))}
+            {/* Row 7: Borders */}
+            <div className="flex flex-col">
+                <RowLabel>Borders</RowLabel>
+                <div className="grid grid-cols-5 gap-1.5 p-1">
+                    {borderOptions.map((b) => (
+                        <GridCell
+                            key={b.id}
+                            isSelected={backgroundSettings.borderStyle === b.id}
+                            onClick={() => setBackgroundSettings({ borderStyle: b.id as any })}
+                            label={b.label}
+                        >
+                            <div className="w-full h-6 flex items-center justify-center">
+                                <div
+                                    className={`w-6 h-4 rounded-sm border-2 ${b.id === 'accent' ? 'border-brand-accent' :
+                                        b.id === 'ghost' ? 'border-white/10' :
+                                            b.id === 'glass' ? 'border-white/20' :
+                                                b.id === 'vibrant' ? 'border-white/40' :
+                                                    'border-[var(--color-border-subtle)]'
+                                        }`}
+                                />
                             </div>
-                        </div>
-
-                    </div>
-                )}
-            </div>
-
-            {/* Typography Customization */}
-            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 space-y-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-                        <Type size={20} />
-                    </div>
-                    <span className="font-medium text-brand-textPrimary">
-                        Typography
-                    </span>
-                </div>
-
-                {/* Primary (Highlight) */}
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Primary Text (Active/Headers)</label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {[
-                            { id: 'white', label: 'White', color: '#F8FAFC' },
-                            { id: 'mist', label: 'Mist', color: '#CBD5E1' },
-                            { id: 'silver', label: 'Silver', color: '#94a3b8' },
-                            { id: 'iron', label: 'Iron', color: '#475569' },
-                            { id: 'ink', label: 'Ink', color: '#1e293b' }
-                        ].map((t) => (
-                            <button
-                                key={t.id}
-                                onClick={() => setBackgroundSettings({ primaryTheme: t.id })}
-                                className={`relative p-1 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-1
-                                    ${backgroundSettings.primaryTheme === t.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-[var(--color-border-subtle)] bg-transparent hover:border-[var(--color-border-strong)]'}`}
-                            >
-                                <div className="relative w-full h-8 rounded-md shadow-inner mb-1 flex items-center justify-center font-black text-lg"
-                                    style={{ backgroundColor: t.id === 'white' || t.id === 'mist' ? '#1a1d24' : 'transparent', color: t.color }}>
-                                    Aa
-                                    {backgroundSettings.primaryTheme === t.id && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-md">
-                                            <Check size={12} className={t.id === 'white' || t.id === 'mist' ? 'text-white' : 'text-brand-accent'} />
-                                        </div>
-                                    )}
-                                </div>
-                                <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.primaryTheme === t.id ? 'text-white' : 'text-brand-textSecondary'}`}>
-                                    {t.label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Secondary (Base) */}
-                <div className="space-y-2">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Secondary Text (Inactive/Context)</label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                        {[
-                            { id: 'slate', label: 'Slate', color: '#94A3B8' },
-                            { id: 'ash', label: 'Ash', color: '#64748B' },
-                            { id: 'pewter', label: 'Pewter', color: '#475569' },
-                            { id: 'lead', label: 'Lead', color: '#334155' },
-                            { id: 'graphite', label: 'Graphite', color: '#475569' }
-                        ].map((t) => (
-                            <button
-                                key={t.id}
-                                onClick={() => setBackgroundSettings({ secondaryTheme: t.id })}
-                                className={`relative p-1 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-1
-                                    ${backgroundSettings.secondaryTheme === t.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-[var(--color-border-subtle)] bg-transparent hover:border-[var(--color-border-strong)]'}`}
-                            >
-                                <div className="relative w-full h-8 rounded-md shadow-inner mb-1 flex items-center justify-center font-black text-lg"
-                                    style={{ backgroundColor: t.id === 'slate' || t.id === 'ash' ? '#1a1d24' : 'transparent', color: t.color }}>
-                                    Aa
-                                    {backgroundSettings.secondaryTheme === t.id && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-md">
-                                            <Check size={12} className={t.id === 'slate' || t.id === 'ash' ? 'text-white' : 'text-brand-accent'} />
-                                        </div>
-                                    )}
-                                </div>
-                                <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.secondaryTheme === t.id ? 'text-white' : 'text-brand-textSecondary'}`}>
-                                    {t.label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
+                        </GridCell>
+                    ))}
                 </div>
             </div>
 
-            {/* Data & Analytics */}
-            {onShowData && (
-                <button
-                    onClick={() => {
-                        onShowData();
-                        onClose();
-                    }}
-                    className="w-full bg-[var(--color-bg-tile-alt)] rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-[var(--color-border-strong)] focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
-                            <BarChart2 size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textPrimary">
-                            Data & Analytics
-                        </span>
-                    </div>
-                    <span className="text-sm text-brand-textSecondary">
-                        View insights
-                    </span>
-                </button>
-            )}
+            {/* Row 8: Border Effects (Merged Etch & Glow) */}
+            <div className="flex flex-col">
+                <RowLabel>Border Effects</RowLabel>
+                <div className="grid grid-cols-5 gap-1.5 p-1">
+                    {[
+                        { id: 'none', label: 'None' },
+                        { id: 'etch_top', label: 'Etch (T)' },
+                        { id: 'etch_left', label: 'Etch (L)' },
+                        { id: 'glow_hover', label: 'Hover' },
+                        { id: 'glow_active', label: 'Active' }
+                    ].map((opt) => {
+                        const isSelected = opt.id === 'none'
+                            ? (backgroundSettings.horizonEtch === 'off' && backgroundSettings.auraGlow === 'off')
+                            : opt.id === 'etch_top' ? backgroundSettings.horizonEtch === 'top'
+                                : opt.id === 'etch_left' ? backgroundSettings.horizonEtch === 'left'
+                                    : opt.id === 'glow_hover' ? backgroundSettings.auraGlow === 'hover'
+                                        : backgroundSettings.auraGlow === 'active';
 
-            {/* Join Code */}
-            {onShowJoinCode && (
-                <button
-                    onClick={() => {
-                        onShowJoinCode();
-                        onClose();
-                    }}
-                    className="w-full bg-[var(--color-bg-tile-alt)] rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-[var(--color-border-strong)] focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-green-500/10 text-green-600 dark:text-green-400">
-                            <QrCode size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textPrimary">
-                            Join Code
-                        </span>
-                    </div>
-                    <span className="text-sm text-brand-textSecondary">
-                        Show code
-                    </span>
-                </button>
-            )}
+                        const handleClick = () => {
+                            if (opt.id === 'none') {
+                                setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'off' });
+                            } else if (opt.id === 'etch_top') {
+                                setBackgroundSettings({ horizonEtch: 'top', auraGlow: 'off' });
+                            } else if (opt.id === 'etch_left') {
+                                setBackgroundSettings({ horizonEtch: 'left', auraGlow: 'off' });
+                            } else if (opt.id === 'glow_hover') {
+                                setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'hover' });
+                            } else if (opt.id === 'glow_active') {
+                                setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'active' });
+                            }
+                        };
 
-            {/* Sign Out */}
-            {onLogout && (
-                <button
-                    onClick={() => {
-                        onLogout();
-                        onClose();
-                    }}
-                    className="w-full bg-[var(--color-bg-tile-alt)] rounded-xl p-3 flex items-center justify-between border-2 border-transparent transition-all duration-200 hover:border-[var(--color-border-strong)] focus:outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20"
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-red-500/10 text-red-600 dark:text-red-400">
-                            <LogOut size={20} />
-                        </div>
-                        <span className="font-medium text-brand-textPrimary">
-                            Sign Out
-                        </span>
+                        return (
+                            <GridCell
+                                key={opt.id}
+                                isSelected={isSelected}
+                                onClick={handleClick}
+                                label={opt.label}
+                            >
+                                <div className="w-full h-6 flex items-center justify-center">
+                                    {opt.id === 'none' ? (
+                                        <span className="text-[10px] font-bold text-brand-textMuted">—</span>
+                                    ) : (
+                                        <div
+                                            className={`w-6 h-4 rounded-sm bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] 
+                                                ${opt.id === 'etch_top' ? 'border-t-2 border-brand-accent' : ''}
+                                                ${opt.id === 'etch_left' ? 'border-l-2 border-brand-accent' : ''}`}
+                                            style={opt.id.startsWith('glow') ? {
+                                                boxShadow: `0 0 var(--glow-blur) var(--glow-spread) rgba(59, 130, 246, ${opt.id === 'glow_active' ? '0.6' : '0'})`
+                                            } : {}}
+                                        />
+                                    )}
+                                </div>
+                            </GridCell>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Row 9: Particles */}
+            <div className="flex flex-col">
+                <RowLabel>Unecessarry, yet cool</RowLabel>
+                <div className="grid grid-cols-7 gap-1.5 p-1">
+                    {particleOptions.map((p) => {
+                        const isOff = p.id === 'none';
+                        const isSelected = isOff
+                            ? !backgroundSettings.particlesEnabled
+                            : backgroundSettings.particlesEnabled && backgroundSettings.particleEffect === p.id;
+
+                        return (
+                            <GridCell
+                                key={p.id}
+                                isSelected={isSelected}
+                                noExample={true}
+                                onClick={() => {
+                                    if (isOff) {
+                                        setBackgroundSettings({ particlesEnabled: false });
+                                    } else {
+                                        setBackgroundSettings({ particlesEnabled: true, particleEffect: p.id as any });
+                                    }
+                                }}
+                                label={p.label}
+                            >
+                                <div className="w-full h-6 flex items-center justify-center text-brand-textSecondary">
+                                    {isOff ? (
+                                        <span className="text-[10px] font-bold">—</span>
+                                    ) : (
+                                        <div className="w-4 h-4 rounded-full bg-brand-accent/20 flex items-center justify-center">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
+                                        </div>
+                                    )}
+                                </div>
+                            </GridCell>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Row 10: Particle Appearance (only if particles enabled) */}
+            {backgroundSettings.particlesEnabled && (
+                <div className="flex flex-col">
+                    <RowLabel>Particle Appearance</RowLabel>
+                    <div className="grid grid-cols-4 gap-1.5 p-1">
+                        {particleColorOptions.map((c) => (
+                            <GridCell
+                                key={c.id}
+                                isSelected={backgroundSettings.particleColor === c.id}
+                                noExample={true}
+                                onClick={() => setBackgroundSettings({ particleColor: c.id })}
+                                label={c.label}
+                            >
+                                <div
+                                    className="w-full h-6 rounded-md"
+                                    style={{
+                                        background: c.id === 'multi'
+                                            ? 'linear-gradient(45deg, #ef4444, #10b981, #3b82f6)'
+                                            : c.id
+                                    }}
+                                />
+                            </GridCell>
+                        ))}
                     </div>
-                    <span className="text-sm text-brand-textSecondary">
-                        Leave dashboard
-                    </span>
-                </button>
+                    {/* Opacity slider */}
+                    <div className="flex items-center gap-2 mt-2 px-1">
+                        <span className="text-[8px] font-bold uppercase text-brand-textMuted">Opacity</span>
+                        <input
+                            type="range"
+                            min="0.05"
+                            max="1.0"
+                            step="0.05"
+                            value={backgroundSettings.particleOpacity}
+                            onChange={(e) => setBackgroundSettings({ particleOpacity: parseFloat(e.target.value) })}
+                            className="flex-1 h-1 bg-[var(--color-bg-tile-alt)] rounded-lg appearance-none cursor-pointer accent-brand-accent"
+                        />
+                        <span className="text-[8px] font-bold text-brand-accent w-6">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
+                    </div>
+                </div>
             )}
         </div>
     );
 };
+
 
 export default SettingsOverlay;

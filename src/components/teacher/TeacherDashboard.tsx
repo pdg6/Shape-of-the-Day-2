@@ -280,7 +280,7 @@ const TeacherDashboard: React.FC = () => {
                                                         className={`
                                                         ${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-all duration-300 border flex items-center
                                                         ${currentClassId === cls.id
-                                                                ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm glow-accent/10'
+                                                                ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm glow-accent/10'
                                                                 : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-[var(--color-border-subtle)] shadow-none hover:shadow-layered-sm'}
                                                     `}
                                                         title={cls.name}
@@ -349,10 +349,10 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('create')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${tasksSubTab === 'create' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/create`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${tasksSubTab === 'create' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/create`}
                                                     title="Create"
                                                 >
-                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 shadow-layered-sm ${tasksSubTab === 'create' ? 'bg-brand-accent/10' : 'bg-[var(--color-bg-tile-hover)] group-hover/create:bg-brand-accent/10 group-hover/create:scale-110'}`}>
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 shadow-layered-sm ${tasksSubTab === 'create' ? 'bg-brand-accent/10 text-brand-accent' : 'bg-[var(--color-bg-tile-hover)] text-brand-textSecondary group-hover/create:bg-brand-accent/10 group-hover/create:scale-110'}`}>
                                                         <Plus size={14} className="transition-transform group-hover/create:rotate-90" />
                                                     </div>
                                                     <span className={`${isCollapsed ? 'hidden' : ''}`}>Create</span>
@@ -361,10 +361,10 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('browse')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${tasksSubTab === 'browse' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/edit`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${tasksSubTab === 'browse' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/edit`}
                                                     title="Edit"
                                                 >
-                                                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/edit:scale-110">
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${tasksSubTab === 'browse' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/edit:scale-110'}`}>
                                                         <Pencil size={14} className="transition-transform group-hover/edit:scale-110" />
                                                     </div>
                                                     <span className={`${isCollapsed ? 'hidden' : ''}`}>Edit</span>
@@ -387,10 +387,10 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setLiveViewSubTab('tasks')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${liveViewSubTab === 'tasks' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/tasks`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${liveViewSubTab === 'tasks' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/tasks`}
                                                     title="By Task"
                                                 >
-                                                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/tasks:scale-110">
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${liveViewSubTab === 'tasks' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/tasks:scale-110'}`}>
                                                         <ListChecks size={14} className="transition-transform group-hover/tasks:scale-110" />
                                                     </div>
                                                     <span className={`${isCollapsed ? 'hidden' : ''}`}>By Task</span>
@@ -399,10 +399,10 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setLiveViewSubTab('students')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${liveViewSubTab === 'students' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/students`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${liveViewSubTab === 'students' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/students`}
                                                     title="By Student"
                                                 >
-                                                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/students:scale-110">
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${liveViewSubTab === 'students' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/students:scale-110'}`}>
                                                         <Users size={14} className="transition-transform group-hover/students:scale-110" />
                                                     </div>
                                                     <span className={`${isCollapsed ? 'hidden' : ''}`}>By Student</span>
@@ -425,10 +425,10 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setReportsSubTab('calendar')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${reportsSubTab === 'calendar' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/calendar`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${reportsSubTab === 'calendar' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/calendar`}
                                                     title="Calendar"
                                                 >
-                                                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/calendar:scale-110">
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${reportsSubTab === 'calendar' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/calendar:scale-110'}`}>
                                                         <Calendar size={14} className="transition-transform group-hover/calendar:scale-110" />
                                                     </div>
                                                     <span className={`${isCollapsed ? 'hidden' : ''}`}>Calendar</span>
@@ -437,10 +437,10 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setReportsSubTab('analytics')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${reportsSubTab === 'analytics' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/analytics`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${reportsSubTab === 'analytics' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/analytics`}
                                                     title="Analytics"
                                                 >
-                                                    <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/analytics:scale-110">
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${reportsSubTab === 'analytics' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/analytics:scale-110'}`}>
                                                         <BarChart2 size={14} className="transition-transform group-hover/analytics:scale-110" />
                                                     </div>
                                                     <span className={`${isCollapsed ? 'hidden' : ''}`}>Analytics</span>
@@ -521,7 +521,7 @@ const TeacherDashboard: React.FC = () => {
                         >
                             <Menu className="w-6 h-6" />
                         </button>
-                        <h1 className="flex items-baseline gap-1.5 text-xl font-black truncate lift-dynamic">
+                        <h1 className="flex items-baseline gap-1.5 text-xl font-black truncate">
                             <span className="text-brand-textPrimary">
                                 {activeTab === 'tasks' ? (tasksSubTab === 'create' ? 'Tasks:' : 'Inventory:')
                                     : activeTab === 'shape' ? 'Shape:'
@@ -580,6 +580,7 @@ const TeacherDashboard: React.FC = () => {
                     isOpen={isSettingsOpen}
                     onClose={() => setIsSettingsOpen(false)}
                     title="Menu"
+                    variant="page"
                 >
                     <SettingsOverlay
                         isOpen={true}

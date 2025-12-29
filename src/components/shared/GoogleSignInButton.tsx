@@ -32,10 +32,15 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
         <button
             onClick={onClick}
             disabled={isLoading || disabled}
-            className="flex items-center justify-center gap-3 w-full bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-sm font-black uppercase tracking-widest py-3.5 px-6 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 outline-none shadow-layered-sm transition-float hover:shadow-layered-lg button-lift-dynamic min-h-[56px] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-3 w-full py-3.5 px-6 rounded-xl
+                bg-[var(--color-bg-tile)] text-brand-textPrimary text-sm font-black uppercase tracking-widest
+                border border-[var(--color-border-subtle)] shadow-layered
+                hover:bg-[var(--color-bg-tile-hover)] hover:border-blue-500/50 hover:shadow-layered-lg
+                transition-float button-lift-dynamic
+                disabled:opacity-50 disabled:cursor-not-allowed"
         >
             {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin text-brand-accent" />
+                <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
             ) : (
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path

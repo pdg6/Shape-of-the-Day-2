@@ -625,41 +625,30 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             </div>
 
             <div className="flex-1 min-h-0 flex flex-col">
-                <div className="flex-1 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
+                <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
 
                     {/* LEFT PANEL: Task Editor */}
                     <div className="flex-1 lg:col-span-3 flex flex-col">
                         {/* Main Form Card - Standard tile color, description/title boxes are transparent */}
                         <div className={`w-full rounded-2xl transition-float p-6 space-y-4 flex-1 flex flex-col relative z-40 levitated-tile ${editingTaskId ? 'active' : ''}`}>
-                            {/* Save State Indicator - top right */}
-                            <div className="absolute top-3 right-4 z-10 flex items-center gap-2">
-                                <div className={`flex items-center gap-1.5 transition-all duration-500 overflow-hidden ${saveState === 'saved' ? 'max-w-[100px] opacity-100' : 'max-w-0 opacity-0'}`}>
-                                    <Check size={16} className="text-green-500" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-green-500 whitespace-nowrap">Saved</span>
-                                </div>
-                                <div className={`flex items-center gap-1.5 transition-all duration-300 ${saveState === 'saving' ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                                    <Loader size={14} className="animate-spin text-brand-textSecondary" />
-                                </div>
-                            </div>
+
 
                             {/* Title Input - inset box matching description */}
-                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] transition-all duration-300
+                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-glass-inlay-warm)] transition-all duration-300
                                 shadow-layered-sm">
                                 <input
                                     type="text"
                                     value={activeFormData.title}
                                     onChange={(e) => updateActiveCard('title', e.target.value)}
-                                    placeholder="Title for this task, assignment, or project..."
-                                    className="w-full text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder-brand-textSecondary placeholder-opacity-30 text-brand-textPrimary"
+                                    placeholder="Title for this task..."
+                                    className="w-full text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textPrimary/40 text-brand-textPrimary/80"
                                 />
                             </div>
 
                             {/* Description & Attachments Section */}
                             <div className="flex-1 min-h-[120px] relative">
                                 <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] overflow-y-auto transition-all duration-300
-                                        shadow-layered-sm"
-                                    >
+                                    <div className="flex-1 overflow-y-auto transition-all duration-300">
                                         <RichTextEditor
                                             value={activeFormData.description}
                                             onChange={(value) => updateActiveCard('description', value)}
@@ -948,9 +937,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             disabled={isSubmitting}
                                             className="group/btn relative flex flex-col items-center justify-center gap-1.5 py-2.5 px-4 min-w-[72px]
                                                 rounded-xl transition-float border
-                                                bg-[#1a1d24] shadow-layered-sm
+                                                bg-[var(--color-bg-tile)] shadow-layered-sm
                                                 hover:shadow-layered-lg button-lift-dynamic
-                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[#1e2128] border-white/10 hover:border-red-400/50
+                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-[var(--color-border-subtle)] hover:border-red-400/50
                                                 disabled:opacity-50"
                                         >
                                             <Trash2 size={16} className="w-4 h-4 transition-colors group-hover/btn:text-red-500" />
@@ -969,18 +958,18 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         }}
                                         disabled={isSubmitting || !activeFormData.title.trim()}
                                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float
-                                            bg-[#1a1d24] border border-white/10 text-brand-textPrimary
+                                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
                                             shadow-layered-sm
                                             hover:shadow-layered-lg
                                             button-lift-dynamic hover:border-brand-accent/50
                                             disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {isSubmitting ? (
+                                        {isSubmitting || saveState === 'saving' ? (
                                             <Loader className="w-5 h-5 animate-spin text-brand-accent" />
                                         ) : (
                                             <Check className="w-5 h-5 text-brand-accent" />
                                         )}
-                                        <span>{isSubmitting ? 'Saving...' : 'Save'}</span>
+                                        <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
                                     </button>
                                 </div>
                             </div>
@@ -988,8 +977,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     </div>
 
                     {/* RIGHT PANEL: Task List */}
-                    <div className="shrink-0 lg:col-span-1 flex flex-col">
-                        <div className="flex flex-col justify-end lg:justify-between overflow-visible pb-2 lg:pb-0 lg:p-0">
+                    <div className="flex-1 min-h-0 lg:col-span-1 flex flex-col">
+                        <div className="flex-1 min-h-0 flex flex-col justify-end lg:justify-between overflow-visible pb-2 lg:pb-0 lg:p-0">
 
 
                             {/* Mobile Overlay - closes accordion when clicking outside */}
@@ -1033,10 +1022,14 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             </div>
 
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
+                            {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
-                                overflow-y-auto px-1 space-y-3 custom-scrollbar relative z-50 bg-[var(--color-bg-tile)] lg:bg-transparent
-                                lg:overflow-visible lg:pt-0 lg:pb-4 lg:bg-transparent
-                                ${isMobileTasksOpen ? 'flex-1 pt-3 pb-4 rounded-lg' : 'max-h-0 lg:max-h-none overflow-hidden'}
+                                px-4 space-y-3 relative z-50 bg-[var(--color-bg-tile)] lg:bg-transparent
+                                lg:pt-0 lg:pb-4 overflow-visible
+                                ${isMobileTasksOpen
+                                    ? 'flex-1 pt-3 pb-4 rounded-lg overflow-y-auto custom-scrollbar'
+                                    : 'max-h-0 overflow-hidden lg:max-h-none lg:overflow-visible'
+                                }
                                 transition-all duration-300 ease-in-out
                             `}>
                                 {!currentClassId ? (
@@ -1080,7 +1073,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                             onClick={() => handleReorder(task.id, 'up')}
                                                             disabled={siblingIndex === 0}
                                                             title="Move up"
-                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-brand-textSecondary focus:outline-none"
+                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[var(--color-bg-tile)] disabled:hover:text-brand-textSecondary focus:outline-none"
                                                         >
                                                             <ArrowUp size={14} />
                                                         </button>
@@ -1088,7 +1081,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                             onClick={() => handleReorder(task.id, 'down')}
                                                             disabled={siblingIndex === siblings.length - 1}
                                                             title="Move down"
-                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[#1a1d24] disabled:hover:text-brand-textSecondary focus:outline-none"
+                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[var(--color-bg-tile)] disabled:hover:text-brand-textSecondary focus:outline-none"
                                                         >
                                                             <ArrowDown size={14} />
                                                         </button>
@@ -1146,7 +1139,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                                     e.preventDefault();
                                                                     handleAddSubtask(task);
                                                                 }}
-                                                                className="group/btn p-1.5 rounded-lg transition-float bg-[#1a1d24] border border-white/10 text-brand-textSecondary shadow-layered-sm opacity-0 group-hover:opacity-100 hover:shadow-layered button-lift-dynamic hover:text-brand-textPrimary hover:bg-[#1e2128] hover:border-brand-accent/50 focus:outline-none"
+                                                                className="group/btn p-1.5 rounded-lg transition-float bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary shadow-layered-sm opacity-0 group-hover:opacity-100 hover:shadow-layered button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 focus:outline-none"
                                                                 title="Add subtask"
                                                             >
                                                                 <Plus size={14} className="transition-colors group-hover/btn:text-brand-accent" />

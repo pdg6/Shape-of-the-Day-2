@@ -9,14 +9,106 @@ export interface BackgroundSettings {
     particlesEnabled: boolean;
     particleEffect: 'none' | 'grid' | 'magnetic' | 'orbit' | 'swarm_small' | 'swarm_large' | 'gravity';
     particleOpacity: number;
-    primaryTheme: string;       // 'bone' | 'mist' | 'silver' | 'iron' | 'ink'
-    secondaryTheme: string;     // 'stone' | 'ash' | 'pewter' | 'lead' | 'graphite'
-    tileTheme: string;          // 'onyx' | 'slate' | 'graphite' | 'cloud' | 'glacier'
-    elevationLevel: 'whisper' | 'gentle' | 'float' | 'lift' | 'dramatic';
+    primaryTheme: 'pure' | 'silver' | 'steel' | 'iron' | 'ink' | 'obsidian';
+    secondaryTheme: 'sky' | 'mist' | 'ash' | 'accent' | 'lead' | 'coal';
+    tileTheme: 'pure' | 'onyx' | 'slate' | 'glass' | 'cloud' | 'glacier';
+    elevationLevel: 'flat' | 'subtle' | 'moderate' | 'elevated' | 'dramatic';
     borderStyle: 'auto' | 'accent' | 'ghost' | 'glass' | 'vibrant';
-    horizonEtching: boolean;
-    glowEffect: boolean;
+    horizonEtch: 'off' | 'top' | 'left';
+    auraGlow: 'off' | 'hover' | 'active';
 }
+
+// Theme Presets: Bundles of settings for one-click theme application
+export const THEME_PRESETS: Record<string, { name: string; settings: Partial<BackgroundSettings> }> = {
+    deepVoid: {
+        name: 'Deep Void',
+        settings: {
+            bgColor: '#050505',
+            tileTheme: 'onyx',
+            primaryTheme: 'pure',
+            secondaryTheme: 'mist',
+            elevationLevel: 'moderate',
+            borderStyle: 'auto',
+            horizonEtch: 'top',
+            auraGlow: 'off',
+            particlesEnabled: true,
+            particleEffect: 'swarm_large'
+        }
+    },
+    stark: {
+        name: 'Stark',
+        settings: {
+            bgColor: '#000000',
+            tileTheme: 'pure',
+            primaryTheme: 'pure',
+            secondaryTheme: 'sky',
+            elevationLevel: 'flat',
+            borderStyle: 'auto',
+            horizonEtch: 'off',
+            auraGlow: 'off',
+            particlesEnabled: false
+        }
+    },
+    cyberPro: {
+        name: 'Cyber Pro',
+        settings: {
+            bgColor: '#0F1115',
+            tileTheme: 'slate',
+            primaryTheme: 'steel',
+            secondaryTheme: 'ash',
+            elevationLevel: 'moderate',
+            borderStyle: 'auto',
+            horizonEtch: 'top',
+            auraGlow: 'off',
+            particlesEnabled: true,
+            particleEffect: 'grid'
+        }
+    },
+    shadow: {
+        name: 'Shadow',
+        settings: {
+            bgColor: '#171A21',
+            tileTheme: 'glass',
+            primaryTheme: 'iron',
+            secondaryTheme: 'accent',
+            elevationLevel: 'moderate',
+            borderStyle: 'glass',
+            horizonEtch: 'left',
+            auraGlow: 'off',
+            particlesEnabled: true,
+            particleEffect: 'gravity'
+        }
+    },
+    ghost: {
+        name: 'Ghost',
+        settings: {
+            bgColor: '#C1C7D0',
+            tileTheme: 'cloud',
+            primaryTheme: 'ink',
+            secondaryTheme: 'lead',
+            elevationLevel: 'subtle',
+            borderStyle: 'auto',
+            horizonEtch: 'off',
+            auraGlow: 'off',
+            particlesEnabled: true,
+            particleEffect: 'magnetic'
+        }
+    },
+    vapor: {
+        name: 'Vapor',
+        settings: {
+            bgColor: '#D1D5DA',
+            tileTheme: 'glacier',
+            primaryTheme: 'obsidian',
+            secondaryTheme: 'coal',
+            elevationLevel: 'subtle',
+            borderStyle: 'auto',
+            horizonEtch: 'off',
+            auraGlow: 'off',
+            particlesEnabled: false
+        }
+    }
+};
 
 interface ClassState {
     currentClassId: string | null;
@@ -64,15 +156,15 @@ export const useClassStore = create<ClassState>((set) => ({
             bgColor: '#050505',
             particleColor: 'multi',
             particlesEnabled: true,
-            particleEffect: 'orbit' as const,
+            particleEffect: 'swarm_large' as const,
             particleOpacity: 0.25,
-            primaryTheme: 'white',    // Position 1 (Lightest)
-            secondaryTheme: 'slate', // Position 1 (Lightest)
-            tileTheme: 'onyx',       // Position 1 (Darkest)
-            elevationLevel: 'gentle', // Default: mild floating
+            primaryTheme: 'pure',
+            secondaryTheme: 'mist',
+            tileTheme: 'onyx',
+            elevationLevel: 'moderate',
             borderStyle: 'auto',
-            horizonEtching: true,
-            glowEffect: true
+            horizonEtch: 'top',
+            auraGlow: 'off'
         };
 
         if (typeof window === 'undefined') return defaultSettings;

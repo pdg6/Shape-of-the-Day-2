@@ -8,6 +8,7 @@ interface ModalProps {
     children: ReactNode;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
     hideHeader?: boolean;
+    variant?: 'tile' | 'page';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -16,7 +17,8 @@ export const Modal: React.FC<ModalProps> = ({
     title,
     children,
     maxWidth = 'md',
-    hideHeader = false
+    hideHeader = false,
+    variant = 'tile'
 }) => {
     const titleId = useId();
 
@@ -91,7 +93,8 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto`}
+                className={`${widthClasses[maxWidth]} w-full rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto
+                    ${variant === 'page' ? 'bg-[var(--bg-page)]' : 'bg-[var(--color-bg-tile)]'}`}
                 onClick={e => e.stopPropagation()}
             >
                 {!hideHeader && (

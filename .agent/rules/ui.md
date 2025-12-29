@@ -2,10 +2,6 @@
 trigger: always_on
 ---
 
----
-trigger: always_on
----
-
 # UI Rules (Dynamic Theme System)
 
 This document defines the **dynamic ground truth** for all UI elements in the application. It replaces fixed hex codes with CSS variables to support the Autonomous Theme System.
@@ -174,6 +170,9 @@ These utilities respect the user's `elevationLevel` setting (whisper, gentle, fl
 >
 ```
 
+**Rationale for UI Rules:**
+.levitated-tile uses transforms and large shadows. Without `overflow: visible`, these effects extend beyond the tile's bounds and get clipped by the default `overflow: hidden` behavior. This is especially critical for tiles inside scrollable containers or flex layouts.
+
 **CSS Definition:**
 ```css
 .levitated-tile {
@@ -181,6 +180,7 @@ These utilities respect the user's `elevationLevel` setting (whisper, gentle, fl
     border: 1px solid var(--color-border-subtle);
     box-shadow: var(--shadow-layered-lg);
     transform: translateY(var(--elevation-tile-default, -4px));
+    overflow: visible; /* CRITICAL: Prevents shadow/elevation clipping */
 }
 ```
 

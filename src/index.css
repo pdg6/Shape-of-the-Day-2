@@ -436,7 +436,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         transform: translateY(var(--elevation-button-hover, -2px));
         box-shadow:
             var(--shadow-layered-lg),
-            0 0 20px rgba(59, 130, 246, var(--glow-opacity, 0));
+            0 0 var(--glow-blur, 0px) var(--glow-spread, 0px) var(--glow-color, transparent);
     }
 
     .card-interactive-selected {
@@ -510,6 +510,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         @apply text-brand-textSecondary;
         box-shadow: var(--shadow-layered-lg);
         transform: translateY(var(--elevation-tile-default, -4px));
+        backdrop-filter: blur(var(--tile-blur, 0px));
+        -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
     }
 
     /* Hover State: Higher magnetic pull + Accent Border */
@@ -518,7 +520,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         border-color: var(--color-brand-accent);
         box-shadow:
             var(--shadow-layered-lg),
-            0 0 15px rgba(59, 130, 246, var(--glow-opacity, 0));
+            0 0 var(--glow-blur, 0px) var(--glow-spread, 0px) var(--glow-color, transparent);
         @apply text-brand-textPrimary;
     }
 
@@ -527,18 +529,18 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         @apply text-brand-textPrimary;
         background-color: var(--color-bg-tile);
         border: 1px solid var(--color-border-subtle);
-        border-top: 0.5px solid var(--color-horizon-highlight);
+        border-top: var(--horizon-border-top, 1px solid var(--color-border-subtle));
+        border-left: var(--horizon-border-left, 1px solid var(--color-border-subtle));
         box-shadow:
-            inset 0 3px 6px -2px rgba(29, 78, 216, 0.5),
-            var(--shadow-layered-lg);
+            var(--active-inset-shadow, none),
+            var(--shadow-layered-lg),
+            0 0 var(--glow-blur, 0px) var(--glow-spread, 0px) rgba(59, 130, 246, calc(0.45 * var(--glow-on-active, 0)));
         transform: translateY(var(--elevation-tile-default, -4px));
     }
 
     /* Active State Logo: Brand Accent */
     .nav-item.active svg {
         color: var(--color-brand-accent);
-        filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
-        /* Optional: glow for active logo */
     }
 
     /* ============================================
@@ -551,6 +553,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         border: 1px solid var(--color-border-subtle);
         box-shadow: var(--shadow-layered-lg);
         transform: translateY(var(--elevation-tile-default, -4px));
+        backdrop-filter: blur(var(--tile-blur, 0px));
+        -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
+        overflow: visible;
+        /* Prevents shadow/elevation clipping */
     }
 
     .levitated-tile:hover {
@@ -563,10 +569,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         color: white;
         background-color: var(--color-bg-tile);
         border: 1px solid var(--color-border-subtle);
-        border-top: 0.5px solid var(--color-horizon-highlight);
+        border-top: var(--horizon-border-top, 1px solid var(--color-border-subtle));
+        border-left: var(--horizon-border-left, 1px solid var(--color-border-subtle));
         box-shadow:
-            inset 0 3px 6px -2px rgba(29, 78, 216, 0.5),
-            var(--shadow-layered-lg);
+            var(--active-inset-shadow, none),
+            var(--shadow-layered-lg),
+            0 0 var(--glow-blur, 0px) var(--glow-spread, 0px) rgba(59, 130, 246, calc(0.45 * var(--glow-on-active, 0)));
         transform: translateY(var(--elevation-tile-default, -4px));
     }
 
@@ -736,11 +744,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .input-base {
-        @apply w-full px-4 py-2.5 rounded-md border-2 transition-all duration-200;
-        @apply bg-transparent text-base;
+        @apply w-full px-4 py-2.5 rounded-xl border transition-all duration-200;
+        @apply bg-[var(--color-bg-tile-alt)] text-base;
         @apply text-brand-textPrimary;
         @apply border-[var(--color-border-subtle)];
-        @apply placeholder-brand-textSecondary font-medium;
+        @apply placeholder-brand-textMuted font-medium;
         @apply hover:border-[var(--color-border-strong)];
 
         /* Override browser autofill background */
@@ -761,14 +769,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .btn-primary-green {
-        @apply px-4 py-2 rounded-xl text-brand-textPrimary font-bold transition-all duration-300;
-        @apply bg-[var(--color-bg-tile)] text-base shadow-layered-sm;
-        @apply border-[var(--color-border-subtle)];
-        @apply hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-strong)] hover:shadow-layered-lg;
+        @apply w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold transition-float;
+        @apply bg-[var(--color-bg-tile)] text-brand-textPrimary text-base;
+        @apply border border-[var(--color-border-subtle)] shadow-layered;
+        @apply hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 hover:shadow-layered-lg;
         @apply button-lift-dynamic;
-        @apply focus:outline-none focus:ring-2 focus:ring-slate-400/30;
-        @apply focus:bg-[var(--color-bg-tile-hover)];
-        @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-400;
+        @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/20;
+        @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none;
     }
 
     .settings-btn {
