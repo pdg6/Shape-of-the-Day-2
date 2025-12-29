@@ -37,7 +37,7 @@ const getFileIconColor = (mimeType: string): string => {
     if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-green-500';
     if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-orange-500';
     if (mimeType === 'application/pdf') return 'text-red-500';
-    return 'text-gray-500';
+    return 'text-brand-textSecondary';
 };
 
 // Extract domain from URL for display
@@ -207,7 +207,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                         setIsDescriptionExpanded(!isDescriptionExpanded);
                     }}
                     className="absolute top-3 right-3 p-1.5 rounded-lg z-20
-                        text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10
+                        text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10
                         transition-colors opacity-0 group-hover:opacity-100"
                     style={{ opacity: isDescriptionExpanded ? 1 : undefined }}
                     title={isDescriptionExpanded ? 'Collapse' : 'Expand'}
@@ -239,7 +239,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                             e.stopPropagation();
                             onEdit?.(task.id);
                         }}
-                        className={`p-1 rounded-md text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10 
+                        className={`p-1 rounded-md text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10 
                             transition-all duration-200 ${showEditButton ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                         title="Edit task"
                     >
@@ -256,7 +256,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                             {task.title}
                         </h3>
                         {task.endDate && (
-                            <span className="text-sm text-gray-400 font-medium shrink-0">
+                            <span className="text-sm text-brand-textSecondary font-medium shrink-0">
                                 {task.endDate === today
                                     ? 'Due Today'
                                     : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`
@@ -268,7 +268,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                     {/* Progress Bar for Parent Tasks */}
                     {hasChildren && (
                         <div className="mt-2">
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <div className="flex items-center gap-2 text-xs text-brand-textSecondary">
                                 <span className="font-medium">{completedChildren}/{childTasks.length} complete</span>
                             </div>
                             <div className="mt-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -359,7 +359,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                                     {link.title || getUrlDomain(link.url)}
                                                 </span>
                                                 {link.title && (
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="text-xs text-brand-textSecondary">
                                                         {getUrlDomain(link.url)}
                                                     </span>
                                                 )}
@@ -409,7 +409,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <FileIcon size={16} className={`shrink-0 ${iconColor}`} />
-                                            <span className="truncate max-w-[150px] text-gray-700 dark:text-gray-300">{attachment.filename}</span>
+                                            <span className="truncate max-w-[150px] text-brand-textPrimary">{attachment.filename}</span>
                                         </a>
                                     );
                                 })}
@@ -561,7 +561,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
 
     if (!currentClass) {
         return (
-            <div className="flex items-center justify-center h-full text-gray-500">
+            <div className="flex items-center justify-center h-full text-brand-textSecondary">
                 Please select a class to view the Shape of the Day.
             </div>
         );
@@ -607,7 +607,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                             {/* Fullscreen Toggle Button */}
                             <button
                                 onClick={toggleFullscreen}
-                                className="p-1.5 rounded-lg text-gray-400 hover:text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                                className="p-1.5 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10 transition-colors"
                                 title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Enter Fullscreen (F)'}
                             >
                                 {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
@@ -649,7 +649,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
             {/* --- TASK STREAM (Hierarchical) --- */}
             <div className="space-y-3 pb-4">
                 {loading ? (
-                    <div className="text-center py-12 text-gray-400">Loading schedule...</div>
+                    <div className="text-center py-12 text-brand-textSecondary">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
                     <div className="text-center py-12 text-brand-textDarkSecondary bg-brand-lightSurface dark:bg-bg-tile rounded-2xl border border-dashed border-slate-300 dark:border-white/10">
                         No tasks scheduled for this date.

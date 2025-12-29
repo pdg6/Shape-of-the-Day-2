@@ -202,7 +202,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                         onClick={openCreateModal}
                         title="Create new class"
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float self-end
-                            bg-[#1a1d24] border border-white/10 text-white
+                            bg-[#1a1d24] border border-white/10 text-brand-textPrimary
                             shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
                             hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
                             hover:-translate-y-0.5 hover:border-brand-accent/50"
@@ -217,7 +217,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             size="md"
                             icon={CalendarIcon}
                             onClick={() => setInternalTab('history')}
-                            className={internalTab === 'history' ? 'text-brand-accent' : 'text-gray-500'}
+                            className={internalTab === 'history' ? 'text-brand-accent' : 'text-brand-textSecondary'}
                         >
                             Calendar
                         </Button>
@@ -226,7 +226,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             size="md"
                             icon={BarChart3}
                             onClick={() => setInternalTab('analytics')}
-                            className={internalTab === 'analytics' ? 'text-brand-accent' : 'text-gray-500'}
+                            className={internalTab === 'analytics' ? 'text-brand-accent' : 'text-brand-textSecondary'}
                         >
                             Analytics
                         </Button>
@@ -292,10 +292,10 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     {/* Header */}
                                     <div className="h-20 p-5 relative flex justify-between items-start border-b border-gray-100 dark:border-white/5">
                                         <div className="z-10 w-full min-w-0">
-                                            <h3 className="text-xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary leading-tight mb-1 truncate pr-2">
+                                            <h3 className="text-xl font-bold text-brand-textPrimary leading-tight mb-1 truncate pr-2">
                                                 Overview
                                             </h3>
-                                            <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                            <p className="text-xs font-medium text-brand-textSecondary">
                                                 Classroom Manager
                                             </p>
                                         </div>
@@ -308,24 +308,24 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     <div className="flex-1 p-5 flex flex-col justify-center gap-4">
                                         <div className="flex items-start gap-4">
                                             <div className="flex-1 text-left -m-2 p-2">
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Classes</p>
+                                                <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Classes</p>
                                                 <div className="flex items-baseline gap-1.5">
-                                                    <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                    <span className="text-2xl font-bold text-brand-textPrimary">
                                                         {classrooms.length}
                                                     </span>
-                                                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500">active</span>
+                                                    <span className="text-xs font-medium text-brand-textSecondary">active</span>
                                                 </div>
                                             </div>
 
                                             <div className="w-px bg-gray-200 dark:bg-gray-700 self-stretch my-1" />
 
                                             <div className="flex-1 text-left -m-2 p-2">
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Tasks</p>
+                                                <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Tasks</p>
                                                 <div className="flex items-baseline gap-1.5">
-                                                    <span className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                                                    <span className="text-2xl font-bold text-brand-textPrimary">
                                                         {totalTasks}
                                                     </span>
-                                                    <span className="text-xs font-medium text-gray-400 dark:text-gray-500">total</span>
+                                                    <span className="text-xs font-medium text-brand-textSecondary">total</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -377,7 +377,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                         <div className="flex-1 card-base overflow-hidden flex flex-col">
                             <div className="grid grid-cols-7 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                    <div key={day} className="p-3 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    <div key={day} className="p-3 text-center text-xs font-bold text-brand-textSecondary uppercase tracking-wider">
                                         {day}
                                     </div>
                                 ))}
@@ -405,7 +405,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                 border-b border-r border-gray-200 dark:border-gray-700 p-2 relative cursor-pointer transition-colors
                                                 hover:bg-brand-accent/5
                                                 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent
-                                                ${!isSameMonth(day, currentMonth) ? 'bg-gray-50/50 dark:bg-gray-900/50 text-gray-400' : ''}
+                                                ${!isSameMonth(day, currentMonth) ? 'bg-gray-50/50 dark:bg-gray-900/50 text-brand-textSecondary' : ''}
                                                 ${isSameDay(day, new Date()) ? 'bg-brand-accent/10' : ''}
                                             `}
                                         >
@@ -434,7 +434,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                 {internalTab === 'analytics' && (
                     <div className="space-y-6">
                         {!analyticsData ? (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                            <div className="flex flex-col items-center justify-center h-full text-brand-textSecondary">
                                 <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
                                 <p>No analytics data available yet.</p>
                             </div>
@@ -444,18 +444,18 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div className="p-6 rounded-2xl levitated-tile">
                                         <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg. Session</span>
+                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Avg. Session</span>
                                             <Clock className="w-5 h-5 text-brand-accent" />
                                         </div>
                                         <div className="flex items-baseline gap-2">
                                             <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.avgSessionDuration}</span>
-                                            <span className="text-sm text-gray-500">mins</span>
+                                            <span className="text-sm text-brand-textSecondary">mins</span>
                                         </div>
                                     </div>
 
                                     <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Completion Rate</span>
+                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Completion Rate</span>
                                             <CheckCircle className="w-5 h-5 text-green-500" />
                                         </div>
                                         <div className="flex items-baseline gap-2">
@@ -465,23 +465,23 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                                     <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Stuck Rate</span>
+                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Stuck Rate</span>
                                             <AlertCircle className="w-5 h-5 text-amber-500" />
                                         </div>
                                         <div className="flex items-baseline gap-2">
                                             <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.stuckRate}%</span>
-                                            <span className="text-sm text-gray-500">of tasks</span>
+                                            <span className="text-sm text-brand-textSecondary">of tasks</span>
                                         </div>
                                     </div>
 
                                     <div className="bg-white dark:bg-bg-tile rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered p-6 transition-float hover:shadow-layered-lg">
                                         <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Students</span>
+                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Active Students</span>
                                             <Users className="w-5 h-5 text-purple-500" />
                                         </div>
                                         <div className="flex items-baseline gap-2">
                                             <span className="text-3xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">{analyticsData.uniqueStudents}</span>
-                                            <span className="text-sm text-gray-500">total</span>
+                                            <span className="text-sm text-brand-textSecondary">total</span>
                                         </div>
                                     </div>
                                 </div>
@@ -499,7 +499,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                 <div key={i} className="space-y-2">
                                                     <div className="flex justify-between text-sm">
                                                         <span className="font-medium truncate max-w-[70%]">{task.title}</span>
-                                                        <span className="text-gray-500">{task.avgTime}s avg</span>
+                                                        <span className="text-brand-textSecondary">{task.avgTime}s avg</span>
                                                     </div>
                                                     <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden flex">
                                                         <div
@@ -515,7 +515,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                 </div>
                                             ))}
                                             {analyticsData.difficultTasks.length === 0 && (
-                                                <p className="text-gray-400 text-sm italic">No data available.</p>
+                                                <p className="text-brand-textSecondary text-sm italic">No data available.</p>
                                             )}
                                         </div>
                                     </div>

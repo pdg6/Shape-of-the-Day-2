@@ -124,10 +124,10 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                 {/* Header / Banner */}
                 <div className="h-20 p-6 relative flex justify-between items-start">
                     <div className="z-10 w-full min-w-0">
-                        <h3 className={`text-xl font-bold leading-tight mb-1 truncate pr-2 ${isSelected ? 'text-white' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                        <h3 className={`text-xl font-bold leading-tight mb-1 truncate pr-2 ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                             {classroom.name}
                         </h3>
-                        <p className={`text-xs font-medium flex items-center gap-2 ${isSelected ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'}`}>
+                        <p className={`text-xs font-medium flex items-center gap-2 ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>
                             <span className="opacity-75 truncate">{classroom.subject}</span>
                             <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-white/40' : 'bg-gray-300 dark:bg-gray-600'}`} />
                             <span className="opacity-75">{classroom.gradeLevel}</span>
@@ -139,7 +139,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             e.stopPropagation();
                             onEdit(classroom);
                         }}
-                        className={`flex items-center justify-center p-2 rounded-xl text-sm font-bold text-gray-400 transition-float hover:-translate-y-0.5 shadow-layered-sm border border-transparent ${isSelected ? 'hover:text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent/20 hover:shadow-layered-lg' : ''}`}
+                        className={`flex items-center justify-center p-2 rounded-xl text-sm font-bold text-brand-textSecondary transition-float hover:-translate-y-0.5 shadow-layered-sm border border-transparent ${isSelected ? 'hover:text-brand-accent hover:bg-brand-accent/10 hover:border-brand-accent/20 hover:shadow-layered-lg' : ''}`}
                         title="Edit Class"
                     >
                         <Edit2 size={16} />
@@ -158,9 +158,9 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             }}
                             className={`flex-1 text-left group/stats -m-2 p-2 rounded-xl transition-float hover:-translate-y-0.5 border border-transparent focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-slate-50 dark:hover:bg-white/[0.03] hover:border-slate-200 dark:hover:border-white/5 shadow-layered-sm hover:shadow-layered-lg' : ''}`}
                         >
-                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>Students</p>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>Students</p>
                             <div className="flex items-baseline gap-1.5">
-                                <span className={`text-2xl font-bold ${isSelected ? 'text-white' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                <span className={`text-2xl font-bold ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                                     {activeStudentCount ?? '-'}
                                 </span>
                                 {isActive ? (
@@ -180,9 +180,9 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             }}
                             className={`flex-1 text-left group/stats -m-2 p-2 rounded-xl transition-float hover:-translate-y-0.5 border border-transparent focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-slate-50 dark:hover:bg-white/[0.03] hover:border-slate-200 dark:hover:border-white/5 shadow-layered-sm' : ''}`}
                         >
-                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>Tasks</p>
+                            <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>Tasks</p>
                             <div className="flex items-baseline gap-1.5">
-                                <span className={`text-2xl font-bold ${isSelected ? 'text-white' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                                <span className={`text-2xl font-bold ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                                     {savedTaskCount}
                                 </span>
                             </div>
@@ -202,14 +202,14 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             bg-[#1a1d24] shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
                             hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5
                             ${isSelected
-                                ? 'text-slate-400 hover:text-white hover:bg-[#1e2128] border-white/10 hover:border-brand-accent/50'
+                                ? 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[#1e2128] border-white/10 hover:border-brand-accent/50'
                                 : 'border-white/5 cursor-default'}
                         `}
                         title="Click to show join code"
                     >
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Code</span>
+                        <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-widest">Code</span>
                         <div className="flex items-center gap-2">
-                            <span className={`font-mono font-bold text-lg tracking-widest transition-colors ${isSelected ? 'text-white group-hover/code:text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
+                            <span className={`font-mono font-bold text-lg tracking-widest transition-colors ${isSelected ? 'text-brand-textPrimary group-hover/code:text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
                                 {classroom.joinCode}
                             </span>
                             <button
@@ -217,7 +217,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                                 className={`p-1 rounded-md transition-colors ${isSelected ? 'hover:bg-white/20' : 'hover:bg-gray-200 dark:hover:bg-white/10'}`}
                                 title="Copy join code"
                             >
-                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-white group-hover/code:text-brand-accent' : 'text-gray-400'}`} />}
+                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-brand-textPrimary group-hover/code:text-brand-accent' : 'text-brand-textSecondary'}`} />}
                             </button>
                         </div>
                     </div>
@@ -246,13 +246,13 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                                 bg-[#1a1d24] shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
                                 hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)] hover:-translate-y-0.5
                                 ${isSelected
-                                    ? 'text-slate-400 hover:text-white hover:bg-[#1e2128] border-white/10 hover:border-brand-accent/50'
+                                    ? 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[#1e2128] border-white/10 hover:border-brand-accent/50'
                                     : 'border-white/5 cursor-default'}
                             `}
                             title={action.label}
                         >
                             <action.icon className={`w-4 h-4 transition-colors ${isSelected ? 'group-hover/btn:text-brand-accent' : ''}`} />
-                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isSelected ? 'group-hover/btn:text-white' : ''}`}>
+                            <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${isSelected ? 'group-hover/btn:text-brand-textPrimary' : ''}`}>
                                 {action.label}
                             </span>
                         </button>

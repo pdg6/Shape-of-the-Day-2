@@ -164,20 +164,20 @@ export function MultiSelect<T extends string | number = string>({
                     group relative w-full cursor-pointer
                     pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
                     border transition-all duration-300 transition-float
-                    bg-[#1a1d24] text-slate-400
+                    bg-brand-tile text-brand-textSecondary
                     shadow-[0_4px_12px_-2px_rgba(0,0,0,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_0_rgba(255,255,255,0.1)]
                     hover:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.6),0_4px_8px_-2px_rgba(0,0,0,0.4)]
-                    hover:-translate-y-0.5 hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                    hover:-translate-y-0.5 hover:text-brand-textPrimary hover:bg-brand-tile-alt hover:border-brand-accent/50
                     focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     border-white/10
-                    ${value.length > 0 ? 'text-brand-textPrimary' : 'text-slate-400'}
+                    ${value.length > 0 ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                     ${buttonClassName}
                 `}
             >
                 {/* Left Icon or Checkmark */}
                 {ButtonIcon ? (
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 transition-colors group-hover:text-brand-accent">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-brand-textSecondary transition-colors group-hover:text-brand-accent">
                         <ButtonIcon size={18} />
                     </span>
                 ) : value.length > 0 && primaryOption ? (
@@ -197,7 +197,7 @@ export function MultiSelect<T extends string | number = string>({
                 </span>
 
                 {/* Chevron (points up since dropdown opens upward) */}
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 transition-colors group-hover:text-brand-accent">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-brand-textSecondary transition-colors group-hover:text-brand-accent">
                     <ChevronDown
                         size={16}
                         className={`transition-transform duration-200 ${isOpen ? '' : 'rotate-180'}`}
@@ -219,7 +219,7 @@ export function MultiSelect<T extends string | number = string>({
                 >
                     <div
                         data-multiselect-dropdown
-                        className="fixed z-[9999] overflow-hidden rounded-lg border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-[#1a1d24] shadow-layered focus:outline-none"
+                        className="fixed z-[9999] overflow-hidden rounded-lg border border-slate-200 dark:border-white/5 bg-brand-lightSurface dark:bg-brand-tile shadow-layered focus:outline-none"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,
@@ -229,16 +229,16 @@ export function MultiSelect<T extends string | number = string>({
                     >
                         {/* Search Input */}
                         {showSearch && (
-                            <div className="p-2 border-b border-slate-200 dark:border-white/5 sticky top-0 bg-brand-lightSurface dark:bg-[#1a1d24]">
+                            <div className="p-2 border-b border-slate-200 dark:border-white/5 sticky top-0 bg-brand-lightSurface dark:bg-brand-tile">
                                 <div className="relative">
-                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary" />
                                     <input
                                         ref={searchInputRef}
                                         type="text"
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                         placeholder="Search..."
-                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-brand-textDarkPrimary dark:text-brand-textPrimary placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
+                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
                                         onClick={e => e.stopPropagation()}
                                         onKeyDown={e => e.stopPropagation()}
                                     />
@@ -248,7 +248,7 @@ export function MultiSelect<T extends string | number = string>({
                                                 e.stopPropagation();
                                                 setSearch('');
                                             }}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-textSecondary hover:text-brand-textPrimary"
                                         >
                                             <X size={14} />
                                         </button>
@@ -271,7 +271,7 @@ export function MultiSelect<T extends string | number = string>({
                                             relative w-full cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm text-left
                                             hover:bg-slate-50 dark:hover:bg-gray-800
                                             ${option.disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                                            text-brand-textDarkPrimary dark:text-brand-textPrimary
+                                            text-brand-textPrimary
                                         `}
                                     >
                                         {/* Colored checkmark when selected */}
@@ -301,7 +301,7 @@ export function MultiSelect<T extends string | number = string>({
 
                             {/* No results message */}
                             {filteredOptions.length === 0 && (
-                                <div className="py-4 px-4 text-sm text-gray-400 dark:text-gray-500 text-center italic">
+                                <div className="py-4 px-4 text-sm text-brand-textSecondary text-center italic">
                                     No options found
                                 </div>
                             )}

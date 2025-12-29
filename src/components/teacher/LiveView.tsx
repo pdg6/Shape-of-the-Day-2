@@ -174,7 +174,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
     if (!currentClassId) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+            <div className="flex flex-col items-center justify-center h-64 text-brand-textSecondary">
                 <Activity className="w-12 h-12 mb-4 opacity-20" />
                 <p>No class selected.</p>
             </div>
@@ -217,7 +217,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                         size="md"
                         icon={ListChecks}
                         onClick={() => handleViewChange('tasks')}
-                        className={internalView === 'tasks' ? 'text-brand-accent' : 'text-gray-500'}
+                        className={internalView === 'tasks' ? 'text-brand-accent' : 'text-brand-textSecondary'}
                     >
                         Tasks
                     </Button>
@@ -226,7 +226,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                         size="md"
                         icon={Users}
                         onClick={() => handleViewChange('students')}
-                        className={internalView === 'students' ? 'text-brand-accent' : 'text-gray-500'}
+                        className={internalView === 'students' ? 'text-brand-accent' : 'text-brand-textSecondary'}
                     >
                         Students
                     </Button>
@@ -237,10 +237,10 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
             {activeStudents.length === 0 ? (
                 <div className="text-center py-12 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered">
                     <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Users className="w-8 h-8 text-gray-400" />
+                        <Users className="w-8 h-8 text-brand-textSecondary" />
                     </div>
-                    <h3 className="text-fluid-lg font-bold text-gray-900 dark:text-white mb-1">Waiting for students...</h3>
-                    <p className="text-fluid-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-6">
+                    <h3 className="text-fluid-lg font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-1">Waiting for students...</h3>
+                    <p className="text-fluid-sm text-brand-textSecondary max-w-sm mx-auto mb-6">
                         Share this code with your students to get started.
                     </p>
 
@@ -261,11 +261,11 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
                                 {/* Code & URL */}
                                 <div className="text-left">
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Join at</p>
+                                    <p className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Join at</p>
                                     <p className="text-fluid-sm font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary mb-3">
                                         shapeoftheday.app/join
                                     </p>
-                                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Class Code</p>
+                                    <p className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Class Code</p>
                                     <div className="flex items-center gap-2">
                                         <span className="text-2xl font-mono font-black text-brand-accent tracking-widest">
                                             {currentClass.joinCode}
@@ -282,7 +282,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                                             {copied ? (
                                                 <Check className="w-4 h-4 text-green-500" />
                                             ) : (
-                                                <Copy className="w-4 h-4 text-gray-400" />
+                                                <Copy className="w-4 h-4 text-brand-textSecondary" />
                                             )}
                                         </button>
                                     </div>
@@ -308,10 +308,10 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
             <table className="w-full text-left">
                 <thead className="bg-gray-50 dark:bg-[#151921] border-b border-gray-200 dark:border-white/5">
                     <tr>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-40">Student</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Task Progress</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase">Questions / Comments</th>
-                        <th className="p-4 text-xs font-bold text-gray-500 uppercase w-16 text-center">Actions</th>
+                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-40">Student</th>
+                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase">Task Progress</th>
+                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase">Questions / Comments</th>
+                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-16 text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-white/5">
@@ -341,7 +341,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                             "{student.currentMessage}"
                                         </span>
                                     ) : (
-                                        <span className="text-sm text-gray-400 dark:text-gray-600">—</span>
+                                        <span className="text-sm text-brand-textSecondary/60">—</span>
                                     )}
                                 </td>
 
@@ -349,7 +349,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                 <td className="p-4 text-center">
                                     <button
                                         onClick={() => onDelete(student.uid, student.displayName)}
-                                        className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+                                        className="p-2 rounded-lg text-brand-textSecondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
                                         title={`Remove ${student.displayName} from class`}
                                         aria-label={`Remove ${student.displayName} from class`}
                                     >
@@ -368,7 +368,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
 const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ tasks, students }) => {
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-12 text-gray-500 bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
+            <div className="text-center py-12 text-brand-textSecondary bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
                 <Activity className="w-12 h-12 mb-4 opacity-20 mx-auto" />
                 <p>No tasks scheduled for today.</p>
             </div>
@@ -408,7 +408,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                         {/* Column Header */}
                         <div className={`p-4 border-b flex flex-col gap-3 ${hasHelp ? 'border-amber-100 dark:border-white/10 bg-amber-50/50 dark:bg-amber-900/5' : 'border-slate-100 dark:border-white/5'}`}>
                             <div className="flex items-center justify-between">
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded shadow-sm ${hasHelp ? 'bg-amber-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}`}>
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded shadow-sm ${hasHelp ? 'bg-amber-500 text-brand-textPrimary' : 'bg-gray-100 dark:bg-gray-800 text-brand-textSecondary'}`}>
                                     TASK {getHierarchicalNumber(task, tasks)}
                                 </span>
                                 {hasHelp && (
@@ -460,7 +460,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             />
 
                             {!hasActivity && (
-                                <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-30 mt-12">
+                                <div className="h-full flex flex-col items-center justify-center text-brand-textSecondary opacity-30 mt-12">
                                     <Activity size={40} className="mb-3" />
                                     <span className="text-xs font-black uppercase tracking-widest">Idle</span>
                                 </div>
@@ -478,7 +478,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                             {Math.round((totalWorking / (students.length || 1)) * 100)}%
                                         </span>
                                     </div>
-                                    <span className="text-[9px] text-gray-400 leading-tight">Students who have started</span>
+                                    <span className="text-[9px] text-brand-textSecondary leading-tight">Students who have started</span>
                                 </div>
                                 <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
@@ -497,7 +497,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                             {totalWorking > 0 ? Math.round((helpStudents.length / (helpStudents.length + inProgressStudents.length || 1)) * 100) : 0}%
                                         </span>
                                     </div>
-                                    <span className="text-[9px] text-gray-400 leading-tight">Active students needing help</span>
+                                    <span className="text-[9px] text-brand-textSecondary leading-tight">Active students needing help</span>
                                 </div>
                                 <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
@@ -516,7 +516,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                             {Math.round((studentsCompleted.length / (students.length || 1)) * 100)}%
                                         </span>
                                     </div>
-                                    <span className="text-[9px] text-gray-400 leading-tight">Total finished for this task</span>
+                                    <span className="text-[9px] text-brand-textSecondary leading-tight">Total finished for this task</span>
                                 </div>
                                 <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                     <div
@@ -562,7 +562,7 @@ const StudentBucketColumn: React.FC<{
                             {s.displayName}
                         </span>
                         {s.currentMessage && (
-                            <span className="text-[10px] italic text-gray-500 dark:text-gray-400 line-clamp-2 leading-tight">
+                            <span className="text-[10px] italic text-brand-textSecondary line-clamp-2 leading-tight">
                                 "{s.currentMessage}"
                             </span>
                         )}

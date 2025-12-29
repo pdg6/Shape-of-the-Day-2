@@ -185,7 +185,7 @@ const TeacherDashboard: React.FC = () => {
     };
 
     return (
-        <div className="flex h-full w-full bg-transparent text-[#F2EFEA] font-inter overflow-hidden select-none">
+        <div className="flex h-full w-full bg-transparent text-brand-textPrimary font-inter overflow-hidden select-none">
             {/* Background Blobs removed for Gravity Background */}
 
             {/* Mobile Sidebar Overlay */}
@@ -223,10 +223,10 @@ const TeacherDashboard: React.FC = () => {
                             transition-all duration-300 ease-in-out
                             ${isCollapsed ? 'lg:w-0 lg:opacity-0' : 'opacity-100'}
                         `}>
-                            <span className="font-bold text-base text-brand-textDarkPrimary dark:text-brand-textPrimary whitespace-nowrap leading-tight">
+                            <span className="font-bold text-base text-brand-textPrimary whitespace-nowrap leading-tight">
                                 Shape of the Day
                             </span>
-                            <span className="text-sm text-brand-textDarkSecondary dark:text-gray-400 whitespace-nowrap leading-tight">
+                            <span className="text-sm text-brand-textSecondary whitespace-nowrap leading-tight">
                                 {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                             </span>
                         </div>
@@ -234,7 +234,7 @@ const TeacherDashboard: React.FC = () => {
                     {/* Mobile Close Button */}
                     <button
                         onClick={() => setSidebarOpen(false)}
-                        className="lg:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-slate-100 dark:hover:bg-white/10 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                        className="lg:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-slate-100 dark:hover:bg-white/10 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                         aria-label="Close navigation menu"
                     >
                         <X className="w-5 h-5" />
@@ -280,8 +280,8 @@ const TeacherDashboard: React.FC = () => {
                                                         className={`
                                                         ${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-all duration-300 border flex items-center
                                                         ${currentClassId === cls.id
-                                                                ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm glow-accent/10'
-                                                                : 'text-brand-textDarkSecondary hover:text-brand-textDarkPrimary dark:text-gray-400 dark:hover:text-gray-200 hover:bg-white dark:hover:bg-white/5 border-transparent hover:border-slate-200 dark:hover:border-white/5 shadow-none hover:shadow-layered-sm'}
+                                                                ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm glow-accent/10'
+                                                                : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/5 border-transparent hover:border-slate-200 dark:hover:border-white/5 shadow-none hover:shadow-layered-sm'}
                                                     `}
                                                         title={cls.name}
                                                     >
@@ -298,7 +298,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setIsClassModalOpen(true)}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-float hover:-translate-y-0.5 flex items-center gap-2 mt-2 group/add`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold text-brand-textSecondary hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-float hover:-translate-y-0.5 flex items-center gap-2 mt-2 group/add`}
                                                     title="Add Class"
                                                 >
                                                     <div className="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/10 flex items-center justify-center transition-all duration-300 group-hover/add:bg-brand-accent/10 group-hover/add:scale-110 shadow-layered-sm">
@@ -323,7 +323,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setIsJoinCodeOpen(true)}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-float hover:-translate-y-0.5 flex items-center gap-2 group/join`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border border-transparent hover:border-brand-accent/20 hover:shadow-layered-sm transition-float hover:-translate-y-0.5 flex items-center gap-2 group/join`}
                                                     title="Show Join Code"
                                                 >
                                                     <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/join:scale-110">
@@ -349,7 +349,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('create')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${tasksSubTab === 'create' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/create`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${tasksSubTab === 'create' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/create`}
                                                     title="Create"
                                                 >
                                                     <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 shadow-layered-sm ${tasksSubTab === 'create' ? 'bg-brand-accent/10' : 'bg-slate-100 dark:bg-white/10 group-hover/create:bg-brand-accent/10 group-hover/create:scale-110'}`}>
@@ -361,7 +361,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('browse')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${tasksSubTab === 'browse' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/edit`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${tasksSubTab === 'browse' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/edit`}
                                                     title="Edit"
                                                 >
                                                     <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/edit:scale-110">
@@ -387,7 +387,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setLiveViewSubTab('tasks')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${liveViewSubTab === 'tasks' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/tasks`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${liveViewSubTab === 'tasks' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/tasks`}
                                                     title="By Task"
                                                 >
                                                     <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/tasks:scale-110">
@@ -399,7 +399,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setLiveViewSubTab('students')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${liveViewSubTab === 'students' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/students`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${liveViewSubTab === 'students' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/students`}
                                                     title="By Student"
                                                 >
                                                     <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/students:scale-110">
@@ -425,7 +425,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setReportsSubTab('calendar')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${reportsSubTab === 'calendar' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/calendar`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${reportsSubTab === 'calendar' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/calendar`}
                                                     title="Calendar"
                                                 >
                                                     <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/calendar:scale-110">
@@ -437,7 +437,7 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setReportsSubTab('analytics')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${reportsSubTab === 'analytics' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-accent hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/analytics`}
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float hover:-translate-y-0.5 flex items-center gap-2 border ${reportsSubTab === 'analytics' ? 'text-brand-textPrimary bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-brand-accent/5 border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/analytics`}
                                                     title="Analytics"
                                                 >
                                                     <div className="w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 group-hover/analytics:scale-110">
@@ -467,18 +467,18 @@ const TeacherDashboard: React.FC = () => {
                         className={`hidden md:flex nav-item ${isCollapsed ? 'w-12 justify-center' : 'w-full'} h-12`}
                         title={isCollapsed ? 'Expand Menu' : 'Collapse Menu'}
                     >
-                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textDarkSecondary dark:text-gray-400 transition-colors">
+                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textSecondary transition-colors">
                             {isCollapsed ? <ChevronRight size={24} /> : <Menu size={20} />}
                         </div>
                         <span className={`
                             whitespace-nowrap transition-all duration-300 ease-in-out flex-1 text-left
                             ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-1'}
-                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
+                            text-brand-textSecondary group-hover:text-brand-textPrimary
                         `}>
                             Menu
                         </span>
                         {!isCollapsed && (
-                            <div className="pr-3 text-gray-500 dark:text-gray-400">
+                            <div className="pr-3 text-brand-textSecondary">
                                 <ChevronLeft size={20} />
                             </div>
                         )}
@@ -489,13 +489,13 @@ const TeacherDashboard: React.FC = () => {
                         className={`nav-item ${isCollapsed ? 'w-12 justify-center' : 'w-full'} h-12`}
                         title={isCollapsed ? 'Settings' : undefined}
                     >
-                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textDarkSecondary dark:text-gray-400 transition-colors">
+                        <div className="flex items-center justify-center w-12 shrink-0 text-brand-textSecondary transition-colors">
                             <Settings size={20} />
                         </div>
                         <span className={`
                             whitespace-nowrap transition-all duration-300 ease-in-out
                             ${isCollapsed ? 'w-0 opacity-0 ml-0' : 'opacity-100 ml-1'}
-                            text-brand-textDarkSecondary dark:text-gray-400 group-hover:text-brand-textDarkPrimary dark:group-hover:text-gray-200
+                            text-brand-textSecondary group-hover:text-brand-textPrimary
                         `}>
                             Settings
                         </span>
@@ -514,7 +514,7 @@ const TeacherDashboard: React.FC = () => {
                     <div className="flex items-center gap-3 min-w-0">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
+                            className="flex items-center justify-center text-brand-textSecondary hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
                             aria-label="Open navigation menu"
                             aria-expanded={isSidebarOpen}
                             aria-controls="main-navigation"
@@ -522,7 +522,7 @@ const TeacherDashboard: React.FC = () => {
                             <Menu className="w-6 h-6" />
                         </button>
                         <h1 className="flex items-baseline gap-1.5 text-xl font-black truncate">
-                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                            <span className="text-brand-textPrimary">
                                 {activeTab === 'tasks' ? (tasksSubTab === 'create' ? 'Tasks:' : 'Inventory:')
                                     : activeTab === 'shape' ? 'Shape:'
                                         : activeTab === 'live' ? 'Live:'
@@ -530,7 +530,7 @@ const TeacherDashboard: React.FC = () => {
                                                 : activeTab === 'reports' ? 'Reports:'
                                                     : ''}
                             </span>
-                            <span className="text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4 truncate">
+                            <span className="text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4 truncate">
                                 {currentClass?.name || 'All Classes'}
                             </span>
                         </h1>
@@ -561,7 +561,7 @@ const TeacherDashboard: React.FC = () => {
                             <QrCode className="w-5 h-5" />
                         </button>
                     ) : (
-                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        <span className="text-sm font-medium text-brand-textSecondary whitespace-nowrap">
                             {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                         </span>
                     )}

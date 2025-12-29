@@ -383,7 +383,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                     {/* Left: Hamburger Menu */}
                     <button
                         onClick={() => setIsMobileSidebarOpen(true)}
-                        className="flex items-center justify-center text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
+                        className="flex items-center justify-center text-brand-textSecondary hover:text-brand-textPrimary transition-colors duration-200 focus:outline-none"
                         aria-label="Open navigation menu"
                         aria-expanded={isMobileSidebarOpen ? "true" : "false"}
                     >
@@ -461,7 +461,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         {currentClassName}
                                     </h1>
                                     <div className="flex items-center gap-3 shrink-0">
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm font-medium text-brand-textSecondary">
                                             {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                         </span>
                                         <CircularProgress
@@ -489,7 +489,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         {currentClassName}
                                     </h1>
                                     <div className="flex items-center gap-3 shrink-0">
-                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        <span className="text-sm font-medium text-brand-textSecondary">
                                             {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
                                         </span>
                                         <CircularProgress

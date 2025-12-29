@@ -9,7 +9,10 @@ export interface BackgroundSettings {
     particlesEnabled: boolean;
     particleEffect: 'none' | 'grid' | 'magnetic' | 'orbit' | 'swarm_small' | 'swarm_large' | 'gravity';
     particleOpacity: number;
-    textColor: string;
+    primaryTheme: string;       // 'bone' | 'mist' | 'silver' | 'iron' | 'ink'
+    secondaryTheme: string;     // 'stone' | 'ash' | 'pewter' | 'lead' | 'graphite'
+    tileTheme: string;          // 'onyx' | 'slate' | 'graphite' | 'cloud' | 'glacier'
+    elevationLevel: 'whisper' | 'gentle' | 'float' | 'lift' | 'dramatic';
 }
 
 interface ClassState {
@@ -58,13 +61,16 @@ export const useClassStore = create<ClassState>((set) => ({
     isClassModalOpen: false,
     editingClass: null,
     backgroundSettings: (() => {
-        const defaultSettings = {
-            bgColor: '#0f1115',
+        const defaultSettings: BackgroundSettings = {
+            bgColor: '#050505',
             particleColor: 'multi',
             particlesEnabled: true,
             particleEffect: 'orbit' as const,
             particleOpacity: 0.25,
-            textColor: '#F2EFEA'
+            primaryTheme: 'white',    // Position 1 (Lightest)
+            secondaryTheme: 'slate', // Position 1 (Lightest)
+            tileTheme: 'onyx',       // Position 1 (Darkest)
+            elevationLevel: 'gentle' // Default: mild floating
         };
 
         if (typeof window === 'undefined') return defaultSettings;
@@ -82,6 +88,26 @@ export const useClassStore = create<ClassState>((set) => ({
         const oldTheme = localStorage.getItem('backgroundTheme');
         if (oldTheme === '2a') return { ...defaultSettings, bgColor: '#050505', particleColor: '#111111' };
         if (oldTheme === '3a') return { ...defaultSettings, bgColor: '#0f1115', particleColor: '#3b82f6', particleEffect: 'grid' as const };
+
+        // Migration of old hex values to new IDs if needed, otherwise defaults work
+        const migratedSettings = { ...defaultSettings };
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Map old hexes to new IDs if present
+                if (parsed.textColor === '#3b82f6') migratedSettings.primaryTheme = 'accent';
+                else if (parsed.textColor === '#262626') migratedSettings.primaryTheme = 'onyx';
+                else if (parsed.textColor === '#94a3b8') migratedSettings.primaryTheme = 'muted';
+                else if (parsed.textColor === '#F2EFEA' || parsed.textColor === '#F8FAFC') migratedSettings.primaryTheme = 'white';
+
+                if (parsed.textBaseColor === '#050505') migratedSettings.secondaryTheme = 'onyx';
+                else if (parsed.textBaseColor === '#334155') migratedSettings.secondaryTheme = 'slate';
+                else if (parsed.textBaseColor === '#64748b') migratedSettings.secondaryTheme = 'muted';
+                else if (parsed.textBaseColor === '#94a3b8' || parsed.textBaseColor === '#A8A29D') migratedSettings.secondaryTheme = 'slate';
+
+                return { ...migratedSettings, ...parsed, primaryTheme: migratedSettings.primaryTheme, secondaryTheme: migratedSettings.secondaryTheme };
+            } catch (e) { return defaultSettings; }
+        }
 
         return defaultSettings;
     })(),

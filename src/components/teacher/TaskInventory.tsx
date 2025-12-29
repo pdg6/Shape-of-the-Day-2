@@ -165,7 +165,7 @@ function TreeItem({
                             e.stopPropagation();
                             onEdit(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-gray-400 hover:text-blue-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-brand-textSecondary hover:text-blue-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
                         title="Edit task"
                     >
                         <Pencil size={14} />
@@ -176,7 +176,7 @@ function TreeItem({
                             e.stopPropagation();
                             onDelete(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-brand-textSecondary hover:text-red-500 transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center"
                         title="Delete task"
                     >
                         <Trash2 size={14} />
@@ -186,7 +186,7 @@ function TreeItem({
                             e.stopPropagation();
                             onCopyToBoard(task);
                         }}
-                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-slate-200 dark:hover:bg-[#151921] text-gray-400 hover:text-brand-accent transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center border border-transparent hover:border-slate-300 dark:hover:border-white/5 shadow-layered-sm"
+                        className="p-1.5 min-w-[2.75rem] min-h-[2.75rem] sm:min-w-0 sm:min-h-0 rounded-xl hover:bg-slate-200 dark:hover:bg-[#151921] text-brand-textSecondary hover:text-brand-accent transition-float hover:shadow-layered-lg hover:-translate-y-0.5 flex items-center justify-center border border-transparent hover:border-slate-300 dark:hover:border-white/5 shadow-layered-sm"
                         title="Copy to Task Board"
                     >
                         <Copy size={14} />
@@ -736,7 +736,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                     <div className="flex flex-wrap gap-3">
                         {/* Search */}
                         <div className="relative flex-1 min-w-[200px]">
-                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary" />
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -830,7 +830,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 shadow-layered-sm
                                 ${filterDate === null
                                         ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                        : 'border-slate-200 dark:border-white/10 text-gray-500 hover:border-slate-400 dark:hover:border-white/20'
+                                        : 'border-slate-200 dark:border-white/10 text-brand-textSecondary hover:border-slate-400 dark:hover:border-white/20'
                                     }
                             `}
                             >
@@ -840,7 +840,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             {/* Left Arrow */}
                             <button
                                 onClick={() => navigateCalendar('left')}
-                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                                 title="Previous week"
                             >
                                 <ChevronLeft size={18} />
@@ -881,7 +881,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                                     : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'}
                                         `}
                                         >
-                                            <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2' : 'text-gray-400'}`}>
+                                            <span className={`text-[11px] font-semibold uppercase tracking-wide ${isToday ? 'text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2' : 'text-brand-textSecondary'}`}>
                                                 {dayName}
                                             </span>
                                             <span className={`text-xl font-bold ${isSelected ? 'text-brand-accent' : 'text-brand-textDarkPrimary dark:text-brand-textPrimary'}`}>
@@ -909,7 +909,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             {/* Right Arrow */}
                             <button
                                 onClick={() => navigateCalendar('right')}
-                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textDarkSecondary dark:text-gray-400 hover:text-brand-textDarkPrimary dark:hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
+                                className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white dark:hover:bg-white/10 transition-all duration-300 transition-float hover:-translate-y-0.5 border border-transparent hover:border-slate-200 dark:hover:border-white/10 shadow-layered-sm"
                                 title="Next week"
                             >
                                 <ChevronRight size={18} />
@@ -935,7 +935,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 onClick={() => setMobileActiveTab('projects')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'projects'
                                     ? 'bg-purple-500/10 text-purple-500'
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                    : 'text-brand-textSecondary hover:text-brand-textPrimary'
                                     }`}
                             >
                                 <FolderOpen size={16} />
@@ -946,7 +946,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 onClick={() => setMobileActiveTab('assignments')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'assignments'
                                     ? 'bg-blue-500/10 text-blue-500'
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                    : 'text-brand-textSecondary hover:text-brand-textPrimary'
                                     }`}
                             >
                                 <FileText size={16} />
@@ -957,7 +957,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 onClick={() => setMobileActiveTab('tasks')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'tasks'
                                     ? 'bg-green-500/10 text-green-500'
-                                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                                    : 'text-brand-textSecondary hover:text-brand-textPrimary'
                                     }`}
                             >
                                 <ListChecks size={16} />
@@ -978,7 +978,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 <h3 className="font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary">
                                     Projects
                                 </h3>
-                                <span className="text-xs text-gray-400 font-medium">
+                                <span className="text-xs text-brand-textSecondary font-medium">
                                     {groupedTasks.projects.length}
                                 </span>
                                 {groupedTasks.projects.some(p => p.childIds?.length > 0) && (
@@ -996,7 +996,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                                 setExpandedIds(prev => new Set([...prev, ...projectIds]));
                                             }
                                         }}
-                                        className="ml-auto flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                        className="ml-auto flex items-center gap-1 text-xs text-brand-textSecondary hover:text-brand-textPrimary transition-colors"
                                     >
                                         {groupedTasks.projects.filter(p => p.childIds?.length > 0).every(p => expandedIds.has(p.id)) ? (
                                             <><span>Collapse</span><ChevronUp size={14} /></>
@@ -1008,7 +1008,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             </div>
 
                             {groupedTasks.projects.length === 0 ? (
-                                <p className="text-center text-sm text-gray-400 py-8 italic">
+                                <p className="text-center text-sm text-brand-textSecondary py-8 italic">
                                     No projects found
                                 </p>
                             ) : (

@@ -75,7 +75,7 @@ export function RichTextEditor({
         content: value,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[100px] px-4 pt-3 pb-3 caret-brand-accent',
+                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[160px] px-4 pt-4 pb-4 caret-brand-textPrimary',
             },
         },
         onUpdate: ({ editor }) => {
@@ -158,7 +158,7 @@ export function RichTextEditor({
             onPaste={handlePaste}
         >
             {/* Toolbar */}
-            <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 rounded-t-md">
+            <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-white/5 background-glass dark:bg-white/5 rounded-t-md">
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleBold().run()}
                     isActive={editor.isActive('bold')}
@@ -235,10 +235,10 @@ export function RichTextEditor({
                 {/* Multi-line Placeholder - only show when truly empty (both editor state and value prop) */}
                 {editor.isEmpty && (!value || value === '<p></p>') && (
                     <div className="absolute top-4 left-4 pointer-events-none">
-                        <div className="text-gray-400 dark:text-gray-500 text-sm font-medium">
+                        <div className="text-brand-textSecondary opacity-30 text-sm font-medium">
                             {placeholder}
                         </div>
-                        <div className="text-gray-300 dark:text-gray-600 text-xs mt-1">
+                        <div className="text-brand-textSecondary opacity-20 text-xs mt-1">
                             {secondaryPlaceholder}
                         </div>
                     </div>

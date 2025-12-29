@@ -14,18 +14,145 @@ const GravityBackground: React.FC = () => {
     // Global Text Color Application
     useEffect(() => {
         const root = document.documentElement;
-        root.style.setProperty('--color-brand-textPrimary', backgroundSettings.textColor);
 
-        // Scale secondary/muted colors based on primary selection
-        if (backgroundSettings.textColor === '#F2EFEA') {
-            root.style.setProperty('--color-brand-textSecondary', '#A8A29D');
-            root.style.setProperty('--color-brand-textMuted', '#64748B');
-        } else {
-            // For Accent, Onyx, Muted settings - use opacities for harmony
-            root.style.setProperty('--color-brand-textSecondary', backgroundSettings.textColor + 'cc'); // 80%
-            root.style.setProperty('--color-brand-textMuted', backgroundSettings.textColor + '99'); // 60%
-        }
-    }, [backgroundSettings.textColor]);
+        // 5-Position Text Palette (Lightest → Darkest for matching with dark→light backgrounds)
+        // Position 1 = Lightest (for dark BG), Position 5 = Darkest (for light BG)
+        const THEME_PALETTE: Record<string, { ink: string, vibe: string }> = {
+            // Position 1: Lightest (default for dark mode)
+            'white': { ink: '#e2e8f0', vibe: '#F8FAFC' },
+            // Position 2
+            'mist': { ink: '#94a3b8', vibe: '#CBD5E1' },
+            // Position 3
+            'silver': { ink: '#64748b', vibe: '#94a3b8' },
+            // Position 4
+            'iron': { ink: '#334155', vibe: '#475569' },
+            // Position 5: Darkest (for light mode)
+            'ink': { ink: '#0f172a', vibe: '#1e293b' },
+            // Legacy mappings
+            'bone': { ink: '#e2e8f0', vibe: '#F8FAFC' },
+            'default': { ink: '#d4d0c8', vibe: '#F8FAFC' },
+        };
+
+        // 5-Position Secondary Text Palette
+        const SECONDARY_PALETTE: Record<string, { ink: string, vibe: string }> = {
+            // Position 1: Lightest (default for dark mode)
+            'slate': { ink: '#64748b', vibe: '#94A3B8' },
+            // Position 2
+            'ash': { ink: '#475569', vibe: '#64748B' },
+            // Position 3
+            'pewter': { ink: '#334155', vibe: '#475569' },
+            // Position 4
+            'lead': { ink: '#1e293b', vibe: '#334155' },
+            // Position 5: Darkest (for light mode)
+            'graphite': { ink: '#334155', vibe: '#475569' },
+            // Legacy mappings
+            'stone': { ink: '#64748b', vibe: '#94A3B8' },
+            'default': { ink: '#78716c', vibe: '#94A3B8' },
+        };
+
+        // 5-Position Tile Palette (Darkest → Lightest)
+        const TILE_THEMES: Record<string, { tile: string, tileAlt: string, border: string }> = {
+            // Position 1: Darkest (default)
+            'onyx': { tile: '#1a1d24', tileAlt: '#151921', border: 'rgba(255, 255, 255, 0.1)' },
+            // Position 2
+            'slate': { tile: '#1e293b', tileAlt: '#0f172a', border: 'rgba(255, 255, 255, 0.1)' },
+            // Position 3
+            'graphite': { tile: '#334155', tileAlt: '#1e293b', border: 'rgba(255, 255, 255, 0.15)' },
+            // Position 4
+            'cloud': { tile: '#e2e8f0', tileAlt: '#cbd5e1', border: 'rgba(0, 0, 0, 0.1)' },
+            // Position 5: Lightest
+            'glacier': { tile: '#ffffff', tileAlt: '#f8fafc', border: 'rgba(0, 0, 0, 0.08)' },
+        };
+
+        // 5-Tier Elevation Presets (whisper → dramatic)
+        const ELEVATION_PRESETS: Record<string, {
+            tileDefault: string;
+            tileHover: string;
+            buttonHover: string;
+            shadowSm: string;
+            shadow: string;
+            shadowLg: string;
+        }> = {
+            whisper: {
+                tileDefault: '0px',
+                tileHover: '-1px',
+                buttonHover: '-1px',
+                shadowSm: '0 1px 2px rgba(0,0,0,0.03)',
+                shadow: '0 2px 6px rgba(0,0,0,0.06)',
+                shadowLg: '0 4px 12px rgba(0,0,0,0.08)'
+            },
+            gentle: {
+                tileDefault: '-1px',
+                tileHover: '0px',
+                buttonHover: '-1px',
+                shadowSm: '0 2px 4px rgba(0,0,0,0.08)',
+                shadow: '0 4px 12px rgba(0,0,0,0.1)',
+                shadowLg: '0 8px 20px rgba(0,0,0,0.12)'
+            },
+            float: {
+                tileDefault: '-2px',
+                tileHover: '-1px',
+                buttonHover: '-2px',
+                shadowSm: '0 2px 4px rgba(0,0,0,0.12)',
+                shadow: '0 6px 16px rgba(0,0,0,0.15)',
+                shadowLg: '0 12px 28px rgba(0,0,0,0.18)'
+            },
+            lift: {
+                tileDefault: '-4px',
+                tileHover: '-3px',
+                buttonHover: '-2px',
+                shadowSm: '0 2px 4px -1px rgba(0,0,0,0.2), inset 0 1px 0 0 rgba(255,255,255,0.05)',
+                shadow: '0 8px 20px -4px rgba(0,0,0,0.35), 0 4px 8px -2px rgba(0,0,0,0.2), inset 0 1px 0 0 rgba(255,255,255,0.08)',
+                shadowLg: '0 16px 36px -8px rgba(0,0,0,0.45), 0 6px 14px -4px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.12)'
+            },
+            dramatic: {
+                tileDefault: '-6px',
+                tileHover: '-4px',
+                buttonHover: '-3px',
+                shadowSm: '0 3px 6px -1px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.08)',
+                shadow: '0 12px 28px -6px rgba(0,0,0,0.5), 0 6px 12px -3px rgba(0,0,0,0.35), inset 0 1px 0 0 rgba(255,255,255,0.1)',
+                shadowLg: '0 24px 48px -12px rgba(0,0,0,0.6), 0 10px 20px -5px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.15)'
+            }
+        };
+
+        // 1. Get Color Pairs
+        const primary = THEME_PALETTE[backgroundSettings.primaryTheme] || THEME_PALETTE['default'];
+        const secondary = SECONDARY_PALETTE[backgroundSettings.secondaryTheme] || SECONDARY_PALETTE['default'];
+        const tile = TILE_THEMES[backgroundSettings.tileTheme || 'onyx'] || TILE_THEMES['onyx'];
+        const elevation = ELEVATION_PRESETS[backgroundSettings.elevationLevel || 'gentle'] || ELEVATION_PRESETS['gentle'];
+
+        // 2. Inject CSS Variables
+        // Primary Theme (Headers, Active - "The Active Voice")
+        root.style.setProperty('--text-primary-ink', primary.ink);   // Darker/Dimmer (Ink)
+        root.style.setProperty('--text-primary-vibe', primary.vibe);    // Lighter/BVright (Vibe) -> Use this for Text!
+        root.style.setProperty('--color-brand-textPrimary', primary.vibe);
+
+        // Secondary Theme (Body, Labels - "The Context Voice")
+        root.style.setProperty('--text-secondary-ink', secondary.ink); // Darker (Ink)
+        root.style.setProperty('--text-secondary-vibe', secondary.vibe);  // Lighter (Vibe) -> Use this for Text!
+        root.style.setProperty('--color-brand-textSecondary', secondary.vibe);
+        root.style.setProperty('--color-brand-textMuted', secondary.ink);
+
+        // Tile Theme (Surfaces, Cards, Navigation)
+        root.style.setProperty('--color-bg-tile', tile.tile);
+        root.style.setProperty('--color-bg-tile-alt', tile.tileAlt);
+        // Map legacy utilities to dynamic tile colors for consistency
+        root.style.setProperty('--color-brand-darkSurface', tile.tile);
+        root.style.setProperty('--color-brand-lightSurface', tile.tile);
+
+        // Elevation Theme (Lift transforms + Shadow intensity)
+        root.style.setProperty('--elevation-tile-default', elevation.tileDefault);
+        root.style.setProperty('--elevation-tile-hover', elevation.tileHover);
+        root.style.setProperty('--elevation-button-hover', elevation.buttonHover);
+        root.style.setProperty('--shadow-layered-sm', elevation.shadowSm);
+        root.style.setProperty('--shadow-layered', elevation.shadow);
+        root.style.setProperty('--shadow-layered-lg', elevation.shadowLg);
+
+        // Important: Update border opacity context if switching between Light/Dark tiles
+        // But for now, just let standard borders exist. The Tile Border is usually handled by individual components, 
+        // but levitated-tile uses --color-bg-tile background.
+
+    }, [backgroundSettings.primaryTheme, backgroundSettings.secondaryTheme, backgroundSettings.tileTheme, backgroundSettings.elevationLevel]);
 
     useEffect(() => {
         const canvas = canvasRef.current;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, LogOut, QrCode, BarChart2, User, BookOpen, School, ListTodo, Presentation, Activity, Check, Type } from 'lucide-react';
+import { Moon, Sun, LogOut, QrCode, User, BookOpen, Check, Type, Activity, BarChart2, Layers } from 'lucide-react';
 import { useClassStore } from '../../store/classStore';
 
 interface SettingsOverlayProps {
@@ -32,80 +32,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
 
     return (
         <div className="space-y-3">
-            {/* Navigation Section - Only show if navigation props provided */}
-            {activeTab && onTabChange && (
-                <>
-                    <div className="grid grid-cols-5 gap-1.5 mb-4">
-                        <button
-                            onClick={() => {
-                                onTabChange('classrooms');
-                                onClose();
-                            }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'classrooms'
-                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                        >
-                            <School size={20} />
-                            <span className="text-[10px] font-bold">Classes</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                onTabChange('tasks');
-                                onClose();
-                            }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
-                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                        >
-                            <ListTodo size={20} />
-                            <span className="text-[10px] font-bold">Tasks</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                onTabChange('shape');
-                                onClose();
-                            }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'shape'
-                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                        >
-                            <Presentation size={20} />
-                            <span className="text-[10px] font-bold">Shape</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                onTabChange('live');
-                                onClose();
-                            }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'live'
-                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                        >
-                            <Activity size={20} />
-                            <span className="text-[10px] font-bold">Live</span>
-                        </button>
-                        <button
-                            onClick={() => {
-                                onTabChange('reports');
-                                onClose();
-                            }}
-                            className={`flex flex-col items-center justify-center gap-0.5 p-2 rounded-lg border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'reports'
-                                ? 'border-brand-accent text-brand-accent bg-brand-accent/5'
-                                : 'border-gray-400 dark:border-gray-600 hover:border-gray-600 dark:hover:border-gray-400 text-gray-500 dark:text-gray-400'
-                                }`}
-                        >
-                            <BarChart2 size={20} />
-                            <span className="text-[10px] font-bold">Reports</span>
-                        </button>
-                    </div>
-                    {/* Divider */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
-                </>
-            )}
+
 
             {/* Teacher Name */}
             <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
@@ -117,7 +44,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         Teacher
                     </span>
                 </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
                     {teacherName}
                 </span>
             </div>
@@ -133,37 +60,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             Class
                         </span>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
                         {className}
                     </span>
                 </div>
             )}
-
-            {/* Theme Toggle */}
-            <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${darkMode ? 'bg-indigo-500/10 text-indigo-400' : 'bg-amber-500/10 text-amber-500'}`}>
-                        {darkMode ? <Moon size={20} /> : <Sun size={20} />}
-                    </div>
-                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
-                        Theme
-                    </span>
-                </div>
-                <button
-                    onClick={toggleDarkMode}
-                    className={`
-                        relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 dark:focus:ring-offset-gray-900
-                        ${darkMode ? 'bg-brand-accent' : 'bg-gray-300 border border-gray-400'}
-                    `}
-                >
-                    <span
-                        className={`
-                            inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out
-                            ${darkMode ? 'translate-x-6' : 'translate-x-1'}
-                        `}
-                    />
-                </button>
-            </div>
 
             {/* Background Color Customization */}
             <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 space-y-3">
@@ -175,12 +76,13 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         Background Color
                     </span>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-1.5">
                     {[
-                        { color: '#050505', label: 'Onyx' },
+                        { color: '#050505', label: 'Void' },
                         { color: '#0a0a0a', label: 'Charcoal' },
                         { color: '#0f1115', label: 'Cyber' },
-                        { color: '#cbd5e1', label: 'Slate' }
+                        { color: '#64748b', label: 'Fog' },
+                        { color: '#f1f5f9', label: 'Snow' }
                     ].map((c) => (
                         <button
                             key={c.color}
@@ -190,14 +92,100 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             title={c.label}
                         >
                             <div
-                                className={`w-full h-8 rounded-md flex items-center justify-center shadow-inner
-                                    ${c.color === '#cbd5e1' ? 'text-gray-800' : 'text-brand-accent'}`}
+                                className={`w-full h-8 rounded-md flex items-center justify-center shadow-inner border border-white/5
+                                    ${c.color === '#f1f5f9' || c.color === '#64748b' ? 'text-gray-800' : 'text-brand-accent'}`}
                                 style={{ backgroundColor: c.color }}
                             >
                                 {backgroundSettings.bgColor === c.color && <Check size={14} />}
                             </div>
-                            <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.bgColor === c.color ? 'text-white' : 'text-gray-500 hover:text-gray-400'}`}>
+                            <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.bgColor === c.color ? 'text-white' : 'text-brand-textDarkSecondary hover:text-brand-textDarkPrimary'}`}>
                                 {c.label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Tile Appearance (Replaces Theme Toggle) */}
+            <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 space-y-3">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-teal-500/10 text-teal-500">
+                        <BookOpen size={20} />
+                    </div>
+                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Tile Theme
+                    </span>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5">
+                    {[
+                        { id: 'onyx', label: 'Onyx', color: '#1a1d24' },
+                        { id: 'slate', label: 'Slate', color: '#1e293b' },
+                        { id: 'graphite', label: 'Graphite', color: '#334155' },
+                        { id: 'cloud', label: 'Cloud', color: '#e2e8f0' },
+                        { id: 'glacier', label: 'Glacier', color: '#ffffff' }
+                    ].map((t) => (
+                        <button
+                            key={t.id}
+                            onClick={() => setBackgroundSettings({ tileTheme: t.id })}
+                            className={`flex flex-col items-center gap-1.5 p-1 rounded-lg border-2 transition-all duration-200
+                                ${backgroundSettings.tileTheme === t.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-white/5 bg-transparent hover:border-white/10'}`}
+                            title={t.label}
+                        >
+                            <div
+                                className={`w-full h-8 rounded-md flex items-center justify-center shadow-inner border border-white/5`}
+                                style={{ backgroundColor: t.color }}
+                            >
+                                {backgroundSettings.tileTheme === t.id && (
+                                    <Check size={14} className={t.id === 'cloud' || t.id === 'glacier' ? 'text-gray-800' : 'text-white'} />
+                                )}
+                            </div>
+                            <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.tileTheme === t.id ? 'text-white' : 'text-brand-textDarkSecondary hover:text-brand-textDarkPrimary'}`}>
+                                {t.label}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Elevation Level */}
+            <div className="bg-brand-light dark:bg-brand-dark rounded-xl p-3 space-y-3">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                        <Layers size={20} />
+                    </div>
+                    <span className="font-medium text-brand-textDarkPrimary dark:text-brand-textPrimary">
+                        Elevation
+                    </span>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5">
+                    {[
+                        { id: 'whisper', label: 'Whisper', lift: '0px' },
+                        { id: 'gentle', label: 'Gentle', lift: '-1px' },
+                        { id: 'float', label: 'Float', lift: '-2px' },
+                        { id: 'lift', label: 'Lift', lift: '-3px' },
+                        { id: 'dramatic', label: 'Dramatic', lift: '-4px' }
+                    ].map((e) => (
+                        <button
+                            key={e.id}
+                            onClick={() => setBackgroundSettings({ elevationLevel: e.id as any })}
+                            className={`flex flex-col items-center gap-1.5 p-1 rounded-lg border-2 transition-all duration-200
+                                ${backgroundSettings.elevationLevel === e.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-white/5 bg-transparent hover:border-white/10'}`}
+                            title={e.label}
+                        >
+                            <div
+                                className={`w-full h-8 rounded-md flex items-center justify-center border border-white/10 transition-all duration-200`}
+                                style={{
+                                    backgroundColor: 'var(--color-bg-tile, #1a1d24)',
+                                    transform: `translateY(${e.lift})`,
+                                    boxShadow: backgroundSettings.elevationLevel === e.id
+                                        ? '0 4px 12px rgba(0,0,0,0.3)'
+                                        : '0 2px 6px rgba(0,0,0,0.15)'
+                                }}
+                            >
+                                {backgroundSettings.elevationLevel === e.id && <Check size={14} className="text-white" />}
+                            </div>
+                            <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.elevationLevel === e.id ? 'text-white' : 'text-brand-textDarkSecondary hover:text-brand-textDarkPrimary'}`}>
+                                {e.label}
                             </span>
                         </button>
                     ))}
@@ -235,7 +223,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                     <div className="space-y-4 animate-in fade-in slide-in-from-top-1 duration-200">
                         {/* Mode Selection */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1">Style</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textDarkSecondary dark:text-brand-textSecondary px-1">Style</label>
                             <div className="grid grid-cols-3 gap-2">
                                 {[
                                     { id: 'gravity', label: 'Gravity' },
@@ -251,7 +239,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                         className={`px-1 py-2 rounded-lg text-[10px] font-bold transition-all duration-200 border
                                             ${backgroundSettings.particleEffect === m.id
                                                 ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-sm'
-                                                : 'bg-transparent border-white/5 text-gray-500 dark:text-gray-400 hover:border-white/20 hover:text-gray-300'}`}
+                                                : 'bg-transparent border-white/5 text-brand-textSecondary hover:border-white/20 hover:text-brand-textPrimary'}`}
                                     >
                                         {m.label}
                                     </button>
@@ -262,7 +250,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         {/* Opacity Slider */}
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Opacity</label>
+                                <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textDarkSecondary dark:text-brand-textSecondary">Opacity</label>
                                 <span className="text-[10px] font-bold text-brand-accent">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
                             </div>
                             <input
@@ -278,7 +266,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
 
                         {/* Color Presets */}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 px-1">Appearance</label>
+                            <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textDarkSecondary dark:text-brand-textSecondary px-1">Appearance</label>
                             <div className="grid grid-cols-4 gap-2">
                                 {[
                                     { color: '#262626', label: 'Onyx' },
@@ -304,7 +292,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                                 </div>
                                             )}
                                         </div>
-                                        <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.particleColor === c.color ? 'text-white' : 'text-gray-500'}`}>
+                                        <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.particleColor === c.color ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}`}>
                                             {c.label}
                                         </span>
                                     </button>
@@ -327,33 +315,72 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                     </span>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2">
-                    {[
-                        { color: '#262626', label: 'Onyx' },
-                        { color: '#3b82f6', label: 'Accent' },
-                        { color: '#94a3b8', label: 'Muted' },
-                        { color: '#F2EFEA', label: 'Default' }
-                    ].map((t) => (
-                        <button
-                            key={t.color}
-                            onClick={() => setBackgroundSettings({ textColor: t.color })}
-                            className={`relative p-2 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-1
-                                ${backgroundSettings.textColor === t.color ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-white/5 bg-transparent hover:border-white/10'}`}
-                        >
-                            <div className="relative w-full h-8 rounded-md shadow-inner mb-1 flex items-center justify-center font-black text-lg"
-                                style={{ backgroundColor: t.color === '#F2EFEA' ? '#334155' : 'transparent', color: t.color }}>
-                                Aa
-                                {backgroundSettings.textColor === t.color && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-md">
-                                        <Check size={12} className="text-white drop-shadow-md" />
-                                    </div>
-                                )}
-                            </div>
-                            <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.textColor === t.color ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`}>
-                                {t.label}
-                            </span>
-                        </button>
-                    ))}
+                {/* Primary (Highlight) */}
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Primary Text (Active/Headers)</label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                        {[
+                            { id: 'white', label: 'White', color: '#F8FAFC' },
+                            { id: 'mist', label: 'Mist', color: '#CBD5E1' },
+                            { id: 'silver', label: 'Silver', color: '#94a3b8' },
+                            { id: 'iron', label: 'Iron', color: '#475569' },
+                            { id: 'ink', label: 'Ink', color: '#1e293b' }
+                        ].map((t) => (
+                            <button
+                                key={t.id}
+                                onClick={() => setBackgroundSettings({ primaryTheme: t.id })}
+                                className={`relative p-1 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-1
+                                    ${backgroundSettings.primaryTheme === t.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-white/5 bg-transparent hover:border-white/10'}`}
+                            >
+                                <div className="relative w-full h-8 rounded-md shadow-inner mb-1 flex items-center justify-center font-black text-lg"
+                                    style={{ backgroundColor: t.id === 'white' || t.id === 'mist' ? '#1a1d24' : 'transparent', color: t.color }}>
+                                    Aa
+                                    {backgroundSettings.primaryTheme === t.id && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-md">
+                                            <Check size={12} className={t.id === 'white' || t.id === 'mist' ? 'text-white' : 'text-brand-accent'} />
+                                        </div>
+                                    )}
+                                </div>
+                                <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.primaryTheme === t.id ? 'text-white' : 'text-brand-textSecondary'}`}>
+                                    {t.label}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Secondary (Base) */}
+                <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-brand-textSecondary px-1">Secondary Text (Inactive/Context)</label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                        {[
+                            { id: 'slate', label: 'Slate', color: '#94A3B8' },
+                            { id: 'ash', label: 'Ash', color: '#64748B' },
+                            { id: 'pewter', label: 'Pewter', color: '#475569' },
+                            { id: 'lead', label: 'Lead', color: '#334155' },
+                            { id: 'graphite', label: 'Graphite', color: '#475569' }
+                        ].map((t) => (
+                            <button
+                                key={t.id}
+                                onClick={() => setBackgroundSettings({ secondaryTheme: t.id })}
+                                className={`relative p-1 rounded-lg border-2 transition-all duration-200 flex flex-col items-center gap-1
+                                    ${backgroundSettings.secondaryTheme === t.id ? 'border-brand-accent shadow-sm bg-brand-accent/5' : 'border-white/5 bg-transparent hover:border-white/10'}`}
+                            >
+                                <div className="relative w-full h-8 rounded-md shadow-inner mb-1 flex items-center justify-center font-black text-lg"
+                                    style={{ backgroundColor: t.id === 'slate' || t.id === 'ash' ? '#1a1d24' : 'transparent', color: t.color }}>
+                                    Aa
+                                    {backgroundSettings.secondaryTheme === t.id && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/5 rounded-md">
+                                            <Check size={12} className={t.id === 'slate' || t.id === 'ash' ? 'text-white' : 'text-brand-accent'} />
+                                        </div>
+                                    )}
+                                </div>
+                                <span className={`text-[9px] font-black uppercase tracking-tighter text-center leading-none ${backgroundSettings.secondaryTheme === t.id ? 'text-white' : 'text-brand-textSecondary'}`}>
+                                    {t.label}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -374,7 +401,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             Data & Analytics
                         </span>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-brand-textDarkSecondary dark:text-brand-textSecondary">
                         View insights
                     </span>
                 </button>
@@ -397,7 +424,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             Join Code
                         </span>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-brand-textSecondary">
                         Show code
                     </span>
                 </button>
@@ -420,7 +447,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             Sign Out
                         </span>
                     </div>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-sm text-brand-textSecondary">
                         Leave dashboard
                     </span>
                 </button>
