@@ -178,7 +178,6 @@ const SettingsManager: React.FC = () => {
         }
 
         // 2. Inject CSS Variables
-        root.style.setProperty('--color-glass-inlay-warm', 'rgba(255, 255, 255, 0.03)');
         // Primary Theme (Headers, Active - "The Active Voice")
         root.style.setProperty('--text-primary-ink', primary.ink);   // Darker/Dimmer (Ink)
         root.style.setProperty('--text-primary-vibe', primary.vibe);    // Lighter/BVright (Vibe) -> Use this for Text!

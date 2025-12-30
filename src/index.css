@@ -69,7 +69,7 @@
 }
 
 @utility transition-float {
-    transition-property: transform, box-shadow, background-color, border-color, opacity;
+    transition-property: transform, box-shadow, background-color, border-color, color, opacity;
     transition-timing-function: var(--timing-weightless);
     transition-duration: 300ms;
 }
@@ -100,6 +100,14 @@
         transform: translateY(var(--elevation-button-hover, -1px));
         box-shadow: var(--shadow-layered-lg);
     }
+}
+
+/* Universal Responsive Grid - No media queries needed.
+   Cards automatically wrap and resize based on available space.
+   Min-width can be customized via CSS variable. */
+@utility grid-auto-fit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-size, 300px), 1fr));
 }
 
 /* Dark mode shadow overrides - REMOVED
@@ -763,12 +771,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .input-base {
-        @apply w-full px-4 py-2.5 rounded-xl border transition-all duration-200;
-        @apply bg-[var(--color-bg-tile-alt)] text-base;
+        @apply w-full px-4 py-2.5 rounded-xl border transition-float;
+        @apply bg-[var(--color-bg-tile)] text-base min-h-[44px];
         @apply text-brand-textPrimary;
         @apply border-[var(--color-border-subtle)];
         @apply placeholder-brand-textMuted font-medium;
-        @apply hover:border-[var(--color-border-strong)];
+        @apply shadow-layered;
+        @apply hover:border-[var(--color-border-strong)] hover:shadow-layered-lg;
 
         /* Override browser autofill background */
         &:-webkit-autofill,

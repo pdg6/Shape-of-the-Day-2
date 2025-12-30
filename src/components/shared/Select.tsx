@@ -147,15 +147,15 @@ export function Select<T extends string | number = string>({
                             className={`
                                 group relative w-full cursor-pointer
                                 pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
-                                border transition-all duration-300 transition-float
-                                bg-brand-tile text-brand-textSecondary
-                                shadow-layered-sm
+                                border transition-float
+                                bg-[var(--color-bg-tile)] text-brand-textSecondary
+                                shadow-layered
                                 hover:shadow-layered-lg
-                                button-lift-dynamic hover:text-brand-textPrimary hover:bg-brand-tile-alt hover:border-brand-accent/50
+                                button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                                 focus:outline-none focus:border-brand-accent
                                 min-h-[44px] flex items-center
                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                ${colorClasses || 'border-white/10'}
+                                ${colorClasses || 'border-[var(--color-border-subtle)]'}
                                 ${value ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                                 ${buttonClassName}
                             `}

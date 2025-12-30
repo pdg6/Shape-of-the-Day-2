@@ -8,8 +8,9 @@ import 'react-day-picker/style.css';
 // --- Types ---
 
 interface DatePickerProps {
-    value: string; // ISO date string: YYYY-MM-DD
-    onChange: (value: string) => void;
+    value?: string; // ISO date string: YYYY-MM-DD
+    selected?: Date | null; // Compatibility with react-datepicker props
+    onChange: (value: any) => void; // Handles both Date and string back
     onClose?: () => void; // Called when picker closes (for chaining)
     placeholder?: string;
     label?: string;
@@ -19,6 +20,7 @@ interface DatePickerProps {
     className?: string;
     iconOnly?: boolean; // When true, shows just a calendar icon button
     iconColor?: string; // Color for the icon when iconOnly is true
+    customInput?: React.ReactNode; // Custom trigger element
 }
 
 // Detect touch device for native fallback
@@ -40,6 +42,7 @@ const isTouchDevice = () => {
  */
 export function DatePicker({
     value,
+    selected,
     onChange,
     onClose,
     placeholder = 'Select date',
@@ -50,6 +53,7 @@ export function DatePicker({
     className = '',
     iconOnly = false,
     iconColor,
+    customInput,
 }: DatePickerProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
@@ -57,9 +61,9 @@ export function DatePicker({
     const popoverRef = useRef<HTMLDivElement>(null);
     const nativeInputRef = useRef<HTMLInputElement>(null);
 
-    // Parse value to Date object
-    const selectedDate = value ? parse(value, 'yyyy-MM-dd', new Date()) : undefined;
-    const isValidDate = selectedDate && isValid(selectedDate);
+    // Support both value (string) and selected (Date)
+    const effectiveDate = selected || (value ? parse(value, 'yyyy-MM-dd', new Date()) : undefined);
+    const isValidDate = effectiveDate && isValid(effectiveDate);
 
     // Parse min/max dates
     const minDateObj = minDate ? parse(minDate, 'yyyy-MM-dd', new Date()) : undefined;
@@ -67,7 +71,7 @@ export function DatePicker({
 
     // Format for display
     const displayValue = isValidDate
-        ? format(selectedDate, 'MMM d, yyyy')
+        ? format(effectiveDate, 'MMM d, yyyy')
         : '';
 
     // Update position when opening
@@ -133,7 +137,7 @@ export function DatePicker({
     // Handle date selection
     const handleSelect = (date: Date | undefined) => {
         if (date) {
-            onChange(format(date, 'yyyy-MM-dd'));
+            onChange(date);
             setIsOpen(false);
             onClose?.();
         }
@@ -141,7 +145,7 @@ export function DatePicker({
 
     // Handle "Today" button
     const handleToday = () => {
-        onChange(format(new Date(), 'yyyy-MM-dd'));
+        onChange(new Date());
         setIsOpen(false);
         onClose?.();
     };
@@ -180,7 +184,7 @@ export function DatePicker({
             <input
                 ref={nativeInputRef}
                 type="date"
-                value={value}
+                value={value || (selected ? format(selected, 'yyyy-MM-dd') : '')}
                 onChange={handleNativeChange}
                 min={minDate}
                 max={maxDate}
@@ -189,16 +193,29 @@ export function DatePicker({
             />
 
             {/* Trigger Button */}
-            {iconOnly ? (
+            {customInput ? (
+                <button
+                    ref={buttonRef}
+                    type="button"
+                    onClick={toggleOpen}
+                    disabled={disabled}
+                    className="focus:outline-none"
+                    aria-haspopup="grid"
+                    aria-expanded={isOpen}
+                >
+                    {customInput}
+                </button>
+            ) : iconOnly ? (
                 <button
                     ref={buttonRef}
                     type="button"
                     onClick={toggleOpen}
                     disabled={disabled}
                     className={`
-                        cursor-pointer p-1.5 rounded-xl transition-all duration-200
-                        hover:bg-slate-100 dark:hover:bg-bg-tile-alt border border-transparent hover:border-slate-200 dark:hover:border-white/5
-                        focus:outline-none
+                        cursor-pointer p-1.5 rounded-xl transition-float button-lift-dynamic
+                        hover:bg-[var(--color-bg-tile-hover)] border border-transparent 
+                        hover:border-[var(--color-border-subtle)] focus:outline-none 
+                        shadow-layered-sm hover:shadow-layered
                         disabled:opacity-50 disabled:cursor-not-allowed
                     `}
                     style={{ color: iconColor }}
@@ -213,32 +230,31 @@ export function DatePicker({
                     disabled={disabled}
                     className={`
                         relative w-full cursor-pointer
-                        pl-9 pr-8 py-2.5 rounded-xl text-sm font-bold text-left
-                        border transition-all duration-200 shadow-layered-sm
-                        bg-brand-lightSurface dark:bg-bg-tile
-                        border-slate-200 dark:border-white/5
-                        hover:bg-slate-50 dark:hover:bg-bg-tile-alt
-                        hover:border-slate-300 dark:hover:border-white/10
-                        focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
+                        pl-9 pr-8 py-2.5 rounded-xl text-sm font-bold text-left transition-float button-lift-dynamic
+                        border shadow-layered
+                        bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)]
+                        hover:bg-[var(--color-bg-tile-hover)]
+                        hover:border-[var(--color-border-strong)]
+                        focus:outline-none focus:border-brand-accent/50
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
-                        ${value ? 'text-brand-textDarkPrimary dark:text-brand-textPrimary' : 'text-gray-400 dark:text-gray-500'}
+                        ${isValidDate ? 'text-brand-textPrimary' : 'text-brand-textMuted'}
                     `}
                 >
                     {/* Calendar Icon */}
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textMuted pointer-events-none">
                         <CalendarIcon size={14} />
                     </span>
 
                     {/* Display Value */}
                     <span className="block truncate">
-                        {label && !value ? label : ''}
+                        {label && !isValidDate ? label : ''}
                         {displayValue || (!label ? placeholder : '')}
                     </span>
 
                     {/* Clear Button */}
-                    {value && !disabled && (
+                    {isValidDate && !disabled && (
                         <span
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-textMuted hover:text-brand-textPrimary cursor-pointer"
                             onClick={handleClear}
                         >
                             <X size={14} />

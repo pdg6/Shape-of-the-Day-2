@@ -203,7 +203,7 @@ const TeacherDashboard: React.FC = () => {
                     ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64
                     bg-transparent
                     transform transition-transform duration-300 ease-in-out
-                    flex flex-col h-full overflow-hidden
+                    flex flex-col h-full
                     ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
                     border-none
                 `}
@@ -567,8 +567,8 @@ const TeacherDashboard: React.FC = () => {
                     )}
                 </header>
 
-                {/* Content Body - Scrolling matches sidebar nav exactly, flex-col allows children to stretch */}
-                <div className="flex-1 min-h-0 min-w-0 relative px-6 pb-4 overflow-y-auto custom-scrollbar overflow-x-hidden flex flex-col">
+                {/* Content Body - Universal Canvas: No padding, no default scroll. Children control their own layout. */}
+                <div className="flex-1 min-h-0 min-w-0 relative flex flex-col">
                     {renderContent()}
                 </div>
 

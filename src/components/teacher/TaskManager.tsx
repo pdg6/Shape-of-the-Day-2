@@ -29,6 +29,7 @@ import { DateRangePicker } from '../shared/DateRangePicker';
 import { DatePicker } from '../shared/DatePicker';
 import { RichTextEditor } from '../shared/RichTextEditor';
 import { Button } from '../shared/Button';
+import { PageLayout } from '../shared/PageLayout';
 
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -506,142 +507,146 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const availableParents = getAvailableParents(activeFormData.type);
     const currentClass = rooms.find(r => r.id === currentClassId);
 
-    return (
-        <div className="flex-1 min-h-0 flex flex-col space-y-4">
-            {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
-            <div className="hidden lg:grid lg:grid-cols-4 h-16 shrink-0 items-center gap-6">
-                {/* Left Section (3 cols): Label + Current Class + Drafts + New Task */}
-                <div className="lg:col-span-3 flex items-center gap-6">
-                    <div className="flex items-baseline gap-3 shrink-0">
-                        <span className="text-fluid-lg font-black text-brand-textPrimary">
-                            Tasks:
-                        </span>
-                        <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
-                            {currentClass?.name || 'All Classes'}
-                        </span>
-                    </div>
-
-                    {/* Drafts - inline between title and New Task */}
-                    <div className="flex items-center gap-2 flex-wrap flex-1">
-                        {(() => {
-                            const drafts = tasks.filter(t => t.status === 'draft');
-                            return (
-                                <>
-                                    {drafts.length > 0 && (
-                                        <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider">Drafts:</span>
-                                    )}
-                                    {drafts.slice(0, 4).map(draft => {
-                                        const isActive = editingTaskId === draft.id;
-                                        const hierNum = getHierarchicalNumber(draft, tasks, draft.endDate);
-                                        return (
-                                            <button
-                                                key={draft.id}
-                                                onClick={() => loadTask(draft)}
-                                                title={draft.title}
-                                                className={`
-                                                    flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
-                                                    ${isActive
-                                                        ? 'bg-[var(--color-bg-tile-hover)] text-brand-textPrimary border border-[var(--color-border-subtle)]'
-                                                        : 'bg-black/5 text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary border border-transparent'}
-                                                `}
-                                            >
-                                                <span className="font-bold">{hierNum}.</span>
-                                                <span className="truncate max-w-[60px]">{draft.title || 'Untitled'}</span>
-                                            </button>
-                                        );
-                                    })}
-                                    {drafts.length > 4 && (
-                                        <span className="text-xs text-brand-textSecondary">+{drafts.length - 4} more</span>
-                                    )}
-                                </>
-                            );
-                        })()}
-                    </div>
-
-                    {/* New Task Button - floating button pattern, aligned to right of 3-col section */}
-                    <button
-                        onClick={resetForm}
-                        title="Create new task"
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float ml-auto
-                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
-                            shadow-layered
-                            hover:shadow-layered-lg
-                            button-lift-dynamic hover:border-brand-accent/50"
-                    >
-                        <Plus className="w-5 h-5 text-brand-accent" />
-                        <span>New Task</span>
-                    </button>
+    // Header content for PageLayout
+    const headerContent = (
+        <>
+            {/* Left Section (3 cols): Label + Current Class + Drafts + New Task */}
+            <div className="lg:col-span-3 flex items-center gap-6">
+                <div className="flex items-baseline gap-3 shrink-0">
+                    <span className="text-fluid-lg font-black text-brand-textPrimary">
+                        Tasks:
+                    </span>
+                    <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                        {currentClass?.name || 'All Classes'}
+                    </span>
                 </div>
 
-                {/* Right column (1 col): Shape of the Day Date Navigation */}
-                <div className="lg:col-span-1 flex items-center justify-center gap-2">
-                    <button
-                        onClick={() => {
-                            const prev = new Date(selectedDate + 'T00:00:00');
-                            prev.setDate(prev.getDate() - 1);
-                            setSelectedDate(toDateString(prev));
-                        }}
-                        className="p-2 rounded-xl transition-float text-brand-textSecondary border border-transparent
-                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 button-lift-dynamic hover:shadow-layered-sm
-                            focus:outline-none"
-                        aria-label="Previous day"
-                    >
-                        <ChevronLeft size={16} />
-                    </button>
-
-                    <div className="flex items-center gap-2 text-center">
-                        <DatePicker
-                            value={selectedDate}
-                            onChange={(value) => setSelectedDate(value || toDateString())}
-                            iconOnly={true}
-                            iconColor="var(--color-brand-accent)"
-                        />
-
-                        <span className="text-fluid-base font-bold whitespace-nowrap">
-                            <span className="text-brand-textPrimary underline decoration-brand-accent">
-                                {(() => {
-                                    const d = new Date(selectedDate + 'T00:00:00');
-                                    return isValid(d) ? format(d, 'MMM d') : selectedDate;
-                                })()}
-                            </span>
-                            <span className="text-brand-textSecondary">{' '}Schedule</span>
-                        </span>
-                    </div>
-
-                    <button
-                        onClick={() => {
-                            const next = new Date(selectedDate + 'T00:00:00');
-                            next.setDate(next.getDate() + 1);
-                            setSelectedDate(toDateString(next));
-                        }}
-                        className="p-2 rounded-xl transition-float text-brand-textSecondary border border-transparent
-                            hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 button-lift-dynamic hover:shadow-layered-sm
-                            focus:outline-none"
-                        aria-label="Next day"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
+                {/* Drafts - inline between title and New Task */}
+                <div className="flex items-center gap-2 flex-wrap flex-1">
+                    {(() => {
+                        const drafts = tasks.filter(t => t.status === 'draft');
+                        return (
+                            <>
+                                {drafts.length > 0 && (
+                                    <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider">Drafts:</span>
+                                )}
+                                {drafts.slice(0, 4).map(draft => {
+                                    const isActive = editingTaskId === draft.id;
+                                    const hierNum = getHierarchicalNumber(draft, tasks, draft.endDate);
+                                    return (
+                                        <button
+                                            key={draft.id}
+                                            onClick={() => loadTask(draft)}
+                                            title={draft.title}
+                                            className={`
+                                                flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
+                                                ${isActive
+                                                    ? 'bg-[var(--color-bg-tile-hover)] text-brand-textPrimary border border-[var(--color-border-subtle)]'
+                                                    : 'bg-black/5 text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary border border-transparent'}
+                                            `}
+                                        >
+                                            <span className="font-bold">{hierNum}.</span>
+                                            <span className="truncate max-w-[60px]">{draft.title || 'Untitled'}</span>
+                                        </button>
+                                    );
+                                })}
+                                {drafts.length > 4 && (
+                                    <span className="text-xs text-brand-textSecondary">+{drafts.length - 4} more</span>
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
+
+                {/* New Task Button */}
+                <button
+                    onClick={resetForm}
+                    title="Create new task"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float ml-auto
+                        bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                        shadow-layered
+                        hover:shadow-layered-lg
+                        button-lift-dynamic hover:border-brand-accent/50 min-h-[44px]"
+                >
+                    <Plus className="w-5 h-5 text-brand-accent" />
+                    <span>New Task</span>
+                </button>
             </div>
 
+            {/* Right column (1 col): Shape of the Day Date Navigation */}
+            <div className="lg:col-span-1 flex items-center justify-center gap-2">
+                <button
+                    onClick={() => {
+                        const prev = new Date(selectedDate + 'T00:00:00');
+                        prev.setDate(prev.getDate() - 1);
+                        setSelectedDate(toDateString(prev));
+                    }}
+                    className="p-2 rounded-xl transition-float text-brand-textSecondary border border-transparent
+                        hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 button-lift-dynamic hover:shadow-layered-sm
+                        focus:outline-none"
+                    aria-label="Previous day"
+                >
+                    <ChevronLeft size={16} />
+                </button>
+
+                <div className="flex items-center gap-2 text-center">
+                    <DatePicker
+                        value={selectedDate}
+                        onChange={(value) => setSelectedDate(value || toDateString())}
+                        iconOnly={true}
+                        iconColor="var(--color-brand-accent)"
+                    />
+
+                    <span className="text-fluid-base font-bold whitespace-nowrap">
+                        <span className="text-brand-textPrimary underline decoration-brand-accent">
+                            {(() => {
+                                const d = new Date(selectedDate + 'T00:00:00');
+                                return isValid(d) ? format(d, 'MMM d') : selectedDate;
+                            })()}
+                        </span>
+                        <span className="text-brand-textSecondary">{' '}Schedule</span>
+                    </span>
+                </div>
+
+                <button
+                    onClick={() => {
+                        const next = new Date(selectedDate + 'T00:00:00');
+                        next.setDate(next.getDate() + 1);
+                        setSelectedDate(toDateString(next));
+                    }}
+                    className="p-2 rounded-xl transition-float text-brand-textSecondary border border-transparent
+                        hover:text-brand-accent hover:bg-brand-accent/5 hover:border-brand-accent/20 button-lift-dynamic hover:shadow-layered-sm
+                        focus:outline-none"
+                    aria-label="Next day"
+                >
+                    <ChevronRight size={16} />
+                </button>
+            </div>
+        </>
+    );
+
+    return (
+        <PageLayout
+            header={<div className="hidden lg:grid lg:grid-cols-4 w-full items-center gap-6">{headerContent}</div>}
+        >
             <div className="flex-1 min-h-0 flex flex-col">
                 <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
 
                     {/* LEFT PANEL: Task Editor */}
                     <div className="flex-1 lg:col-span-3 flex flex-col">
-                        {/* Main Form Card - Standard tile color, description/title boxes are transparent */}
-                        <div className={`w-full rounded-2xl transition-float p-6 space-y-4 flex-1 flex flex-col relative z-40 levitated-tile ${editingTaskId ? 'active' : ''}`}>
+                        {/* Main Form Area - Outer box removed for "Free-Floating" model */}
+                        <div className={`w-full space-y-6 flex-1 flex flex-col relative z-40 ${editingTaskId ? 'active' : ''}`}>
 
 
                             {/* Title Input - inset box matching description */}
-                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-glass-inlay-warm)] transition-all duration-300
-                                shadow-layered-sm">
+                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] transition-all duration-300
+                                shadow-layered">
                                 <input
                                     type="text"
                                     value={activeFormData.title}
                                     onChange={(e) => updateActiveCard('title', e.target.value)}
                                     placeholder="Title for this task..."
-                                    className="w-full text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textPrimary/40 text-brand-textPrimary/80"
+                                    className="w-full text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textSecondary placeholder:opacity-100 text-brand-textPrimary"
                                 />
                             </div>
 
@@ -659,7 +664,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         />
                                     </div>
                                     {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                    <div className="absolute bottom-3 left-3 flex flex-wrap items-center gap-2">
+                                    <div className="absolute bottom-6 left-6 flex flex-wrap items-center gap-2">
                                         {/* Inline attachments with image thumbnails */}
                                         {activeFormData.attachments && activeFormData.attachments.map(attachment => (
                                             <div
@@ -744,7 +749,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
                                                 rounded-xl border cursor-pointer
                                                 bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] hover:border-brand-accent/50
-                                                shadow-layered-sm hover:shadow-layered-lg
+                                                shadow-layered hover:shadow-layered-lg
                                                 text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]">
                                                 <input
                                                     ref={fileInputRef}
@@ -770,7 +775,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
                                                     rounded-xl border
                                                     bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] hover:border-brand-accent/50
-                                                    shadow-layered-sm hover:shadow-layered-lg
+                                                    shadow-layered hover:shadow-layered-lg
                                                     text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]"
                                             >
                                                 <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
@@ -942,7 +947,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 shadow-layered-sm
                                                 hover:shadow-layered-lg
                                                 button-lift-dynamic hover:border-red-400/50 hover:text-brand-textPrimary
-                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap
+                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]
                                                 ${isNewTask ? 'invisible pointer-events-none' : ''}`}
                                         >
                                             <Trash2 className="w-3.5 h-3.5" />
@@ -967,7 +972,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 shadow-layered-sm
                                                 hover:shadow-layered-lg
                                                 button-lift-dynamic hover:border-brand-accent/50
-                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
                                         >
                                             {isSubmitting || saveState === 'saving' ? (
                                                 <Loader className="w-3.5 h-3.5 animate-spin text-brand-accent" />
@@ -1164,6 +1169,6 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     </div>
                 </div>
             </div>
-        </div >
+        </PageLayout>
     );
 }

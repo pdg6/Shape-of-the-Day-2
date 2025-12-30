@@ -171,6 +171,7 @@ export function MultiSelect<T extends string | number = string>({
                     focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
                     border-[var(--color-border-subtle)]
+                    min-h-[44px] flex items-center
                     ${value.length > 0 ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                     ${buttonClassName}
                 `}

@@ -266,18 +266,18 @@ export function DateRangePicker({
                     disabled={disabled}
                     className={`
                         cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold
-                        border transition-all duration-200 whitespace-nowrap transition-float
-                        bg-[#1a1d24]
+                        border transition-float
+                        bg-[var(--color-bg-tile)]
                         shadow-layered-sm
                         hover:shadow-layered-lg
-                        button-lift-dynamic hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                        button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                         focus:outline-none focus:border-brand-accent
                         min-h-[44px] flex items-center
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                         ${activeField
                             ? 'border-brand-accent'
-                            : 'border-white/10'}
-                        ${startDate || endDate ? 'text-brand-textPrimary' : 'text-slate-400'}
+                            : 'border-[var(--color-border-subtle)]'}
+                        ${startDate || endDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                         ${buttonClassName}
                     `}
                 >
@@ -296,18 +296,18 @@ export function DateRangePicker({
                         className={`
                             group relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
-                            border transition-all duration-200 transition-float
-                            bg-[#1a1d24]
+                            border transition-float
+                            bg-[var(--color-bg-tile)]
                             shadow-layered-sm
                             hover:shadow-layered-lg
-                            button-lift-dynamic hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                            button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
                             min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'start'
                                 ? 'border-brand-accent'
-                                : 'border-white/10'}
-                            ${startDate ? 'text-brand-textPrimary' : 'text-slate-400'}
+                                : 'border-[var(--color-border-subtle)]'}
+                            ${startDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
                     >
@@ -333,18 +333,18 @@ export function DateRangePicker({
                         className={`
                             group relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
-                            border transition-all duration-200 transition-float
-                            bg-[#1a1d24]
+                            border transition-float
+                            bg-[var(--color-bg-tile)]
                             shadow-layered-sm
                             hover:shadow-layered-lg
-                            button-lift-dynamic hover:text-white hover:bg-[#1e2128] hover:border-brand-accent/50
+                            button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
                             min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'end'
                                 ? 'border-brand-accent'
-                                : 'border-white/10'}
-                            ${endDate ? 'text-brand-textPrimary' : 'text-slate-400'}
+                                : 'border-[var(--color-border-subtle)]'}
+                            ${endDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                             ${buttonClassName || 'py-2.5 text-sm'}
                         `}
                     >

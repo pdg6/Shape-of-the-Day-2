@@ -111,7 +111,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
 
     return (
         <div
-            className={`group relative flex flex-col h-full rounded-2xl cursor-pointer overflow-hidden levitated-tile ${isSelected ? 'active' : ''}`}
+            className={`group relative flex flex-col h-full rounded-2xl cursor-pointer levitated-tile ${isSelected ? 'active' : ''}`}
             style={{
                 borderColor: isHovered ? cardColor : undefined
             }}

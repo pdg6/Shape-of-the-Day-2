@@ -9,6 +9,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../shared/Button';
 import TaskProgressIcons from './TaskProgressIcons';
 import { getHierarchicalNumber } from '../../utils/taskHierarchy';
+import { PageLayout } from '../shared/PageLayout';
 
 /**
  * LiveView Component
@@ -189,50 +190,52 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         );
     }
 
-    return (
-        <div className="h-full flex flex-col space-y-4 animate-in fade-in duration-500 overflow-hidden">
-            {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
-            <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
-                {/* Left: Label + Class Name + Active Count */}
-                <div className="flex items-center gap-3">
-                    <div className="flex items-baseline gap-3">
-                        <span className="text-fluid-lg font-black text-brand-textPrimary">
-                            Live View:
-                        </span>
-                        <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
-                            {currentClass?.name || 'No Class Selected'}
-                        </span>
-                    </div>
-                    {/* Active Count Badge */}
-                    <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-sm font-medium border border-green-500/20">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                        {activeStudents.length} Active
-                    </div>
+    // Header content for PageLayout
+    const headerContent = (
+        <>
+            {/* Left: Label + Class Name + Active Count */}
+            <div className="flex items-center gap-3">
+                <div className="flex items-baseline gap-3">
+                    <span className="text-fluid-lg font-black text-brand-textPrimary">
+                        Live View:
+                    </span>
+                    <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                        {currentClass?.name || 'No Class Selected'}
+                    </span>
                 </div>
-
-                {/* Right: View Toggle Buttons */}
-                <div className="flex items-center gap-2 self-end">
-                    <Button
-                        variant="ghost"
-                        size="md"
-                        icon={ListChecks}
-                        onClick={() => handleViewChange('tasks')}
-                        className={internalView === 'tasks' ? 'text-brand-accent' : 'text-brand-textSecondary'}
-                    >
-                        Tasks
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="md"
-                        icon={Users}
-                        onClick={() => handleViewChange('students')}
-                        className={internalView === 'students' ? 'text-brand-accent' : 'text-brand-textSecondary'}
-                    >
-                        Students
-                    </Button>
+                {/* Active Count Badge */}
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-sm font-medium border border-green-500/20">
+                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                    {activeStudents.length} Active
                 </div>
             </div>
 
+            {/* Right: View Toggle Buttons */}
+            <div className="flex items-center gap-2 self-end">
+                <Button
+                    variant="ghost"
+                    size="md"
+                    icon={ListChecks}
+                    onClick={() => handleViewChange('tasks')}
+                    className={internalView === 'tasks' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                >
+                    Tasks
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="md"
+                    icon={Users}
+                    onClick={() => handleViewChange('students')}
+                    className={internalView === 'students' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                >
+                    Students
+                </Button>
+            </div>
+        </>
+    );
+
+    return (
+        <PageLayout header={headerContent}>
             {/* Content */}
             {activeStudents.length === 0 ? (
                 <div className="text-center py-12 bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered">
@@ -296,7 +299,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
             ) : (
                 <TaskListView tasks={tasks} students={activeStudents} />
             )}
-        </div>
+        </PageLayout>
     );
 };
 
@@ -304,63 +307,65 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
 const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
     return (
-        <div className="bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden shadow-layered transition-shadow duration-300">
-            <table className="w-full text-left">
-                <thead className="bg-[var(--color-bg-tile-alt)] border-b border-[var(--color-border-subtle)]">
-                    <tr>
-                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-40">Student</th>
-                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase">Task Progress</th>
-                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase">Questions / Comments</th>
-                        <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-16 text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border-subtle)]">
-                    {students.map(student => {
-                        const needsHelp = student.currentStatus === 'help' || student.currentStatus === 'stuck' || student.currentStatus === 'question';
+        <div className="flex-1 min-h-0 bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden shadow-layered transition-shadow duration-300 flex flex-col">
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <table className="w-full text-left">
+                    <thead className="bg-[var(--color-bg-tile-alt)] border-b border-[var(--color-border-subtle)] sticky top-0 z-10">
+                        <tr>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-40 bg-[var(--color-bg-tile-alt)]">Student</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase bg-[var(--color-bg-tile-alt)]">Task Progress</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase bg-[var(--color-bg-tile-alt)]">Questions / Comments</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-16 text-center bg-[var(--color-bg-tile-alt)]">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border-subtle)]">
+                        {students.map(student => {
+                            const needsHelp = student.currentStatus === 'help' || student.currentStatus === 'stuck' || student.currentStatus === 'question';
 
-                        return (
-                            <tr key={student.uid} className="hover:bg-[var(--color-bg-tile-hover)] transition-colors">
-                                {/* Student Name */}
-                                <td className="p-4 font-bold text-brand-textPrimary">
-                                    {student.displayName}
-                                </td>
+                            return (
+                                <tr key={student.uid} className="hover:bg-[var(--color-bg-tile-hover)] transition-colors">
+                                    {/* Student Name */}
+                                    <td className="p-4 font-bold text-brand-textPrimary">
+                                        {student.displayName}
+                                    </td>
 
-                                {/* Task Progress Icons */}
-                                <td className="p-4">
-                                    <TaskProgressIcons
-                                        tasks={tasks}
-                                        taskStatuses={student.taskStatuses || {}}
-                                        maxVisible={10}
-                                    />
-                                </td>
+                                    {/* Task Progress Icons */}
+                                    <td className="p-4">
+                                        <TaskProgressIcons
+                                            tasks={tasks}
+                                            taskStatuses={student.taskStatuses || {}}
+                                            maxVisible={10}
+                                        />
+                                    </td>
 
-                                {/* Questions/Comments - expands to fill space */}
-                                <td className="p-4">
-                                    {student.currentMessage ? (
-                                        <span className={`text-sm italic ${needsHelp ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} title={student.currentMessage}>
-                                            "{student.currentMessage}"
-                                        </span>
-                                    ) : (
-                                        <span className="text-sm text-brand-textSecondary/60">—</span>
-                                    )}
-                                </td>
+                                    {/* Questions/Comments - expands to fill space */}
+                                    <td className="p-4">
+                                        {student.currentMessage ? (
+                                            <span className={`text-sm italic ${needsHelp ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} title={student.currentMessage}>
+                                                "{student.currentMessage}"
+                                            </span>
+                                        ) : (
+                                            <span className="text-sm text-brand-textSecondary/60">—</span>
+                                        )}
+                                    </td>
 
-                                {/* Actions */}
-                                <td className="p-4 text-center">
-                                    <button
-                                        onClick={() => onDelete(student.uid, student.displayName)}
-                                        className="p-2 rounded-lg text-brand-textSecondary hover:text-red-500 hover:bg-red-500/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
-                                        title={`Remove ${student.displayName} from class`}
-                                        aria-label={`Remove ${student.displayName} from class`}
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+                                    {/* Actions */}
+                                    <td className="p-4 text-center">
+                                        <button
+                                            onClick={() => onDelete(student.uid, student.displayName)}
+                                            className="p-2 rounded-lg text-brand-textSecondary hover:text-red-500 hover:bg-red-500/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+                                            title={`Remove ${student.displayName} from class`}
+                                            aria-label={`Remove ${student.displayName} from class`}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };

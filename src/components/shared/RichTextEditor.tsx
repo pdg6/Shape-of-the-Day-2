@@ -150,7 +150,7 @@ export function RichTextEditor({
 
     return (
         <div
-            className={`flex flex-col rounded-xl bg-[var(--color-glass-inlay-warm)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
+            className={`flex flex-col rounded-xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}
@@ -235,10 +235,10 @@ export function RichTextEditor({
                 {/* Multi-line Placeholder - only show when truly empty (both editor state and value prop) */}
                 {editor.isEmpty && (!value || value === '<p></p>') && (
                     <div className="absolute top-3 left-4 pointer-events-none">
-                        <div className="text-brand-textPrimary/50 text-base font-bold">
+                        <div className="text-brand-textSecondary text-base font-bold">
                             {placeholder}
                         </div>
-                        <div className="text-brand-textPrimary/50 text-xs mt-1">
+                        <div className="text-brand-textSecondary text-xs mt-1">
                             {secondaryPlaceholder}
                         </div>
                     </div>

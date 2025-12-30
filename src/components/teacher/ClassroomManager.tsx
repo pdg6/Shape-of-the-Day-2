@@ -9,6 +9,7 @@ import { handleError } from '../../utils/errorHandler';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
 import { useClassStore } from '../../store/appSettings';
 import { ClassCard } from './ClassCard';
+import { PageLayout } from '../shared/PageLayout';
 
 /**
  * ClassroomManager Component
@@ -182,400 +183,400 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
     // Get current class name
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
-    return (
-        <div className={`flex flex-col space-y-4 animate-in fade-in duration-500 ${internalTab === 'history' ? 'h-full' : ''}`}>
-            {/* Content Header - hidden on mobile (TeacherDashboard provides mobile header) */}
-            <div className="hidden lg:flex h-16 flex-shrink-0 items-center justify-between">
-                {/* Left: Label + Current Class */}
-                <div className="flex items-baseline gap-3">
-                    <span className="text-fluid-lg font-black text-brand-textPrimary">
-                        {internalTab === 'classes' ? 'Classrooms:' : 'Reports:'}
-                    </span>
-                    <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
-                        {currentClass?.name || 'None Selected'}
-                    </span>
-                </div>
-
-                {/* Right: View-specific buttons */}
-                {internalTab === 'classes' ? (
-                    <button
-                        onClick={openCreateModal}
-                        title="Create new class"
-                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float self-end
-                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
-                            shadow-layered
-                            hover:shadow-layered-lg
-                            button-lift-dynamic hover:border-brand-accent/50"
-                    >
-                        <Plus className="w-5 h-5 text-brand-accent" />
-                        <span>Create Class</span>
-                    </button>
-                ) : (
-                    <div className="flex items-center gap-2 self-end">
-                        <Button
-                            variant="ghost"
-                            size="md"
-                            icon={CalendarIcon}
-                            onClick={() => setInternalTab('history')}
-                            className={internalTab === 'history' ? 'text-brand-accent' : 'text-brand-textSecondary'}
-                        >
-                            Calendar
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="md"
-                            icon={BarChart3}
-                            onClick={() => setInternalTab('analytics')}
-                            className={internalTab === 'analytics' ? 'text-brand-accent' : 'text-brand-textSecondary'}
-                        >
-                            Analytics
-                        </Button>
-                    </div>
-                )}
+    // Content Header for PageLayout
+    const headerContent = (
+        <>
+            {/* Left: Label + Current Class */}
+            <div className="flex items-baseline gap-3">
+                <span className="text-fluid-lg font-black text-brand-textPrimary">
+                    {internalTab === 'classes' ? 'Classrooms:' : 'Reports:'}
+                </span>
+                <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                    {currentClass?.name || 'None Selected'}
+                </span>
             </div>
 
-            {/* Content Area */}
-            <div className={`${internalTab === 'history' ? 'flex-1 overflow-hidden' : ''}`}>
-                {internalTab === 'classes' && (
-                    <div className="">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-12">
-                            {classrooms.map(cls => (
-                                <ClassCard
-                                    key={cls.id}
-                                    classroom={cls}
-                                    isSelected={cls.id === currentClassId}
-                                    onEdit={openEditModal}
-                                    onSelect={(id) => {
-                                        setCurrentClassId(id);
-                                        // Do not navigate away from classrooms tab
-                                    }}
-                                    onViewHistory={(id) => {
-                                        setCurrentClassId(id);
-                                        setInternalTab('history');
-                                    }}
-                                    onViewStudents={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('live', 'students');
-                                    }}
-                                    onViewTasks={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('live', 'tasks');
-                                    }}
-                                    onManageTasks={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('tasks');
-                                    }}
-                                    onViewShape={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('shape');
-                                    }}
-                                    onViewCalendar={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('reports', 'history');
-                                    }}
-                                    onViewData={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onNavigate) onNavigate('reports', 'analytics');
-                                    }}
-                                    onShowJoinCode={(id) => {
-                                        setCurrentClassId(id);
-                                        if (onShowJoinCode) onShowJoinCode(id);
-                                    }}
+            {/* Right: View-specific buttons */}
+            {internalTab === 'classes' ? (
+                <button
+                    onClick={openCreateModal}
+                    title="Create new class"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float self-end
+                        bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                        shadow-layered
+                        hover:shadow-layered-lg
+                        button-lift-dynamic hover:border-brand-accent/50"
+                >
+                    <Plus className="w-5 h-5 text-brand-accent" />
+                    <span>Create Class</span>
+                </button>
+            ) : (
+                <div className="flex items-center gap-2 self-end">
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        icon={CalendarIcon}
+                        onClick={() => setInternalTab('history')}
+                        className={internalTab === 'history' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                    >
+                        Calendar
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="md"
+                        icon={BarChart3}
+                        onClick={() => setInternalTab('analytics')}
+                        className={internalTab === 'analytics' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                    >
+                        Analytics
+                    </Button>
+                </div>
+            )}
+        </>
+    );
+
+    return (
+        <PageLayout
+            header={headerContent}
+            disableScroll={internalTab === 'history'}
+        >
+            {internalTab === 'classes' && (
+                <div className="grid-auto-fit gap-6 pb-8" style={{ '--grid-min-size': '280px' } as React.CSSProperties}>
+                    {classrooms.map(cls => (
+                        <ClassCard
+                            key={cls.id}
+                            classroom={cls}
+                            isSelected={cls.id === currentClassId}
+                            onEdit={openEditModal}
+                            onSelect={(id) => {
+                                setCurrentClassId(id);
+                                // Do not navigate away from classrooms tab
+                            }}
+                            onViewHistory={(id) => {
+                                setCurrentClassId(id);
+                                setInternalTab('history');
+                            }}
+                            onViewStudents={(id) => {
+                                setCurrentClassId(id);
+                                if (onNavigate) onNavigate('live', 'students');
+                            }}
+                            onViewTasks={(id) => {
+                                setCurrentClassId(id);
+                                if (onNavigate) onNavigate('live', 'tasks');
+                            }}
+                            onManageTasks={(id) => {
+                                setCurrentClassId(id);
+                                if (onNavigate) onNavigate('tasks');
+                            }}
+                            onViewShape={(id) => {
+                                setCurrentClassId(id);
+                                if (onNavigate) onNavigate('shape');
+                            }}
+                            onViewCalendar={(id) => {
+                                setCurrentClassId(id);
+                                if (onNavigate) onNavigate('reports', 'history');
+                            }}
+                            onViewData={(id) => {
+                                setCurrentClassId(id);
+                                if (onNavigate) onNavigate('reports', 'analytics');
+                            }}
+                            onShowJoinCode={(id) => {
+                                setCurrentClassId(id);
+                                if (onShowJoinCode) onShowJoinCode(id);
+                            }}
+                        />
+                    ))}
+
+                    {/* Summary / Create Card - Moved to end */}
+                    {/* Summary / Create Card - Glass Panel Effect */}
+                    <div className="flex h-full rounded-2xl transition-float overflow-hidden min-h-[160px] bg-[var(--color-bg-tile)] backdrop-blur-md border border-[var(--color-border-subtle)] shadow-layered">
+                        {/* Main Content (Left Side) */}
+                        <div className="flex-1 flex flex-col min-w-0">
+                            {/* Header */}
+                            <div className="h-20 p-5 relative flex justify-between items-start border-b border-[var(--color-border-subtle)]">
+                                <div className="z-10 w-full min-w-0">
+                                    <h3 className="text-xl font-bold text-brand-textPrimary leading-tight mb-1 truncate pr-2">
+                                        Overview
+                                    </h3>
+                                    <p className="text-xs font-medium text-brand-textSecondary">
+                                        Classroom Manager
+                                    </p>
+                                </div>
+                                <div className="p-1.5 bg-[var(--color-bg-tile-alt)] rounded-lg text-brand-textMuted">
+                                    <BookOpen className="w-4 h-4" />
+                                </div>
+                            </div>
+
+                            {/* Body Stats */}
+                            <div className="flex-1 p-5 flex flex-col justify-center gap-4">
+                                <div className="flex items-start gap-4">
+                                    <div className="flex-1 text-left -m-2 p-2">
+                                        <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Classes</p>
+                                        <div className="flex items-baseline gap-1.5">
+                                            <span className="text-2xl font-bold text-brand-textPrimary">
+                                                {classrooms.length}
+                                            </span>
+                                            <span className="text-xs font-medium text-brand-textSecondary">active</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-px bg-[var(--color-border-subtle)] self-stretch my-1" />
+
+                                    <div className="flex-1 text-left -m-2 p-2">
+                                        <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Tasks</p>
+                                        <div className="flex items-baseline gap-1.5">
+                                            <span className="text-2xl font-bold text-brand-textPrimary">
+                                                {totalTasks}
+                                            </span>
+                                            <span className="text-xs font-medium text-brand-textSecondary">total</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Sidebar Action */}
+                        <div className="flex flex-col w-[72px] border-l-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]/20">
+                            <button
+                                onClick={openCreateModal}
+                                className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/10 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-float focus:outline-none group/create"
+                                title="Create New Class"
+                            >
+                                <div className="p-2 transition-float group-hover/create:-translate-y-1 group-hover/create:scale-110">
+                                    <Plus className="w-6 h-6" />
+                                </div>
+                                <span className="text-[10px] font-bold uppercase text-center leading-tight">Create<br />Class</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {internalTab === 'history' && (
+                <div className="h-full flex flex-col">
+                    {/* History Toolbar */}
+                    <div className="flex items-center justify-between mb-6 bg-[var(--color-bg-tile)] p-4 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-float">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="icon"
+                                    size="sm"
+                                    onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                                    icon={ChevronLeft}
                                 />
-                            ))}
-
-                            {/* Summary / Create Card - Moved to end */}
-                            {/* Summary / Create Card - Glass Panel Effect */}
-                            <div className="flex h-full rounded-2xl transition-float overflow-hidden min-h-[160px] bg-[var(--color-bg-tile)] backdrop-blur-md border border-[var(--color-border-subtle)] shadow-layered">
-                                {/* Main Content (Left Side) */}
-                                <div className="flex-1 flex flex-col min-w-0">
-                                    {/* Header */}
-                                    <div className="h-20 p-5 relative flex justify-between items-start border-b border-[var(--color-border-subtle)]">
-                                        <div className="z-10 w-full min-w-0">
-                                            <h3 className="text-xl font-bold text-brand-textPrimary leading-tight mb-1 truncate pr-2">
-                                                Overview
-                                            </h3>
-                                            <p className="text-xs font-medium text-brand-textSecondary">
-                                                Classroom Manager
-                                            </p>
-                                        </div>
-                                        <div className="p-1.5 bg-[var(--color-bg-tile-alt)] rounded-lg text-brand-textMuted">
-                                            <BookOpen className="w-4 h-4" />
-                                        </div>
-                                    </div>
-
-                                    {/* Body Stats */}
-                                    <div className="flex-1 p-5 flex flex-col justify-center gap-4">
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex-1 text-left -m-2 p-2">
-                                                <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Classes</p>
-                                                <div className="flex items-baseline gap-1.5">
-                                                    <span className="text-2xl font-bold text-brand-textPrimary">
-                                                        {classrooms.length}
-                                                    </span>
-                                                    <span className="text-xs font-medium text-brand-textSecondary">active</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="w-px bg-[var(--color-border-subtle)] self-stretch my-1" />
-
-                                            <div className="flex-1 text-left -m-2 p-2">
-                                                <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Tasks</p>
-                                                <div className="flex items-baseline gap-1.5">
-                                                    <span className="text-2xl font-bold text-brand-textPrimary">
-                                                        {totalTasks}
-                                                    </span>
-                                                    <span className="text-xs font-medium text-brand-textSecondary">total</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right Sidebar Action */}
-                                <div className="flex flex-col w-[72px] border-l-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]/20">
-                                    <button
-                                        onClick={openCreateModal}
-                                        className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/10 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-float focus:outline-none group/create"
-                                        title="Create New Class"
-                                    >
-                                        <div className="p-2 transition-float group-hover/create:-translate-y-1 group-hover/create:scale-110">
-                                            <Plus className="w-6 h-6" />
-                                        </div>
-                                        <span className="text-[10px] font-bold uppercase text-center leading-tight">Create<br />Class</span>
-                                    </button>
-                                </div>
+                                <span className="font-bold text-lg w-32 text-center">{format(currentMonth, 'MMMM yyyy')}</span>
+                                <Button
+                                    variant="icon"
+                                    size="sm"
+                                    onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                                    icon={ChevronRight}
+                                />
                             </div>
                         </div>
                     </div>
-                )}
 
-                {internalTab === 'history' && (
-                    <div className="h-full flex flex-col">
-                        {/* History Toolbar */}
-                        <div className="flex items-center justify-between mb-6 bg-[var(--color-bg-tile)] p-4 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-float">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="icon"
-                                        size="sm"
-                                        onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                                        icon={ChevronLeft}
-                                    />
-                                    <span className="font-bold text-lg w-32 text-center">{format(currentMonth, 'MMMM yyyy')}</span>
-                                    <Button
-                                        variant="icon"
-                                        size="sm"
-                                        onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                                        icon={ChevronRight}
-                                    />
+                    {/* Calendar Grid */}
+                    <div className="flex-1 card-base overflow-hidden flex flex-col">
+                        <div className="grid grid-cols-7 border-b-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                                <div key={day} className="p-3 text-center text-xs font-bold text-brand-textSecondary uppercase tracking-wider">
+                                    {day}
                                 </div>
-                            </div>
+                            ))}
                         </div>
+                        <div className="grid grid-cols-7 flex-1 auto-rows-fr">
+                            {daysInMonth.map((day) => {
+                                const dayLogs = getLogsForDate(day);
+                                const hasActivity = dayLogs.length > 0;
+                                const uniqueStudents = new Set(dayLogs.map(l => l.studentId)).size;
 
-                        {/* Calendar Grid */}
-                        <div className="flex-1 card-base overflow-hidden flex flex-col">
-                            <div className="grid grid-cols-7 border-b-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]">
-                                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                                    <div key={day} className="p-3 text-center text-xs font-bold text-brand-textSecondary uppercase tracking-wider">
-                                        {day}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-7 flex-1 auto-rows-fr">
-                                {daysInMonth.map((day) => {
-                                    const dayLogs = getLogsForDate(day);
-                                    const hasActivity = dayLogs.length > 0;
-                                    const uniqueStudents = new Set(dayLogs.map(l => l.studentId)).size;
-
-                                    return (
-                                        <div
-                                            key={day.toISOString()}
-                                            onClick={() => handleDayClick(day)}
-                                            tabIndex={0}
-                                            role="button"
-                                            aria-label={`View details for ${format(day, 'MMMM d, yyyy')}`}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                    e.preventDefault();
-                                                    handleDayClick(day);
-                                                }
-                                            }}
-                                            className={`
+                                return (
+                                    <div
+                                        key={day.toISOString()}
+                                        onClick={() => handleDayClick(day)}
+                                        tabIndex={0}
+                                        role="button"
+                                        aria-label={`View details for ${format(day, 'MMMM d, yyyy')}`}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                handleDayClick(day);
+                                            }
+                                        }}
+                                        className={`
                                                 border-b border-r border-[var(--color-border-subtle)] p-2 relative cursor-pointer transition-colors
                                                 hover:bg-brand-accent/5
                                                 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent
                                                 ${!isSameMonth(day, currentMonth) ? 'bg-[var(--color-bg-tile-alt)]/50 text-brand-textMuted' : ''}
                                                 ${isSameDay(day, new Date()) ? 'bg-brand-accent/10' : ''}
                                             `}
-                                        >
-                                            <span className={`text-sm font-medium ${isSameDay(day, new Date()) ? 'text-brand-accent' : ''}`}>
-                                                {format(day, 'd')}
-                                            </span>
+                                    >
+                                        <span className={`text-sm font-medium ${isSameDay(day, new Date()) ? 'text-brand-accent' : ''}`}>
+                                            {format(day, 'd')}
+                                        </span>
 
-                                            {hasActivity && (
-                                                <div className="mt-2 space-y-1">
-                                                    <div className="flex items-center gap-1 text-xs text-brand-textSecondary">
-                                                        <Users className="w-3 h-3" /> {uniqueStudents}
-                                                    </div>
-                                                    <div className="flex items-center gap-1 text-xs text-brand-textSecondary">
-                                                        <Check className="w-3 h-3" /> {dayLogs.reduce((acc, log) => acc + log.taskPerformance.length, 0)} Tasks
-                                                    </div>
+                                        {hasActivity && (
+                                            <div className="mt-2 space-y-1">
+                                                <div className="flex items-center gap-1 text-xs text-brand-textSecondary">
+                                                    <Users className="w-3 h-3" /> {uniqueStudents}
                                                 </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                                <div className="flex items-center gap-1 text-xs text-brand-textSecondary">
+                                                    <Check className="w-3 h-3" /> {dayLogs.reduce((acc, log) => acc + log.taskPerformance.length, 0)} Tasks
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {internalTab === 'analytics' && (
-                    <div className="space-y-6">
-                        {!analyticsData ? (
-                            <div className="flex flex-col items-center justify-center h-full text-brand-textSecondary">
-                                <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
-                                <p>No analytics data available yet.</p>
+            {internalTab === 'analytics' && (
+                <div className="space-y-6">
+                    {!analyticsData ? (
+                        <div className="flex flex-col items-center justify-center h-full text-brand-textSecondary">
+                            <BarChart3 className="w-16 h-16 mb-4 opacity-20" />
+                            <p>No analytics data available yet.</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* KPI Tiles */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-6 rounded-2xl levitated-tile">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Avg. Session</span>
+                                        <Clock className="w-5 h-5 text-brand-accent" />
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.avgSessionDuration}</span>
+                                        <span className="text-sm text-brand-textSecondary">mins</span>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 rounded-2xl levitated-tile">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Completion Rate</span>
+                                        <CheckCircle className="w-5 h-5 text-green-500" />
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.completionRate}%</span>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 rounded-2xl levitated-tile">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Stuck Rate</span>
+                                        <AlertCircle className="w-5 h-5 text-amber-500" />
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.stuckRate}%</span>
+                                        <span className="text-sm text-brand-textSecondary">of tasks</span>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 rounded-2xl levitated-tile">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Active Students</span>
+                                        <Users className="w-5 h-5 text-purple-500" />
+                                    </div>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.uniqueStudents}</span>
+                                        <span className="text-sm text-brand-textSecondary">total</span>
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <>
-                                {/* KPI Tiles */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="p-6 rounded-2xl levitated-tile">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Avg. Session</span>
-                                            <Clock className="w-5 h-5 text-brand-accent" />
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.avgSessionDuration}</span>
-                                            <span className="text-sm text-brand-textSecondary">mins</span>
-                                        </div>
-                                    </div>
 
-                                    <div className="p-6 rounded-2xl levitated-tile">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Completion Rate</span>
-                                            <CheckCircle className="w-5 h-5 text-green-500" />
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.completionRate}%</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6 rounded-2xl levitated-tile">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Stuck Rate</span>
-                                            <AlertCircle className="w-5 h-5 text-amber-500" />
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.stuckRate}%</span>
-                                            <span className="text-sm text-brand-textSecondary">of tasks</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="p-6 rounded-2xl levitated-tile">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <span className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider">Active Students</span>
-                                            <Users className="w-5 h-5 text-purple-500" />
-                                        </div>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-3xl font-bold text-brand-textPrimary">{analyticsData.uniqueStudents}</span>
-                                            <span className="text-sm text-brand-textSecondary">total</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Charts Row */}
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                    {/* Task Difficulty */}
-                                    <div className="p-6 rounded-2xl levitated-tile">
-                                        <h3 className="text-lg font-bold text-brand-textPrimary mb-6 flex items-center gap-2">
-                                            <TrendingUp className="w-5 h-5 text-brand-accent" />
-                                            Most Challenging Tasks
-                                        </h3>
-                                        <div className="space-y-4">
-                                            {analyticsData.difficultTasks.map((task, i) => (
-                                                <div key={i} className="space-y-2">
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="font-medium truncate max-w-[70%]">{task.title}</span>
-                                                        <span className="text-brand-textSecondary">{task.avgTime}s avg</span>
-                                                    </div>
-                                                    <div className="h-2 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden flex">
-                                                        <div
-                                                            className="bg-amber-500 h-full"
-                                                            style={{ width: `${task.stuckRate * 100}%` }}
-                                                            title={`Stuck Rate: ${Math.round(task.stuckRate * 100)}%`}
-                                                        />
-                                                        <div
-                                                            className="bg-brand-accent h-full"
-                                                            style={{ width: `${100 - (task.stuckRate * 100)}%` }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {analyticsData.difficultTasks.length === 0 && (
-                                                <p className="text-brand-textSecondary text-sm italic">No data available.</p>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Engagement Trend */}
-                                    <div className="p-6 flex flex-col rounded-2xl levitated-tile">
-                                        <h3 className="text-lg font-bold text-brand-textPrimary mb-6 flex items-center gap-2">
-                                            <BarChart3 className="w-5 h-5 text-brand-accent" />
-                                            Activity (Last 7 Days)
-                                        </h3>
-                                        <div className="flex-1 flex items-end justify-between gap-2 min-h-[200px]">
-                                            {analyticsData.trendData.map((day, i) => {
-                                                const maxVal = Math.max(...analyticsData.trendData.map(d => d.count), 1);
-                                                const height = (day.count / maxVal) * 100;
-                                                return (
-                                                    <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
-                                                        <div
-                                                            className="w-full bg-brand-accent/10 rounded-t-lg relative group-hover:bg-brand-accent/20 transition-colors"
-                                                            style={{ height: `${height}%` }}
-                                                        >
-                                                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-[var(--color-border-subtle)] shadow-layered-sm">
-                                                                {day.count}
-                                                            </div>
-                                                        </div>
-                                                        <span className="text-xs font-bold text-brand-textMuted">{day.day}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Needs Support */}
+                            {/* Charts Row */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Task Difficulty */}
                                 <div className="p-6 rounded-2xl levitated-tile">
                                     <h3 className="text-lg font-bold text-brand-textPrimary mb-6 flex items-center gap-2">
-                                        <AlertCircle className="w-5 h-5 text-red-500" />
-                                        Students Needing Support
+                                        <TrendingUp className="w-5 h-5 text-brand-accent" />
+                                        Most Challenging Tasks
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {analyticsData.studentsNeedingSupport.map((student, i) => (
-                                            <div key={i} className="flex items-center gap-4 p-4 bg-[var(--color-bg-tile-alt)] rounded-lg border border-[var(--color-border-subtle)]">
-                                                <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold">
-                                                    {student.name.charAt(0)}
+                                    <div className="space-y-4">
+                                        {analyticsData.difficultTasks.map((task, i) => (
+                                            <div key={i} className="space-y-2">
+                                                <div className="flex justify-between text-sm">
+                                                    <span className="font-medium truncate max-w-[70%]">{task.title}</span>
+                                                    <span className="text-brand-textSecondary">{task.avgTime}s avg</span>
                                                 </div>
-                                                <div>
-                                                    <p className="font-bold text-brand-textPrimary">{student.name}</p>
-                                                    <p className="text-xs text-brand-textMuted">{student.stuckCount} stuck events</p>
+                                                <div className="h-2 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden flex">
+                                                    <div
+                                                        className="bg-amber-500 h-full"
+                                                        style={{ width: `${task.stuckRate * 100}%` }}
+                                                        title={`Stuck Rate: ${Math.round(task.stuckRate * 100)}%`}
+                                                    />
+                                                    <div
+                                                        className="bg-brand-accent h-full"
+                                                        style={{ width: `${100 - (task.stuckRate * 100)}%` }}
+                                                    />
                                                 </div>
                                             </div>
                                         ))}
-                                        {analyticsData.studentsNeedingSupport.length === 0 && (
-                                            <p className="text-gray-400 text-sm italic col-span-full">No students flagged for support.</p>
+                                        {analyticsData.difficultTasks.length === 0 && (
+                                            <p className="text-brand-textSecondary text-sm italic">No data available.</p>
                                         )}
                                     </div>
                                 </div>
-                            </>
-                        )}
-                    </div>
-                )}
-            </div>
+
+                                {/* Engagement Trend */}
+                                <div className="p-6 flex flex-col rounded-2xl levitated-tile">
+                                    <h3 className="text-lg font-bold text-brand-textPrimary mb-6 flex items-center gap-2">
+                                        <BarChart3 className="w-5 h-5 text-brand-accent" />
+                                        Activity (Last 7 Days)
+                                    </h3>
+                                    <div className="flex-1 flex items-end justify-between gap-2 min-h-[200px]">
+                                        {analyticsData.trendData.map((day, i) => {
+                                            const maxVal = Math.max(...analyticsData.trendData.map(d => d.count), 1);
+                                            const height = (day.count / maxVal) * 100;
+                                            return (
+                                                <div key={i} className="flex flex-col items-center gap-2 flex-1 group">
+                                                    <div
+                                                        className="w-full bg-brand-accent/10 rounded-t-lg relative group-hover:bg-brand-accent/20 transition-colors"
+                                                        style={{ height: `${height}%` }}
+                                                    >
+                                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-[var(--color-border-subtle)] shadow-layered-sm">
+                                                            {day.count}
+                                                        </div>
+                                                    </div>
+                                                    <span className="text-xs font-bold text-brand-textMuted">{day.day}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Needs Support */}
+                            <div className="p-6 rounded-2xl levitated-tile">
+                                <h3 className="text-lg font-bold text-brand-textPrimary mb-6 flex items-center gap-2">
+                                    <AlertCircle className="w-5 h-5 text-red-500" />
+                                    Students Needing Support
+                                </h3>
+                                <div className="grid-auto-fit gap-4" style={{ '--grid-min-size': '250px' } as React.CSSProperties}>
+                                    {analyticsData.studentsNeedingSupport.map((student, i) => (
+                                        <div key={i} className="flex items-center gap-4 p-4 bg-[var(--color-bg-tile-alt)] rounded-lg border border-[var(--color-border-subtle)]">
+                                            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold">
+                                                {student.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-brand-textPrimary">{student.name}</p>
+                                                <p className="text-xs text-brand-textMuted">{student.stuckCount} stuck events</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {analyticsData.studentsNeedingSupport.length === 0 && (
+                                        <p className="text-gray-400 text-sm italic col-span-full">No students flagged for support.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
 
             {/* Daily Summary Modal */}
             {showDaySummary && selectedDate && (
@@ -669,8 +670,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                     </div>
                 </div>
             )}
-        </div>
+        </PageLayout>
     );
 };
 
 export default ClassroomManager;
+
