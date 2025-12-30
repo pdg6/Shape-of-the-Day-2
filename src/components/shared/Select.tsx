@@ -31,6 +31,7 @@ interface SelectProps<T = string> {
     iconSize?: number;
     hideText?: boolean;
     hideChevron?: boolean;
+    dropUp?: boolean; // Open dropdown above the button instead of below
 }
 
 /**
@@ -62,10 +63,11 @@ export function Select<T extends string | number = string>({
     iconSize = 18,
     hideText = false,
     hideChevron = false,
+    dropUp = false,
 }: SelectProps<T>) {
     const [search, setSearch] = useState('');
     const buttonRef = useRef<HTMLButtonElement>(null);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0, bottom: 0 });
     const [isOpen, setIsOpen] = useState(false);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -92,6 +94,7 @@ export function Select<T extends string | number = string>({
                 top: rect.bottom + window.scrollY + 4,
                 left: rect.left + window.scrollX,
                 width: rect.width,
+                bottom: window.innerHeight - rect.top + 4, // Distance from bottom of viewport to top of button
             });
         }
     };
@@ -198,7 +201,10 @@ export function Select<T extends string | number = string>({
                                     static
                                     className="fixed z-[9999] overflow-hidden rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile)] shadow-layered focus:outline-none"
                                     style={{
-                                        top: dropdownPosition.top,
+                                        ...(dropUp
+                                            ? { bottom: dropdownPosition.bottom }
+                                            : { top: dropdownPosition.top }
+                                        ),
                                         left: dropdownPosition.left,
                                         minWidth: Math.max(dropdownPosition.width, 200),
                                         maxHeight: '300px',

@@ -46,14 +46,9 @@ const getTypeLabel = (type: ItemType): string => {
     }
 };
 
-// Get type color classes
+// Get type color classes (use semantic CSS classes from index.css)
 const getTypeColorClasses = (type: ItemType): string => {
-    switch (type) {
-        case 'project': return 'text-purple-500 bg-purple-500/10 border-purple-500/30';
-        case 'assignment': return 'text-blue-500 bg-blue-500/10 border-blue-500/30';
-        case 'task': return 'text-green-500 bg-green-500/10 border-green-500/30';
-        case 'subtask': return 'text-orange-500 bg-orange-500/10 border-orange-500/30';
-    }
+    return `type-${type}`;
 };
 
 interface TaskInventoryProps {
@@ -887,17 +882,17 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                             <span className={`text-xl font-bold ${isSelected ? 'text-brand-accent' : 'text-brand-textPrimary'}`}>
                                                 {dayNum}
                                             </span>
-                                            {/* Task counts - colored dots */}
+                                            {/* Task counts - colored dots using type CSS variables */}
                                             {hasItems && (
                                                 <div className="flex gap-1 mt-0.5">
                                                     {counts.projects > 0 && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500" title={`${counts.projects} projects`} />
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--type-project-color)]" title={`${counts.projects} projects`} />
                                                     )}
                                                     {counts.assignments > 0 && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title={`${counts.assignments} assignments`} />
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--type-assignment-color)]" title={`${counts.assignments} assignments`} />
                                                     )}
                                                     {counts.tasks > 0 && (
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" title={`${counts.tasks} tasks`} />
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--type-task-color)]" title={`${counts.tasks} tasks`} />
                                                     )}
                                                 </div>
                                             )}

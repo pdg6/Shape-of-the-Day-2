@@ -799,6 +799,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             icon={getTypeIcon(activeFormData.type)}
                                             iconColor={getTypeHexColor(activeFormData.type)}
                                             buttonClassName="text-sm"
+                                            dropUp
                                         />
                                     </div>
                                 </div>
@@ -866,6 +867,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             hideChevron
                                             iconSize={22}
                                             buttonClassName="lg:px-0"
+                                            dropUp
                                         />
                                     </div>
                                 </div>
@@ -927,50 +929,54 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                     </div>
                                 </div>
 
-                                {/* Right: Action Buttons */}
-                                <div className="flex items-center gap-2">
-                                    {/* Delete Button - unified with Section X pattern */}
-                                    {!isNewTask && (
+                                {/* Right: Action Buttons - Perfectly aligned with DateRangePicker above */}
+                                <div className="flex items-center gap-2 ml-auto w-full max-w-[224px] lg:max-w-none lg:w-[calc(100%-216px)] lg:flex-[0_0_224px]">
+                                    <div className="flex w-full gap-2 lg:gap-2">
+                                        {/* Delete Button - aligns with Start Date button */}
                                         <button
                                             type="button"
                                             onClick={() => handleDelete(editingTaskId!)}
                                             disabled={isSubmitting}
-                                            className="group/btn relative flex flex-col items-center justify-center gap-1.5 py-2.5 px-4 min-w-[72px]
-                                                rounded-xl transition-float border
-                                                bg-[var(--color-bg-tile)] shadow-layered-sm
-                                                hover:shadow-layered-lg button-lift-dynamic
-                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-[var(--color-border-subtle)] hover:border-red-400/50
-                                                disabled:opacity-50"
+                                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-float
+                                                bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary
+                                                shadow-layered-sm
+                                                hover:shadow-layered-lg
+                                                button-lift-dynamic hover:border-red-400/50 hover:text-brand-textPrimary
+                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap
+                                                ${isNewTask ? 'invisible pointer-events-none' : ''}`}
                                         >
-                                            <Trash2 size={16} className="w-4 h-4 transition-colors group-hover/btn:text-red-500" />
-                                            <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Delete</span>
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <span>Delete</span>
                                         </button>
-                                    )}
 
-                                    {/* Save Button - Section VI.C Content Header Action Button pattern */}
-                                    <button
-                                        onClick={async () => {
-                                            if (!activeFormData.title.trim()) {
-                                                handleError(new Error("⚠️ Please include a title before saving."));
-                                                return;
-                                            }
-                                            await handleSave();
-                                        }}
-                                        disabled={isSubmitting || !activeFormData.title.trim()}
-                                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float
-                                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
-                                            shadow-layered-sm
-                                            hover:shadow-layered-lg
-                                            button-lift-dynamic hover:border-brand-accent/50
-                                            disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isSubmitting || saveState === 'saving' ? (
-                                            <Loader className="w-5 h-5 animate-spin text-brand-accent" />
-                                        ) : (
-                                            <Check className="w-5 h-5 text-brand-accent" />
-                                        )}
-                                        <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
-                                    </button>
+                                        {/* Arrow/Width Spacer - Matches the space taken by ArrowRight (16px) in DateRangePicker */}
+                                        <div className="flex items-center justify-center w-4 lg:w-4 shrink-0" aria-hidden="true" />
+
+                                        {/* Save Button - aligns with Due Date button */}
+                                        <button
+                                            onClick={async () => {
+                                                if (!activeFormData.title.trim()) {
+                                                    handleError(new Error("⚠️ Please include a title before saving."));
+                                                    return;
+                                                }
+                                                await handleSave();
+                                            }}
+                                            disabled={isSubmitting || !activeFormData.title.trim()}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-float
+                                                bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                                                shadow-layered-sm
+                                                hover:shadow-layered-lg
+                                                button-lift-dynamic hover:border-brand-accent/50
+                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                        >
+                                            {isSubmitting || saveState === 'saving' ? (
+                                                <Loader className="w-3.5 h-3.5 animate-spin text-brand-accent" />
+                                            ) : (
+                                                <Check className="w-3.5 h-3.5 text-brand-accent" />
+                                            )}
+                                            <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1067,34 +1073,36 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             >
 
                                                 <div className="flex items-start gap-2">
-                                                    {/* Reorder Controls - for all tasks within their sibling group */}
-                                                    <div className="flex flex-col" onClick={e => e.stopPropagation()}>
-                                                        <button
-                                                            onClick={() => handleReorder(task.id, 'up')}
-                                                            disabled={siblingIndex === 0}
-                                                            title="Move up"
-                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[var(--color-bg-tile)] disabled:hover:text-brand-textSecondary focus:outline-none"
-                                                        >
-                                                            <ArrowUp size={14} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleReorder(task.id, 'down')}
-                                                            disabled={siblingIndex === siblings.length - 1}
-                                                            title="Move down"
-                                                            className="group/btn p-1.5 rounded-lg transition-float bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary shadow-layered-sm hover:shadow-layered-lg button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 disabled:opacity-30 disabled:hover:bg-[var(--color-bg-tile)] disabled:hover:text-brand-textSecondary focus:outline-none"
-                                                        >
-                                                            <ArrowDown size={14} />
-                                                        </button>
-                                                    </div>
-
-                                                    {/* Number + Type Icon - stacked vertically, left aligned */}
-                                                    <div className="flex flex-col items-start shrink-0 w-8">
-                                                        <span className="text-xs font-bold text-brand-textSecondary text-left">
-                                                            {getHierarchicalNumber(task, filteredTasks, selectedDate)}
-                                                        </span>
-                                                        <span className={`w-6 h-6 rounded-lg flex items-center justify-start ${getTypeColorClasses(task.type)}`}>
-                                                            <TypeIconSmall size={12} />
-                                                        </span>
+                                                    {/* Left Column: Arrow + Number/Icon paired rows */}
+                                                    <div className="flex flex-col gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                                                        {/* Row 1: Up Arrow + Number */}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <button
+                                                                onClick={() => handleReorder(task.id, 'up')}
+                                                                disabled={siblingIndex === 0}
+                                                                title="Move up"
+                                                                className="p-1 rounded-md transition-colors bg-transparent border border-transparent text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent focus:outline-none"
+                                                            >
+                                                                <ArrowUp size={16} />
+                                                            </button>
+                                                            <span className="text-sm font-bold text-brand-textSecondary w-6 text-center">
+                                                                {getHierarchicalNumber(task, filteredTasks, selectedDate)}
+                                                            </span>
+                                                        </div>
+                                                        {/* Row 2: Down Arrow + Type Icon */}
+                                                        <div className="flex items-center gap-1.5">
+                                                            <button
+                                                                onClick={() => handleReorder(task.id, 'down')}
+                                                                disabled={siblingIndex === siblings.length - 1}
+                                                                title="Move down"
+                                                                className="p-1 rounded-md transition-colors bg-transparent border border-transparent text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent focus:outline-none"
+                                                            >
+                                                                <ArrowDown size={16} />
+                                                            </button>
+                                                            <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                                <TypeIconSmall size={14} />
+                                                            </span>
+                                                        </div>
                                                     </div>
 
                                                     {/* Content: Title + Due Date */}
