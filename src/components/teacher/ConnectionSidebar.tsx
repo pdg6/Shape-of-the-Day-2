@@ -99,7 +99,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
             aria-label="Class connection panel"
             aria-hidden={!isSidebarOpen}
             className={`
-                fixed right-0 top-[64px] h-[calc(100dvh-64px)] w-80 bg-[var(--color-bg-tile)] shadow-2xl transition-transform duration-300 ease-in-out z-50
+                fixed right-0 top-[64px] h-[calc(100dvh-64px)] w-80 bg-tile shadow-2xl transition-transform duration-300 ease-in-out z-50
                 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'}
             `}
         >
@@ -107,7 +107,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                 {/* Content Area */}
                 <div className="flex-1 flex flex-col overflow-hidden">
                     {/* QR Code Section */}
-                    <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-[var(--color-bg-tile-alt)]/50">
+                    <div className="p-4 flex flex-col items-center justify-center space-y-3 bg-tile-alt/50">
 
                         {/* Join URL */}
                         <div className="w-full flex flex-col items-center justify-center px-3 py-3 rounded-lg border border-brand-accent/20 bg-brand-accent/5">
@@ -125,7 +125,7 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                             </span>
                         </div>
 
-                        <div className="w-48 aspect-square bg-white p-3 rounded-lg border border-[var(--color-border-subtle)] shadow-layered-sm mt-2">
+                        <div className="w-48 aspect-square bg-white p-3 rounded-lg border border-border-subtle shadow-layered-sm mt-2">
                             <QRCodeSVG
                                 value={joinUrl}
                                 style={{ width: '100%', height: '100%' }}
@@ -136,9 +136,9 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                     </div>
 
                     {/* Live Roster Section */}
-                    <div className="flex-1 overflow-y-auto bg-[var(--color-bg-tile)]">
+                    <div className="flex-1 overflow-y-auto bg-tile">
                         <div className="p-4 space-y-2">
-                            <h3 className="text-fluid-xs font-bold text-brand-textMuted uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-[var(--color-bg-tile)] py-2 z-10">
+                            <h3 className="text-fluid-xs font-bold text-brand-textMuted uppercase tracking-wider mb-2 flex items-center justify-between sticky top-0 bg-tile py-2 z-10">
                                 <span>Live Students</span>
                                 <span className="bg-brand-accent/10 text-brand-accent px-2 py-0.5 rounded-full text-fluid-xs font-bold">
                                     {liveStudents.length}
@@ -150,38 +150,40 @@ const ConnectionSidebar: React.FC<ConnectionSidebarProps> = ({ classCode, classI
                                     Waiting for students...
                                 </div>
                             ) : (
-                                liveStudents.map((student) => (
-                                    <div
-                                        key={student.uid}
-                                        className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border border-[var(--color-border-subtle)] hover:border-brand-accent/30 bg-[var(--color-bg-tile-alt)] hover:shadow-layered-sm group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                                        tabIndex={0}
-                                        role="listitem"
-                                    >
-                                        <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-fluid-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
-                                            {student.displayName.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-fluid-sm font-medium text-brand-textPrimary truncate">
-                                                {student.displayName}
-                                            </p>
-                                            <p className="text-fluid-xs text-brand-textMuted truncate">
-                                                {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
-                                            </p>
-                                        </div>
-                                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${(student.currentStatus === 'stuck' || student.currentStatus === 'question' || student.currentStatus === 'help')
-                                            ? 'bg-amber-500 animate-pulse ring-2 ring-amber-500/10' :
-                                            student.currentStatus === 'done' ? 'bg-blue-500' :
-                                                'bg-emerald-500'
-                                            }`} />
-                                    </div>
-                                ))
+                                <ul className="space-y-2 list-none p-0 m-0" role="list">
+                                    {liveStudents.map((student) => (
+                                        <li
+                                            key={student.uid}
+                                            className="w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 border border-border-subtle hover:border-brand-accent/30 bg-tile-alt hover:shadow-layered-sm group cursor-default focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                                            tabIndex={0}
+                                            role="listitem"
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-brand-accent/10 flex items-center justify-center text-brand-accent font-bold text-fluid-xs shrink-0 group-hover:bg-brand-accent/20 transition-colors">
+                                                {student.displayName.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-fluid-sm font-medium text-brand-textPrimary truncate">
+                                                    {student.displayName}
+                                                </p>
+                                                <p className="text-fluid-xs text-brand-textMuted truncate">
+                                                    {student.currentStatus === 'todo' ? 'Just joined' : student.currentStatus}
+                                                </p>
+                                            </div>
+                                            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${(student.currentStatus === 'stuck' || student.currentStatus === 'question' || student.currentStatus === 'help')
+                                                ? 'bg-amber-500 animate-pulse ring-2 ring-amber-500/10' :
+                                                student.currentStatus === 'done' ? 'bg-blue-500' :
+                                                    'bg-emerald-500'
+                                                }`} />
+                                        </li>
+                                    ))}
+                                </ul>
                             )}
                         </div>
                     </div>
                 </div>
 
                 {/* Footer with Close Button */}
-                <div className="p-4 bg-[var(--color-bg-tile)]">
+                <div className="p-4 bg-tile">
                     <button
                         ref={closeButtonRef}
                         onClick={() => setSidebarOpen(false)}

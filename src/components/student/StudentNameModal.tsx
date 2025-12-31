@@ -51,13 +51,13 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
             onClick={onClose}
         >
             <div
-                className="bg-[var(--color-bg-tile)] rounded-2xl shadow-layered w-full max-w-md p-8 transition-float border border-[var(--color-border-subtle)] relative"
+                className="bg-tile rounded-2xl shadow-layered w-full max-w-md p-8 transition-float border border-border-subtle relative"
                 onClick={(e) => e.stopPropagation()}
             >
                 {onClose && (
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-2 text-brand-textMuted hover:text-brand-textPrimary transition-colors rounded-lg hover:bg-[var(--color-bg-tile-hover)]"
+                        className="absolute top-4 right-4 p-2 text-brand-textMuted hover:text-brand-textPrimary transition-colors rounded-lg hover:bg-tile-hover"
                         aria-label="Close"
                     >
                         <X className="w-5 h-5" />
@@ -85,9 +85,9 @@ const StudentNameModal: React.FC<StudentNameModalProps> = ({ onSubmit, initialNa
                                 autoComplete="off"
                                 spellCheck={false}
                                 className={`
-                                    w-full px-4 py-4 rounded-xl bg-[var(--color-bg-tile-alt)] border text-lg text-center tracking-[0.5em] font-black
+                                    w-full px-4 py-4 rounded-xl bg-tile-alt border text-lg text-center tracking-[0.5em] font-black
                                     placeholder:tracking-normal placeholder:font-sans placeholder:font-normal
-                                    ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-[var(--color-border-subtle)] focus:border-brand-accent/50 focus:ring-brand-accent/5'}
+                                    ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-border-subtle focus:border-brand-accent/50 focus:ring-brand-accent/5'}
                                     text-brand-textPrimary placeholder-brand-textMuted focus:outline-none focus:ring-4 transition-all shadow-layered-sm
                                 `}
                                 enterKeyHint="go"

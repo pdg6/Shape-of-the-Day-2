@@ -148,14 +148,14 @@ export function Select<T extends string | number = string>({
                                 group relative w-full cursor-pointer
                                 pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
                                 border transition-float
-                                bg-[var(--color-bg-tile)] text-brand-textSecondary
+                                bg-(--color-bg-tile) text-brand-textSecondary
                                 shadow-layered
                                 hover:shadow-layered-lg
-                                button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
+                                button-lift-dynamic hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50
                                 focus:outline-none focus:border-brand-accent
                                 min-h-[44px] flex items-center
                                 disabled:opacity-50 disabled:cursor-not-allowed
-                                ${colorClasses || 'border-[var(--color-border-subtle)]'}
+                                ${colorClasses || 'border-border-subtle'}
                                 ${value ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                                 ${buttonClassName}
                             `}
@@ -199,7 +199,7 @@ export function Select<T extends string | number = string>({
                             >
                                 <Listbox.Options
                                     static
-                                    className="fixed z-[9999] overflow-hidden rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile)] shadow-layered focus:outline-none"
+                                    className="fixed z-9999 overflow-hidden rounded-lg border border-border-subtle bg-(--color-bg-tile) shadow-layered focus:outline-none select-dropdown"
                                     style={{
                                         ...(dropUp
                                             ? { bottom: dropdownPosition.bottom }
@@ -212,7 +212,7 @@ export function Select<T extends string | number = string>({
                                 >
                                     {/* Search Input */}
                                     {showSearch && (
-                                        <div className="p-2 border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-bg-tile)]">
+                                        <div className="p-2 border-b border-border-subtle sticky top-0 bg-(--color-bg-tile)">
                                             <div className="relative">
                                                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary" />
                                                 <input
@@ -221,7 +221,7 @@ export function Select<T extends string | number = string>({
                                                     value={search}
                                                     onChange={e => setSearch(e.target.value)}
                                                     placeholder="Search..."
-                                                    className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
+                                                    className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-border-subtle bg-tile-alt text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
                                                     onClick={e => e.stopPropagation()}
                                                     onKeyDown={e => e.stopPropagation()}
                                                 />
@@ -232,6 +232,8 @@ export function Select<T extends string | number = string>({
                                                             setSearch('');
                                                         }}
                                                         className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-textSecondary hover:text-brand-textPrimary"
+                                                        aria-label="Clear search"
+                                                        title="Clear search"
                                                     >
                                                         <X size={14} />
                                                     </button>
@@ -248,7 +250,7 @@ export function Select<T extends string | number = string>({
                                                 value={null}
                                                 className={({ active }) => `
                                                     relative cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm
-                                                    ${active ? 'bg-[var(--color-bg-tile-hover)]' : ''}
+                                                    ${active ? 'bg-(--color-bg-tile-hover)' : ''}
                                                     text-brand-textSecondary italic
                                                 `}
                                             >
@@ -275,7 +277,7 @@ export function Select<T extends string | number = string>({
                                                     disabled={option.disabled}
                                                     className={({ active, disabled: optDisabled }) => `
                                                         relative cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm
-                                                    ${active ? 'bg-[var(--color-bg-tile-hover)]' : ''}
+                                                    ${active ? 'bg-(--color-bg-tile-hover)' : ''}
                                                     ${optDisabled ? 'opacity-50 cursor-not-allowed' : ''}
                                                     text-brand-textPrimary
                                                 `}

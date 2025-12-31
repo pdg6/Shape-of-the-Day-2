@@ -49,8 +49,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                         onClick={() => setActiveTab('student')}
                         className={`flex-1 py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-float
                             ${activeTab === 'student'
-                                ? 'bg-[var(--color-bg-tile)] border border-emerald-500/50 text-emerald-500 shadow-layered border-t-[0.5px] border-t-emerald-400/30'
-                                : 'bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textMuted hover:text-brand-textSecondary hover:border-[var(--color-border-strong)] shadow-layered-sm button-lift-dynamic'
+                                ? 'bg-tile border border-emerald-500/50 text-emerald-500 shadow-layered border-t-[0.5px] border-t-emerald-400/30'
+                                : 'bg-tile-alt border border-border-subtle text-brand-textMuted hover:text-brand-textSecondary hover:border-border-strong shadow-layered-sm button-lift-dynamic'
                             }`}
                     >
                         Student
@@ -59,8 +59,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                         onClick={() => setActiveTab('teacher')}
                         className={`flex-1 py-3 px-4 rounded-xl font-black text-xs uppercase tracking-widest transition-float
                             ${activeTab === 'teacher'
-                                ? 'bg-[var(--color-bg-tile)] border border-blue-500/50 text-blue-500 shadow-layered border-t-[0.5px] border-t-blue-400/30'
-                                : 'bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textMuted hover:text-brand-textSecondary hover:border-[var(--color-border-strong)] shadow-layered-sm button-lift-dynamic'
+                                ? 'bg-tile border border-blue-500/50 text-blue-500 shadow-layered border-t-[0.5px] border-t-blue-400/30'
+                                : 'bg-tile-alt border border-border-subtle text-brand-textMuted hover:text-brand-textSecondary hover:border-border-strong shadow-layered-sm button-lift-dynamic'
                             }`}
                     >
                         Teacher
@@ -97,10 +97,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
 
                                 <div className="relative py-4">
                                     <div className="absolute inset-0 flex items-center">
-                                        <div className="w-full border-t border-[var(--color-border-subtle)]"></div>
+                                        <div className="w-full border-t border-border-subtle"></div>
                                     </div>
                                     <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
-                                        <span className="bg-[var(--color-bg-tile)] px-3 text-brand-textMuted">Or continue with</span>
+                                        <span className="bg-tile px-3 text-brand-textMuted">Or continue with</span>
                                     </div>
                                 </div>
 

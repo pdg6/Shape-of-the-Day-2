@@ -50,7 +50,7 @@ export function DateRangePicker({
     disabled = false,
     className = '',
     buttonClassName = '',
-    singleDateMode = false,
+
     compactMode = false,
 }: DateRangePickerProps) {
     const [activeField, setActiveField] = useState<'start' | 'end' | null>(null);
@@ -246,6 +246,8 @@ export function DateRangePicker({
                 onChange={handleNativeStartChange}
                 className="sr-only"
                 tabIndex={-1}
+                aria-label="Start date"
+                title="Start date"
             />
             <input
                 ref={endNativeRef}
@@ -255,6 +257,8 @@ export function DateRangePicker({
                 min={startDate || undefined}
                 className="sr-only"
                 tabIndex={-1}
+                aria-label="End date"
+                title="End date"
             />
 
             {/* Compact Mode: Single button showing date range */}
@@ -267,16 +271,16 @@ export function DateRangePicker({
                     className={`
                         cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold
                         border transition-float
-                        bg-[var(--color-bg-tile)]
+                        bg-(--color-bg-tile)
                         shadow-layered
                         hover:shadow-layered-lg
-                        button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
+                        button-lift-dynamic hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50
                         focus:outline-none focus:border-brand-accent
                         min-h-[44px] flex items-center
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                         ${activeField
                             ? 'border-brand-accent'
-                            : 'border-[var(--color-border-subtle)]'}
+                            : 'border-border-subtle'}
                         ${startDate || endDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                         ${buttonClassName}
                     `}
@@ -297,16 +301,16 @@ export function DateRangePicker({
                             group relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-float
-                            bg-[var(--color-bg-tile)]
+                            bg-(--color-bg-tile)
                             shadow-layered
                             hover:shadow-layered-lg
-                            button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
+                            button-lift-dynamic hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
                             min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'start'
                                 ? 'border-brand-accent'
-                                : 'border-[var(--color-border-subtle)]'}
+                                : 'border-border-subtle'}
                             ${startDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                             ${buttonClassName}
                         `}
@@ -334,16 +338,16 @@ export function DateRangePicker({
                             group relative flex-1 cursor-pointer
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-float
-                            bg-[var(--color-bg-tile)]
+                            bg-(--color-bg-tile)
                             shadow-layered
                             hover:shadow-layered-lg
-                            button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
+                            button-lift-dynamic hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
                             min-h-[44px] flex items-center
                             disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                             ${activeField === 'end'
                                 ? 'border-brand-accent'
-                                : 'border-[var(--color-border-subtle)]'}
+                                : 'border-border-subtle'}
                             ${endDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                             ${buttonClassName}
                         `}
@@ -362,16 +366,17 @@ export function DateRangePicker({
             {typeof document !== 'undefined' && activeField && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] rounded-2xl shadow-layered-lg p-3 animate-fade-in"
+                    className="fixed z-9999 bg-(--color-bg-tile) border border-border-subtle rounded-2xl shadow-layered-lg p-3 animate-fade-in date-range-picker-popover"
                     style={{
                         top: position.top,
                         left: position.left,
-                        backdropFilter: 'blur(var(--tile-blur, 0px))',
-                        WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))',
                     }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Date range picker calendar"
                 >
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--color-border-subtle)]">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-subtle">
                         <div className="flex items-center gap-3">
                             <span className="text-xs font-semibold text-brand-textSecondary uppercase">
                                 {activeField === 'start' ? startLabel : endLabel}
@@ -388,6 +393,8 @@ export function DateRangePicker({
                             type="button"
                             onClick={() => setActiveField(null)}
                             className="text-brand-textSecondary hover:text-brand-textPrimary transition-colors"
+                            aria-label="Close date picker"
+                            title="Close date picker"
                         >
                             <X size={16} />
                         </button>
@@ -395,7 +402,7 @@ export function DateRangePicker({
 
                     {/* Selected Range Display */}
                     {(isStartValid || isEndValid) && (
-                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-[var(--color-bg-tile-alt)] rounded-lg text-xs">
+                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-tile-alt rounded-lg text-xs">
                             <span className={activeField === 'start' ? 'font-semibold text-brand-accent' : 'text-brand-textSecondary'}>
                                 {startDisplay || '—'}
                             </span>

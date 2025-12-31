@@ -5,7 +5,7 @@ import { Classroom, AnalyticsLog } from '../../types';
 import { Plus, Calendar as CalendarIcon, Users, X, Check, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle, BookOpen } from 'lucide-react';
 import { Button } from '../shared/Button';
 import { GhostButton } from '../shared/GhostButton';
-import { HelpButton } from '../shared/HelpButton';
+
 import { handleError } from '../../utils/errorHandler';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
 import { useClassStore } from '../../store/appSettings';
@@ -203,7 +203,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                     onClick={openCreateModal}
                     title="Create new class"
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float self-end
-                        bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                        bg-(--color-bg-tile) border border-border-subtle text-brand-textPrimary
                         shadow-layered
                         hover:shadow-layered-lg
                         button-lift-dynamic hover:border-brand-accent/50"
@@ -288,11 +288,11 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                     {/* Summary / Create Card - Moved to end */}
                     {/* Summary / Create Card - Glass Panel Effect */}
-                    <div className="flex h-full rounded-2xl transition-float overflow-hidden min-h-[160px] bg-[var(--color-bg-tile)] backdrop-blur-md border border-[var(--color-border-subtle)] shadow-layered">
+                    <div className="flex h-full rounded-2xl transition-float overflow-hidden min-h-[160px] bg-(--color-bg-tile) backdrop-blur-md border border-border-subtle shadow-layered">
                         {/* Main Content (Left Side) */}
                         <div className="flex-1 flex flex-col min-w-0">
                             {/* Header */}
-                            <div className="h-20 p-5 relative flex justify-between items-start border-b border-[var(--color-border-subtle)]">
+                            <div className="h-20 p-5 relative flex justify-between items-start border-b border-border-subtle">
                                 <div className="z-10 w-full min-w-0">
                                     <h3 className="text-xl font-bold text-brand-textPrimary leading-tight mb-1 truncate pr-2">
                                         Overview
@@ -301,7 +301,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         Classroom Manager
                                     </p>
                                 </div>
-                                <div className="p-1.5 bg-[var(--color-bg-tile-alt)] rounded-lg text-brand-textMuted">
+                                <div className="p-1.5 bg-tile-alt rounded-lg text-brand-textMuted">
                                     <BookOpen className="w-4 h-4" />
                                 </div>
                             </div>
@@ -319,7 +319,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     </div>
 
-                                    <div className="w-px bg-[var(--color-border-subtle)] self-stretch my-1" />
+                                    <div className="w-px bg-border-subtle self-stretch my-1" />
 
                                     <div className="flex-1 text-left -m-2 p-2">
                                         <p className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Tasks</p>
@@ -335,7 +335,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                         </div>
 
                         {/* Right Sidebar Action */}
-                        <div className="flex flex-col w-[72px] border-l-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]/20">
+                        <div className="flex flex-col w-[72px] border-l-2 border-border-subtle bg-tile-alt/20">
                             <button
                                 onClick={openCreateModal}
                                 className="h-full w-full flex flex-col items-center justify-center gap-2 p-1 text-brand-accent hover:bg-brand-accent/10 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-float focus:outline-none group/create"
@@ -354,7 +354,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {internalTab === 'history' && (
                 <div className="h-full flex flex-col">
                     {/* History Toolbar */}
-                    <div className="flex items-center justify-between mb-6 bg-[var(--color-bg-tile)] p-4 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float">
+                    <div className="flex items-center justify-between mb-6 bg-(--color-bg-tile) p-4 rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <GhostButton
@@ -374,7 +374,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                     {/* Calendar Grid */}
                     <div className="flex-1 card-base overflow-hidden flex flex-col">
-                        <div className="grid grid-cols-7 border-b-2 border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)]">
+                        <div className="grid grid-cols-7 border-b-2 border-border-subtle bg-tile-alt">
                             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                                 <div key={day} className="p-3 text-center text-xs font-bold text-brand-textSecondary uppercase tracking-wider">
                                     {day}
@@ -401,10 +401,10 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                             }
                                         }}
                                         className={`
-                                                border-b border-r border-[var(--color-border-subtle)] p-2 relative cursor-pointer transition-colors
+                                                border-b border-r border-border-subtle p-2 relative cursor-pointer transition-colors
                                                 hover:bg-brand-accent/5
                                                 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-accent
-                                                ${!isSameMonth(day, currentMonth) ? 'bg-[var(--color-bg-tile-alt)]/50 text-brand-textMuted' : ''}
+                                                ${!isSameMonth(day, currentMonth) ? 'bg-tile-alt/50 text-brand-textMuted' : ''}
                                                 ${isSameDay(day, new Date()) ? 'bg-brand-accent/10' : ''}
                                             `}
                                     >
@@ -500,7 +500,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                     <span className="font-medium truncate max-w-[70%]">{task.title}</span>
                                                     <span className="text-brand-textSecondary">{task.avgTime}s avg</span>
                                                 </div>
-                                                <div className="h-2 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden flex">
+                                                <div className="h-2 bg-tile-alt rounded-full overflow-hidden flex">
                                                     <div
                                                         className="bg-amber-500 h-full"
                                                         style={{ width: `${task.stuckRate * 100}%` }}
@@ -535,7 +535,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                         className="w-full bg-brand-accent/10 rounded-t-lg relative group-hover:bg-brand-accent/20 transition-colors"
                                                         style={{ height: `${height}%` }}
                                                     >
-                                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-[var(--color-border-subtle)] shadow-layered-sm">
+                                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-tile-alt text-brand-textPrimary text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-border-subtle shadow-layered-sm">
                                                             {day.count}
                                                         </div>
                                                     </div>
@@ -555,7 +555,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                 </h3>
                                 <div className="grid-auto-fit gap-4" style={{ '--grid-min-size': '250px' } as React.CSSProperties}>
                                     {analyticsData.studentsNeedingSupport.map((student, i) => (
-                                        <div key={i} className="flex items-center gap-4 p-4 bg-[var(--color-bg-tile-alt)] rounded-lg border border-[var(--color-border-subtle)]">
+                                        <div key={i} className="flex items-center gap-4 p-4 bg-tile-alt rounded-lg border border-border-subtle">
                                             <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 font-bold">
                                                 {student.name.charAt(0)}
                                             </div>
@@ -579,7 +579,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {showDaySummary && selectedDate && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl flex flex-col levitated-tile">
-                        <div className="p-6 border-b border-[var(--color-border-subtle)] flex justify-between items-center bg-[var(--color-bg-tile-alt)] rounded-t-2xl">
+                        <div className="p-6 border-b border-border-subtle flex justify-between items-center bg-tile-alt rounded-t-2xl">
                             <h3 className="text-2xl font-bold text-brand-textPrimary">
                                 {classrooms.find(c => c.id === currentClassId)?.name || 'Class'}'s schedule for {format(selectedDate, 'EEEE, MMMM do, yyyy')}
                             </h3>
@@ -621,9 +621,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                     </div>
 
                                     {/* Student List Table */}
-                                    <div className="border border-[var(--color-border-subtle)] rounded-2xl overflow-hidden">
+                                    <div className="border border-border-subtle rounded-2xl overflow-hidden">
                                         <table className="w-full text-left">
-                                            <thead className="bg-[var(--color-bg-tile-alt)] border-b border-[var(--color-border-subtle)]">
+                                            <thead className="bg-tile-alt border-b border-border-subtle">
                                                 <tr>
                                                     <th className="p-4 text-xs font-bold text-brand-textMuted uppercase">Student Name</th>
                                                     <th className="p-4 text-xs font-bold text-brand-textMuted uppercase">Session Duration</th>
@@ -631,9 +631,9 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                     <th className="p-4 text-xs font-bold text-brand-textMuted uppercase">Status</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-[var(--color-border-subtle)]">
+                                            <tbody className="divide-y divide-border-subtle">
                                                 {getLogsForDate(selectedDate).map(log => (
-                                                    <tr key={log.id} className="hover:bg-[var(--color-bg-tile-hover)]">
+                                                    <tr key={log.id} className="hover:bg-(--color-bg-tile-hover)">
                                                         <td className="p-4 font-bold text-brand-textPrimary">
                                                             {log.studentName}
                                                         </td>
@@ -643,7 +643,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                                         <td className="p-4">
                                                             <div className="flex flex-wrap gap-2">
                                                                 {log.taskPerformance.map((t, i) => (
-                                                                    <span key={i} className="px-2 py-1 bg-[var(--color-bg-tile-alt)] rounded text-xs border border-[var(--color-border-subtle)]" title={t.title}>
+                                                                    <span key={i} className="px-2 py-1 bg-tile-alt rounded text-xs border border-border-subtle" title={t.title}>
                                                                         {t.title.substring(0, 15)}{t.title.length > 15 ? '...' : ''}
                                                                         {t.statusWasStuck && <span className="ml-1 text-amber-500">⚠️</span>}
                                                                     </span>

@@ -139,7 +139,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                         </div>
                         <button
                             onClick={onClose}
-                            className={`p-2 rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-tile-hover)] transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${isModalHovered ? 'opacity-100' : 'opacity-0'}`}
+                            className={`p-2 rounded-lg border-2 border-border-subtle hover:border-border-strong hover:bg-tile-hover transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${isModalHovered ? 'opacity-100' : 'opacity-0'}`}
                             aria-label="Close"
                         >
                             <X className="w-5 h-5 text-brand-textMuted" />
@@ -168,7 +168,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                         </div>
                         <button
                             onClick={handleCopyCode}
-                            className={`p-2 rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-tile-hover)] transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${showCopyButton ? 'opacity-100' : 'opacity-0'}`}
+                            className={`p-2 rounded-lg border-2 border-border-subtle hover:border-border-strong hover:bg-tile-hover transition-all focus:outline-none focus:ring-2 focus:ring-brand-accent/30 ${showCopyButton ? 'opacity-100' : 'opacity-0'}`}
                             title="Copy code"
                         >
                             {copied ? (
@@ -186,11 +186,11 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
 
                 <div className="max-h-[320px] overflow-y-auto custom-scrollbar">
                     {liveStudents.length === 0 ? (
-                        <div className="flex items-center justify-center gap-3 py-8 text-brand-textSecondary border-2 border-dashed border-[var(--color-border-subtle)] rounded-xl">
+                        <div className="flex items-center justify-center gap-3 py-8 text-brand-textSecondary border-2 border-dashed border-border-subtle rounded-xl">
                             <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-[var(--color-border-strong)] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="w-2 h-2 bg-[var(--color-border-strong)] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="w-2 h-2 bg-[var(--color-border-strong)] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                <span className="w-2 h-2 bg-border-strong rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-2 h-2 bg-border-strong rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-2 h-2 bg-border-strong rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                             </div>
                             <p className="text-sm italic">Waiting for students...</p>
                         </div>
@@ -223,7 +223,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
                                         className={`
                                             flex items-center gap-2 px-3 py-2 rounded-full
                                             ${bgColor} ${textColor}
-                                            border border-[var(--color-border-subtle)]
+                                            border border-border-subtle
                                             transition-all duration-300
                                             ${isNew ? 'animate-celebration-pop ring-2 ring-green-500/50' : ''}
                                         `}

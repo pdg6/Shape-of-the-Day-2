@@ -164,13 +164,13 @@ export function MultiSelect<T extends string | number = string>({
                     group relative w-full cursor-pointer
                     pl-10 pr-8 py-2.5 rounded-xl text-sm font-bold
                     border transition-float
-                    bg-[var(--color-bg-tile)] text-brand-textSecondary
+                    bg-(--color-bg-tile) text-brand-textSecondary
                     shadow-layered
                     hover:shadow-layered-lg
-                    button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
+                    button-lift-dynamic hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50
                     focus:outline-none focus:border-brand-accent
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    border-[var(--color-border-subtle)]
+                    border-border-subtle
                     min-h-[44px] flex items-center
                     ${value.length > 0 ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
                     ${buttonClassName}
@@ -189,7 +189,7 @@ export function MultiSelect<T extends string | number = string>({
                         <Check size={16} strokeWidth={3} />
                     </span>
                 ) : (
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-dashed border-[var(--color-border-subtle)] rounded" />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-dashed border-border-subtle rounded" />
                 )}
 
                 {/* Display Text */}
@@ -220,7 +220,7 @@ export function MultiSelect<T extends string | number = string>({
                 >
                     <div
                         data-multiselect-dropdown
-                        className="fixed z-[9999] overflow-hidden rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile)] shadow-layered focus:outline-none"
+                        className="fixed z-9999 overflow-hidden rounded-lg border border-border-subtle bg-(--color-bg-tile) shadow-layered focus:outline-none multi-select-dropdown"
                         style={{
                             top: dropdownPosition.top,
                             left: dropdownPosition.left,
@@ -230,7 +230,7 @@ export function MultiSelect<T extends string | number = string>({
                     >
                         {/* Search Input */}
                         {showSearch && (
-                            <div className="p-2 border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-bg-tile)]">
+                            <div className="p-2 border-b border-border-subtle sticky top-0 bg-(--color-bg-tile)">
                                 <div className="relative">
                                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary" />
                                     <input
@@ -239,7 +239,7 @@ export function MultiSelect<T extends string | number = string>({
                                         value={search}
                                         onChange={e => setSearch(e.target.value)}
                                         placeholder="Search..."
-                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
+                                        className="w-full pl-8 pr-8 py-1.5 text-sm rounded-xl border border-border-subtle bg-tile-alt text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 transition-all"
                                         onClick={e => e.stopPropagation()}
                                         onKeyDown={e => e.stopPropagation()}
                                     />
@@ -250,6 +250,8 @@ export function MultiSelect<T extends string | number = string>({
                                                 setSearch('');
                                             }}
                                             className="absolute right-2 top-1/2 -translate-y-1/2 text-brand-textSecondary hover:text-brand-textPrimary"
+                                            aria-label="Clear search"
+                                            title="Clear search"
                                         >
                                             <X size={14} />
                                         </button>
@@ -270,7 +272,7 @@ export function MultiSelect<T extends string | number = string>({
                                         onClick={() => handleToggle(option.value)}
                                         className={`
                                             relative w-full cursor-pointer select-none py-2.5 pl-10 pr-4 text-sm text-left
-                                            hover:bg-[var(--color-bg-tile-hover)]
+                                            hover:bg-(--color-bg-tile-hover)
                                             ${option.disabled ? 'opacity-50 cursor-not-allowed' : ''}
                                             text-brand-textPrimary
                                         `}
@@ -287,7 +289,7 @@ export function MultiSelect<T extends string | number = string>({
                                         {!isSelected && (
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2">
                                                 <span
-                                                    className="block w-4 h-4 rounded border-2 border-[var(--color-border-subtle)]"
+                                                    className="block w-4 h-4 rounded border-2 border-border-subtle"
                                                     style={{ borderColor: option.color ? `${option.color}40` : undefined }}
                                                 />
                                             </span>

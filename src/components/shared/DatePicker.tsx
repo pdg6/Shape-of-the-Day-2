@@ -190,6 +190,8 @@ export function DatePicker({
                 max={maxDate}
                 className="sr-only"
                 tabIndex={-1}
+                aria-label="Select date"
+                title="Select date"
             />
 
             {/* Trigger Button */}
@@ -200,8 +202,10 @@ export function DatePicker({
                     onClick={toggleOpen}
                     disabled={disabled}
                     className="focus:outline-none"
-                    aria-haspopup="grid"
-                    aria-expanded={isOpen}
+                    aria-haspopup="dialog"
+                    aria-expanded={isOpen ? "true" : "false"}
+                    aria-label="Open date picker"
+                    title="Open date picker"
                 >
                     {customInput}
                 </button>
@@ -213,14 +217,17 @@ export function DatePicker({
                     disabled={disabled}
                     className={`
                         cursor-pointer p-1.5 rounded-xl transition-float button-lift-dynamic
-                        hover:bg-[var(--color-bg-tile-hover)] border border-transparent 
-                        hover:border-[var(--color-border-subtle)] focus:outline-none 
+                        hover:bg-tile-hover border border-transparent 
+                        hover:border-border-subtle focus:outline-none 
                         shadow-layered-sm hover:shadow-layered
                         disabled:opacity-50 disabled:cursor-not-allowed
                     `}
-                    style={{ color: iconColor }}
+                    aria-label="Open date picker"
+                    title="Open date picker"
+                    aria-haspopup="dialog"
+                    aria-expanded={isOpen ? "true" : "false"}
                 >
-                    <CalendarIcon size={20} />
+                    <CalendarIcon size={20} style={iconColor ? { color: iconColor } : undefined} />
                 </button>
             ) : (
                 <button
@@ -232,13 +239,15 @@ export function DatePicker({
                         relative w-full cursor-pointer
                         pl-9 pr-8 py-2.5 rounded-xl text-sm font-bold text-left transition-float button-lift-dynamic
                         border shadow-layered
-                        bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)]
-                        hover:bg-[var(--color-bg-tile-hover)]
-                        hover:border-[var(--color-border-strong)]
+                        bg-tile border-border-subtle
+                        hover:bg-tile-hover
+                        hover:border-border-strong
                         focus:outline-none focus:border-brand-accent/50
                         disabled:opacity-50 disabled:cursor-not-allowed tracking-tight
                         ${isValidDate ? 'text-brand-textPrimary' : 'text-brand-textMuted'}
                     `}
+                    aria-haspopup="dialog"
+                    aria-expanded={isOpen ? "true" : "false"}
                 >
                     {/* Calendar Icon */}
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textMuted pointer-events-none">
@@ -265,66 +274,97 @@ export function DatePicker({
 
             {/* Portal-rendered Calendar Popover */}
             {typeof document !== 'undefined' && isOpen && createPortal(
-                <div
-                    ref={popoverRef}
-                    className="fixed z-[9999] bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] rounded-2xl shadow-layered-lg p-3 animate-fade-in"
-                    style={{
-                        top: position.top,
-                        left: position.left,
-                        backdropFilter: 'blur(var(--tile-blur, 0px))',
-                        WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))',
-                    }}
-                >
-                    {/* Today Button */}
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--color-border-subtle)]">
-                        <button
-                            type="button"
-                            onClick={handleToday}
-                            className="text-xs font-bold text-brand-accent hover:opacity-80 transition-opacity"
-                        >
-                            Today
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setIsOpen(false);
-                                onClose?.();
-                            }}
-                            className="text-brand-textMuted hover:text-brand-textPrimary transition-colors"
-                        >
-                            <X size={16} />
-                        </button>
-                    </div>
-
-                    {/* Calendar */}
-                    <DayPicker
-                        mode="single"
-                        selected={isValidDate ? selectedDate : undefined}
-                        onSelect={handleSelect}
-                        defaultMonth={isValidDate ? selectedDate : new Date()}
-                        disabled={[
-                            ...(minDateObj ? [{ before: minDateObj }] : []),
-                            ...(maxDateObj ? [{ after: maxDateObj }] : []),
-                        ]}
-                        components={{
-                            Chevron: ({ orientation }) =>
-                                orientation === 'left'
-                                    ? <ChevronLeft size={16} />
-                                    : <ChevronRight size={16} />,
-                        }}
-                        classNames={{
-                            ...getDefaultClassNames(),
-                            root: `${getDefaultClassNames().root} rdp-custom`,
-                            disabled: 'text-brand-textMuted opacity-20 cursor-not-allowed',
-                            outside: 'text-brand-textMuted opacity-40',
-                            chevron: 'fill-brand-textSecondary',
-                        }}
-                    />
-                </div>,
+                <PopoverContent
+                    isOpen={isOpen}
+                    onClose={onClose}
+                    handleToday={handleToday}
+                    handleSelect={handleSelect}
+                    isValidDate={isValidDate}
+                    effectiveDate={effectiveDate}
+                    minDateObj={minDateObj}
+                    maxDateObj={maxDateObj}
+                    position={position}
+                    setIsOpen={setIsOpen}
+                />,
                 document.body
             )}
         </div>
     );
 }
+
+// Extracted Popover Component to use useLayoutEffect cleanly
+const PopoverContent = ({
+    isOpen, onClose, handleToday, handleSelect,
+    isValidDate, effectiveDate, minDateObj, maxDateObj, position, setIsOpen
+}: any) => {
+    const popoverRef = useRef<HTMLDivElement>(null);
+
+    // Use useLayoutEffect to position before paint to avoid flickering
+    useEffect(() => {
+        if (popoverRef.current) {
+            popoverRef.current.style.top = `${position.top}px`;
+            popoverRef.current.style.left = `${position.left}px`;
+        }
+    }, [position]);
+
+    return (
+        <div
+            ref={popoverRef}
+            className="fixed z-9999 bg-tile border border-border-subtle rounded-2xl shadow-layered-lg p-3 animate-fade-in date-picker-popover"
+            // No inline style prop here - handled by ref
+            role="dialog"
+            aria-modal="true"
+            aria-label="Date picker calendar"
+        >
+            {/* Today Button */}
+            <div className="flex justify-between items-center mb-2 pb-2 border-b border-border-subtle">
+                <button
+                    type="button"
+                    onClick={handleToday}
+                    className="text-xs font-bold text-brand-accent hover:opacity-80 transition-opacity"
+                >
+                    Today
+                </button>
+                <button
+                    type="button"
+                    onClick={() => {
+                        setIsOpen(false);
+                        onClose?.();
+                    }}
+                    className="text-brand-textMuted hover:text-brand-textPrimary transition-colors"
+                    aria-label="Close date picker"
+                    title="Close date picker"
+                >
+                    <X size={16} />
+                </button>
+            </div>
+
+            {/* Calendar */}
+            <DayPicker
+                mode="single"
+                selected={isValidDate ? effectiveDate : undefined}
+                onSelect={handleSelect}
+                defaultMonth={isValidDate ? effectiveDate : new Date()}
+                disabled={[
+                    ...(minDateObj ? [{ before: minDateObj }] : []),
+                    ...(maxDateObj ? [{ after: maxDateObj }] : []),
+                ]}
+                components={{
+                    Chevron: ({ orientation }) =>
+                        orientation === 'left'
+                            ? <ChevronLeft size={16} />
+                            : <ChevronRight size={16} />,
+                }}
+                classNames={{
+                    ...getDefaultClassNames(),
+                    root: `${getDefaultClassNames().root} rdp-custom`,
+                    disabled: 'text-brand-textMuted opacity-20 cursor-not-allowed',
+                    outside: 'text-brand-textMuted opacity-40',
+                    chevron: 'fill-brand-textSecondary',
+                }}
+            />
+        </div>
+    );
+};
 
 export default DatePicker;

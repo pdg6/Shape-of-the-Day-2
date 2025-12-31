@@ -21,7 +21,7 @@ const StudentView = lazy(() => import('./components/student/StudentView'));
 
 // Loading fallback component
 const LoadingSpinner = () => (
-    <div className="h-screen w-screen flex items-center justify-center bg-[var(--bg-page)]">
+    <div className="h-screen w-screen flex items-center justify-center bg-(--bg-page)">
         <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
             <p className="text-sm font-bold text-brand-textSecondary animate-pulse uppercase tracking-widest">
@@ -47,7 +47,6 @@ const App = () => {
     const {
         view,
         setView,
-        classrooms,
         setClassrooms,
         currentClassId,
         setCurrentClassId,
@@ -61,8 +60,6 @@ const App = () => {
     } = useClassStore();
 
     // Student specific UI state (local to App)
-    const [isLoading, setIsLoading] = useState(true);
-    const [classroomId, setClassroomId] = useState<string | null>(null);
     const [isStudentNameModalOpen, setIsStudentNameModalOpen] = useState(false);
 
     // Initial data fetch
@@ -86,7 +83,6 @@ const App = () => {
 
     const fetchClassrooms = async () => {
         if (!user) {
-            setIsLoading(false);
             return;
         }
 
@@ -104,13 +100,13 @@ const App = () => {
 
             // AUTO-SELECT FIRST CLASS IF NONE SELECTED
             if (classroomsData.length > 0 && !currentClassId) {
-                setCurrentClassId(classroomsData[0].id);
+                setCurrentClassId(classroomsData[0]!.id);
             }
         } catch (error) {
             console.error('Error fetching classrooms:', error);
             toast.error('Failed to load classrooms.');
         } finally {
-            setIsLoading(false);
+            // Loading handled by global auth loading state for now
         }
     };
 
@@ -179,7 +175,7 @@ const App = () => {
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
             <TourProvider>
                 <SettingsManager />
-                <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent">
+                <div className="relative z-10 flex flex-col h-dvh bg-transparent">
                     {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
                     <a href="#main-content" className="skip-link">
                         Skip to main content

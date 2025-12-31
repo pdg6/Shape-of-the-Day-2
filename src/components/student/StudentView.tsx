@@ -379,7 +379,7 @@ const StudentView: React.FC<StudentViewProps> = ({
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 {/* Mobile Header */}
-                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-[var(--color-border-subtle)] shadow-layered-sm">
+                <header className="md:hidden h-12 px-4 flex items-center justify-between z-10 shrink-0 border-b border-border-subtle shadow-layered-sm">
                     {/* Left: Hamburger Menu */}
                     <button
                         onClick={() => setIsMobileSidebarOpen(true)}
@@ -442,7 +442,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                         classroomId={classId}
                                     />
                                 ) : (
-                                    <div className="text-center py-12 italic bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+                                    <div className="text-center py-12 italic bg-tile rounded-2xl border border-dashed border-border-subtle shadow-layered-sm">
                                         <p className="text-brand-textSecondary">
                                             {previewTasks.length > 0
                                                 ? "Import these tasks to start working on them."
@@ -553,7 +553,7 @@ const StudentView: React.FC<StudentViewProps> = ({
                                     classroomId={classId}
                                 />
                             ) : (
-                                <div className="text-center py-12 bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+                                <div className="text-center py-12 bg-tile rounded-2xl border border-dashed border-border-subtle shadow-layered-sm">
                                     <p className="text-brand-textSecondary font-medium">
                                         {previewTasks.length > 0
                                             ? "Import these tasks to start working on them."

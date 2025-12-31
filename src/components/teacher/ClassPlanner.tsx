@@ -61,16 +61,16 @@ const ClassPlanner: React.FC = () => {
 
             <div className="grid gap-4">
                 {logs.length === 0 ? (
-                    <div className="text-center py-12 bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+                    <div className="text-center py-12 bg-tile rounded-2xl border border-dashed border-border-subtle shadow-layered-sm">
                         <p className="text-brand-textMuted">No analytics logs found yet.</p>
                         <p className="text-sm text-brand-textMuted mt-2">Sign out a student to generate a log.</p>
                     </div>
                 ) : (
                     logs.map((log) => (
-                        <div key={log.id} className="bg-[var(--color-bg-tile)] p-5 rounded-2xl border border-[var(--color-border-subtle)] hover:border-brand-accent/30 shadow-layered lift-hover transition-all">
+                        <div key={log.id} className="bg-tile p-5 rounded-2xl border border-border-subtle hover:border-brand-accent/30 shadow-layered lift-hover transition-all">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-[var(--color-bg-tile-alt)] rounded-lg">
+                                    <div className="p-2 bg-tile-alt rounded-lg">
                                         <Clock className="w-5 h-5 text-brand-textSecondary" />
                                     </div>
                                     <div>
@@ -95,7 +95,7 @@ const ClassPlanner: React.FC = () => {
                             <div className="space-y-2">
                                 <h4 className="text-xs font-bold text-brand-textMuted uppercase tracking-wider mb-2">Task Performance</h4>
                                 {log.taskPerformance.map((task, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-3 bg-[var(--color-bg-tile-alt)] rounded-lg border border-[var(--color-border-subtle)]">
+                                    <div key={idx} className="flex items-center justify-between p-3 bg-tile-alt rounded-lg border border-border-subtle">
                                         <span className="font-medium text-sm text-brand-textSecondary">{task.title}</span>
                                         <div className="flex items-center gap-3">
                                             {task.statusWasStuck && (

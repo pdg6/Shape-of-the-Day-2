@@ -91,7 +91,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     {/* Mobile Close Button */}
                     <button
                         onClick={onMobileClose}
-                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
+                        className="md:hidden flex items-center justify-center w-8 h-8 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-tile-hover transition-float button-lift-dynamic border border-transparent hover:border-border-subtle shadow-layered-sm"
                         aria-label="Close navigation menu"
                     >
                         <X className="w-5 h-5" />
@@ -131,7 +131,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 {/* Progress Card */}
                 <div className={`flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 space-y-3 ${isCollapsed ? 'md:hidden' : ''}`}>
                     {totalTasks > 0 && (
-                        <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 border border-[var(--color-border-subtle)] shadow-layered-sm">
+                        <div className="bg-tile-alt rounded-xl p-3 border border-border-subtle shadow-layered-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-[10px] font-black text-brand-textMuted uppercase tracking-wider">Today's Progress</span>
                                 {tasksCompleted === totalTasks && (
@@ -153,7 +153,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                     {/* Collapse Toggle - Desktop only */}
                     <button
                         onClick={onToggleCollapse}
-                        aria-expanded={!isCollapsed}
+                        aria-expanded={!isCollapsed ? "true" : "false"}
                         aria-controls="student-sidebar-nav"
                         aria-label={isCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu'}
                         className={`

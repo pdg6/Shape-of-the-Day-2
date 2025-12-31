@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, QrCode, Check } from 'lucide-react';
+import { LogOut, QrCode } from 'lucide-react';
 import { useClassStore, THEME_PRESETS } from '../../store/appSettings';
 
 interface SettingsOverlayProps {
@@ -34,9 +34,9 @@ const GridCell: React.FC<{
             className={`group relative flex flex-col items-center gap-1 p-1.5 rounded-lg transition-float overflow-visible
                 ${immersive ? 'justify-center min-h-[44px]' : 'items-center'}
                 ${noExample
-                    ? (isSelected ? 'border-2 border-brand-textPrimary bg-[var(--color-bg-tile)]' : 'border-2 border-transparent hover:bg-[var(--color-bg-tile-hover)]')
-                    : `bg-[var(--color-bg-tile)] border-2 lift-dynamic
-                       ${isSelected ? 'border-brand-textPrimary' : 'border-[var(--color-border-subtle)]'}
+                    ? (isSelected ? 'border-2 border-brand-textPrimary bg-(--color-bg-tile)' : 'border-2 border-transparent hover:bg-(--color-bg-tile-hover)')
+                    : `bg-(--color-bg-tile) border-2 lift-dynamic
+                       ${isSelected ? 'border-brand-textPrimary' : 'border-border-subtle'}
                        hover:border-brand-accent/50
                        hover:shadow-[var(--shadow-layered-lg),0_0_var(--glow-blur)_var(--glow-spread)_var(--glow-color)]
                       `
@@ -208,7 +208,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                     <button
                         onClick={() => { onShowJoinCode(); onClose(); }}
                         className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold
-                            bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)]
+                            bg-(--color-bg-tile) text-brand-textPrimary border border-border-subtle
                             button-lift-dynamic hover:border-brand-accent/50"
                     >
                         <QrCode size={16} className="text-brand-accent" />
@@ -219,7 +219,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                     <button
                         onClick={() => { onLogout(); onClose(); }}
                         className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold
-                            bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)]
+                            bg-(--color-bg-tile) text-brand-textPrimary border border-border-subtle
                             button-lift-dynamic hover:border-red-500/50"
                     >
                         <LogOut size={16} className="text-red-500" />
@@ -229,7 +229,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
             </div>
 
             {/* Divider */}
-            <div className="border-t border-[var(--color-border-subtle)] my-2" />
+            <div className="border-t border-border-subtle my-2" />
 
             {/* Row 1: Presets */}
             <div className="flex flex-col">
@@ -273,7 +273,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         <GridCell
                             key={t.id}
                             isSelected={backgroundSettings.tileTheme === t.id}
-                            onClick={() => setBackgroundSettings({ tileTheme: t.id })}
+                            onClick={() => setBackgroundSettings({ tileTheme: t.id as any })}
                             label={t.label}
                             immersive={true}
                             style={t.id === 'glass'
@@ -293,7 +293,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         <GridCell
                             key={t.id}
                             isSelected={backgroundSettings.primaryTheme === t.id}
-                            onClick={() => setBackgroundSettings({ primaryTheme: t.id })}
+                            onClick={() => setBackgroundSettings({ primaryTheme: t.id as any })}
                             label={t.label}
                         >
                             <div
@@ -318,7 +318,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         <GridCell
                             key={t.id}
                             isSelected={backgroundSettings.secondaryTheme === t.id}
-                            onClick={() => setBackgroundSettings({ secondaryTheme: t.id })}
+                            onClick={() => setBackgroundSettings({ secondaryTheme: t.id as any })}
                             label={t.label}
                         >
                             <div
@@ -348,7 +348,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             className="overflow-hidden"
                         >
                             <div
-                                className="w-8 h-5 rounded-sm bg-[var(--color-brand-textSecondary)]"
+                                className="w-8 h-5 rounded-sm bg-brand-textSecondary"
                                 style={{
                                     transform: `translateY(${e.lift})`,
                                     boxShadow: 'var(--shadow-layered)'
@@ -376,7 +376,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                         b.id === 'ghost' ? 'border-white/10' :
                                             b.id === 'glass' ? 'border-white/20' :
                                                 b.id === 'vibrant' ? 'border-white/40' :
-                                                    'border-[var(--color-border-subtle)]'
+                                                    'border-border-subtle'
                                         }`}
                                 />
                             </div>
@@ -429,7 +429,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                         <span className="text-[10px] font-bold text-brand-textMuted">—</span>
                                     ) : (
                                         <div
-                                            className={`w-6 h-4 rounded-sm bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] 
+                                            className={`w-6 h-4 rounded-sm bg-(--color-bg-tile) border border-border-subtle 
                                                 ${opt.id === 'etch_top' ? 'border-t-2 border-brand-accent' : ''}
                                                 ${opt.id === 'etch_left' ? 'border-l-2 border-brand-accent' : ''}`}
                                             style={opt.id.startsWith('glow') ? {
@@ -517,7 +517,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             step="0.05"
                             value={backgroundSettings.particleOpacity}
                             onChange={(e) => setBackgroundSettings({ particleOpacity: parseFloat(e.target.value) })}
-                            className="flex-1 h-1 bg-[var(--color-bg-tile-alt)] rounded-lg appearance-none cursor-pointer accent-brand-accent"
+                            className="flex-1 h-1 bg-tile-alt rounded-lg appearance-none cursor-pointer accent-brand-accent"
+                            aria-label="Particle opacity"
+                            title="Adjust particle opacity"
                         />
                         <span className="text-[8px] font-bold text-brand-accent w-6">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
                     </div>

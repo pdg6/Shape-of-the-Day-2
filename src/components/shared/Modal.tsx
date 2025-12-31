@@ -93,8 +93,8 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto
-                    ${variant === 'page' ? 'bg-[var(--bg-page)]' : 'bg-[var(--color-bg-tile)]'}`}
+                className={`${widthClasses[maxWidth]} w-full rounded-2xl border border-border-subtle shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto
+                    ${variant === 'page' ? 'bg-page' : 'bg-tile'}`}
                 onClick={e => e.stopPropagation()}
             >
                 {!hideHeader && (
@@ -104,7 +104,7 @@ export const Modal: React.FC<ModalProps> = ({
                         </h2>
                         <button
                             onClick={onClose}
-                            className="p-2 text-brand-textSecondary hover:text-brand-textPrimary rounded-full hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic shadow-none hover:shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none border border-transparent hover:border-[var(--color-border-subtle)]"
+                            className="p-2 text-brand-textSecondary hover:text-brand-textPrimary rounded-full hover:bg-tile-hover transition-float button-lift-dynamic shadow-none hover:shadow-layered-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/20 active:scale-95 select-none border border-transparent hover:border-border-subtle"
                             aria-label="Close"
                         >
                             <X className="w-5 h-5" />

@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
     children?: ReactNode;
@@ -33,8 +33,8 @@ class ErrorBoundary extends Component<Props, State> {
     public render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen flex items-center justify-center bg-[var(--bg-page)] p-6">
-                    <div className="bg-[var(--color-bg-tile)] p-10 rounded-2xl shadow-layered max-w-2xl w-full border border-[var(--color-border-subtle)] relative overflow-hidden">
+                <div className="min-h-screen flex items-center justify-center bg-page p-6">
+                    <div className="bg-tile p-10 rounded-2xl shadow-layered max-w-2xl w-full border border-border-subtle relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
                         <h1 className="text-3xl font-black text-red-600 mb-6 uppercase tracking-tight">
                             Something went wrong
@@ -65,7 +65,7 @@ class ErrorBoundary extends Component<Props, State> {
                                     localStorage.clear();
                                     window.location.reload();
                                 }}
-                                className="px-6 py-3 bg-[var(--color-bg-tile-alt)] hover:bg-[var(--color-bg-tile-hover)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-xl transition-float font-black text-[10px] uppercase tracking-widest shadow-layered-sm button-lift-dynamic"
+                                className="px-6 py-3 bg-tile-alt hover:bg-tile-hover border border-border-subtle text-brand-textPrimary rounded-xl transition-float font-black text-[10px] uppercase tracking-widest shadow-layered-sm button-lift-dynamic"
                             >
                                 Reload App
                             </button>
@@ -76,7 +76,7 @@ class ErrorBoundary extends Component<Props, State> {
                                 <summary className="cursor-pointer hover:text-brand-textSecondary mb-3 transition-colors">
                                     Advanced Error Details
                                 </summary>
-                                <pre className="whitespace-pre-wrap overflow-auto max-h-40 p-4 bg-[var(--color-bg-tile-alt)] rounded-xl border border-[var(--color-border-subtle)] text-brand-textSecondary normal-case tracking-normal">
+                                <pre className="whitespace-pre-wrap overflow-auto max-h-40 p-4 bg-tile-alt rounded-xl border border-border-subtle text-brand-textSecondary normal-case tracking-normal">
                                     {this.state.errorInfo.componentStack}
                                 </pre>
                             </details>

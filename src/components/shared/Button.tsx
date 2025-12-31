@@ -43,7 +43,7 @@ export const Button: React.FC<ButtonProps> = ({
     const baseClasses = 'font-bold rounded-xl transition-float focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center active:scale-95 select-none cursor-pointer shadow-layered hover:shadow-layered-lg button-lift-dynamic';
 
     const variantClasses = {
-        primary: 'bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50',
+        primary: 'bg-tile text-brand-textPrimary border border-border-subtle hover:bg-tile-hover hover:border-brand-accent/50',
         secondary: 'bg-brand-accent/10 text-brand-accent border border-brand-accent/20 hover:bg-brand-accent/20 hover:border-brand-accent/40',
         'outline-primary': 'border border-brand-accent bg-transparent text-brand-accent hover:bg-brand-accent/10',
         'outline-danger': 'border border-[var(--color-danger,#ef4444)] bg-transparent text-[var(--color-danger,#ef4444)] hover:bg-[var(--color-danger,#ef4444)]/10',
@@ -76,7 +76,7 @@ export const Button: React.FC<ButtonProps> = ({
             className={`${baseClasses} ${variantClasses[variant]} ${activeClasses} ${sizeClasses[size]} ${className}`}
             title={title}
             aria-label={ariaLabel || title}
-            aria-pressed={active}
+            aria-pressed={active ? "true" : "false"}
         >
             {loading ? (
                 <Loader2 className="animate-spin mr-2" size={iconSizeClasses[size]} />

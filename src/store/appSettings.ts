@@ -142,6 +142,7 @@ interface ClassState {
     setStudentClassId: (id: string) => void;
     setStudentClassroomColor: (color: string | undefined) => void;
     resetAppState: () => void;
+    resetSettings: () => void;
 }
 
 export const useClassStore = create<ClassState>((set) => ({
@@ -189,15 +190,15 @@ export const useClassStore = create<ClassState>((set) => ({
             try {
                 const parsed = JSON.parse(saved);
                 // Map old hexes to new IDs if present
-                if (parsed.textColor === '#3b82f6') migratedSettings.primaryTheme = 'accent';
-                else if (parsed.textColor === '#262626') migratedSettings.primaryTheme = 'onyx';
-                else if (parsed.textColor === '#94a3b8') migratedSettings.primaryTheme = 'muted';
-                else if (parsed.textColor === '#F2EFEA' || parsed.textColor === '#F8FAFC') migratedSettings.primaryTheme = 'white';
+                if (parsed.textColor === '#3b82f6') migratedSettings.primaryTheme = 'steel';
+                else if (parsed.textColor === '#262626') migratedSettings.primaryTheme = 'iron';
+                else if (parsed.textColor === '#94a3b8') migratedSettings.primaryTheme = 'silver';
+                else if (parsed.textColor === '#F2EFEA' || parsed.textColor === '#F8FAFC') migratedSettings.primaryTheme = 'pure';
 
-                if (parsed.textBaseColor === '#050505') migratedSettings.secondaryTheme = 'onyx';
-                else if (parsed.textBaseColor === '#334155') migratedSettings.secondaryTheme = 'slate';
-                else if (parsed.textBaseColor === '#64748b') migratedSettings.secondaryTheme = 'muted';
-                else if (parsed.textBaseColor === '#94a3b8' || parsed.textBaseColor === '#A8A29D') migratedSettings.secondaryTheme = 'slate';
+                if (parsed.textBaseColor === '#050505') migratedSettings.secondaryTheme = 'coal';
+                else if (parsed.textBaseColor === '#334155') migratedSettings.secondaryTheme = 'ash';
+                else if (parsed.textBaseColor === '#64748b') migratedSettings.secondaryTheme = 'mist';
+                else if (parsed.textBaseColor === '#94a3b8' || parsed.textBaseColor === '#A8A29D') migratedSettings.secondaryTheme = 'sky';
 
                 return { ...migratedSettings, ...parsed, primaryTheme: migratedSettings.primaryTheme, secondaryTheme: migratedSettings.secondaryTheme };
             } catch (e) { return defaultSettings; }
@@ -267,8 +268,26 @@ export const useClassStore = create<ClassState>((set) => ({
             studentName: '',
             studentClassId: '',
             studentClassroomColor: undefined,
-            currentClassId: null,
-            classrooms: []
         });
+    },
+    resetSettings: () => {
+        const defaultSettings: BackgroundSettings = {
+            bgColor: '#050505',
+            particleColor: 'multi',
+            particlesEnabled: true,
+            particleEffect: 'swarm_large' as const,
+            particleOpacity: 0.25,
+            primaryTheme: 'pure',
+            secondaryTheme: 'mist',
+            tileTheme: 'onyx',
+            elevationLevel: 'moderate',
+            borderStyle: 'auto',
+            horizonEtch: 'top',
+            auraGlow: 'off'
+        };
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('backgroundSettings', JSON.stringify(defaultSettings));
+        }
+        set({ backgroundSettings: defaultSettings });
     }
 }));

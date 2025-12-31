@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, doc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, query, where, getDocs } from 'firebase/firestore';
 import { db, auth } from '../../firebase';
 import { Classroom } from '../../types';
 import { X, Trash2 } from 'lucide-react';
@@ -112,15 +112,15 @@ export const ClassFormModal: React.FC = () => {
 
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-[var(--color-bg-tile)] w-full max-w-md rounded-2xl shadow-layered border border-[var(--color-border-subtle)] p-6 transition-transform duration-200">
+            <div className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl shadow-layered border border-border-subtle p-6 transition-transform duration-200">
                 <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-brand-textPrimary">{editingClass ? 'Edit Class' : 'Create New Class'}</h3>
-                    <button onClick={() => setIsClassModalOpen(false)}><X className="w-6 h-6 text-brand-textSecondary" /></button>
+                    <button onClick={() => setIsClassModalOpen(false)} aria-label="Close modal" title="Close modal"><X className="w-6 h-6 text-brand-textSecondary" /></button>
                 </div>
                 {/* Law of Common Region: Group related fields visually */}
                 <div className="space-y-4">
                     {/* Basic Info Section - Grouped with border */}
-                    <div className="p-4 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] space-y-4">
+                    <div className="p-4 rounded-xl bg-tile-alt border border-border-subtle space-y-4">
                         <h4 className="text-xs font-bold text-brand-textMuted uppercase tracking-wider mb-3">Basic Information</h4>
                         <div>
                             <label className="block text-sm font-bold mb-1 text-brand-textSecondary">Class Name <span className="text-red-500">*</span></label>
@@ -158,7 +158,7 @@ export const ClassFormModal: React.FC = () => {
                     </div>
 
                     {/* Appearance Section - Separate visual group */}
-                    <div className="p-4 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)]">
+                    <div className="p-4 rounded-xl bg-tile-alt border border-border-subtle">
                         <h4 className="text-xs font-bold text-brand-textMuted uppercase tracking-wider mb-3">Appearance</h4>
                         <label className="block text-sm font-bold mb-1 text-brand-textSecondary">Theme Color</label>
                         <p className="text-xs text-brand-textMuted mb-2">This color will accent both teacher and student views</p>
@@ -168,11 +168,11 @@ export const ClassFormModal: React.FC = () => {
                                     key={color}
                                     onClick={() => setFormData({ ...formData, color })}
                                     /* Fitts's Law: Larger touch targets (44x44px) for color selection */
-                                    className={`w-11 h-11 rounded-full border-2 transition-all ${formData.color === color ? 'border-brand-textPrimary scale-110 ring-2 ring-offset-2 ring-offset-[var(--bg-page)]' : 'border-transparent hover:scale-105'}`}
-                                    style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 0 2px ${color}40` : undefined }}
+                                    className={`w-11 h-11 rounded-full border-2 transition-all ${formData.color === color ? 'border-brand-textPrimary scale-110 ring-2 ring-offset-2 ring-offset-(--bg-page)' : 'border-transparent hover:scale-105'}`}
+                                    style={{ backgroundColor: color }}
                                     title={`Select ${color} as theme color`}
                                     aria-label={`Select theme color ${color}`}
-                                    aria-pressed={formData.color === color}
+                                    aria-pressed={formData.color === color ? "true" : "false"}
                                 />
                             ))}
                         </div>

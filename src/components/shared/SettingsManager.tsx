@@ -106,10 +106,10 @@ const SettingsManager: React.FC = () => {
         };
 
         // 1. Get Color Pairs
-        const primary = THEME_PALETTE[backgroundSettings.primaryTheme] || THEME_PALETTE['default'];
-        const secondary = SECONDARY_PALETTE[backgroundSettings.secondaryTheme] || SECONDARY_PALETTE['default'];
-        const tile = TILE_THEMES[backgroundSettings.tileTheme || 'onyx'] || TILE_THEMES['onyx'];
-        const elevation = ELEVATION_PRESETS[backgroundSettings.elevationLevel || 'subtle'] || ELEVATION_PRESETS['subtle'];
+        const primary = THEME_PALETTE[backgroundSettings.primaryTheme as string] || THEME_PALETTE['default']!;
+        const secondary = SECONDARY_PALETTE[backgroundSettings.secondaryTheme as string] || SECONDARY_PALETTE['default']!;
+        const tile = TILE_THEMES[backgroundSettings.tileTheme || 'onyx'] || TILE_THEMES['onyx']!;
+        const elevation = ELEVATION_PRESETS[backgroundSettings.elevationLevel || 'subtle'] || ELEVATION_PRESETS['subtle']!;
 
         // 1.5 Calculate Dynamic Border & Hover Colors
         const isDarkTile = ['pure', 'onyx', 'slate', 'glass'].includes(backgroundSettings.tileTheme || 'onyx');
@@ -284,7 +284,7 @@ const SettingsManager: React.FC = () => {
                 this.y = cy;
 
                 const types: ('red' | 'green' | 'blue')[] = ['red', 'green', 'blue'];
-                this.type = types[Math.floor(Math.random() * types.length)];
+                this.type = types[Math.floor(Math.random() * types.length)]!;
 
                 // Color Preset Logic:
                 // - Vibrant: Multi-color icons (Red/Green/Blue)
@@ -507,18 +507,18 @@ const SettingsManager: React.FC = () => {
 
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
+                    const dx = particles[i]!.x - particles[j]!.x;
+                    const dy = particles[i]!.y - particles[j]!.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < CONFIG.connectDistance) {
                         const opacity = (1 - dist / CONFIG.connectDistance) * 0.5 * backgroundSettings.particleOpacity;
                         ctx.beginPath();
-                        ctx.strokeStyle = particles[i].baseColor;
+                        ctx.strokeStyle = particles[i]!.baseColor;
                         ctx.globalAlpha = opacity;
                         ctx.lineWidth = 1;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.moveTo(particles[i]!.x, particles[i]!.y);
+                        ctx.lineTo(particles[j]!.x, particles[j]!.y);
                         ctx.stroke();
                         ctx.globalAlpha = 1.0;
                     }
@@ -527,18 +527,18 @@ const SettingsManager: React.FC = () => {
 
             if (mouse.active) {
                 for (let i = 0; i < particles.length; i++) {
-                    const dx = mouse.x - particles[i].x;
-                    const dy = mouse.y - particles[i].y;
+                    const dx = mouse.x - particles[i]!.x;
+                    const dy = mouse.y - particles[i]!.y;
                     const dist = Math.sqrt(dx * dx + dy * dy);
 
                     if (dist < CONFIG.mouseRadius) {
                         const opacity = (1 - dist / CONFIG.mouseRadius) * 0.4 * backgroundSettings.particleOpacity;
                         ctx.beginPath();
-                        ctx.strokeStyle = particles[i].baseColor;
+                        ctx.strokeStyle = particles[i]!.baseColor;
                         ctx.globalAlpha = opacity;
                         ctx.lineWidth = 1;
                         ctx.moveTo(mouse.x, mouse.y);
-                        ctx.lineTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[i]!.x, particles[i]!.y);
                         ctx.stroke();
                         ctx.globalAlpha = 1.0;
                     }
@@ -549,8 +549,8 @@ const SettingsManager: React.FC = () => {
         function init() {
             width = window.innerWidth;
             height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
+            canvas!.width = width;
+            canvas!.height = height;
 
             particles = [];
             const mode = backgroundSettings.particleEffect;

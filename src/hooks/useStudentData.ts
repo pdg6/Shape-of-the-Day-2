@@ -40,13 +40,10 @@ export function useStudentData(classId: string): UseStudentDataResult {
 
         let mounted = true;
 
-        const initialize = async () => {
+        const startService = async () => {
             setIsLoading(true);
             try {
-                const fetchedTasks = await studentDataService.initialize(classId);
-                if (mounted) {
-                    setTasks(fetchedTasks);
-                }
+                await studentDataService.initialize(classId);
             } catch (error) {
                 console.error('[useStudentData] Initialization error:', error);
             } finally {
@@ -56,18 +53,26 @@ export function useStudentData(classId: string): UseStudentDataResult {
             }
         };
 
+        // Subscribe to tasks
+        const unsubscribeTasks = studentDataService.subscribeToTasks((fetchedTasks) => {
+            if (mounted) {
+                setTasks(fetchedTasks);
+            }
+        });
+
         // Subscribe to sync status changes
-        const unsubscribe = studentDataService.onSyncStatusChange((status) => {
+        const unsubscribeStatus = studentDataService.onSyncStatusChange((status) => {
             if (mounted) {
                 setSyncStatus(status);
             }
         });
 
-        initialize();
+        startService();
 
         return () => {
             mounted = false;
-            unsubscribe();
+            unsubscribeTasks();
+            unsubscribeStatus();
             studentDataService.destroy();
         };
     }, [classId]);
@@ -78,13 +83,14 @@ export function useStudentData(classId: string): UseStudentDataResult {
         status: 'todo' | 'in_progress' | 'done' | 'help',
         comment?: string
     ): Promise<boolean> => {
-        return studentDataService.updateTaskStatus(taskId, status, comment);
+        // Find current task to get metrics if needed, or pass defaults
+        return studentDataService.syncProgress(taskId, status as any, { completedCount: 0, activeTasks: [] }, comment);
     }, []);
 
     // Force refresh tasks
     const refreshTasks = useCallback(async () => {
         try {
-            const freshTasks = await studentDataService.forceSync();
+            const freshTasks = await studentDataService.forceCacheReload();
             setTasks(freshTasks);
         } catch (error) {
             console.error('[useStudentData] Refresh error:', error);

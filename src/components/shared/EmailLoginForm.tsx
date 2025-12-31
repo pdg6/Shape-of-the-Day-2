@@ -35,9 +35,9 @@ const EmailLoginForm = () => {
             <button
                 onClick={() => setIsExpanded(!isExpanded)} // Use isExpanded
                 className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-xl
-                    bg-[var(--color-bg-tile)] text-brand-textSecondary text-sm font-black uppercase tracking-widest
-                    border border-[var(--color-border-subtle)] shadow-layered
-                    hover:bg-[var(--color-bg-tile-hover)] hover:border-blue-500/50 hover:text-brand-textPrimary hover:shadow-layered-lg
+                    bg-tile text-brand-textSecondary text-sm font-black uppercase tracking-widest
+                    border border-border-subtle shadow-layered
+                    hover:bg-tile-hover hover:border-blue-500/50 hover:text-brand-textPrimary hover:shadow-layered-lg
                     transition-float button-lift-dynamic"
             >
                 <Mail className="w-4 h-4" />
@@ -56,7 +56,7 @@ const EmailLoginForm = () => {
                         placeholder="Email address" // Changed placeholder
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-tile-alt border border-border-subtle focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
                         required
                     />
                 </div>
@@ -67,7 +67,7 @@ const EmailLoginForm = () => {
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
+                        className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-bold bg-tile-alt border border-border-subtle focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all placeholder:text-brand-textMuted text-brand-textPrimary"
                         required
                     />
                 </div>
@@ -80,8 +80,8 @@ const EmailLoginForm = () => {
                     type="button"
                     onClick={() => setIsExpanded(false)} // Use isExpanded
                     className="px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest
-                        bg-[var(--color-bg-tile-alt)] text-brand-textMuted border border-[var(--color-border-subtle)]
-                        hover:text-brand-textSecondary hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-strong)]
+                        bg-tile-alt text-brand-textMuted border border-border-subtle
+                        hover:text-brand-textSecondary hover:bg-tile-hover hover:border-border-strong
                         transition-float shadow-layered-sm button-lift-dynamic"
                 >
                     Back

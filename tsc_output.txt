@@ -1,41 +1,88 @@
-src/App.tsx(56,12): error TS6133: 'isJoining' is declared but its value is never read.
+src/App.tsx(50,9): error TS6133: 'classrooms' is declared but its value is never read.
+src/App.tsx(64,12): error TS6133: 'isLoading' is declared but its value is never read.
+src/App.tsx(65,12): error TS6133: 'classroomId' is declared but its value is never read.
+src/App.tsx(65,25): error TS6133: 'setClassroomId' is declared but its value is never read.
+src/App.tsx(107,35): error TS2532: Object is possibly 'undefined'.
 src/components/shared/CodeBlockRenderer.tsx(35,19): error TS2532: Object is possibly 'undefined'.
 src/components/shared/DateRangePicker.tsx(53,5): error TS6133: 'singleDateMode' is declared but its value is never read.
+src/components/shared/DummyDataControls.tsx(3,80): error TS2307: Cannot find module '../../services/dummyDataService' or its corresponding type declarations.
 src/components/shared/ErrorBoundary.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/components/student/StudentProjectsView.tsx(14,1): error TS6133: 'db' is declared but its value is never read.
-src/components/student/StudentView.tsx(492,11): error TS6133: 'handleDesktopTabChange' is declared but its value is never read.
+src/components/shared/SettingsManager.tsx(117,28): error TS18048: 'tile' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(184,54): error TS18048: 'primary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(185,55): error TS18048: 'primary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(186,61): error TS18048: 'primary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(189,56): error TS18048: 'secondary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(190,57): error TS18048: 'secondary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(191,63): error TS18048: 'secondary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(192,59): error TS18048: 'secondary' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(213,61): error TS18048: 'tile' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(214,62): error TS18048: 'tile' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(217,60): error TS18048: 'elevation' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(218,58): error TS18048: 'elevation' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(219,60): error TS18048: 'elevation' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(220,55): error TS18048: 'elevation' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(221,52): error TS18048: 'elevation' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(222,55): error TS18048: 'elevation' is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(287,17): error TS2322: Type '"blue" | "green" | "red" | undefined' is not assignable to type '"blue" | "green" | "red"'.
+  Type 'undefined' is not assignable to type '"blue" | "green" | "red"'.
+src/components/shared/SettingsManager.tsx(510,32): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(510,49): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(511,32): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(511,49): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(517,43): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(520,36): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(520,52): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(521,36): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(521,52): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(530,42): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(531,42): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(537,43): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(541,36): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(541,52): error TS2532: Object is possibly 'undefined'.
+src/components/shared/SettingsManager.tsx(552,13): error TS18047: 'canvas' is possibly 'null'.
+src/components/shared/SettingsManager.tsx(553,13): error TS18047: 'canvas' is possibly 'null'.
 src/components/teacher/ClassFormModal.tsx(2,22): error TS6133: 'addDoc' is declared but its value is never read.
-src/components/teacher/ShapeOfDay.tsx(4,1): error TS6133: 'db' is declared but its value is never read.
+src/components/teacher/ClassroomManager.tsx(8,1): error TS6133: 'HelpButton' is declared but its value is never read.
+src/components/teacher/SettingsOverlay.tsx(2,26): error TS6133: 'Check' is declared but its value is never read.
+src/components/teacher/SettingsOverlay.tsx(276,68): error TS2322: Type 'string' is not assignable to type '"pure" | "onyx" | "slate" | "glass" | "cloud" | "glacier" | undefined'.
+src/components/teacher/SettingsOverlay.tsx(296,68): error TS2322: Type 'string' is not assignable to type '"pure" | "silver" | "steel" | "iron" | "ink" | "obsidian" | undefined'.
+src/components/teacher/SettingsOverlay.tsx(321,68): error TS2322: Type 'string' is not assignable to type '"sky" | "mist" | "ash" | "accent" | "lead" | "coal" | undefined'.
 src/components/teacher/TaskInventory.test.tsx(3,1): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(8,1): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(9,17): error TS2304: Cannot find name 'jest'.
 src/components/teacher/TaskInventory.test.tsx(10,15): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(11,15): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(11,24): error TS6133: 'query' is declared but its value is never read.
-src/components/teacher/TaskInventory.test.tsx(11,24): error TS7006: Parameter 'query' implicitly has an 'any' type.
-src/components/teacher/TaskInventory.test.tsx(11,31): error TS7006: Parameter 'callback' implicitly has an 'any' type.
-src/components/teacher/TaskInventory.test.tsx(13,17): error TS6133: 'callback' is declared but its value is never read.
-src/components/teacher/TaskInventory.test.tsx(13,17): error TS7006: Parameter 'callback' implicitly has an 'any' type.
-src/components/teacher/TaskInventory.test.tsx(17,12): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(19,10): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(20,10): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(23,1): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(24,18): error TS2304: Cannot find name 'jest'.
-src/components/teacher/TaskInventory.test.tsx(31,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/components/teacher/TaskInventory.test.tsx(32,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/components/teacher/TaskInventory.test.tsx(35,5): error TS2304: Cannot find name 'expect'.
-src/components/teacher/TaskInventory.test.tsx(38,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
-src/components/teacher/TaskInventory.tsx(106,11): error TS6133: 'progress' is declared but its value is never read.
-src/components/teacher/TaskInventory.tsx(110,11): error TS6133: 'canHaveChildren' is declared but its value is never read.
-src/components/teacher/TaskInventory.tsx(626,11): error TS6133: 'resetCalendarToToday' is declared but its value is never read.
-src/components/teacher/TaskInventory.tsx(776,26): error TS2741: Property 'value' is missing in type '{ onChange: (value: string | null) => void; options: { value: string; label: string; }[]; placeholder: string; }' but required in type 'SelectProps<string>'.
-src/firebase.ts(42,40): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/firebase.ts(56,24): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/firebase.ts(61,36): error TS2339: Property 'env' does not exist on type 'ImportMeta'.
-src/services/studentDataService.ts(37,7): error TS6133: 'CACHE_KEY_TASKS' is declared but its value is never read.
+src/components/teacher/TaskInventory.test.tsx(11,10): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(12,10): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(13,12): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(14,15): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(14,24): error TS6133: 'q' is declared but its value is never read.
+src/components/teacher/TaskInventory.test.tsx(14,24): error TS7006: Parameter 'q' implicitly has an 'any' type.
+src/components/teacher/TaskInventory.test.tsx(14,27): error TS7006: Parameter 'cb' implicitly has an 'any' type.
+src/components/teacher/TaskInventory.test.tsx(16,12): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(18,11): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(19,20): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(22,1): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(23,18): error TS2304: Cannot find name 'jest'.
+src/components/teacher/TaskInventory.test.tsx(30,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/teacher/TaskInventory.test.tsx(31,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/teacher/TaskInventory.test.tsx(34,5): error TS2304: Cannot find name 'expect'.
+src/components/teacher/TaskInventory.test.tsx(37,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+src/components/teacher/TaskInventory.tsx(862,43): error TS6133: 'hasItems' is declared but its value is never read.
+src/hooks/useStudentData.ts(48,30): error TS2345: Argument of type 'void' is not assignable to parameter of type 'SetStateAction<Task[]>'.
+src/hooks/useStudentData.ts(81,35): error TS2339: Property 'updateTaskStatus' does not exist on type 'StudentDataService'.
+src/hooks/useStudentData.ts(87,57): error TS2339: Property 'forceSync' does not exist on type 'StudentDataService'.
 src/services/telemetryService.ts(48,7): error TS6133: 'MAX_METRICS' is declared but its value is never read.
+src/store/appSettings.ts(193,53): error TS2322: Type '"accent"' is not assignable to type '"pure" | "silver" | "steel" | "iron" | "ink" | "obsidian"'.
+src/store/appSettings.ts(194,58): error TS2322: Type '"onyx"' is not assignable to type '"pure" | "silver" | "steel" | "iron" | "ink" | "obsidian"'.
+src/store/appSettings.ts(195,58): error TS2322: Type '"muted"' is not assignable to type '"pure" | "silver" | "steel" | "iron" | "ink" | "obsidian"'.
+src/store/appSettings.ts(196,92): error TS2322: Type '"white"' is not assignable to type '"pure" | "silver" | "steel" | "iron" | "ink" | "obsidian"'.
+src/store/appSettings.ts(198,57): error TS2322: Type '"onyx"' is not assignable to type '"sky" | "mist" | "ash" | "accent" | "lead" | "coal"'.
+src/store/appSettings.ts(199,62): error TS2322: Type '"slate"' is not assignable to type '"sky" | "mist" | "ash" | "accent" | "lead" | "coal"'.
+src/store/appSettings.ts(200,62): error TS2322: Type '"muted"' is not assignable to type '"sky" | "mist" | "ash" | "accent" | "lead" | "coal"'.
+src/store/appSettings.ts(201,100): error TS2322: Type '"slate"' is not assignable to type '"sky" | "mist" | "ash" | "accent" | "lead" | "coal"'.
 src/utils/debounce.ts(52,20): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Parameters<T>'.
 src/utils/debounce.ts(52,23): error TS2488: Type 'NonNullable<Parameters<T>>' must have a '[Symbol.iterator]()' method that returns an iterator.
 src/utils/debounce.ts(73,16): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Parameters<T>'.
 src/utils/debounce.ts(73,19): error TS2488: Type 'NonNullable<Parameters<T>>' must have a '[Symbol.iterator]()' method that returns an iterator.
 src/utils/debounce.ts(119,24): error TS2345: Argument of type 'any[]' is not assignable to parameter of type 'Parameters<T>'.
 src/utils/debounce.ts(119,27): error TS2488: Type 'NonNullable<Parameters<T>>' must have a '[Symbol.iterator]()' method that returns an iterator.
-src/utils/security.ts(214,30): error TS2532: Object is possibly 'undefined'.

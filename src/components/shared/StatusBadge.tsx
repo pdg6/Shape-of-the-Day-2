@@ -33,14 +33,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'sm' })
         },
         todo: {
             color: 'text-brand-textSecondary',
-            bg: 'bg-[var(--color-bg-tile-alt)]',
-            border: 'border-[var(--color-border-subtle)]',
+            bg: 'bg-tile-alt',
+            border: 'border-border-subtle',
             label: 'To Do'
         },
         draft: {
             color: 'text-brand-textMuted',
-            bg: 'bg-[var(--color-bg-tile-alt)]',
-            border: 'border-[var(--color-border-subtle)]',
+            bg: 'bg-tile-alt',
+            border: 'border-border-subtle',
             label: 'Draft'
         }
     };

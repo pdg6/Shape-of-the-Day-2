@@ -1,0 +1,435 @@
+
+> shape-of-the-day@0.0.0 lint
+> eslint .
+
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\cypress\e2e\ui-alignment.cy.ts
+  37:23  error  'accentColor' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  37:23  error  'accentColor' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  @typescript-eslint/no-unused-vars
+  79:76  error  '$el' is defined but never used                                                              no-unused-vars
+  79:76  error  '$el' is defined but never used                                                              @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\cypress\support\commands.ts
+   8:3   error  ES2015 module syntax is preferred over namespaces  @typescript-eslint/no-namespace
+  13:22  error  'email' is defined but never used                  no-unused-vars
+  13:38  error  'password' is defined but never used               no-unused-vars
+  18:22  error  'displayName' is defined but never used            no-unused-vars
+  18:43  error  'joinCode' is defined but never used               no-unused-vars
+  28:20  error  'data' is defined but never used                   no-unused-vars
+  33:23  error  'name' is defined but never used                   no-unused-vars
+  33:37  error  'subject' is defined but never used                no-unused-vars
+  41:27  error  'classroomId' is defined but never used            no-unused-vars
+  46:23  error  'timeout' is defined but never used                no-unused-vars
+  51:22  error  'title' is defined but never used                  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\cypress\support\e2e.ts
+   7:40  error  'runnable' is defined but never used    no-unused-vars
+   7:40  error  'runnable' is defined but never used    @typescript-eslint/no-unused-vars
+  25:46  error  'collection' is defined but never used  no-unused-vars
+  25:46  error  'collection' is defined but never used  @typescript-eslint/no-unused-vars
+  25:66  error  'query' is defined but never used       no-unused-vars
+  25:66  error  'query' is defined but never used       @typescript-eslint/no-unused-vars
+  25:81  error  'expected' is defined but never used    no-unused-vars
+  25:81  error  'expected' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\functions\src\index.ts
+  332:78  error  'event' is defined but never used  no-unused-vars
+  332:78  error  'event' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\scripts\migrate-presentation-order.ts
+  21:1   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-var-requires')
+  22:24  error    A `require()` style import is forbidden                                                                @typescript-eslint/no-require-imports
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\App.tsx
+  70:8  warning  React Hook useEffect has a missing dependency: 'fetchClassrooms'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  82:8  warning  React Hook useEffect has a missing dependency: 'setView'. Either include it or remove the dependency array          react-hooks/exhaustive-deps
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\Celebration.tsx
+  43:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\Celebration.tsx:43:13
+  41 |     useEffect(() => {
+  42 |         if (active) {
+> 43 |             setIsVisible(true);
+     |             ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |             // Generate confetti pieces
+  45 |             const newPieces: ConfettiPiece[] = Array.from({ length: 50 }).map((_, i) => ({
+  46 |                 id: i,  react-hooks/set-state-in-effect
+  65:8   warning  React Hook useEffect has a missing dependency: 'colors'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\CodeBlockRenderer.tsx
+  112:18  error  'err' is defined but never used  no-unused-vars
+  112:18  error  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\DatePicker.tsx
+  13:16  error  'value' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\DateRangePicker.tsx
+  13:25  error  'value' is defined but never used  no-unused-vars
+  14:23  error  'value' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\EmailLoginForm.tsx
+  21:18  error  'err' is defined but never used  no-unused-vars
+  21:18  error  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\JoinRoom.tsx
+  10:14  error  'code' is defined but never used     no-unused-vars
+  10:28  error  'name' is defined but never used     no-unused-vars
+  10:42  error  'classId' is defined but never used  no-unused-vars
+  34:48  error  Unnecessary escape character: \.     no-useless-escape
+  34:50  error  Unnecessary escape character: \,     no-useless-escape
+  34:52  error  Unnecessary escape character: \_     no-useless-escape
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\LandingPage.tsx
+  14:14  error  'code' is defined but never used     no-unused-vars
+  14:28  error  'name' is defined but never used     no-unused-vars
+  14:42  error  'classId' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\MultiSelect.tsx
+  17:16  error  'values' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\OfflineIndicator.tsx
+  26:41  error  React Hook "React.useState" is called conditionally. React Hooks must be called in the exact same order in every component render   react-hooks/rules-of-hooks
+  28:5   error  React Hook "React.useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render  react-hooks/rules-of-hooks
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\OnboardingTour.tsx
+   26:17  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\OnboardingTour.tsx:26:17
+  24 |         if (saved) {
+  25 |             try {
+> 26 |                 setCompletedTours(new Set(JSON.parse(saved)));
+     |                 ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  27 |             } catch {
+  28 |                 // Invalid data, ignore
+  29 |             }                                                                                                                                                                                                                                                            react-hooks/set-state-in-effect
+   52:33  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `saveCompletedTour`, but the source dependencies were [currentTourId]. Inferred different dependency than source.
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\OnboardingTour.tsx:52:33
+  50 |     }, []);
+  51 |
+> 52 |     const endTour = useCallback(() => {
+     |                                 ^^^^^^^
+> 53 |         if (currentTourId) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 54 |             saveCompletedTour(currentTourId);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 55 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 56 |         setIsActive(false);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 57 |         setCurrentTourId(null);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 58 |         setCurrentStep(0);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |     }, [currentTourId]);
+     | ^^^^^^ Could not preserve existing manual memoization
+  60 |
+  61 |     const skipTour = useCallback(() => {
+  62 |         // Mark as skipped but not completed (can show again later)  react-hooks/preserve-manual-memoization
+   59:8   warning  React Hook useCallback has a missing dependency: 'saveCompletedTour'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+  166:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\OnboardingTour.tsx:166:13
+  164 |             }
+  165 |
+> 166 |             setPosition({ top, left });
+      |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  167 |         }
+  168 |     }, [step]);
+  169 |                                                                                                                                                                                                                                                                                                                                                                react-hooks/set-state-in-effect
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\RichTextEditor.tsx
+  22:16  error  'value' is defined but never used  no-unused-vars
+  25:15  error  'files' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\Select.tsx
+  18:16  error  'value' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\SettingsManager.tsx
+  119:13  error    'tileHover' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 prefer-const
+  126:13  error    'horizonPosition' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           prefer-const
+  265:9   warning  Compilation Skipped: Inline `class` declarations are not supported
+
+Move class declarations outside of components/hooks.
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\shared\SettingsManager.tsx:265:9
+  263 |         let isMouseDown = false;
+  264 |
+> 265 |         class Particle {
+      |         ^^^^^^^^^^^^^^^^
+> 266 |             cx: number;
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 267 |             cy: number;
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 502 |             }
+      | ^^^^^^^^^^^^^^^^^^^^^^^
+> 503 |         }
+      | ^^^^^^^^^^ Inline `class` declarations are not supported
+  504 |
+  505 |         function drawConnections() {
+  506 |             if (!ctx || backgroundSettings.particleEffect !== 'gravity') return;
+
+  react-hooks/unsupported-syntax
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\CurrentTaskList.tsx
+   80:23  error  'taskId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+   80:39  error  'comment' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+  280:33  error  Irregular whitespace not allowed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-irregular-whitespace
+  398:22  error  'taskId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  398:38  error  'status' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  399:23  error  'task' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+  401:23  error  'assigned' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  401:42  error  'due' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+  821:22  error  'taskId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  821:38  error  'status' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  822:23  error  'taskId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  822:39  error  'comment' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        no-unused-vars
+  858:9   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\CurrentTaskList.tsx:858:9
+  856 |             setTimeout(() => setShowCelebration(true), 0);
+  857 |         }
+> 858 |         setPreviousProgress(currentProgress);
+      |         ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  859 |     }, [allComplete, currentProgress, previousProgress]);
+  860 |
+  861 |     // Helper functions for date formatting  react-hooks/set-state-in-effect
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\DayTaskPreview.tsx
+  18:21  error  'task' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\MiniCalendar.tsx
+  11:20  error  'date' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\StudentMenuModal.tsx
+  16:19  error  'tab' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\StudentNameModal.tsx
+  12:16  error  'name' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\StudentProjectsView.tsx
+   18:20  error  'task' is defined but never used           no-unused-vars
+  349:62  error  '_emptyMessage' is defined but never used  no-unused-vars
+  349:62  error  '_emptyMessage' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\StudentSidebar.tsx
+    9:19  error  'tab' is defined but never used  no-unused-vars
+  156:41  error  Redundant double negation        no-extra-boolean-cast
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\student\StudentView.tsx
+   34:18  error    'name' is defined but never used                                                                                        no-unused-vars
+   35:20  error    'name' is defined but never used                                                                                        no-unused-vars
+   57:13  error    '_isLive' is assigned a value but never used                                                                            no-unused-vars
+   57:13  error    '_isLive' is assigned a value but never used                                                                            @typescript-eslint/no-unused-vars
+  190:8   warning  React Hook useEffect has a missing dependency: 'currentTasks.length'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\ClassCard.tsx
+  10:14  error  'cls' is defined but never used  no-unused-vars
+  11:16  error  'id' is defined but never used   no-unused-vars
+  12:21  error  'id' is defined but never used   no-unused-vars
+  13:23  error  'id' is defined but never used   no-unused-vars
+  14:20  error  'id' is defined but never used   no-unused-vars
+  15:22  error  'id' is defined but never used   no-unused-vars
+  16:20  error  'id' is defined but never used   no-unused-vars
+  17:23  error  'id' is defined but never used   no-unused-vars
+  18:19  error  'id' is defined but never used   no-unused-vars
+  19:23  error  'id' is defined but never used   no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\ClassroomManager.tsx
+  25:19  error  'tab' is defined but never used      no-unused-vars
+  25:79  error  'subTab' is defined but never used   no-unused-vars
+  26:23  error  'classId' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\LiveView.tsx
+   24:21   error  'view' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+   86:36   error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\LiveView.tsx:86:36
+  84 |     }, [currentClassId]);
+  85 |
+> 86 |     const [now, setNow] = useState(Date.now());
+     |                                    ^^^^^^^^^^ Cannot call impure function
+  87 |
+  88 |     useEffect(() => {
+  89 |         const interval = setInterval(() => setNow(Date.now()), 60000); // Update every minute  react-hooks/purity
+  312:106  error  'uid' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  312:119  error  'name' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\SettingsOverlay.tsx
+   14:20  error  'tab' is defined but never used  no-unused-vars
+  196:66  error  '_' is defined but never used    no-unused-vars
+  196:66  error  '_' is defined but never used    @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\ShapeOfDay.tsx
+  105:7   error    'flattenTree' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                         no-unused-vars
+  105:7   error    'flattenTree' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                         @typescript-eslint/no-unused-vars
+  121:15  error    'taskId' is defined but never used                                                                                  no-unused-vars
+  427:19  error    'tab' is defined but never used                                                                                     no-unused-vars
+  427:79  error    'subTab' is defined but never used                                                                                  no-unused-vars
+  535:8   warning  React Hook useMemo has an unnecessary dependency: 'selectedDate'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\TaskInventory.test.tsx
+  28:23  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\TaskInventory.tsx
+   57:19  error  'task' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   58:22  error  'tasks' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+   67:22  error  'id' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            no-unused-vars
+   68:14  error  'task' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   69:16  error  'task' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   70:21  error  'task' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          no-unused-vars
+   71:19  error  'parentId' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      no-unused-vars
+   72:18  error  'parentTask' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    no-unused-vars
+   75:29  error  'value' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  140:22  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\TaskInventory.tsx:140:22
+  138 |                 {/* Type Icon */}
+  139 |                 <span className={`shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+> 140 |                     <TypeIcon size={12} />
+      |                      ^^^^^^^^ This component is created during render
+  141 |                 </span>
+  142 |
+  143 |                 {/* Title & Info */}
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\TaskInventory.tsx:99:22
+   97 |     isQuickAddSaving
+   98 | }: TreeItemProps) {
+>  99 |     const TypeIcon = getTypeIcon(task.type);
+      |                      ^^^^^^^^^^^^^^^^^^^^^^ The component is created during render here
+  100 |     const children = allTasks.filter(t => t.parentId === task.id);
+  101 |     const hasChildren = children.length > 0;
+  102 |     const isExpanded = expandedIds.has(task.id);  react-hooks/static-components
+  368:13  error  'today' is never reassigned. Use 'const' instead                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          prefer-const
+  404:11  error  'getDateTaskCounts' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         no-unused-vars
+  404:11  error  'getDateTaskCounts' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\TaskManager.tsx
+  258:8  warning  React Hook useEffect has a missing dependency: 'formData.selectedRoomIds'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  285:8  warning  React Hook useEffect has a missing dependency: 'handleEditClick'. Either include it or remove the dependency array           react-hooks/exhaustive-deps
+  496:8  warning  React Hook useEffect has a missing dependency: 'handleSave'. Either include it or remove the dependency array                react-hooks/exhaustive-deps
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\components\teacher\TeacherDashboard.tsx
+  464:41  error  Redundant double negation  no-extra-boolean-cast
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\context\AuthContext.tsx
+  107:8  warning  React Hook useEffect has a missing dependency: 'attemptSilentRefresh'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\context\auth-context.ts
+  15:22  error  'email' is defined but never used     no-unused-vars
+  15:37  error  'password' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\context\tour-context.ts
+  25:17  error  'tourId' is defined but never used  no-unused-vars
+  30:24  error  'tourId' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\hooks\useStudentData.ts
+  19:24  error  'taskId' is defined but never used   no-unused-vars
+  19:40  error  'status' is defined but never used   no-unused-vars
+  19:90  error  'comment' is defined but never used  no-unused-vars
+  21:23  error  'date' is defined but never used     no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\hooks\useTaskManager.ts
+   12:18  error  'message' is defined but never used  no-unused-vars
+   13:16  error  'message' is defined but never used  no-unused-vars
+  236:36  error  'prev' is defined but never used     no-unused-vars
+  240:30  error  'prev' is defined but never used     no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\services\authService.ts
+  61:41  error  'user' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\services\firestoreService.ts
+  174:9   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  209:16  error  'tasks' is defined but never used                                                                                    no-unused-vars
+  284:16  error  'students' is defined but never used                                                                                 no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\services\storageService.ts
+  172:25  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unused-vars')
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\services\studentDataService.ts
+   51:22  error  'status' is defined but never used  no-unused-vars
+   65:33  error  'tasks' is defined but never used   no-unused-vars
+  175:33  error  'tasks' is defined but never used   no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\services\telemetryService.ts
+  256:16  error  'attempt' is defined but never used  no-unused-vars
+  256:33  error  'error' is defined but never used    no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\store\appSettings.ts
+  131:25  error  'id' is defined but never used            no-unused-vars
+  132:21  error  'classrooms' is defined but never used    no-unused-vars
+  134:22  error  'isOpen' is defined but never used        no-unused-vars
+  135:29  error  'count' is defined but never used         no-unused-vars
+  136:27  error  'isOpen' is defined but never used        no-unused-vars
+  136:44  error  'editingClass' is defined but never used  no-unused-vars
+  137:29  error  'settings' is defined but never used      no-unused-vars
+  140:15  error  'view' is defined but never used          no-unused-vars
+  141:22  error  'name' is defined but never used          no-unused-vars
+  142:25  error  'id' is defined but never used            no-unused-vars
+  143:32  error  'color' is defined but never used         no-unused-vars
+  177:22  error  'e' is defined but never used             no-unused-vars
+  177:22  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  204:22  error  'e' is defined but never used             no-unused-vars
+  204:22  error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\utils\debounce.ts
+   13:43  error  'args' is defined but never used  no-unused-vars
+   14:9   error  'args' is defined but never used  no-unused-vars
+   32:40  error  'args' is defined but never used  no-unused-vars
+   93:40  error  'args' is defined but never used  no-unused-vars
+   96:8   error  'args' is defined but never used  no-unused-vars
+  143:25  error  'key' is defined but never used   no-unused-vars
+  143:38  error  'data' is defined but never used  no-unused-vars
+  148:21  error  'key' is defined but never used   no-unused-vars
+  148:34  error  'data' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\utils\security.ts
+  291:40  error  'args' is defined but never used  no-unused-vars
+  294:9   error  'args' is defined but never used  no-unused-vars
+  312:40  error  'args' is defined but never used  no-unused-vars
+  315:9   error  'args' is defined but never used  no-unused-vars
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\utils\textSanitizer.ts
+   50:18  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f  no-control-regex
+  108:18  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f  no-control-regex
+  139:29  error  Unexpected control character(s) in regular expression: \x00, \x08, \x0b, \x0c, \x0e, \x1f  no-control-regex
+
+C:\Users\16047\Desktop\Antigravity\Shape of the Day 2\src\utils\validation.ts
+  49:14  error  'e' is defined but never used  no-unused-vars
+  49:14  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+Γ£û 187 problems (174 errors, 13 warnings)
+  5 errors and 2 warnings potentially fixable with the `--fix` option.
+

@@ -99,14 +99,14 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                 <div className="flex gap-2">
                     <button
                         onClick={() => scroll('left')}
-                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) duration-300 transition-float button-lift-dynamic border border-transparent hover:border-border-subtle shadow-layered-sm"
                         aria-label="Previous Month"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => scroll('right')}
-                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-all duration-300 transition-float button-lift-dynamic border border-transparent hover:border-[var(--color-border-subtle)] shadow-layered-sm"
+                        className="flex items-center justify-center w-9 h-9 rounded-full text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) duration-300 transition-float button-lift-dynamic border border-transparent hover:border-border-subtle shadow-layered-sm"
                         aria-label="Next Month"
                     >
                         <ChevronRight className="w-5 h-5" />
@@ -134,11 +134,11 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
                                 if (!isDragging) onSelectDate(full);
                             }}
                             className={`
-                                flex flex-col items-center justify-center min-w-[4.5rem] min-h-[5rem] flex-1 p-3 rounded-xl border transition-all duration-300 transition-float button-lift-dynamic outline-none
+                                flex flex-col items-center justify-center min-w-18 min-h-20 flex-1 p-3 rounded-xl border duration-300 transition-float button-lift-dynamic outline-none
                                 focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5
                                 ${isSelected
                                     ? 'bg-brand-accent/10 border-brand-accent shadow-layered-sm scale-105 z-10'
-                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-transparent hover:border-[var(--color-border-subtle)] shadow-none hover:shadow-layered-sm'}
+                                    : 'bg-tile-alt text-brand-textSecondary border-transparent hover:border-border-subtle shadow-none hover:shadow-layered-sm'}
                             `}
                         >
                             <span className={`text-xs font-medium mb-1 text-brand-textSecondary ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>
@@ -156,4 +156,3 @@ const MiniCalendar: React.FC<MiniCalendarProps> = ({ selectedDate, onSelectDate 
 };
 
 export default MiniCalendar;
-```

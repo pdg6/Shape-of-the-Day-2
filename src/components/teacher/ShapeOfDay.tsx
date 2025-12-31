@@ -176,8 +176,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
     return (
         <div
-            className={`group bg-[var(--color-bg-tile)] 
-                border border-[var(--color-border-subtle)] rounded-2xl p-5
+            className={`group bg-(--color-bg-tile) 
+                border border-border-subtle rounded-2xl p-5
                 border-l-4 ${typeBorderColor}
                 transition-float shadow-layered
                 hover:border-brand-accent hover:shadow-layered-lg
@@ -271,7 +271,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                             <div className="flex items-center gap-2 text-xs text-brand-textSecondary">
                                 <span className="font-medium">{completedChildren}/{childTasks.length} complete</span>
                             </div>
-                            <div className="mt-1 h-1.5 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden">
+                            <div className="mt-1 h-1.5 bg-tile-alt rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-brand-accent rounded-full transition-all duration-300"
                                     style={{ width: `${childTasks.length > 0 ? (completedChildren / childTasks.length) * 100 : 0}%` }}
@@ -310,11 +310,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         rel="noopener noreferrer"
                                         className="block"
                                         onClick={(e) => e.stopPropagation()}
+                                        title="View image"
                                     >
                                         <img
                                             src={task.imageURL}
                                             alt=""
-                                            className="w-20 h-20 object-cover rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-brand-accent transition-colors"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-border-subtle hover:border-brand-accent transition-colors"
                                             loading="lazy"
                                         />
                                     </a>
@@ -332,7 +333,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                         <img
                                             src={img.url}
                                             alt={img.filename}
-                                            className="w-20 h-20 object-cover rounded-lg border-2 border-[var(--color-border-subtle)] hover:border-brand-accent transition-colors"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-border-subtle hover:border-brand-accent transition-colors"
                                             loading="lazy"
                                         />
                                     </a>
@@ -402,7 +403,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 px-3 py-2 rounded-lg
-                                                bg-[var(--color-bg-tile-hover)] border-2 border-[var(--color-border-subtle)]
+                                                bg-(--color-bg-tile-hover) border-2 border-border-subtle
                                                 text-sm font-medium hover:border-brand-accent hover:shadow-lg transition-all"
                                             title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
                                             onClick={(e) => e.stopPropagation()}
@@ -576,7 +577,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         >
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float shrink-0 p-6">
+            <div className="w-full bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float shrink-0 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}
@@ -632,7 +633,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                         </div>
 
                         {/* QR Code */}
-                        <div className="bg-white p-1.5 rounded-lg shadow-sm border border-[var(--color-border-subtle)]">
+                        <div className="bg-white p-1.5 rounded-lg shadow-sm border border-border-subtle">
                             <QRCodeSVG
                                 value={`${joinUrl}?code=${currentClass.joinCode}`}
                                 size={80}
@@ -650,7 +651,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 {loading ? (
                     <div className="text-center py-12 text-brand-textSecondary">Loading schedule...</div>
                 ) : displayTasks.length === 0 ? (
-                    <div className="text-center py-12 text-brand-textSecondary bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)]">
+                    <div className="text-center py-12 text-brand-textSecondary bg-(--color-bg-tile) rounded-2xl border border-dashed border-border-subtle">
                         No tasks scheduled for this date.
                     </div>
                 ) : (

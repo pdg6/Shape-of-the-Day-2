@@ -166,21 +166,19 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
         }
     }, [step]);
 
-    // Progress percentage for Goal-Gradient Effect
-    const progress = ((currentStep + 1) / totalSteps) * 100;
     const isLastStep = currentStep === totalSteps - 1;
     const isFirstStep = currentStep === 0;
     const isCentered = step.position === 'center';
 
     return (
-        <div className="fixed inset-0 z-[1000]" role="dialog" aria-modal="true" aria-label="Tour guide">
+        <div className="fixed inset-0 z-1000" role="dialog" aria-modal="true" aria-label="Tour guide">
             {/* Backdrop with spotlight */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onSkip} />
 
             {/* Spotlight on target element */}
             {targetRect && !isCentered && (
                 <div
-                    className="absolute border border-brand-accent rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none transition-all duration-300"
+                    className="absolute border border-brand-accent rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] pointer-events-none transition-float"
                     style={{
                         top: targetRect.top - 8,
                         left: targetRect.left - 8,
@@ -193,9 +191,9 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
             {/* Tooltip */}
             <div
                 className={`
-                    absolute bg-[var(--color-bg-tile)] rounded-2xl shadow-layered-lg
-                    border border-[var(--color-border-subtle)] p-6 w-80 max-w-[90vw] animate-in fade-in zoom-in-95 duration-200
-                    transition-all duration-300 ease-out
+                    absolute bg-tile rounded-2xl shadow-layered-lg
+                    border border-border-subtle p-6 w-80 max-w-[90vw] animate-in fade-in zoom-in-95 duration-200
+                    transition-float ease-out
                     ${isCentered ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}
                 `}
                 style={!isCentered ? {
@@ -210,7 +208,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                 {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1.5 text-brand-textMuted hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] rounded-lg transition-colors"
+                    className="absolute top-4 right-4 p-1.5 text-brand-textMuted hover:text-brand-textPrimary hover:bg-tile-hover rounded-lg transition-colors"
                     aria-label="Close tour"
                 >
                     <X className="w-4 h-4" />
@@ -236,7 +234,7 @@ const TourOverlay: React.FC<TourOverlayProps> = ({
                             <span>Progress</span>
                             <span>{currentStep + 1} / {totalSteps}</span>
                         </div>
-                        <div className="h-1.5 bg-[var(--color-bg-tile-alt)] rounded-full border border-[var(--color-border-subtle)] overflow-hidden">
+                        <div className="h-1.5 bg-tile-alt rounded-full border border-border-subtle overflow-hidden">
                             <div
                                 className="h-full bg-brand-accent transition-all duration-500"
                                 style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}

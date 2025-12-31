@@ -58,18 +58,19 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
                     </span>
                 </div>
             )}
-            <div className={`w-full bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden ${sizeClasses[size]} border border-[var(--color-border-subtle)]`}>
+            <div className={`w-full bg-tile-alt rounded-full overflow-hidden ${sizeClasses[size]} border border-border-subtle`}>
                 <div
                     className={`
                         ${sizeClasses[size]} rounded-full
                         ${variantClasses[variant]}
                         ${animate ? 'transition-all duration-500 ease-out' : ''}
+                        w-[var(--progress-width)]
                     `}
-                    style={{ width: `${percentage}%` }}
+                    style={{ '--progress-width': `${percentage}%` } as React.CSSProperties}
                     role="progressbar"
-                    aria-valuenow={current}
+                    aria-valuenow={percentage}
                     aria-valuemin={0}
-                    aria-valuemax={total}
+                    aria-valuemax={100}
                     aria-label={`${current} of ${total} tasks complete`}
                 />
             </div>
@@ -108,7 +109,7 @@ export const CircularProgress: React.FC<CircularProgressProps> = ({
             <svg width={size} height={size} className="-rotate-90">
                 {/* Background circle */}
                 <circle
-                    className="text-[var(--color-bg-tile-alt)]"
+                    className="text-bg-tile-alt"
                     strokeWidth={strokeWidth}
                     stroke="currentColor"
                     fill="transparent"
@@ -178,7 +179,7 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                                         ? 'bg-status-complete text-white'
                                         : isCurrent
                                             ? 'bg-brand-accent text-white ring-4 ring-brand-accent/10'
-                                            : 'bg-[var(--color-bg-tile-alt)] text-brand-textMuted border border-[var(--color-border-subtle)]'
+                                            : 'bg-tile-alt text-brand-textMuted border border-border-subtle'
                                     }
                                 `}
                             >
@@ -200,7 +201,7 @@ export const StepProgress: React.FC<StepProgressProps> = ({
                         {!isLast && (
                             <div className={`
                                 flex-1 h-0.5 mx-2 transition-all duration-300 rounded-full
-                                ${isCompleted ? 'bg-status-complete' : 'bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)]'}
+                                ${isCompleted ? 'bg-status-complete' : 'bg-tile-alt border border-border-subtle'}
                             `} />
                         )}
                     </React.Fragment>
@@ -232,7 +233,7 @@ export const TaskSummary: React.FC<TaskSummaryProps> = ({
     const allComplete = completed === total && total > 0;
 
     return (
-        <div className={`bg-[var(--color-bg-tile)] rounded-2xl p-5 border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float ${className}`}>
+        <div className={`bg-(--color-bg-tile) rounded-2xl p-5 border border-border-subtle shadow-layered lift-dynamic transition-float ${className}`}>
             {/* Main progress */}
             <div className="flex items-center gap-5 mb-4">
                 <CircularProgress current={completed} total={total} size={52} />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, LogOut, User, BookOpen, Calendar, CheckCircle, ListTodo, FolderOpen, CalendarDays, Settings, Palette, Layers, Box, Zap, Trash2, Edit3, Monitor, Sparkles } from 'lucide-react';
+import { LogOut, User, BookOpen, CheckCircle, ListTodo, FolderOpen, CalendarDays, Palette, Layers, Box, Zap, Trash2, Edit3, Sparkles } from 'lucide-react';
 import { useClassStore } from '../../store/appSettings';
 import { Modal } from '../shared/Modal';
 
@@ -41,28 +41,21 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
 }) => {
     const { backgroundSettings, setBackgroundSettings, resetSettings } = useClassStore();
     const [activeSettingsTab, setActiveSettingsTab] = React.useState<'nav' | 'theme'>('nav');
-
-    const tasksLeft = totalTasks - tasksCompleted;
     const progressPercent = totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0;
 
-    const currentDate = new Date().toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-    });
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Menu">
-            <div className="flex gap-2 mb-6 p-1 bg-[var(--color-bg-tile-alt)] rounded-xl border border-[var(--color-border-subtle)]">
+            <div className="flex gap-2 mb-6 p-1 bg-tile-alt rounded-xl border border-border-subtle">
                 <button
                     onClick={() => setActiveSettingsTab('nav')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-float ${activeSettingsTab === 'nav' ? 'bg-[var(--color-bg-tile)] text-brand-accent shadow-layered-sm border border-[var(--color-border-subtle)]' : 'text-brand-textMuted hover:text-brand-textSecondary'}`}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-float ${activeSettingsTab === 'nav' ? 'bg-tile text-brand-accent shadow-layered-sm border border-border-subtle' : 'text-brand-textMuted hover:text-brand-textSecondary'}`}
                 >
                     Navigation
                 </button>
                 <button
                     onClick={() => setActiveSettingsTab('theme')}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-float ${activeSettingsTab === 'theme' ? 'bg-[var(--color-bg-tile)] text-brand-accent shadow-layered-sm border border-[var(--color-border-subtle)]' : 'text-brand-textMuted hover:text-brand-textSecondary'}`}
+                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-black uppercase tracking-widest transition-float ${activeSettingsTab === 'theme' ? 'bg-tile text-brand-accent shadow-layered-sm border border-border-subtle' : 'text-brand-textMuted hover:text-brand-textSecondary'}`}
                 >
                     Appearance
                 </button>
@@ -79,8 +72,8 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                     onClose();
                                 }}
                                 className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'tasks'
-                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-accent shadow-layered-sm'
-                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)]'
+                                    ? 'bg-tile border-brand-accent text-brand-accent shadow-layered-sm'
+                                    : 'bg-tile-alt text-brand-textSecondary border-border-subtle hover:bg-tile-hover'
                                     }`}
                             >
                                 <ListTodo size={24} />
@@ -92,8 +85,8 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                     onClose();
                                 }}
                                 className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'projects'
-                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-accent shadow-layered-sm'
-                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)]'
+                                    ? 'bg-tile border-brand-accent text-brand-accent shadow-layered-sm'
+                                    : 'bg-tile-alt text-brand-textSecondary border-border-subtle hover:bg-tile-hover'
                                     }`}
                             >
                                 <FolderOpen size={24} />
@@ -105,8 +98,8 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                     onClose();
                                 }}
                                 className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border transition-float focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${activeTab === 'schedule'
-                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-accent shadow-layered-sm'
-                                    : 'bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border-[var(--color-border-subtle)] hover:bg-[var(--color-bg-tile-hover)]'
+                                    ? 'bg-tile border-brand-accent text-brand-accent shadow-layered-sm'
+                                    : 'bg-tile-alt text-brand-textSecondary border-border-subtle hover:bg-tile-hover'
                                     }`}
                             >
                                 <CalendarDays size={24} />
@@ -115,7 +108,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         </div>
 
                         {/* Divider */}
-                        <div className="h-px bg-[var(--color-border-subtle)] my-2" />
+                        <div className="h-px bg-border-subtle my-2" />
 
                         {/* Student Info Cards */}
                         <div className="space-y-2">
@@ -125,7 +118,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                     onEditName();
                                     onClose();
                                 }}
-                                className="w-full bg-[var(--color-bg-tile)] rounded-xl p-3 flex items-center justify-between border border-[var(--color-border-subtle)] transition-float button-lift-dynamic shadow-layered-sm group"
+                                className="w-full bg-tile rounded-xl p-3 flex items-center justify-between border border-border-subtle transition-float button-lift-dynamic shadow-layered-sm group"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent group-hover:scale-110 transition-transform">
@@ -140,7 +133,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             </button>
 
                             {/* Class Name */}
-                            <div className="bg-[var(--color-bg-tile)] rounded-xl p-3 flex items-center justify-between border border-[var(--color-border-subtle)] shadow-layered-sm">
+                            <div className="bg-tile rounded-xl p-3 flex items-center justify-between border border-border-subtle shadow-layered-sm">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
                                         <BookOpen size={20} />
@@ -154,7 +147,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         </div>
 
                         {/* Progress Section */}
-                        <div className="bg-[var(--color-bg-tile)] rounded-xl p-4 border border-[var(--color-border-subtle)] shadow-layered-sm space-y-3">
+                        <div className="bg-tile rounded-xl p-4 border border-border-subtle shadow-layered-sm space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
@@ -164,7 +157,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                 </div>
                                 <span className="text-sm font-black text-brand-accent">{progressPercent}%</span>
                             </div>
-                            <div className="h-1.5 bg-[var(--color-bg-tile-alt)] rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-tile-alt rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-brand-accent rounded-full transition-all duration-1000 ease-out"
                                     style={{ width: `${progressPercent}%` }}
@@ -180,7 +173,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         {/* Theme Section */}
                         <div className="space-y-4">
                             {/* Visual Presets Info */}
-                            <div className="bg-[var(--color-bg-tile-alt)] rounded-xl p-3 border border-[var(--color-border-subtle)]">
+                            <div className="bg-tile-alt rounded-xl p-3 border border-border-subtle">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
                                         <Sparkles size={20} />
@@ -211,7 +204,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                                 bgColor: preset.color,
                                                 particleColor: preset.particle
                                             })}
-                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.bgColor === preset.color ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.bgColor === preset.color ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-tile border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
                                         >
                                             {preset.label}
                                         </button>
@@ -234,7 +227,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                         <button
                                             key={theme.id}
                                             onClick={() => setBackgroundSettings({ tileTheme: theme.id as any })}
-                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.tileTheme === theme.id ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.tileTheme === theme.id ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-tile border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
                                         >
                                             {theme.label}
                                         </button>
@@ -253,7 +246,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                         <button
                                             key={level}
                                             onClick={() => setBackgroundSettings({ elevationLevel: level as any })}
-                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.elevationLevel === level ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.elevationLevel === level ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-tile border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
                                         >
                                             {level}
                                         </button>
@@ -264,7 +257,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             {/* Particles Toggle */}
                             <button
                                 onClick={() => setBackgroundSettings({ particlesEnabled: !backgroundSettings.particlesEnabled })}
-                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-float ${backgroundSettings.particlesEnabled ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-layered-sm' : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary'}`}
+                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-float ${backgroundSettings.particlesEnabled ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-layered-sm' : 'bg-tile border-border-subtle text-brand-textSecondary'}`}
                             >
                                 <div className="flex items-center gap-3">
                                     <Zap size={18} className={backgroundSettings.particlesEnabled ? 'animate-pulse' : ''} />
@@ -278,7 +271,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             {/* Reset Button */}
                             <button
                                 onClick={resetSettings}
-                                className="w-full py-3 px-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile-alt)] text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-red-500 hover:border-red-500/50 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-tile-alt text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-red-500 hover:border-red-500/50 transition-all flex items-center justify-center gap-2"
                             >
                                 <Trash2 size={14} />
                                 Reset to Defaults
@@ -288,7 +281,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                 )}
 
                 {/* Shared Logout Action */}
-                <div className="pt-4 mt-2 border-t border-[var(--color-border-subtle)]">
+                <div className="pt-4 mt-2 border-t border-border-subtle">
                     <button
                         onClick={() => {
                             if (window.confirm('Sign out of this class?')) {
@@ -307,7 +300,6 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
             </div>
         </Modal>
     );
-};
 };
 
 export default StudentMenuModal;

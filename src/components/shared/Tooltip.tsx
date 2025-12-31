@@ -36,7 +36,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     };
 
     const variantClasses = {
-        default: 'bg-[var(--color-bg-tile-alt)] text-brand-textPrimary border border-[var(--color-border-subtle)]',
+        default: 'bg-tile-alt text-brand-textPrimary border border-border-subtle',
         info: 'bg-blue-600/95 text-white',
         warning: 'bg-amber-500/95 text-gray-900'
     };
@@ -79,13 +79,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
                 {content}
                 {/* Arrow */}
                 <div className={`
-                    absolute w-2 h-2 rotate-45 border-r border-b border-[var(--color-border-subtle)]
-                    ${variant === 'default' ? 'bg-[var(--color-bg-tile-alt)]' :
+                    absolute w-2 h-2 rotate-45 border-r border-b border-border-subtle
+                    ${variant === 'default' ? 'bg-tile-alt' :
                         variant === 'info' ? 'bg-blue-600/95' : 'bg-amber-500/95'}
                     ${position === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2 rotate-45 border-r border-b' : ''}
                     ${position === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2 -rotate-135 border-r border-b' : ''}
-                    ${position === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2 rotate-[-45deg] border-r border-b' : ''}
-                    ${position === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2 rotate-[135deg] border-r border-b' : ''}
+                    ${position === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2 -rotate-45 border-r border-b' : ''}
+                    ${position === 'right' ? 'left-[-4px] top-1/2 -translate-y-1/2 rotate-135 border-r border-b' : ''}
                 `} />
             </div>
         </div>

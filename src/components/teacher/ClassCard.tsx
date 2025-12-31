@@ -129,7 +129,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         </h3>
                         <p className={`text-xs font-medium flex items-center gap-2 ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>
                             <span className="opacity-75 truncate">{classroom.subject}</span>
-                            <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-white/40' : 'bg-[var(--color-border-strong)]'}`} />
+                            <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-white/40' : 'bg-border-strong'}`} />
                             <span className="opacity-75">{classroom.gradeLevel}</span>
                         </p>
                     </div>
@@ -157,7 +157,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                                 if (onViewStudents) onViewStudents(classroom.id);
                             }}
                             className={`flex-1 text-left -m-2 p-2 rounded-xl transition-float button-lift-dynamic border border-transparent
-            ${isSelected ? 'hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-subtle)] shadow-layered-sm hover:shadow-layered-lg' : ''}`}
+            ${isSelected ? 'hover:bg-(--color-bg-tile-hover) hover:border-border-subtle shadow-layered-sm hover:shadow-layered-lg' : ''}`}
                         >
                             <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>Students</p>
                             <div className="flex items-baseline gap-1.5">
@@ -167,7 +167,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                                 {isActive ? (
                                     <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" title="Online" />
                                 ) : (
-                                    <span className="w-2 h-2 rounded-full bg-[var(--color-border-strong)]" title="Offline" />
+                                    <span className="w-2 h-2 rounded-full bg-border-strong" title="Offline" />
                                 )}
                             </div>
                         </button>
@@ -179,7 +179,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                                 e.stopPropagation();
                                 if (onViewTasks) onViewTasks(classroom.id);
                             }}
-                            className={`flex-1 text-left group/stats -m-2 p-2 rounded-xl transition-float button-lift-dynamic border border-transparent focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-[var(--color-bg-tile-hover)] hover:border-[var(--color-border-subtle)] shadow-layered-sm' : ''}`}
+                            className={`flex-1 text-left group/stats -m-2 p-2 rounded-xl transition-float button-lift-dynamic border border-transparent focus:outline-none focus:ring-2 focus:ring-brand-accent/20 ${isSelected ? 'hover:bg-(--color-bg-tile-hover) hover:border-border-subtle shadow-layered-sm' : ''}`}
                         >
                             <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 transition-colors ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>Tasks</p>
                             <div className="flex items-baseline gap-1.5">
@@ -199,11 +199,11 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         }}
                         className={`w-full group/code relative flex items-center justify-between p-2.5
                     rounded-xl transition-float border cursor-pointer
-                    bg-[var(--color-bg-tile)] shadow-layered
+                    bg-(--color-bg-tile) shadow-layered
                     hover:shadow-layered-lg button-lift-dynamic
                     ${isSelected
-                                ? 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-[var(--color-border-subtle)] hover:border-brand-accent/50'
-                                : 'border-[var(--color-border-subtle)] cursor-default'}`}
+                                ? 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) border-border-subtle hover:border-brand-accent/50'
+                                : 'border-border-subtle cursor-default'}`}
                         title="Click to show join code"
                     >
                         <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-widest">Code</span>
@@ -213,7 +213,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             </span>
                             <button
                                 onClick={handleCopyCode}
-                                className={`p-1 rounded-md transition-colors ${isSelected ? 'hover:bg-white/20' : 'hover:bg-[var(--color-bg-tile-hover)]'}`}
+                                className={`p-1 rounded-md transition-colors ${isSelected ? 'hover:bg-white/20' : 'hover:bg-(--color-bg-tile-hover)'}`}
                                 title="Copy join code"
                             >
                                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-brand-textPrimary group-hover/code:text-brand-accent' : 'text-brand-textSecondary'}`} />}
@@ -241,11 +241,11 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             }}
                             className={`group/btn relative flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 px-1
                     rounded-xl transition-float border
-                    bg-[var(--color-bg-tile)] shadow-layered
+                    bg-(--color-bg-tile) shadow-layered
                     hover:shadow-layered-lg button-lift-dynamic
                     ${isSelected
-                                    ? 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] border-[var(--color-border-subtle)] hover:border-brand-accent/50'
-                                    : 'border-[var(--color-border-subtle)] cursor-default'}`}
+                                    ? 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) border-border-subtle hover:border-brand-accent/50'
+                                    : 'border-border-subtle cursor-default'}`}
                             title={action.label}
                         >
                             <action.icon className={`w-4 h-4 transition-colors ${isSelected ? 'group-hover/btn:text-brand-accent' : ''}`} />

@@ -52,7 +52,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
     // If no tasks exist for this date, show a simple empty state message
     if (tasks.length === 0) {
         return (
-            <div className="bg-[var(--color-bg-tile)] p-6 rounded-2xl border border-dashed border-[var(--color-border-subtle)] text-center mb-6 shadow-layered-sm">
+            <div className="bg-tile p-6 rounded-2xl border border-dashed border-border-subtle text-center mb-6 shadow-layered-sm">
                 <p className="text-brand-textSecondary font-medium">No tasks scheduled for this day.</p>
             </div>
         );
@@ -74,7 +74,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     ) : (
                         <button
                             onClick={onImport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border border-[var(--color-border-subtle)] hover:border-brand-accent/50 hover:bg-[var(--color-bg-tile-hover)] hover:text-brand-textPrimary transition-float button-lift-dynamic font-bold text-xs uppercase tracking-widest shadow-layered-sm"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-tile-alt text-brand-textSecondary border border-border-subtle hover:border-brand-accent/50 hover:bg-tile-hover hover:text-brand-textPrimary transition-float button-lift-dynamic font-bold text-xs uppercase tracking-widest shadow-layered-sm"
                         >
                             <Download className="w-4 h-4" />
                             <span className="hidden sm:inline">
@@ -103,7 +103,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                             case 'done':
                                 return 'border-status-complete/30';
                             default: // 'todo'
-                                return 'border-[var(--color-border-subtle)]';
+                                return 'border-border-subtle';
                         }
                     };
 
@@ -112,7 +112,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                     return (
                         <div
                             key={task.id}
-                            className={`relative bg-[var(--color-bg-tile)] p-4 rounded-xl border border-[var(--color-border-subtle)] ${borderClass} shadow-layered-sm transition-float lift-dynamic hover:shadow-layered hover:border-brand-accent/50`}
+                            className={`relative bg-tile p-4 rounded-xl border border-border-subtle ${borderClass} shadow-layered-sm transition-float lift-dynamic hover:shadow-layered hover:border-brand-accent/50`}
                         >
                             {/* Import Button - Top Right */}
                             {onImportTask && !hideImportButtons && (
@@ -127,7 +127,7 @@ const DayTaskPreview: React.FC<DayTaskPreviewProps> = ({
                                 ) : (
                                     <button
                                         onClick={() => onImportTask(task)}
-                                        className="absolute top-3 right-3 p-2 rounded-lg transition-float bg-[var(--color-bg-tile-alt)] text-brand-textSecondary border border-[var(--color-border-subtle)] hover:text-brand-accent hover:border-brand-accent/50 button-lift-dynamic"
+                                        className="absolute top-3 right-3 p-2 rounded-lg transition-float bg-tile-alt text-brand-textSecondary border border-border-subtle hover:text-brand-accent hover:border-brand-accent/50 button-lift-dynamic"
                                         title="Import this task"
                                         aria-label={`Import ${task.title}`}
                                     >

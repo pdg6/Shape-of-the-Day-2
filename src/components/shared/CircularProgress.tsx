@@ -125,7 +125,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={strokeWidth}
-                className="text-[var(--color-border-subtle)]"
+                className="text-border-subtle"
             />
             {/* Colored segments */}
             {renderSegments()}

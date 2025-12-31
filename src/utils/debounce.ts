@@ -10,7 +10,7 @@
 // Types
 // ============================================================================
 
-interface DebouncedFunction<T extends (...args: Parameters<T>) => ReturnType<T>> {
+interface DebouncedFunction<T extends (...args: any[]) => any> {
     (...args: Parameters<T>): void;
     cancel: () => void;
     flush: () => void;
@@ -29,7 +29,7 @@ interface DebouncedFunction<T extends (...args: Parameters<T>) => ReturnType<T>>
  * @param immediate - If true, call on the leading edge instead of trailing
  * @returns Debounced function with cancel and flush methods
  */
-export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
+export function debounce<T extends (...args: any[]) => any>(
     fn: T,
     wait: number,
     immediate: boolean = false
@@ -90,7 +90,7 @@ export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
  * @param wait - Minimum milliseconds between calls
  * @returns Throttled function
  */
-export function throttle<T extends (...args: Parameters<T>) => ReturnType<T>>(
+export function throttle<T extends (...args: any[]) => any>(
     fn: T,
     wait: number
 ): (...args: Parameters<T>) => void {

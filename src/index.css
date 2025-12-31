@@ -6,8 +6,10 @@
     /* Brand Colors - Floating Tiles Dark Palette */
     --color-brand-dark: #0f1115;
     --color-brand-darkSurface: #1a1d24;
-    --color-bg-tile: #1a1d24;
-    --color-bg-tile-alt: #151921;
+    --color-tile: #1a1d24;
+    --color-tile-hover: #1e2128;
+    --color-tile-alt: #151921;
+    --color-page: #0f1115;
     --color-border-subtle: rgba(255, 255, 255, 0.05);
     --color-brand-light: #E2E8F0;
     /* Slate-200 - Darker background for elevation contrast */
@@ -66,6 +68,12 @@
     --shadow-layered-sm: 0 1px 2px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.05);
     --shadow-layered: 0 4px 6px rgba(0, 0, 0, 0.05), 0 12px 24px rgba(0, 0, 0, 0.05), 0 24px 48px rgba(0, 0, 0, 0.05);
     --shadow-layered-lg: 0 15px 30px rgba(0, 0, 0, 0.08), 0 30px 60px rgba(0, 0, 0, 0.1);
+
+    /* Legacy variable mappings for backward compatibility with components using bg-bg-tile */
+    --color-bg-tile: var(--color-tile);
+    --color-bg-tile-hover: var(--color-tile-hover);
+    --color-bg-tile-alt: var(--color-tile-alt);
+    --color-bg-page: var(--color-page);
 }
 
 @utility transition-float {
@@ -112,11 +120,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(var(--grid-min-size, 300px), 1fr));
 }
-
-/* Dark mode shadow overrides - REMOVED
-   Shadows are now controlled dynamically by GravityBackground.tsx
-   based on theme settings (elevationLevel)
-*/
 
 
 /* ============================================
@@ -380,9 +383,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        ============================================ */
     .input-field {
         @apply w-full px-3 py-2 rounded-lg border-2 transition-all duration-200;
-        @apply bg-[var(--color-bg-tile)] font-medium;
+        @apply bg-tile font-medium;
         @apply text-brand-textPrimary;
-        @apply border-[var(--color-border-subtle)];
+        @apply border-border-subtle;
         @apply placeholder-brand-textSecondary;
         @apply hover:border-brand-accent;
         @apply focus:outline-none focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10;
@@ -390,9 +393,9 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     .input-field-sm {
         @apply w-full px-3 py-2 rounded-lg border-2 transition-all duration-200;
-        @apply bg-[var(--color-bg-tile)] font-medium text-sm;
+        @apply bg-tile font-medium text-sm;
         @apply text-brand-textPrimary;
-        @apply border-[var(--color-border-subtle)];
+        @apply border-border-subtle;
         @apply placeholder-brand-textSecondary;
         @apply hover:border-brand-accent;
         @apply focus:outline-none focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10;
@@ -403,8 +406,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        ============================================ */
     .card-interactive {
         @apply rounded-xl border transition-all duration-200 cursor-pointer;
-        @apply border-[var(--color-border-subtle)];
-        @apply bg-[var(--color-bg-tile)];
+        @apply border-border-subtle;
+        @apply bg-tile;
         @apply hover:border-brand-accent;
         @apply active:scale-[0.98];
         /* Light mode: Layered soft shadows for tactile depth */
@@ -444,8 +447,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     /* Glass Panel: Glassmorphism effect */
     .glass-panel {
         background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
+        backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
@@ -535,13 +538,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     .nav-item {
         @apply relative flex items-center rounded-xl font-bold overflow-hidden transition-float;
         /* Default State: Elevated Tile */
-        background-color: var(--color-bg-tile);
+        background-color: var(--color-tile);
         border: 1px solid var(--color-border-subtle);
         @apply text-brand-textSecondary;
         box-shadow: var(--shadow-layered-lg);
         transform: translateY(var(--elevation-tile-default, -4px));
-        backdrop-filter: blur(var(--tile-blur, 0px));
         -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
+        backdrop-filter: blur(var(--tile-blur, 0px));
     }
 
     /* Hover State: Higher magnetic pull + Accent Border */
@@ -557,7 +560,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     /* Active State: Option 6a refined (Single Etched Top) */
     .nav-item.active {
         @apply text-brand-textPrimary;
-        background-color: var(--color-bg-tile);
+        background-color: var(--color-tile);
         border: 1px solid var(--color-border-subtle);
         border-top: var(--horizon-border-top, 1px solid var(--color-border-subtle));
         border-left: var(--horizon-border-left, 1px solid var(--color-border-subtle));
@@ -579,12 +582,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        ============================================ */
     .levitated-tile {
         @apply transition-float;
-        background-color: var(--color-bg-tile);
+        background-color: var(--color-tile);
         border: 1px solid var(--color-border-subtle);
         box-shadow: var(--shadow-layered-lg);
         transform: translateY(var(--elevation-tile-default, -4px));
-        backdrop-filter: blur(var(--tile-blur, 0px));
         -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
+        backdrop-filter: blur(var(--tile-blur, 0px));
         overflow: visible;
         /* Prevents shadow/elevation clipping */
     }
@@ -597,7 +600,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     /* Active State: "Horizon Etched" / "Active/Levitated" Aesthetic */
     .levitated-tile.active {
         color: white;
-        background-color: var(--color-bg-tile);
+        background-color: var(--color-tile);
         border: 1px solid var(--color-border-subtle);
         border-top: var(--horizon-border-top, 1px solid var(--color-border-subtle));
         border-left: var(--horizon-border-left, 1px solid var(--color-border-subtle));
@@ -609,13 +612,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .divider-industrial {
-        @apply border-[var(--color-border-subtle)];
+        @apply border-border-subtle;
     }
 
     /* Card with elevation - for form cards and content panels */
     .card-elevated {
-        @apply bg-[var(--color-bg-tile)];
-        @apply rounded-2xl border border-[var(--color-border-subtle)];
+        @apply bg-tile;
+        @apply rounded-2xl border border-border-subtle;
         box-shadow: var(--shadow-layered);
     }
 
@@ -681,19 +684,19 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
        Skeleton Loading Placeholder
        ============================================ */
     .skeleton-box {
-        @apply bg-[var(--color-bg-tile-hover)] rounded animate-pulse;
+        @apply bg-tile-hover rounded animate-pulse;
     }
 
     .skeleton-text {
-        @apply bg-[var(--color-bg-tile-hover)] rounded animate-pulse h-4 w-full;
+        @apply bg-tile-hover rounded animate-pulse h-4 w-full;
     }
 
     .skeleton-text-sm {
-        @apply bg-[var(--color-bg-tile-hover)] rounded animate-pulse h-3 w-3/4;
+        @apply bg-tile-hover rounded animate-pulse h-3 w-3/4;
     }
 
     .skeleton-card {
-        @apply bg-[var(--color-bg-tile-hover)] animate-pulse h-20 w-full rounded-2xl;
+        @apply bg-tile-hover animate-pulse h-20 w-full rounded-2xl;
     }
 
     /* ============================================
@@ -775,12 +778,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     .input-base {
         @apply w-full px-4 py-2.5 rounded-xl border transition-float;
-        @apply bg-[var(--color-bg-tile)] text-base min-h-[44px];
+        @apply bg-tile text-base min-h-[44px];
         @apply text-brand-textPrimary;
-        @apply border-[var(--color-border-subtle)];
+        @apply border-border-subtle;
         @apply placeholder-brand-textMuted font-medium;
         @apply shadow-layered;
-        @apply hover:border-[var(--color-border-strong)] hover:shadow-layered-lg;
+        @apply hover:border-border-strong hover:shadow-layered-lg;
 
         /* Override browser autofill background */
         &:-webkit-autofill,
@@ -794,16 +797,16 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     }
 
     .input-focus {
-        @apply focus:outline-none focus:border-[var(--color-border-strong)];
-        @apply focus:ring-2 focus:ring-[var(--color-border-subtle)];
-        @apply focus:bg-[var(--color-bg-tile-hover)];
+        @apply focus:outline-none focus:border-border-strong;
+        @apply focus:ring-2 focus:ring-border-subtle;
+        @apply focus:bg-tile-hover;
     }
 
     .btn-primary-green {
         @apply w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold transition-float;
-        @apply bg-[var(--color-bg-tile)] text-brand-textPrimary text-base;
-        @apply border border-[var(--color-border-subtle)] shadow-layered;
-        @apply hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50 hover:shadow-layered-lg;
+        @apply bg-tile text-brand-textPrimary text-base;
+        @apply border border-border-subtle shadow-layered;
+        @apply hover:bg-tile-hover hover:border-brand-accent/50 hover:shadow-layered-lg;
         @apply button-lift-dynamic;
         @apply focus:outline-none focus:ring-2 focus:ring-brand-accent/20;
         @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none;
@@ -811,13 +814,13 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     .settings-btn {
         @apply p-2 rounded-xl transition-all duration-200;
-        @apply bg-[var(--color-bg-tile)];
-        @apply border border-[var(--color-border-subtle)];
+        @apply bg-tile;
+        @apply border border-border-subtle;
     }
 
     .card-base {
-        @apply bg-[var(--color-bg-tile)];
-        @apply border border-[var(--color-border-subtle)];
+        @apply bg-tile;
+        @apply border border-border-subtle;
         @apply rounded-2xl transition-all shadow-layered-sm;
     }
 
@@ -893,14 +896,14 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
     /* Header fade - gradient fade over bottom 16px (72-88px) */
     .header-fade {
-        background: var(--color-bg-tile);
+        background: var(--color-tile);
         -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 16px), transparent 100%);
         mask-image: linear-gradient(to bottom, black calc(100% - 16px), transparent 100%);
     }
 
     /* Footer fade - masks entire element, fading top 12px */
     .footer-fade {
-        background: var(--color-bg-tile);
+        background: var(--color-tile);
         -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12px);
         mask-image: linear-gradient(to bottom, transparent 0%, black 12px);
     }
@@ -1105,8 +1108,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Inline code styling */
 .ProseMirror code {
-    background-color: var(--color-brand-accent);
-    background-opacity: 0.1;
+    background-color: color-mix(in srgb, var(--color-brand-accent) 10%, transparent);
     border-radius: 0.25rem;
     padding: 0.15rem 0.4rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -1281,8 +1283,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Inline code styling */
 .code-block-renderer code:not(pre code) {
-    background-color: var(--color-brand-accent);
-    background-opacity: 0.1;
+    background-color: color-mix(in srgb, var(--color-brand-accent) 10%, transparent);
     border-radius: 0.25rem;
     padding: 0.15rem 0.4rem;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

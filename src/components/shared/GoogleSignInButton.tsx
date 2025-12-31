@@ -33,9 +33,9 @@ const GoogleSignInButton: React.FC<GoogleSignInButtonProps> = ({
             onClick={onClick}
             disabled={isLoading || disabled}
             className="flex items-center justify-center gap-3 w-full py-3.5 px-6 rounded-xl
-                bg-[var(--color-bg-tile)] text-brand-textPrimary text-sm font-black uppercase tracking-widest
-                border border-[var(--color-border-subtle)] shadow-layered
-                hover:bg-[var(--color-bg-tile-hover)] hover:border-blue-500/50 hover:shadow-layered-lg
+                bg-tile text-brand-textPrimary text-sm font-black uppercase tracking-widest
+                border border-border-subtle shadow-layered
+                hover:bg-tile-hover hover:border-blue-500/50 hover:shadow-layered-lg
                 transition-float button-lift-dynamic
                 disabled:opacity-50 disabled:cursor-not-allowed"
         >

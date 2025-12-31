@@ -32,7 +32,7 @@ export function CodeBlockRenderer({ html, className = '', isExpanded = true }: C
             // Extract text content from the code block for copying
             const codeMatch = match[0].match(/<code[^>]*>([\s\S]*?)<\/code>/i);
             const codeText = codeMatch
-                ? codeMatch[1].replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
+                ? codeMatch[1]!.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
                 : match[0].replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
 
             segments.push({ type: 'code', content: match[0], codeText });
@@ -129,7 +129,7 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
     };
 
     return (
-        <div className="code-block-wrapper relative rounded-xl border border-[var(--color-border-subtle)] my-4 transition-all hover:border-[var(--color-border-strong)] w-full max-w-full overflow-hidden shadow-layered-sm">
+        <div className="code-block-wrapper relative rounded-xl border border-border-subtle my-4 transition-all hover:border-border-strong w-full max-w-full overflow-hidden shadow-layered-sm">
             {/* Copy button - React controlled */}
             <button
                 onClick={handleCopy}
@@ -137,9 +137,9 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
                 className={`absolute top-2 right-2 flex items-center gap-1.5 px-3 py-1 rounded-xl border 
                     ${copied
                         ? 'border-green-400 text-green-400'
-                        : 'border-[var(--color-border-subtle)] text-brand-textMuted hover:border-brand-accent/50 hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]'
+                        : 'border-border-subtle text-brand-textMuted hover:border-brand-accent/50 hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)'
                     }
-                    bg-[var(--color-bg-tile)]/90 backdrop-blur-sm transition-all font-bold text-xs tracking-tight
+                    bg-(--color-bg-tile)/90 backdrop-blur-sm transition-all font-bold text-xs tracking-tight
                     focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 z-10`}
             >
                 {copied ? (
@@ -157,7 +157,7 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
 
             {/* Code block content - scrolls horizontally, grows vertically */}
             <div
-                className="code-block-content bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-sm p-4 pr-24 w-full whitespace-pre-wrap break-words"
+                className="code-block-content bg-tile-alt text-brand-textPrimary text-sm p-4 pr-24 w-full whitespace-pre-wrap wrap-break-word"
                 dangerouslySetInnerHTML={{ __html: html }}
             />
         </div>

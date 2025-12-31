@@ -64,7 +64,7 @@ export const Confetti: React.FC<{ active: boolean; duration?: number }> = ({
 
     return (
         <div
-            className="fixed inset-0 pointer-events-none z-[2000] overflow-hidden"
+            className="fixed inset-0 pointer-events-none z-2000 overflow-hidden"
             aria-hidden="true"
         >
             {pieces.map(piece => (
@@ -152,7 +152,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
         <>
             <Confetti active={showConfetti} />
             <div
-                className="fixed inset-0 z-[1500] flex items-center justify-center p-4"
+                className="fixed inset-0 z-1500 flex items-center justify-center p-4"
                 onClick={type === 'milestone' ? undefined : onClose}
             >
                 {/* Backdrop */}
@@ -160,7 +160,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
 
                 {/* Modal */}
                 <div
-                    className="relative bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered-lg p-8 text-center max-w-sm w-full animate-celebration-pop"
+                    className="relative bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered-lg p-8 text-center max-w-sm w-full animate-celebration-pop"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Animated icon */}
@@ -257,7 +257,7 @@ export const ProgressCelebration: React.FC<ProgressCelebrationProps> = ({
     };
 
     return (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[1000] animate-slide-up-fade">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-1000 animate-slide-up-fade">
             <div className="bg-brand-accent text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2">
                 <Star className="w-4 h-4" />
                 {messages[milestoneType]}
