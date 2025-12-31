@@ -34,10 +34,8 @@ const GridCell: React.FC<{
             className={`group relative flex flex-col items-center gap-1 p-1.5 rounded-lg transition-float overflow-visible
                 ${immersive ? 'justify-center min-h-[44px]' : 'items-center'}
                 ${noExample
-                    ? (isSelected ? 'border-2 border-brand-textPrimary bg-[var(--color-bg-tile)]' : 'border-2 border-transparent hover:bg-[var(--color-bg-tile-alt)]')
-                    : `bg-[var(--color-bg-tile)] border-2 shadow-layered
-                       transform translate-y-[var(--elevation-tile-default)]
-                       hover:translate-y-[var(--elevation-tile-hover)]
+                    ? (isSelected ? 'border-2 border-brand-textPrimary bg-[var(--color-bg-tile)]' : 'border-2 border-transparent hover:bg-[var(--color-bg-tile-hover)]')
+                    : `bg-[var(--color-bg-tile)] border-2 lift-dynamic
                        ${isSelected ? 'border-brand-textPrimary' : 'border-[var(--color-border-subtle)]'}
                        hover:border-brand-accent/50
                        hover:shadow-[var(--shadow-layered-lg),0_0_var(--glow-blur)_var(--glow-spread)_var(--glow-color)]
@@ -209,10 +207,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                 {onShowJoinCode && (
                     <button
                         onClick={() => { onShowJoinCode(); onClose(); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold transition-float
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold
                             bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)]
-                            shadow-layered transform translate-y-[var(--elevation-tile-default)]
-                            hover:translate-y-[var(--elevation-tile-hover)] hover:shadow-layered-lg hover:border-brand-accent/50"
+                            button-lift-dynamic hover:border-brand-accent/50"
                     >
                         <QrCode size={16} className="text-brand-accent" />
                         <span className="text-xs">Join Code</span>
@@ -221,10 +218,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                 {onLogout && (
                     <button
                         onClick={() => { onLogout(); onClose(); }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold transition-float
+                        className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold
                             bg-[var(--color-bg-tile)] text-brand-textPrimary border border-[var(--color-border-subtle)]
-                            shadow-layered transform translate-y-[var(--elevation-tile-default)]
-                            hover:translate-y-[var(--elevation-tile-hover)] hover:shadow-layered-lg hover:border-red-500/50"
+                            button-lift-dynamic hover:border-red-500/50"
                     >
                         <LogOut size={16} className="text-red-500" />
                         <span className="text-xs">Sign Out</span>
@@ -355,7 +351,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 className="w-8 h-5 rounded-sm bg-[var(--color-brand-textSecondary)]"
                                 style={{
                                     transform: `translateY(${e.lift})`,
-                                    boxShadow: e.shadow
+                                    boxShadow: 'var(--shadow-layered)'
                                 }}
                             />
                         </GridCell>

@@ -21,10 +21,10 @@ const StudentView = lazy(() => import('./components/student/StudentView'));
 
 // Loading fallback component
 const LoadingSpinner = () => (
-    <div className="h-screen w-screen flex items-center justify-center bg-brand-lightSurface dark:bg-brand-darkSurface">
+    <div className="h-screen w-screen flex items-center justify-center bg-[var(--bg-page)]">
         <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
-            <p className="text-sm font-bold text-brand-textDarkSecondary dark:text-brand-textSecondary animate-pulse">
+            <p className="text-sm font-bold text-brand-textSecondary animate-pulse uppercase tracking-widest">
                 INITIALIZING THE DAY...
             </p>
         </div>
@@ -179,7 +179,7 @@ const App = () => {
         <ThemeProvider role={userRole} classroomColor={view === 'student' ? studentClassroomColor : undefined}>
             <TourProvider>
                 <SettingsManager />
-                <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent transition-colors duration-200">
+                <div className="relative z-10 flex flex-col h-[100dvh] bg-transparent">
                     {/* Skip Link - Accessibility: allows keyboard users to bypass navigation */}
                     <a href="#main-content" className="skip-link">
                         Skip to main content

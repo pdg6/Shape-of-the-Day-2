@@ -116,7 +116,9 @@ const SettingsManager: React.FC = () => {
 
         let borderSubtle = tile.border;
         let borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
-        let tileHover = isDarkTile ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)';
+        let tileHover = isDarkTile
+            ? 'color-mix(in srgb, var(--color-bg-tile), white 3%)'
+            : 'color-mix(in srgb, var(--color-bg-tile), black 3%)';
 
         // Horizon Etch: top, left, or off
         let horizonTop = '1px solid var(--color-border-subtle)';

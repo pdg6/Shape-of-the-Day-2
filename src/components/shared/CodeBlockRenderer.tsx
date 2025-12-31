@@ -51,8 +51,8 @@ export function CodeBlockRenderer({ html, className = '', isExpanded = true }: C
     if (!isExpanded) {
         return (
             <div
-                className={`code-block-renderer prose prose-base dark:prose-invert max-w-none
-                    prose-headings:text-brand-textDarkPrimary dark:prose-headings:text-brand-textPrimary
+                className={`code-block-renderer prose prose-base max-w-none
+                    prose-headings:text-brand-textPrimary
                     prose-headings:font-bold prose-headings:mt-4 prose-headings:mb-2
                     prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5 prose-li:my-0.5 prose-li:marker:text-brand-accent
                     prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-5
@@ -66,8 +66,8 @@ export function CodeBlockRenderer({ html, className = '', isExpanded = true }: C
     }
 
     return (
-        <div className={`code-block-renderer prose prose-base dark:prose-invert max-w-none
-            prose-headings:text-brand-textDarkPrimary dark:prose-headings:text-brand-textPrimary
+        <div className={`code-block-renderer prose prose-base max-w-none
+            prose-headings:text-brand-textPrimary
             prose-headings:font-bold prose-headings:mt-4 prose-headings:mb-2
             prose-ul:my-2 prose-ul:list-disc prose-ul:pl-5 prose-li:my-0.5 prose-li:marker:text-brand-accent
             prose-ol:my-2 prose-ol:list-decimal prose-ol:pl-5
@@ -129,7 +129,7 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
     };
 
     return (
-        <div className="code-block-wrapper relative rounded-xl border border-slate-200 dark:border-white/10 my-4 transition-all hover:border-slate-300 dark:hover:border-white/20 w-full max-w-full overflow-hidden shadow-layered-sm">
+        <div className="code-block-wrapper relative rounded-xl border border-[var(--color-border-subtle)] my-4 transition-all hover:border-[var(--color-border-strong)] w-full max-w-full overflow-hidden shadow-layered-sm">
             {/* Copy button - React controlled */}
             <button
                 onClick={handleCopy}
@@ -137,9 +137,9 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
                 className={`absolute top-2 right-2 flex items-center gap-1.5 px-3 py-1 rounded-xl border 
                     ${copied
                         ? 'border-green-400 text-green-400'
-                        : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white hover:bg-white/5'
+                        : 'border-[var(--color-border-subtle)] text-brand-textMuted hover:border-brand-accent/50 hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)]'
                     }
-                    bg-[#1a1d24]/90 backdrop-blur-sm transition-all font-bold text-xs tracking-tight
+                    bg-[var(--color-bg-tile)]/90 backdrop-blur-sm transition-all font-bold text-xs tracking-tight
                     focus:outline-none focus:border-brand-accent/50 focus:ring-4 focus:ring-brand-accent/5 z-10`}
             >
                 {copied ? (
@@ -157,7 +157,7 @@ function CodeBlock({ html, codeText }: { html: string; codeText: string }) {
 
             {/* Code block content - scrolls horizontally, grows vertically */}
             <div
-                className="code-block-content bg-gray-900 text-gray-100 text-sm p-4 pr-24 w-full whitespace-pre-wrap break-words"
+                className="code-block-content bg-[var(--color-bg-tile-alt)] text-brand-textPrimary text-sm p-4 pr-24 w-full whitespace-pre-wrap break-words"
                 dangerouslySetInnerHTML={{ __html: html }}
             />
         </div>

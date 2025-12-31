@@ -267,18 +267,20 @@ export function DatePicker({
             {typeof document !== 'undefined' && isOpen && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-bg-tile border border-slate-200 dark:border-white/10 rounded-2xl shadow-layered-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] rounded-2xl shadow-layered-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,
+                        backdropFilter: 'blur(var(--tile-blur, 0px))',
+                        WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))',
                     }}
                 >
                     {/* Today Button */}
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-200 dark:border-white/5">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--color-border-subtle)]">
                         <button
                             type="button"
                             onClick={handleToday}
-                            className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors"
+                            className="text-xs font-bold text-brand-accent hover:opacity-80 transition-opacity"
                         >
                             Today
                         </button>
@@ -288,7 +290,7 @@ export function DatePicker({
                                 setIsOpen(false);
                                 onClose?.();
                             }}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            className="text-brand-textMuted hover:text-brand-textPrimary transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -313,9 +315,9 @@ export function DatePicker({
                         classNames={{
                             ...getDefaultClassNames(),
                             root: `${getDefaultClassNames().root} rdp-custom`,
-                            disabled: 'text-gray-300 dark:text-white/10 cursor-not-allowed',
-                            outside: 'text-gray-300 dark:text-white/10 opacity-50',
-                            chevron: 'fill-gray-500 dark:fill-gray-400',
+                            disabled: 'text-brand-textMuted opacity-20 cursor-not-allowed',
+                            outside: 'text-brand-textMuted opacity-40',
+                            chevron: 'fill-brand-textSecondary',
                         }}
                     />
                 </div>,

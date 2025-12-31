@@ -168,7 +168,7 @@ export const ClassFormModal: React.FC = () => {
                                     key={color}
                                     onClick={() => setFormData({ ...formData, color })}
                                     /* Fitts's Law: Larger touch targets (44x44px) for color selection */
-                                    className={`w-11 h-11 rounded-full border-2 transition-all ${formData.color === color ? 'border-brand-textDarkPrimary dark:border-white scale-110 ring-2 ring-offset-2 ring-offset-brand-lightSurface dark:ring-offset-brand-darkSurface' : 'border-transparent hover:scale-105'}`}
+                                    className={`w-11 h-11 rounded-full border-2 transition-all ${formData.color === color ? 'border-brand-textPrimary scale-110 ring-2 ring-offset-2 ring-offset-[var(--bg-page)]' : 'border-transparent hover:scale-105'}`}
                                     style={{ backgroundColor: color, boxShadow: formData.color === color ? `0 0 0 2px ${color}40` : undefined }}
                                     title={`Select ${color} as theme color`}
                                     aria-label={`Select theme color ${color}`}
@@ -181,7 +181,7 @@ export const ClassFormModal: React.FC = () => {
                     {/* Primary action button - Large touch target */}
                     <button
                         onClick={handleSaveClass}
-                        className="w-full py-3 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:border-brand-accent/40 font-bold rounded-xl mt-4 transition-all duration-300 transition-float button-lift-dynamic shadow-layered-sm"
+                        className="w-full py-3 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent border border-brand-accent/20 hover:border-brand-accent/40 font-bold rounded-xl mt-4 button-lift-dynamic"
                     >
                         {editingClass ? 'Save Changes' : 'Create Class'}
                     </button>
@@ -189,7 +189,7 @@ export const ClassFormModal: React.FC = () => {
                     {editingClass && (
                         <button
                             onClick={handleDeleteClass}
-                            className="w-full py-3 bg-red-500/10 text-red-500 border border-red-500/20 hover:border-red-500/40 font-bold rounded-xl transition-all duration-300 transition-float button-lift-dynamic shadow-layered-sm flex items-center justify-center gap-2 mt-4"
+                            className="w-full py-3 bg-red-500/10 text-red-500 border border-red-500/20 hover:border-red-500/40 font-bold rounded-xl button-lift-dynamic flex items-center justify-center gap-2 mt-4"
                         >
                             <Trash2 className="w-4 h-4" />
                             Delete Class

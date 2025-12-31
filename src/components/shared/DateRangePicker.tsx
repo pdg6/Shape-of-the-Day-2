@@ -268,7 +268,7 @@ export function DateRangePicker({
                         cursor-pointer px-4 py-2.5 rounded-xl text-sm font-bold
                         border transition-float
                         bg-[var(--color-bg-tile)]
-                        shadow-layered-sm
+                        shadow-layered
                         hover:shadow-layered-lg
                         button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                         focus:outline-none focus:border-brand-accent
@@ -298,7 +298,7 @@ export function DateRangePicker({
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-float
                             bg-[var(--color-bg-tile)]
-                            shadow-layered-sm
+                            shadow-layered
                             hover:shadow-layered-lg
                             button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
@@ -308,10 +308,10 @@ export function DateRangePicker({
                                 ? 'border-brand-accent'
                                 : 'border-[var(--color-border-subtle)]'}
                             ${startDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
-                            ${buttonClassName || 'py-2.5 text-sm'}
+                            ${buttonClassName}
                         `}
                     >
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors group-hover:text-brand-accent">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary pointer-events-none transition-colors group-hover:text-brand-accent">
                             <CalendarIcon size={14} />
                         </span>
                         <span className="block truncate">
@@ -320,7 +320,7 @@ export function DateRangePicker({
                     </button>
 
                     {/* Arrow indicator */}
-                    <div className="flex items-center text-gray-300 dark:text-gray-600">
+                    <div className="flex items-center text-brand-textMuted">
                         <ArrowRight size={16} />
                     </div>
 
@@ -335,7 +335,7 @@ export function DateRangePicker({
                             pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold text-left
                             border transition-float
                             bg-[var(--color-bg-tile)]
-                            shadow-layered-sm
+                            shadow-layered
                             hover:shadow-layered-lg
                             button-lift-dynamic hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] hover:border-brand-accent/50
                             focus:outline-none focus:border-brand-accent
@@ -345,10 +345,10 @@ export function DateRangePicker({
                                 ? 'border-brand-accent'
                                 : 'border-[var(--color-border-subtle)]'}
                             ${endDate ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}
-                            ${buttonClassName || 'py-2.5 text-sm'}
+                            ${buttonClassName}
                         `}
                     >
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none transition-colors group-hover:text-brand-accent">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-textSecondary pointer-events-none transition-colors group-hover:text-brand-accent">
                             <CalendarIcon size={14} />
                         </span>
                         <span className="block truncate">
@@ -362,16 +362,18 @@ export function DateRangePicker({
             {typeof document !== 'undefined' && activeField && createPortal(
                 <div
                     ref={popoverRef}
-                    className="fixed z-[9999] bg-brand-lightSurface dark:bg-bg-tile border border-slate-200 dark:border-white/10 rounded-2xl shadow-layered-lg p-3 animate-fade-in"
+                    className="fixed z-[9999] bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] rounded-2xl shadow-layered-lg p-3 animate-fade-in"
                     style={{
                         top: position.top,
                         left: position.left,
+                        backdropFilter: 'blur(var(--tile-blur, 0px))',
+                        WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))',
                     }}
                 >
                     {/* Header */}
-                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-slate-200 dark:border-white/5">
+                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-[var(--color-border-subtle)]">
                         <div className="flex items-center gap-3">
-                            <span className="text-xs font-semibold text-brand-textDarkSecondary dark:text-brand-textSecondary uppercase">
+                            <span className="text-xs font-semibold text-brand-textSecondary uppercase">
                                 {activeField === 'start' ? startLabel : endLabel}
                             </span>
                             <button
@@ -385,7 +387,7 @@ export function DateRangePicker({
                         <button
                             type="button"
                             onClick={() => setActiveField(null)}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            className="text-brand-textSecondary hover:text-brand-textPrimary transition-colors"
                         >
                             <X size={16} />
                         </button>
@@ -393,12 +395,12 @@ export function DateRangePicker({
 
                     {/* Selected Range Display */}
                     {(isStartValid || isEndValid) && (
-                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-xs">
-                            <span className={activeField === 'start' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
+                        <div className="flex items-center justify-center gap-2 mb-2 py-1.5 px-2 bg-[var(--color-bg-tile-alt)] rounded-lg text-xs">
+                            <span className={activeField === 'start' ? 'font-semibold text-brand-accent' : 'text-brand-textSecondary'}>
                                 {startDisplay || '—'}
                             </span>
-                            <ArrowRight size={12} className="text-gray-400" />
-                            <span className={activeField === 'end' ? 'font-semibold text-brand-accent' : 'text-gray-500'}>
+                            <ArrowRight size={12} className="text-brand-textSecondary" />
+                            <span className={activeField === 'end' ? 'font-semibold text-brand-accent' : 'text-brand-textSecondary'}>
                                 {endDisplay || '—'}
                             </span>
                         </div>
@@ -434,9 +436,9 @@ export function DateRangePicker({
                         classNames={{
                             ...getDefaultClassNames(),
                             root: `${getDefaultClassNames().root} rdp-custom`,
-                            disabled: 'text-gray-300 dark:text-white/10 cursor-not-allowed',
-                            outside: 'text-gray-300 dark:text-white/10 opacity-50',
-                            chevron: 'fill-gray-500 dark:fill-gray-400',
+                            disabled: 'text-brand-textMuted opacity-20 cursor-not-allowed',
+                            outside: 'text-brand-textMuted opacity-50',
+                            chevron: 'fill-brand-textSecondary transition-colors hover:fill-brand-accent',
                         }}
                     />
                 </div>,

@@ -341,7 +341,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                     {/* Questions/Comments - expands to fill space */}
                                     <td className="p-4">
                                         {student.currentMessage ? (
-                                            <span className={`text-sm italic ${needsHelp ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'}`} title={student.currentMessage}>
+                                            <span className={`text-sm italic ${needsHelp ? 'text-red-500' : 'text-brand-textSecondary'}`} title={student.currentMessage}>
                                                 "{student.currentMessage}"
                                             </span>
                                         ) : (
@@ -373,7 +373,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
 const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ tasks, students }) => {
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-12 text-brand-textSecondary bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-dashed border-slate-200 dark:border-white/10 shadow-layered-sm">
+            <div className="text-center py-12 text-brand-textSecondary bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
                 <Activity className="w-12 h-12 mb-4 opacity-20 mx-auto" />
                 <p>No tasks scheduled for today.</p>
             </div>
@@ -417,7 +417,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                     TASK {getHierarchicalNumber(task, tasks)}
                                 </span>
                                 {hasHelp && (
-                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-widest">
+                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-500 uppercase tracking-widest">
                                         <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
                                         ALERT
                                     </div>
@@ -478,14 +478,14 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             <div className="space-y-1.5">
                                 <div className="flex flex-col gap-0.5">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black text-brand-textDarkPrimary dark:text-white uppercase tracking-widest">Engagement</span>
-                                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary bg-white dark:bg-gray-900 px-1.5 rounded border border-black/5">
+                                        <span className="text-[10px] font-black text-brand-textPrimary uppercase tracking-widest">Engagement</span>
+                                        <span className="text-[10px] font-bold text-brand-textPrimary bg-[var(--color-bg-tile-hover)] px-1.5 rounded border border-[var(--color-border-subtle)]">
                                             {Math.round((totalWorking / (students.length || 1)) * 100)}%
                                         </span>
                                     </div>
                                     <span className="text-[9px] text-brand-textSecondary leading-tight">Students who have started</span>
                                 </div>
-                                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div className="h-1 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-brand-accent/60 transition-all duration-500 w-[var(--engagement-width)]"
                                         style={{ '--engagement-width': `${(totalWorking / (students.length || 1)) * 100}%` } as React.CSSProperties}
@@ -497,14 +497,14 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             <div className="space-y-1.5">
                                 <div className="flex flex-col gap-0.5">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black text-brand-textDarkPrimary dark:text-white uppercase tracking-widest">Friction</span>
-                                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary bg-white dark:bg-gray-900 px-1.5 rounded border border-black/5">
+                                        <span className="text-[10px] font-black text-brand-textPrimary uppercase tracking-widest">Friction</span>
+                                        <span className="text-[10px] font-bold text-brand-textPrimary bg-[var(--color-bg-tile-hover)] px-1.5 rounded border border-[var(--color-border-subtle)]">
                                             {totalWorking > 0 ? Math.round((helpStudents.length / (helpStudents.length + inProgressStudents.length || 1)) * 100) : 0}%
                                         </span>
                                     </div>
                                     <span className="text-[9px] text-brand-textSecondary leading-tight">Active students needing help</span>
                                 </div>
-                                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div className="h-1 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-brand-accent/60 transition-all duration-500 w-[var(--friction-width)]"
                                         style={{ '--friction-width': `${totalWorking > 0 ? (helpStudents.length / (helpStudents.length + inProgressStudents.length || 1)) * 100 : 0}%` } as React.CSSProperties}
@@ -516,14 +516,14 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             <div className="space-y-1.5">
                                 <div className="flex flex-col gap-0.5">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-black text-brand-textDarkPrimary dark:text-white uppercase tracking-widest">Completion</span>
-                                        <span className="text-[10px] font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary bg-white dark:bg-gray-900 px-1.5 rounded border border-black/5">
+                                        <span className="text-[10px] font-black text-brand-textPrimary uppercase tracking-widest">Completion</span>
+                                        <span className="text-[10px] font-bold text-brand-textPrimary bg-[var(--color-bg-tile-hover)] px-1.5 rounded border border-[var(--color-border-subtle)]">
                                             {Math.round((studentsCompleted.length / (students.length || 1)) * 100)}%
                                         </span>
                                     </div>
                                     <span className="text-[9px] text-brand-textSecondary leading-tight">Total finished for this task</span>
                                 </div>
-                                <div className="h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div className="h-1 bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-brand-accent/60 transition-all duration-500 w-[var(--completion-width)]"
                                         style={{ '--completion-width': `${(studentsCompleted.length / (students.length || 1)) * 100}%` } as React.CSSProperties}

@@ -41,7 +41,7 @@ import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { ItemType, Task, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
 import { useClassStore } from '../../store/appSettings';
 import { useTaskManager } from '../../hooks/useTaskManager';
-import { getHierarchicalNumber } from '../../utils/taskHierarchy';
+import { getHierarchicalNumber, getPredictiveNumber } from '../../utils/taskHierarchy';
 
 // Allowed file types for attachments
 const ALLOWED_FILE_TYPES = [
@@ -351,23 +351,24 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
     // Combined filtering: Hook-based (text/type) + Component-based (date/class)
     const filteredTasks = useMemo(() => {
-        // Match ShapeOfDay's strict filtering:
+        // Filter criteria:
         // 1. Must have start and end dates
         // 2. Must be within the selected date range
         // 3. Must be assigned to the current class
-        // 4. Must not be a draft (published)
+        // 4. Include drafts (they will be styled differently in the UI)
 
         return hierarchicalTasks.filter(task => {
             const startDate = task.startDate || '';
             const endDate = task.endDate || '';
             const isInRange = selectedDate >= startDate && selectedDate <= endDate;
-            const isPublished = task.status !== 'draft';
+            const isDraft = task.status === 'draft';
 
             const isAssignedToCurrentClass = currentClassId
                 ? task.selectedRoomIds?.includes(currentClassId)
                 : true;
 
-            return startDate && endDate && isInRange && isPublished && isAssignedToCurrentClass;
+            // Include task if it's in the selected date range OR if it's a draft
+            return startDate && endDate && isAssignedToCurrentClass && (isInRange || isDraft);
         });
     }, [hierarchicalTasks, selectedDate, currentClassId]);
 
@@ -532,7 +533,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                 )}
                                 {drafts.slice(0, 4).map(draft => {
                                     const isActive = editingTaskId === draft.id;
-                                    const hierNum = getHierarchicalNumber(draft, tasks, draft.endDate);
+                                    const hierNum = getHierarchicalNumber(draft, filteredTasks, draft.endDate);
                                     return (
                                         <button
                                             key={draft.id}
@@ -635,23 +636,55 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     {/* LEFT PANEL: Task Editor */}
                     <div className="flex-1 lg:col-span-3 flex flex-col">
                         {/* Main Form Area - Outer box removed for "Free-Floating" model */}
-                        <div className={`w-full space-y-6 flex-1 flex flex-col relative z-40 ${editingTaskId ? 'active' : ''}`}>
+                        <div className={`w-full space-y-4 flex-1 flex flex-col relative z-40 ${editingTaskId ? 'active' : ''}`}>
 
 
-                            {/* Title Input - inset box matching description */}
+                            {/* Title Input with Type selector and predictive number */}
                             <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] transition-all duration-300
-                                shadow-layered">
+                                shadow-layered flex items-center"
+                                style={{ backdropFilter: 'blur(var(--tile-blur, 0px))', WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))' }}>
+                                {/* Predictive Task Number - shows when typing or editing */}
+                                {(activeFormData.title.trim() || editingTaskId) && (
+                                    <span className="text-sm font-black text-brand-accent bg-brand-accent/10 px-2.5 py-1 rounded-lg ml-3 shrink-0">
+                                        {(() => {
+                                            if (editingTaskId) {
+                                                const task = tasks.find(t => t.id === editingTaskId);
+                                                return task ? getHierarchicalNumber(task, filteredTasks, selectedDate) : '...';
+                                            }
+                                            return getPredictiveNumber(activeFormData.parentId, filteredTasks, selectedDate, currentClassId);
+                                        })()}
+                                    </span>
+                                )}
                                 <input
                                     type="text"
                                     value={activeFormData.title}
                                     onChange={(e) => updateActiveCard('title', e.target.value)}
                                     placeholder="Title for this task..."
-                                    className="w-full text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textSecondary placeholder:opacity-100 text-brand-textPrimary"
+                                    className="flex-1 text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textSecondary placeholder:opacity-100 text-brand-textPrimary"
                                 />
+                                {/* Type selector - CUSTOM STYLE: No elevation, no background hover */}
+                                <div className="flex items-center gap-1.5 pr-3 shrink-0">
+                                    <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Type:</span>
+                                    <div className="w-[120px]">
+                                        <Select<ItemType>
+                                            value={activeFormData.type}
+                                            onChange={(value) => updateActiveCard('type', value || 'task')}
+                                            options={TYPE_OPTIONS.map(opt => ({
+                                                ...opt,
+                                                disabled: activeFormData.parentId
+                                                    ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
+                                                    : false
+                                            }))}
+                                            icon={getTypeIcon(activeFormData.type)}
+                                            iconColor={getTypeHexColor(activeFormData.type)}
+                                            buttonClassName="text-sm py-1 border-0 bg-transparent !shadow-none hover:bg-transparent hover:!translate-y-0"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Description & Attachments Section */}
-                            <div className="flex-1 min-h-[120px] relative">
+                            <div className="flex-1 min-h-[300px] relative">
                                 <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
                                     <div className="flex-1 overflow-y-auto transition-all duration-300">
                                         <RichTextEditor
@@ -786,202 +819,159 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                 </div>
                             </div>
 
-                            {/* Metadata Row: Type, Connections, Dates - all on one row */}
-                            <div className="flex items-end gap-2 lg:gap-4">
-                                {/* TYPE */}
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[9px] font-black text-brand-textSecondary uppercase tracking-widest">Type</span>
-                                    <div className="w-full lg:w-[160px]">
-                                        <Select<ItemType>
-                                            value={activeFormData.type}
-                                            onChange={(value) => updateActiveCard('type', value || 'task')}
-                                            options={TYPE_OPTIONS.map(opt => ({
-                                                ...opt,
-                                                disabled: activeFormData.parentId
-                                                    ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
-                                                    : false
-                                            }))}
-                                            icon={getTypeIcon(activeFormData.type)}
-                                            iconColor={getTypeHexColor(activeFormData.type)}
-                                            buttonClassName="text-sm"
-                                            dropUp
-                                        />
-                                    </div>
-                                </div>
 
-                                {/* CONNECTIONS - narrower on mobile */}
-                                <div className="flex flex-col gap-1 shrink-0">
-                                    <span className="text-[9px] font-black text-brand-textSecondary uppercase tracking-widest">Subtask</span>
-                                    <div className="w-24 lg:w-[44px]">
-                                        <Select<string>
-                                            value={activeFormData.parentId}
-                                            onChange={async (value) => {
-                                                if (value === '__add_child__') {
-                                                    // Need to save first if this is a new task
-                                                    if (!editingTaskId) {
-                                                        if (!activeFormData.title.trim()) {
-                                                            handleError(new Error("⚠️ Please add a title before adding children."));
-                                                            return;
-                                                        }
-                                                        // Save the current task first
-                                                        await handleSave();
-                                                        // handleSave sets editingTaskId, so we need to find the saved task
-                                                        // The task should now be in the tasks array
-                                                        const savedTask = tasks.find(t => t.title === activeFormData.title);
-                                                        if (savedTask) {
-                                                            handleAddSubtask(savedTask);
+                            {/* Action Row: Dates + Class + Connect (left) | Delete + Save (right) */}
+                            <div className="flex items-end justify-between gap-4 flex-wrap">
+                                {/* Left: Dates + Class Selector + Connect Tasks */}
+                                <div className="flex items-end gap-4 flex-wrap -mt-1">
+                                    {/* DATES */}
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Dates:</span>
+                                        <div className="hidden lg:block">
+                                            <DateRangePicker
+                                                startDate={activeFormData.startDate}
+                                                endDate={activeFormData.endDate}
+                                                onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                                onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                                startPlaceholder="Start"
+                                                endPlaceholder="Due"
+                                                compactMode={false}
+                                            />
+                                        </div>
+                                        {/* Mobile: Compact single button */}
+                                        <div className="lg:hidden">
+                                            <DateRangePicker
+                                                startDate={activeFormData.startDate}
+                                                endDate={activeFormData.endDate}
+                                                onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                                onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                                startPlaceholder="Start"
+                                                endPlaceholder="Due"
+                                                compactMode={true}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* ADD TO CLASS */}
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Add to Class:</span>
+                                        <div className="w-[200px]">
+                                            {loadingRooms ? (
+                                                <Loader className="w-4 h-4 animate-spin text-brand-textSecondary" />
+                                            ) : rooms.length === 0 ? (
+                                                <span className="text-xs text-brand-textSecondary">No classes found</span>
+                                            ) : (
+                                                <MultiSelect<string>
+                                                    value={activeFormData.selectedRoomIds}
+                                                    onChange={(values) => updateActiveCard('selectedRoomIds', values)}
+                                                    options={rooms.map(room => ({
+                                                        value: room.id,
+                                                        label: room.name,
+                                                        color: room.color || '#3B82F6',
+                                                    }))}
+                                                    placeholder="Select classes..."
+                                                    primaryValue={currentClassId || undefined}
+                                                />
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* CONNECT TASKS */}
+                                    <div className="flex flex-col gap-1">
+                                        <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Connect to:</span>
+                                        <div className="w-[44px]">
+                                            <Select<string>
+                                                value={activeFormData.parentId}
+                                                onChange={async (value) => {
+                                                    if (value === '__add_child__') {
+                                                        if (!editingTaskId) {
+                                                            if (!activeFormData.title.trim()) {
+                                                                handleError(new Error("⚠️ Please add a title before adding children."));
+                                                                return;
+                                                            }
+                                                            await handleSave();
+                                                            const savedTask = tasks.find(t => t.title === activeFormData.title);
+                                                            if (savedTask) {
+                                                                handleAddSubtask(savedTask);
+                                                            }
+                                                        } else {
+                                                            const currentTask = tasks.find(t => t.id === editingTaskId);
+                                                            if (currentTask) {
+                                                                handleAddSubtask(currentTask);
+                                                            }
                                                         }
                                                     } else {
-                                                        const currentTask = tasks.find(t => t.id === editingTaskId);
-                                                        if (currentTask) {
-                                                            handleAddSubtask(currentTask);
-                                                        }
+                                                        updateActiveCard('parentId', value);
                                                     }
-                                                } else {
-                                                    updateActiveCard('parentId', value);
-                                                }
-                                            }}
-                                            options={[
-                                                // Add child option based on type:
-                                                // - Project/Assignment can add Task
-                                                // - Task can add Subtask
-                                                // - Subtask cannot add anything
-                                                ...(['project', 'assignment'].includes(activeFormData.type) ? [
-                                                    { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: '#22c55e' },
-                                                    { value: '__divider_top__', label: '──────────', disabled: true },
-                                                ] : []),
-                                                ...(activeFormData.type === 'task' ? [
-                                                    { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
-                                                    { value: '__divider_top__', label: '──────────', disabled: true },
-                                                ] : []),
-                                                // Available parents
-                                                ...availableParents.map(parent => ({
-                                                    value: parent.id,
-                                                    label: parent.pathTitles?.length
-                                                        ? `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`
-                                                        : `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
-                                                    icon: getTypeIcon(parent.type),
-                                                    iconColor: getTypeHexColor(parent.type),
-                                                })),
-                                            ]}
-                                            placeholder=""
-                                            icon={Plus}
-                                            nullable
-                                            searchable
-                                            hideText
-                                            hideChevron
-                                            iconSize={22}
-                                            buttonClassName="lg:px-0"
-                                            dropUp
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* DATE RANGE - compact on mobile, separate buttons on desktop */}
-                                <div className="flex flex-col gap-1 ml-auto">
-                                    <span className="text-[9px] font-black text-brand-textSecondary uppercase tracking-widest hidden lg:block">Dates</span>
-                                    {/* Desktop: Separate start/end buttons */}
-                                    <div className="hidden lg:block">
-                                        <DateRangePicker
-                                            startDate={activeFormData.startDate}
-                                            endDate={activeFormData.endDate}
-                                            onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                            onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                            startPlaceholder="Start"
-                                            endPlaceholder="Due"
-                                            compactMode={false}
-                                        />
-                                    </div>
-                                    {/* Mobile: Compact single button */}
-                                    <div className="lg:hidden">
-                                        <DateRangePicker
-                                            startDate={activeFormData.startDate}
-                                            endDate={activeFormData.endDate}
-                                            onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                            onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                            startPlaceholder="Start"
-                                            endPlaceholder="Due"
-                                            compactMode={true}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Action Row: Class Selector + Delete/Save buttons */}
-                            <div className="pt-1 flex items-end justify-between gap-4">
-                                {/* Left: Class Selector */}
-                                <div className="flex flex-col gap-1">
-                                    <span className="text-[9px] font-black text-brand-textSecondary uppercase tracking-widest">Add to Class:</span>
-                                    <div className="w-[200px]">
-                                        {loadingRooms ? (
-                                            <Loader className="w-4 h-4 animate-spin text-brand-textSecondary" />
-                                        ) : rooms.length === 0 ? (
-                                            <span className="text-xs text-brand-textSecondary">No classes found</span>
-                                        ) : (
-                                            <MultiSelect<string>
-                                                value={activeFormData.selectedRoomIds}
-                                                onChange={(values) => updateActiveCard('selectedRoomIds', values)}
-                                                options={rooms.map(room => ({
-                                                    value: room.id,
-                                                    label: room.name,
-                                                    color: room.color || '#3B82F6',
-                                                }))}
-                                                placeholder="Select classes..."
-                                                primaryValue={currentClassId || undefined}
-                                                buttonClassName="py-2 text-sm"
+                                                }}
+                                                options={[
+                                                    ...(['project', 'assignment'].includes(activeFormData.type) ? [
+                                                        { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: '#22c55e' },
+                                                        { value: '__divider_top__', label: '──────────', disabled: true },
+                                                    ] : []),
+                                                    ...(activeFormData.type === 'task' ? [
+                                                        { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
+                                                        { value: '__divider_top__', label: '──────────', disabled: true },
+                                                    ] : []),
+                                                    ...availableParents.map(parent => ({
+                                                        value: parent.id,
+                                                        label: `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
+                                                        icon: getTypeIcon(parent.type),
+                                                        iconColor: getTypeHexColor(parent.type),
+                                                    })),
+                                                ]}
+                                                placeholder=""
+                                                icon={Plus}
+                                                nullable
+                                                searchable
+                                                hideText
+                                                hideChevron
+                                                iconSize={20}
+                                                dropUp
                                             />
-                                        )}
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Right: Action Buttons - Perfectly aligned with DateRangePicker above */}
-                                <div className="flex items-center gap-2 ml-auto w-full max-w-[224px] lg:max-w-none lg:w-[calc(100%-216px)] lg:flex-[0_0_224px]">
-                                    <div className="flex w-full gap-2 lg:gap-2">
-                                        {/* Delete Button - aligns with Start Date button */}
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(editingTaskId!)}
-                                            disabled={isSubmitting}
-                                            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-float
-                                                bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary
-                                                shadow-layered-sm
-                                                hover:shadow-layered-lg
-                                                button-lift-dynamic hover:border-red-400/50 hover:text-brand-textPrimary
-                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]
-                                                ${isNewTask ? 'invisible pointer-events-none' : ''}`}
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                            <span>Delete</span>
-                                        </button>
+                                {/* Right: Delete + Save */}
+                                <div className="flex items-center gap-2">
+                                    {/* Delete Button */}
+                                    <button
+                                        type="button"
+                                        onClick={() => handleDelete(editingTaskId!)}
+                                        disabled={isSubmitting}
+                                        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+                                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary
+                                            button-lift-dynamic hover:border-red-400/50 hover:text-brand-textPrimary
+                                            disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]
+                                            ${isNewTask ? 'invisible pointer-events-none' : ''}`}
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <span>Delete</span>
+                                    </button>
 
-                                        {/* Arrow/Width Spacer - Matches the space taken by ArrowRight (16px) in DateRangePicker */}
-                                        <div className="flex items-center justify-center w-4 lg:w-4 shrink-0" aria-hidden="true" />
-
-                                        {/* Save Button - aligns with Due Date button */}
-                                        <button
-                                            onClick={async () => {
-                                                if (!activeFormData.title.trim()) {
-                                                    handleError(new Error("⚠️ Please include a title before saving."));
-                                                    return;
-                                                }
-                                                await handleSave();
-                                            }}
-                                            disabled={isSubmitting || !activeFormData.title.trim()}
-                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-float
-                                                bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
-                                                shadow-layered-sm
-                                                hover:shadow-layered-lg
-                                                button-lift-dynamic hover:border-brand-accent/50
-                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
-                                        >
-                                            {isSubmitting || saveState === 'saving' ? (
-                                                <Loader className="w-3.5 h-3.5 animate-spin text-brand-accent" />
-                                            ) : (
-                                                <Check className="w-3.5 h-3.5 text-brand-accent" />
-                                            )}
-                                            <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
-                                        </button>
-                                    </div>
+                                    {/* Save Button */}
+                                    <button
+                                        onClick={async () => {
+                                            if (!activeFormData.title.trim()) {
+                                                handleError(new Error("⚠️ Please include a title before saving."));
+                                                return;
+                                            }
+                                            await handleSave();
+                                        }}
+                                        disabled={isSubmitting || !activeFormData.title.trim()}
+                                        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+                                            bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                                            button-lift-dynamic hover:border-brand-accent/50
+                                            disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
+                                    >
+                                        {isSubmitting || saveState === 'saving' ? (
+                                            <Loader className="w-3.5 h-3.5 animate-spin text-brand-accent" />
+                                        ) : (
+                                            <Check className="w-3.5 h-3.5 text-brand-accent" />
+                                        )}
+                                        <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1074,6 +1064,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 className={`
                                                 group relative p-3 rounded-xl transition-float cursor-pointer levitated-tile
                                                 ${isEditing ? 'active' : ''}
+                                                ${task.status === 'draft' ? 'opacity-50' : ''}
                                             `}
                                             >
 

@@ -75,7 +75,7 @@ export function RichTextEditor({
         content: value,
         editorProps: {
             attributes: {
-                class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[160px] px-4 py-3 caret-brand-accent text-brand-textPrimary/80',
+                class: 'prose prose-sm max-w-none focus:outline-none min-h-[160px] px-4 py-3 caret-brand-accent text-brand-textPrimary/80',
             },
         },
         onUpdate: ({ editor }) => {
@@ -151,6 +151,7 @@ export function RichTextEditor({
     return (
         <div
             className={`flex flex-col rounded-xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
+            style={{ backdropFilter: 'blur(var(--tile-blur, 0px))', WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))' }}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}

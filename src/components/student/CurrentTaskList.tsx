@@ -372,10 +372,11 @@ const containsHtml = (str: string): boolean => {
 };
 
 // Get hierarchical number for nested tasks
-const getHierarchicalNumber = (task: Task, allTasks: Task[]): string => {
+const getHierarchicalNumber = (task: Task | undefined, allTasks: Task[]): string => {
+    if (!task) return '...';
     const siblings = task.parentId
-        ? allTasks.filter(t => t.parentId === task.parentId)
-        : allTasks.filter(t => !t.parentId);
+        ? allTasks.filter(t => t && t.parentId === task.parentId)
+        : allTasks.filter(t => t && !t.parentId);
 
     siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
     const myIndex = siblings.findIndex(t => t.id === task.id) + 1;

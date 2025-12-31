@@ -125,7 +125,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={strokeWidth}
-                className="text-slate-200 dark:text-white/10"
+                className="text-[var(--color-border-subtle)]"
             />
             {/* Colored segments */}
             {renderSegments()}
@@ -136,7 +136,7 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
                     y="12"
                     textAnchor="middle"
                     dominantBaseline="central"
-                    className="fill-current text-brand-textDarkPrimary dark:text-brand-textPrimary font-bold"
+                    className="fill-current text-brand-textPrimary font-bold"
                     style={{ fontSize: '8px' }}
                 >
                     {remaining}

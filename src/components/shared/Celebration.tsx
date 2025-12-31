@@ -160,7 +160,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
 
                 {/* Modal */}
                 <div
-                    className="relative bg-brand-lightSurface dark:bg-[#1a1d24] rounded-2xl border border-slate-200 dark:border-white/5 shadow-layered-lg p-8 text-center max-w-sm w-full animate-celebration-pop"
+                    className="relative bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered-lg p-8 text-center max-w-sm w-full animate-celebration-pop"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Animated icon */}
@@ -169,10 +169,10 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
                     </div>
 
                     {/* Message */}
-                    <h2 className="text-2xl font-bold text-brand-textDarkPrimary dark:text-brand-textPrimary mb-2">
+                    <h2 className="text-2xl font-bold text-brand-textPrimary mb-2">
                         {message || getDefaultMessage()}
                     </h2>
-                    <p className="text-brand-textDarkSecondary dark:text-brand-textSecondary">
+                    <p className="text-brand-textSecondary">
                         {subMessage || getDefaultSubMessage()}
                     </p>
 
