@@ -722,459 +722,461 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
     );
 
     return (
-        <PageLayout header={headerContent}>
-            {/* Header with Filters */}
-            <div className="flex-shrink-0">
-                {/* Search and Primary Filters */}
-                <div className="flex flex-col lg:flex-row items-center gap-4 pb-4 w-full">
-                    <div className="relative flex-1 w-full group">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-textMuted group-focus-within:text-brand-accent transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Search tasks..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="input-base pl-10 h-11"
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <button
-                            onClick={() => {
-                                const searchName = prompt('Enter a name for this search:');
-                                if (searchName) {
-                                    const newSavedSearch = {
-                                        name: searchName,
-                                        query: searchQuery,
-                                        filters: {
-                                            classroom: filterClassroom,
-                                            status: filterStatus,
-                                            date: filterDate,
-                                        },
-                                    };
-                                    setSavedSearches([...savedSearches, newSavedSearch]);
-                                }
-                            }}
-                            className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold transition-float
-                                bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary
-                                shadow-layered hover:shadow-layered-lg button-lift-dynamic hover:border-brand-accent/50 hover:text-brand-textPrimary whitespace-nowrap"
-                        >
-                            Save Search
-                        </button>
-
-                        {/* Saved Searches Dropdown */}
-                        <Select<string>
-                            value={null}
-                            nullable={true}
-                            placeholder="Saved Searches..."
-                            onChange={(value) => {
-                                if (value) {
-                                    const savedSearch = savedSearches.find(search => search.name === value);
-                                    if (savedSearch) {
-                                        setSearchQuery(savedSearch.query);
-                                        setFilterClassroom(savedSearch.filters.classroom);
-                                        setFilterStatus(savedSearch.filters.status as 'all' | 'active' | 'completed');
-                                        setFilterDate(savedSearch.filters.date);
-                                    }
-                                }
-                            }}
-                            options={savedSearches.map(search => ({
-                                value: search.name,
-                                label: search.name,
-                            }))}
-                        />
-
-                        {/* Classroom Filter */}
-                        <Select<string>
-                            value={filterClassroom === 'all' ? null : filterClassroom}
-                            onChange={(value) => setFilterClassroom(value || 'all')}
-                            options={rooms.map(room => ({
-                                value: room.id,
-                                label: room.name,
-                                iconColor: room.color || '#6B7280',
-                            }))}
-                            placeholder="All Classes"
-                            icon={Filter}
-                            nullable
-                        />
-
-                        {/* Status Filter */}
-                        <Select<string>
-                            value={filterStatus === 'all' ? null : filterStatus}
-                            onChange={(value) => setFilterStatus((value || 'all') as 'all' | 'active' | 'completed')}
-                            options={[
-                                { value: 'active', label: 'Active' },
-                                { value: 'completed', label: 'Completed' },
-                            ]}
-                            placeholder="All Status"
-                            nullable
-                        />
-                    </div>
-                </div>
-
-                {/* Date Filter Calendar Strip */}
-                <div className="pb-4 w-full flex-shrink-0">
-                    <div className="flex items-center gap-3 w-full">
-                        {/* All Dates Button */}
-                        <button
-                            onClick={() => setFilterDate(null)}
-                            className={`
-                                group flex-shrink-0 w-[130px] h-11 flex items-center justify-center rounded-xl font-bold text-sm transition-float button-lift-dynamic select-none cursor-pointer border
-                                focus:outline-none shadow-layered
-                                ${filterDate === null
-                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-textPrimary ring-0 shadow-layered-lg'
-                                    : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/50 hover:text-brand-textPrimary'
-                                }
-                            `}
-                        >
-                            All
-                        </button>
-
-                        {/* Left Arrow */}
-                        <button
-                            onClick={() => navigateCalendar('left')}
-                            className="group flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-float button-lift-dynamic border border-[var(--color-border-subtle)] shadow-layered"
-                            title="Previous week"
-                        >
-                            <ChevronLeft size={18} className="transition-colors group-hover:text-brand-accent" />
-                        </button>
-
-                        {/* Scrollable Calendar Days */}
-                        <div
-                            ref={calendarRef}
-                            onMouseDown={handleCalendarMouseDown}
-                            onMouseMove={handleCalendarMouseMove}
-                            onMouseUp={handleCalendarMouseUp}
-                            onMouseLeave={handleCalendarMouseLeave}
-                            className="flex-1 min-w-0 overflow-x-auto flex items-center justify-start gap-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none py-3 [mask-image:linear-gradient(to_right,transparent,black_2%,black_98%,transparent)]"
-                        >
-                            {calendarItems.map((item, index) => {
-                                // Weekend spanner (subtle gap)
-                                if (item.type === 'weekend') {
-                                    return <div key={`weekend-${index}`} className="w-4 flex-shrink-0" />;
-                                }
-
-                                // Day button
-                                const { dayName, dayNum, dateStr, isToday } = formatCalendarDate(item.date);
-                                const isSelected = filterDate === dateStr;
-                                const counts = getDateTaskCounts(dateStr);
-                                const hasItems = counts.projects > 0 || counts.assignments > 0 || counts.tasks > 0;
-                                return (
-                                    <button
-                                        key={dateStr}
-                                        ref={isSelected ? selectedRef : (isToday ? todayRef : null)}
-                                        data-date={dateStr}
-                                        onClick={() => !isDragging && setFilterDate(dateStr)}
-                                        className={`
-                                            group/btn relative flex-shrink-0 flex flex-col items-center justify-center w-[62px] h-[64px] rounded-xl transition-all duration-300 ease-in-out border
-                                            shadow-layered button-lift-dynamic
-                                            ${isSelected
-                                                ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-textPrimary shadow-layered-lg'
-                                                : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:text-brand-textPrimary hover:border-brand-accent/50 hover:bg-[var(--color-bg-tile-hover)]'
-                                            }
-                                        `}
-                                    >
-                                        <span className={`text-[10px] font-black uppercase tracking-wider mb-0.5 ${isSelected ? 'text-brand-accent' : 'text-brand-textMuted group-hover/btn:text-brand-accent/70'} ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>
-                                            {dayName}
-                                        </span>
-                                        <span className={`text-sm font-bold ${isSelected ? 'text-brand-textPrimary' : ''}`}>
-                                            {dayNum}
-                                        </span>
-                                    </button>
-                                );
-                            })}
+        <PageLayout header={headerContent} disableScroll>
+            <div className="h-full flex flex-col">
+                {/* Header with Filters */}
+                <div className="flex-shrink-0">
+                    {/* Search and Primary Filters */}
+                    <div className="flex flex-col lg:flex-row items-center gap-4 pb-4 w-full lift-dynamic transition-float">
+                        <div className="relative flex-1 w-full group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-textMuted group-focus-within:text-brand-accent transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Search tasks..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="input-base pl-10 h-11"
+                            />
                         </div>
 
-                        {/* Right Arrow */}
-                        <button
-                            onClick={() => navigateCalendar('right')}
-                            className="group flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-float button-lift-dynamic border border-[var(--color-border-subtle)] shadow-layered"
-                            title="Next week"
-                        >
-                            <ChevronRight size={18} className="transition-colors group-hover:text-brand-accent" />
-                        </button>
-
-                        {/* Jump to Date (Calendar Picker) */}
-                        <div className="relative flex-shrink-0">
-                            <DatePicker
-                                selected={filterDate ? new Date(filterDate) : null}
-                                onChange={(date: Date | null) => {
-                                    if (date) {
-                                        const formatted = date.toISOString().split('T')[0];
-                                        setFilterDate(formatted);
+                        <div className="flex items-center gap-3 w-full lg:w-auto">
+                            <button
+                                onClick={() => {
+                                    const searchName = prompt('Enter a name for this search:');
+                                    if (searchName) {
+                                        const newSavedSearch = {
+                                            name: searchName,
+                                            query: searchQuery,
+                                            filters: {
+                                                classroom: filterClassroom,
+                                                status: filterStatus,
+                                                date: filterDate,
+                                            },
+                                        };
+                                        setSavedSearches([...savedSearches, newSavedSearch]);
                                     }
                                 }}
-                                customInput={
-                                    <button className={`
-                                            group flex-shrink-0 w-[130px] h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-float button-lift-dynamic border shadow-layered
-                                            ${filterDate !== null
-                                            ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-textPrimary shadow-layered-lg'
-                                            : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/50 hover:text-brand-textPrimary hover:shadow-layered-lg'
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-bold transition-float
+                                bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textSecondary
+                                shadow-layered hover:shadow-layered-lg button-lift-dynamic hover:border-brand-accent/50 hover:text-brand-textPrimary whitespace-nowrap"
+                            >
+                                Save Search
+                            </button>
+
+                            {/* Saved Searches Dropdown */}
+                            <Select<string>
+                                value={null}
+                                nullable={true}
+                                placeholder="Saved Searches..."
+                                onChange={(value) => {
+                                    if (value) {
+                                        const savedSearch = savedSearches.find(search => search.name === value);
+                                        if (savedSearch) {
+                                            setSearchQuery(savedSearch.query);
+                                            setFilterClassroom(savedSearch.filters.classroom);
+                                            setFilterStatus(savedSearch.filters.status as 'all' | 'active' | 'completed');
+                                            setFilterDate(savedSearch.filters.date);
                                         }
-                                        `}>
-                                        <CalendarIcon className={`w-4 h-4 transition-colors flex-shrink-0 ${filterDate !== null ? 'text-brand-accent' : 'text-brand-textMuted group-hover:text-brand-accent'}`} />
-                                        <span>Select date</span>
-                                    </button>
-                                }
+                                    }
+                                }}
+                                options={savedSearches.map(search => ({
+                                    value: search.name,
+                                    label: search.name,
+                                }))}
+                            />
+
+                            {/* Classroom Filter */}
+                            <Select<string>
+                                value={filterClassroom === 'all' ? null : filterClassroom}
+                                onChange={(value) => setFilterClassroom(value || 'all')}
+                                options={rooms.map(room => ({
+                                    value: room.id,
+                                    label: room.name,
+                                    iconColor: room.color || '#6B7280',
+                                }))}
+                                placeholder="All Classes"
+                                icon={Filter}
+                                nullable
+                            />
+
+                            {/* Status Filter */}
+                            <Select<string>
+                                value={filterStatus === 'all' ? null : filterStatus}
+                                onChange={(value) => setFilterStatus((value || 'all') as 'all' | 'active' | 'completed')}
+                                options={[
+                                    { value: 'active', label: 'Active' },
+                                    { value: 'completed', label: 'Completed' },
+                                ]}
+                                placeholder="All Status"
+                                nullable
                             />
                         </div>
                     </div>
-                </div>
-            </div>
 
-            {/* Content Area */}
-            <div className="flex-1 min-h-0 min-w-0 flex flex-col pb-4 overflow-hidden">
-                {/* Mobile Tab Selector - only visible on small screens */}
-                <div className="lg:hidden mb-4">
-                    <div className="flex rounded-lg border-2 border-[var(--color-border-subtle)] p-1 bg-[var(--color-bg-tile-alt)]">
-                        <button
-                            onClick={() => setMobileActiveTab('projects')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'projects'
-                                ? 'bg-purple-500/10 text-purple-500'
-                                : 'text-brand-textSecondary hover:text-brand-textPrimary'
-                                }`}
-                        >
-                            <FolderOpen size={16} />
-                            <span className="hidden sm:inline">Projects</span>
-                            <span className="text-xs opacity-70">({groupedTasks.projects.length})</span>
-                        </button>
-                        <button
-                            onClick={() => setMobileActiveTab('assignments')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'assignments'
-                                ? 'bg-blue-500/10 text-blue-500'
-                                : 'text-brand-textSecondary hover:text-brand-textPrimary'
-                                }`}
-                        >
-                            <FileText size={16} />
-                            <span className="hidden sm:inline">Assignments</span>
-                            <span className="text-xs opacity-70">({groupedTasks.assignments.length})</span>
-                        </button>
-                        <button
-                            onClick={() => setMobileActiveTab('tasks')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-all ${mobileActiveTab === 'tasks'
-                                ? 'bg-green-500/10 text-green-500'
-                                : 'text-brand-textSecondary hover:text-brand-textPrimary'
-                                }`}
-                        >
-                            <ListChecks size={16} />
-                            <span className="hidden sm:inline">Tasks</span>
-                            <span className="text-xs opacity-70">({groupedTasks.standaloneTasks.length})</span>
-                        </button>
+                    {/* Date Filter Calendar Strip */}
+                    <div className="pb-4 w-full flex-shrink-0">
+                        <div className="flex items-center gap-3 w-full">
+                            {/* All Dates Button */}
+                            <button
+                                onClick={() => setFilterDate(null)}
+                                className={`
+                                group flex-shrink-0 w-[130px] h-11 flex items-center justify-center rounded-xl font-bold text-sm transition-float button-lift-dynamic select-none cursor-pointer border
+                                focus:outline-none shadow-layered
+                                ${filterDate === null
+                                        ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-textPrimary ring-0 shadow-layered-lg'
+                                        : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/50 hover:text-brand-textPrimary'
+                                    }
+                            `}
+                            >
+                                All
+                            </button>
+
+                            {/* Left Arrow */}
+                            <button
+                                onClick={() => navigateCalendar('left')}
+                                className="group flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-float button-lift-dynamic border border-[var(--color-border-subtle)] shadow-layered"
+                                title="Previous week"
+                            >
+                                <ChevronLeft size={18} className="transition-colors group-hover:text-brand-accent" />
+                            </button>
+
+                            {/* Scrollable Calendar Days */}
+                            <div
+                                ref={calendarRef}
+                                onMouseDown={handleCalendarMouseDown}
+                                onMouseMove={handleCalendarMouseMove}
+                                onMouseUp={handleCalendarMouseUp}
+                                onMouseLeave={handleCalendarMouseLeave}
+                                className="flex-1 min-w-0 overflow-x-auto flex items-center justify-start gap-4 scrollbar-hide cursor-grab active:cursor-grabbing select-none py-3 [mask-image:linear-gradient(to_right,transparent,black_2%,black_98%,transparent)]"
+                            >
+                                {calendarItems.map((item, index) => {
+                                    // Weekend spanner (subtle gap)
+                                    if (item.type === 'weekend') {
+                                        return <div key={`weekend-${index}`} className="w-4 flex-shrink-0" />;
+                                    }
+
+                                    // Day button
+                                    const { dayName, dayNum, dateStr, isToday } = formatCalendarDate(item.date);
+                                    const isSelected = filterDate === dateStr;
+                                    const counts = getDateTaskCounts(dateStr);
+                                    const hasItems = counts.projects > 0 || counts.assignments > 0 || counts.tasks > 0;
+                                    return (
+                                        <button
+                                            key={dateStr}
+                                            ref={isSelected ? selectedRef : (isToday ? todayRef : null)}
+                                            data-date={dateStr}
+                                            onClick={() => !isDragging && setFilterDate(dateStr)}
+                                            className={`
+                                            group/btn relative flex-shrink-0 flex flex-col items-center justify-center w-[62px] h-[64px] rounded-xl transition-all duration-300 ease-in-out border
+                                            shadow-layered button-lift-dynamic
+                                            ${isSelected
+                                                    ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-textPrimary shadow-layered-lg'
+                                                    : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:text-brand-textPrimary hover:border-brand-accent/50 hover:bg-[var(--color-bg-tile-hover)]'
+                                                }
+                                        `}
+                                        >
+                                            <span className={`text-[10px] font-black uppercase tracking-wider mb-0.5 ${isSelected ? 'text-brand-accent' : 'text-brand-textMuted group-hover/btn:text-brand-accent/70'} ${isToday ? 'underline decoration-brand-accent decoration-2 underline-offset-4' : ''}`}>
+                                                {dayName}
+                                            </span>
+                                            <span className={`text-sm font-bold ${isSelected ? 'text-brand-textPrimary' : ''}`}>
+                                                {dayNum}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Right Arrow */}
+                            <button
+                                onClick={() => navigateCalendar('right')}
+                                className="group flex-shrink-0 flex items-center justify-center w-11 h-11 rounded-xl text-brand-textSecondary hover:text-brand-textPrimary hover:bg-[var(--color-bg-tile-hover)] transition-float button-lift-dynamic border border-[var(--color-border-subtle)] shadow-layered"
+                                title="Next week"
+                            >
+                                <ChevronRight size={18} className="transition-colors group-hover:text-brand-accent" />
+                            </button>
+
+                            {/* Jump to Date (Calendar Picker) */}
+                            <div className="relative flex-shrink-0">
+                                <DatePicker
+                                    selected={filterDate ? new Date(filterDate) : null}
+                                    onChange={(date: Date | null) => {
+                                        if (date) {
+                                            const formatted = date.toISOString().split('T')[0];
+                                            setFilterDate(formatted);
+                                        }
+                                    }}
+                                    customInput={
+                                        <button className={`
+                                            group flex-shrink-0 w-[130px] h-11 flex items-center justify-center gap-2 rounded-xl text-sm font-bold transition-float button-lift-dynamic border shadow-layered
+                                            ${filterDate !== null
+                                                ? 'bg-[var(--color-bg-tile)] border-brand-accent text-brand-textPrimary shadow-layered-lg'
+                                                : 'bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)] text-brand-textSecondary hover:border-brand-accent/50 hover:text-brand-textPrimary hover:shadow-layered-lg'
+                                            }
+                                        `}>
+                                            <CalendarIcon className={`w-4 h-4 transition-colors flex-shrink-0 ${filterDate !== null ? 'text-brand-accent' : 'text-brand-textMuted group-hover:text-brand-accent'}`} />
+                                            <span>Select date</span>
+                                        </button>
+                                    }
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div className="flex-1 min-h-0 min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-full">
-
-                    {/* Projects Column */}
-                    <div className={`flex flex-col h-full card-base p-4 min-w-0 overflow-hidden ${mobileActiveTab !== 'projects' ? 'hidden lg:block' : ''}`}>
-                        <div className="flex-shrink-0 flex items-center gap-2 mb-4">
-                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('project')}`}>
+                {/* Content Area */}
+                <div className="flex-1 min-h-0 min-w-0 flex flex-col pb-4 overflow-hidden">
+                    {/* Mobile Tab Selector - only visible on small screens */}
+                    <div className="lg:hidden mb-4">
+                        <div className="flex rounded-lg border-2 border-[var(--color-border-subtle)] p-1 bg-[var(--color-bg-tile-alt)]">
+                            <button
+                                onClick={() => setMobileActiveTab('projects')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-float ${mobileActiveTab === 'projects'
+                                    ? 'bg-purple-500/10 text-purple-500'
+                                    : 'text-brand-textSecondary hover:text-brand-textPrimary'
+                                    }`}
+                            >
                                 <FolderOpen size={16} />
-                            </span>
-                            <h3 className="font-bold text-brand-textPrimary">
-                                Projects
-                            </h3>
-                            <span className="text-xs text-brand-textSecondary font-medium">
-                                {groupedTasks.projects.length}
-                            </span>
-                            {groupedTasks.projects.some(p => p.childIds?.length > 0) && (
-                                <button
-                                    onClick={() => {
-                                        const projectIds = groupedTasks.projects.filter(p => p.childIds?.length > 0).map(p => p.id);
-                                        const allExpanded = projectIds.every(id => expandedIds.has(id));
-                                        if (allExpanded) {
-                                            setExpandedIds(prev => {
-                                                const next = new Set(prev);
-                                                projectIds.forEach(id => next.delete(id));
-                                                return next;
-                                            });
-                                        } else {
-                                            setExpandedIds(prev => new Set([...prev, ...projectIds]));
-                                        }
-                                    }}
-                                    className="ml-auto flex items-center gap-1 text-xs text-brand-textSecondary hover:text-brand-textPrimary transition-colors"
-                                >
-                                    {groupedTasks.projects.filter(p => p.childIds?.length > 0).every(p => expandedIds.has(p.id)) ? (
-                                        <><span>Collapse</span><ChevronUp size={14} /></>
-                                    ) : (
-                                        <><span>Expand</span><ChevronDown size={14} /></>
-                                    )}
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                            {groupedTasks.projects.length === 0 ? (
-                                <p className="text-center text-sm text-brand-textSecondary py-8 italic">
-                                    No projects found
-                                </p>
-                            ) : (
-                                <div className="space-y-1">
-                                    {groupedTasks.projects.map(project => (
-                                        <TreeItem
-                                            key={project.id}
-                                            task={project}
-                                            allTasks={filteredTasks}
-                                            depth={0}
-                                            expandedIds={expandedIds}
-                                            onToggleExpand={toggleExpand}
-                                            onEdit={handleEdit}
-                                            onDelete={handleDelete}
-                                            onCopyToBoard={handleCopyToBoard}
-                                            getProgress={getProgress}
-                                            onQuickAdd={handleQuickAdd}
-                                            quickAddParentId={quickAddParentId}
-                                            quickAddTitle={quickAddTitle}
-                                            onQuickAddTitleChange={setQuickAddTitle}
-                                            onQuickAddSave={handleQuickAddSave}
-                                            onQuickAddCancel={handleQuickAddCancel}
-                                            isQuickAddSaving={isQuickAddSaving}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Assignments Column */}
-                    <div className={`flex flex-col h-full card-base p-4 min-w-0 overflow-hidden ${mobileActiveTab !== 'assignments' ? 'hidden lg:block' : ''}`}>
-                        <div className="flex-shrink-0 flex items-center gap-2 mb-4">
-                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
+                                <span className="hidden sm:inline">Projects</span>
+                                <span className="text-xs opacity-70">({groupedTasks.projects.length})</span>
+                            </button>
+                            <button
+                                onClick={() => setMobileActiveTab('assignments')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-float ${mobileActiveTab === 'assignments'
+                                    ? 'bg-blue-500/10 text-blue-500'
+                                    : 'text-brand-textSecondary hover:text-brand-textPrimary'
+                                    }`}
+                            >
                                 <FileText size={16} />
-                            </span>
-                            <h3 className="font-bold text-brand-textPrimary">
-                                Assignments
-                            </h3>
-                            <span className="text-xs text-brand-textMuted font-medium">
-                                {groupedTasks.assignments.length}
-                            </span>
-                            {groupedTasks.assignments.some(a => a.childIds?.length > 0) && (
-                                <button
-                                    onClick={() => {
-                                        const assignmentIds = groupedTasks.assignments.filter(a => a.childIds?.length > 0).map(a => a.id);
-                                        const allExpanded = assignmentIds.every(id => expandedIds.has(id));
-                                        if (allExpanded) {
-                                            setExpandedIds(prev => {
-                                                const next = new Set(prev);
-                                                assignmentIds.forEach(id => next.delete(id));
-                                                return next;
-                                            });
-                                        } else {
-                                            setExpandedIds(prev => new Set([...prev, ...assignmentIds]));
-                                        }
-                                    }}
-                                    className="ml-auto flex items-center gap-1 text-xs text-brand-textMuted hover:text-brand-textPrimary transition-colors"
-                                >
-                                    {groupedTasks.assignments.filter(a => a.childIds?.length > 0).every(a => expandedIds.has(a.id)) ? (
-                                        <><span>Collapse</span><ChevronUp size={14} /></>
-                                    ) : (
-                                        <><span>Expand</span><ChevronDown size={14} /></>
-                                    )}
-                                </button>
-                            )}
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                            {groupedTasks.assignments.length === 0 ? (
-                                <p className="text-center text-sm text-brand-textMuted py-8 italic">
-                                    No standalone assignments
-                                </p>
-                            ) : (
-                                <div className="space-y-1">
-                                    {groupedTasks.assignments.map(assignment => (
-                                        <TreeItem
-                                            key={assignment.id}
-                                            task={assignment}
-                                            allTasks={filteredTasks}
-                                            depth={0}
-                                            expandedIds={expandedIds}
-                                            onToggleExpand={toggleExpand}
-                                            onEdit={handleEdit}
-                                            onDelete={handleDelete}
-                                            onCopyToBoard={handleCopyToBoard}
-                                            getProgress={getProgress}
-                                            onQuickAdd={handleQuickAdd}
-                                            quickAddParentId={quickAddParentId}
-                                            quickAddTitle={quickAddTitle}
-                                            onQuickAddTitleChange={setQuickAddTitle}
-                                            onQuickAddSave={handleQuickAddSave}
-                                            onQuickAddCancel={handleQuickAddCancel}
-                                            isQuickAddSaving={isQuickAddSaving}
-                                        />
-                                    ))}
-                                </div>
-                            )}
+                                <span className="hidden sm:inline">Assignments</span>
+                                <span className="text-xs opacity-70">({groupedTasks.assignments.length})</span>
+                            </button>
+                            <button
+                                onClick={() => setMobileActiveTab('tasks')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-float ${mobileActiveTab === 'tasks'
+                                    ? 'bg-green-500/10 text-green-500'
+                                    : 'text-brand-textSecondary hover:text-brand-textPrimary'
+                                    }`}
+                            >
+                                <ListChecks size={16} />
+                                <span className="hidden sm:inline">Tasks</span>
+                                <span className="text-xs opacity-70">({groupedTasks.standaloneTasks.length})</span>
+                            </button>
                         </div>
                     </div>
 
-                    {/* Tasks Column */}
-                    <div className={`flex flex-col h-full card-base p-4 min-w-0 overflow-hidden ${mobileActiveTab !== 'tasks' ? 'hidden lg:block' : ''}`}>
-                        <div className="flex-shrink-0 flex items-center gap-2 mb-4">
-                            <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('task')}`}>
-                                <ListChecks size={16} />
-                            </span>
-                            <h3 className="font-bold text-brand-textPrimary">
-                                Tasks
-                            </h3>
-                            <span className="text-xs text-brand-textMuted font-medium">
-                                {groupedTasks.standaloneTasks.length}
-                            </span>
-                            {groupedTasks.standaloneTasks.some(t => t.childIds?.length > 0) && (
-                                <button
-                                    onClick={() => {
-                                        const taskIds = groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).map(t => t.id);
-                                        const allExpanded = taskIds.every(id => expandedIds.has(id));
-                                        if (allExpanded) {
-                                            setExpandedIds(prev => {
-                                                const next = new Set(prev);
-                                                taskIds.forEach(id => next.delete(id));
-                                                return next;
-                                            });
-                                        } else {
-                                            setExpandedIds(prev => new Set([...prev, ...taskIds]));
-                                        }
-                                    }}
-                                    className="ml-auto flex items-center gap-1 text-xs text-brand-textMuted hover:text-brand-textPrimary transition-colors"
-                                >
-                                    {groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).every(t => expandedIds.has(t.id)) ? (
-                                        <><span>Collapse</span><ChevronUp size={14} /></>
-                                    ) : (
-                                        <><span>Expand</span><ChevronDown size={14} /></>
-                                    )}
-                                </button>
-                            )}
+                    <div className="flex-1 min-h-0 min-w-0 grid grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-full h-full">
+
+                        {/* Projects Column */}
+                        <div className={`flex flex-col h-full card-base p-4 min-w-0 overflow-hidden shadow-layered lift-dynamic transition-float ${mobileActiveTab !== 'projects' ? 'hidden lg:flex' : ''}`}>
+                            <div className="flex-shrink-0 flex items-center gap-2 mb-4">
+                                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('project')}`}>
+                                    <FolderOpen size={16} />
+                                </span>
+                                <h3 className="font-bold text-brand-textPrimary">
+                                    Projects
+                                </h3>
+                                <span className="text-xs text-brand-textSecondary font-medium">
+                                    {groupedTasks.projects.length}
+                                </span>
+                                {groupedTasks.projects.some(p => p.childIds?.length > 0) && (
+                                    <button
+                                        onClick={() => {
+                                            const projectIds = groupedTasks.projects.filter(p => p.childIds?.length > 0).map(p => p.id);
+                                            const allExpanded = projectIds.every(id => expandedIds.has(id));
+                                            if (allExpanded) {
+                                                setExpandedIds(prev => {
+                                                    const next = new Set(prev);
+                                                    projectIds.forEach(id => next.delete(id));
+                                                    return next;
+                                                });
+                                            } else {
+                                                setExpandedIds(prev => new Set([...prev, ...projectIds]));
+                                            }
+                                        }}
+                                        className="ml-auto flex items-center gap-1 text-xs text-brand-textSecondary hover:text-brand-textPrimary transition-colors"
+                                    >
+                                        {groupedTasks.projects.filter(p => p.childIds?.length > 0).every(p => expandedIds.has(p.id)) ? (
+                                            <><span>Collapse</span><ChevronUp size={14} /></>
+                                        ) : (
+                                            <><span>Expand</span><ChevronDown size={14} /></>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                                {groupedTasks.projects.length === 0 ? (
+                                    <p className="text-center text-sm text-brand-textSecondary py-8 italic">
+                                        No projects found
+                                    </p>
+                                ) : (
+                                    <div className="space-y-1">
+                                        {groupedTasks.projects.map(project => (
+                                            <TreeItem
+                                                key={project.id}
+                                                task={project}
+                                                allTasks={filteredTasks}
+                                                depth={0}
+                                                expandedIds={expandedIds}
+                                                onToggleExpand={toggleExpand}
+                                                onEdit={handleEdit}
+                                                onDelete={handleDelete}
+                                                onCopyToBoard={handleCopyToBoard}
+                                                getProgress={getProgress}
+                                                onQuickAdd={handleQuickAdd}
+                                                quickAddParentId={quickAddParentId}
+                                                quickAddTitle={quickAddTitle}
+                                                onQuickAddTitleChange={setQuickAddTitle}
+                                                onQuickAddSave={handleQuickAddSave}
+                                                onQuickAddCancel={handleQuickAddCancel}
+                                                isQuickAddSaving={isQuickAddSaving}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-                            {groupedTasks.standaloneTasks.length === 0 ? (
-                                <p className="text-center text-sm text-brand-textMuted py-8 italic">
-                                    No tasks found
-                                </p>
-                            ) : (
-                                <div className="space-y-1">
-                                    {groupedTasks.standaloneTasks.map(task => (
-                                        <TreeItem
-                                            key={task.id}
-                                            task={task}
-                                            allTasks={filteredTasks}
-                                            depth={0}
-                                            expandedIds={expandedIds}
-                                            onToggleExpand={toggleExpand}
-                                            onEdit={handleEdit}
-                                            onDelete={handleDelete}
-                                            onCopyToBoard={handleCopyToBoard}
-                                            getProgress={getProgress}
-                                            onQuickAdd={handleQuickAdd}
-                                            quickAddParentId={quickAddParentId}
-                                            quickAddTitle={quickAddTitle}
-                                            onQuickAddTitleChange={setQuickAddTitle}
-                                            onQuickAddSave={handleQuickAddSave}
-                                            onQuickAddCancel={handleQuickAddCancel}
-                                            isQuickAddSaving={isQuickAddSaving}
-                                        />
-                                    ))}
-                                </div>
-                            )}
+                        {/* Assignments Column */}
+                        <div className={`flex flex-col h-full card-base p-4 min-w-0 overflow-hidden shadow-layered lift-dynamic transition-float ${mobileActiveTab !== 'assignments' ? 'hidden lg:flex' : ''}`}>
+                            <div className="flex-shrink-0 flex items-center gap-2 mb-4">
+                                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('assignment')}`}>
+                                    <FileText size={16} />
+                                </span>
+                                <h3 className="font-bold text-brand-textPrimary">
+                                    Assignments
+                                </h3>
+                                <span className="text-xs text-brand-textMuted font-medium">
+                                    {groupedTasks.assignments.length}
+                                </span>
+                                {groupedTasks.assignments.some(a => a.childIds?.length > 0) && (
+                                    <button
+                                        onClick={() => {
+                                            const assignmentIds = groupedTasks.assignments.filter(a => a.childIds?.length > 0).map(a => a.id);
+                                            const allExpanded = assignmentIds.every(id => expandedIds.has(id));
+                                            if (allExpanded) {
+                                                setExpandedIds(prev => {
+                                                    const next = new Set(prev);
+                                                    assignmentIds.forEach(id => next.delete(id));
+                                                    return next;
+                                                });
+                                            } else {
+                                                setExpandedIds(prev => new Set([...prev, ...assignmentIds]));
+                                            }
+                                        }}
+                                        className="ml-auto flex items-center gap-1 text-xs text-brand-textMuted hover:text-brand-textPrimary transition-colors"
+                                    >
+                                        {groupedTasks.assignments.filter(a => a.childIds?.length > 0).every(a => expandedIds.has(a.id)) ? (
+                                            <><span>Collapse</span><ChevronUp size={14} /></>
+                                        ) : (
+                                            <><span>Expand</span><ChevronDown size={14} /></>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                                {groupedTasks.assignments.length === 0 ? (
+                                    <p className="text-center text-sm text-brand-textMuted py-8 italic">
+                                        No standalone assignments
+                                    </p>
+                                ) : (
+                                    <div className="space-y-1">
+                                        {groupedTasks.assignments.map(assignment => (
+                                            <TreeItem
+                                                key={assignment.id}
+                                                task={assignment}
+                                                allTasks={filteredTasks}
+                                                depth={0}
+                                                expandedIds={expandedIds}
+                                                onToggleExpand={toggleExpand}
+                                                onEdit={handleEdit}
+                                                onDelete={handleDelete}
+                                                onCopyToBoard={handleCopyToBoard}
+                                                getProgress={getProgress}
+                                                onQuickAdd={handleQuickAdd}
+                                                quickAddParentId={quickAddParentId}
+                                                quickAddTitle={quickAddTitle}
+                                                onQuickAddTitleChange={setQuickAddTitle}
+                                                onQuickAddSave={handleQuickAddSave}
+                                                onQuickAddCancel={handleQuickAddCancel}
+                                                isQuickAddSaving={isQuickAddSaving}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Tasks Column */}
+                        <div className={`flex flex-col h-full card-base p-4 min-w-0 overflow-hidden shadow-layered lift-dynamic transition-float ${mobileActiveTab !== 'tasks' ? 'hidden lg:flex' : ''}`}>
+                            <div className="flex-shrink-0 flex items-center gap-2 mb-4">
+                                <span className={`w-8 h-8 rounded-lg flex items-center justify-center ${getTypeColorClasses('task')}`}>
+                                    <ListChecks size={16} />
+                                </span>
+                                <h3 className="font-bold text-brand-textPrimary">
+                                    Tasks
+                                </h3>
+                                <span className="text-xs text-brand-textMuted font-medium">
+                                    {groupedTasks.standaloneTasks.length}
+                                </span>
+                                {groupedTasks.standaloneTasks.some(t => t.childIds?.length > 0) && (
+                                    <button
+                                        onClick={() => {
+                                            const taskIds = groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).map(t => t.id);
+                                            const allExpanded = taskIds.every(id => expandedIds.has(id));
+                                            if (allExpanded) {
+                                                setExpandedIds(prev => {
+                                                    const next = new Set(prev);
+                                                    taskIds.forEach(id => next.delete(id));
+                                                    return next;
+                                                });
+                                            } else {
+                                                setExpandedIds(prev => new Set([...prev, ...taskIds]));
+                                            }
+                                        }}
+                                        className="ml-auto flex items-center gap-1 text-xs text-brand-textMuted hover:text-brand-textPrimary transition-colors"
+                                    >
+                                        {groupedTasks.standaloneTasks.filter(t => t.childIds?.length > 0).every(t => expandedIds.has(t.id)) ? (
+                                            <><span>Collapse</span><ChevronUp size={14} /></>
+                                        ) : (
+                                            <><span>Expand</span><ChevronDown size={14} /></>
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
+                                {groupedTasks.standaloneTasks.length === 0 ? (
+                                    <p className="text-center text-sm text-brand-textMuted py-8 italic">
+                                        No tasks found
+                                    </p>
+                                ) : (
+                                    <div className="space-y-1">
+                                        {groupedTasks.standaloneTasks.map(task => (
+                                            <TreeItem
+                                                key={task.id}
+                                                task={task}
+                                                allTasks={filteredTasks}
+                                                depth={0}
+                                                expandedIds={expandedIds}
+                                                onToggleExpand={toggleExpand}
+                                                onEdit={handleEdit}
+                                                onDelete={handleDelete}
+                                                onCopyToBoard={handleCopyToBoard}
+                                                getProgress={getProgress}
+                                                onQuickAdd={handleQuickAdd}
+                                                quickAddParentId={quickAddParentId}
+                                                quickAddTitle={quickAddTitle}
+                                                onQuickAddTitleChange={setQuickAddTitle}
+                                                onQuickAddSave={handleQuickAddSave}
+                                                onQuickAddCancel={handleQuickAddCancel}
+                                                isQuickAddSaving={isQuickAddSaving}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

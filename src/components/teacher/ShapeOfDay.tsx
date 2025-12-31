@@ -179,7 +179,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
             className={`group bg-[var(--color-bg-tile)] 
                 border border-[var(--color-border-subtle)] rounded-2xl p-5
                 border-l-4 ${typeBorderColor}
-                transition-all duration-300 shadow-layered
+                transition-float shadow-layered
                 hover:border-brand-accent hover:shadow-layered-lg
                 relative select-none
                 ${task.status === 'done' ? 'opacity-60 shadow-layered-sm' : ''}`}
@@ -576,7 +576,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
         >
 
             {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered shrink-0 p-6">
+            <div className="w-full bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float shrink-0 p-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6">
 
                     {/* Left: Class Identity */}

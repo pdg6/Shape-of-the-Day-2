@@ -21,7 +21,8 @@ import {
     CheckSquare,
     X,
     File as FileIcon,
-    Trash2
+    Trash2,
+    Layers
 } from 'lucide-react';
 import { Select, SelectOption } from '../shared/Select';
 import { MultiSelect } from '../shared/MultiSelect';
@@ -30,6 +31,7 @@ import { DatePicker } from '../shared/DatePicker';
 import { RichTextEditor } from '../shared/RichTextEditor';
 import { Button } from '../shared/Button';
 import { PageLayout } from '../shared/PageLayout';
+import { Modal } from '../shared/Modal';
 
 import { handleError, handleSuccess } from '../../utils/errorHandler';
 import { toDateString } from '../../utils/dateHelpers';
@@ -113,6 +115,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false);
+    const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -559,11 +562,25 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     })()}
                 </div>
 
+                {/* Bulk Edit Button */}
+                <button
+                    onClick={() => setIsBulkEditOpen(true)}
+                    title="Edit all tasks"
+                    className="flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float ml-auto
+                        bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
+                        shadow-layered
+                        hover:shadow-layered-lg
+                        button-lift-dynamic hover:border-brand-accent/50 min-h-[44px]"
+                >
+                    <Layers className="w-5 h-5 text-brand-accent" />
+                    <span>Bulk Edit</span>
+                </button>
+
                 {/* New Task Button */}
                 <button
                     onClick={resetForm}
                     title="Create new task"
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-float ml-auto
+                    className="flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float
                         bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary
                         shadow-layered
                         hover:shadow-layered-lg
@@ -626,7 +643,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
         </>
     );
 
-    return (
+    return (<>
         <PageLayout
             header={<div className="hidden lg:grid lg:grid-cols-4 w-full items-center gap-6">{headerContent}</div>}
         >
@@ -636,12 +653,12 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     {/* LEFT PANEL: Task Editor */}
                     <div className="flex-1 lg:col-span-3 flex flex-col">
                         {/* Main Form Area - Outer box removed for "Free-Floating" model */}
-                        <div className={`w-full space-y-4 flex-1 flex flex-col relative z-40 ${editingTaskId ? 'active' : ''}`}>
+                        <div className={`w-full space-y-6 flex-1 flex flex-col relative z-40 ${editingTaskId ? 'active' : ''}`}>
 
 
                             {/* Title Input with Type selector and predictive number */}
-                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] transition-all duration-300
-                                shadow-layered flex items-center"
+                            <div className="rounded-xl border border-[var(--color-border-subtle)] focus-within:border-[var(--color-border-strong)] bg-[var(--color-bg-tile)] transition-float
+                                shadow-layered lift-dynamic flex items-center"
                                 style={{ backdropFilter: 'blur(var(--tile-blur, 0px))', WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))' }}>
                                 {/* Predictive Task Number - shows when typing or editing */}
                                 {(activeFormData.title.trim() || editingTaskId) && (
@@ -684,9 +701,10 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             </div>
 
                             {/* Description & Attachments Section */}
-                            <div className="flex-1 min-h-[300px] relative">
-                                <div className="absolute inset-0 flex flex-col transition-all duration-200 rounded-md">
-                                    <div className="flex-1 overflow-y-auto transition-all duration-300">
+                            <div className="flex-1 min-h-[300px] relative rounded-xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float overflow-hidden"
+                                style={{ backdropFilter: 'blur(var(--tile-blur, 0px))', WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))' }}>
+                                <div className="absolute inset-0 flex flex-col">
+                                    <div className="flex-1 overflow-y-auto">
                                         <RichTextEditor
                                             value={activeFormData.description}
                                             onChange={(value) => updateActiveCard('description', value)}
@@ -1161,5 +1179,178 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 </div>
             </div>
         </PageLayout>
-    );
+
+        {/* Bulk Edit Modal */}
+        <Modal
+            isOpen={isBulkEditOpen}
+            onClose={() => setIsBulkEditOpen(false)}
+            title={`${format(new Date(selectedDate + 'T00:00:00'), 'MMM d')} Schedule`}
+            maxWidth="2xl"
+            variant="page"
+        >
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
+                {filteredTasks.length === 0 ? (
+                    <div className="text-center py-12 text-brand-textSecondary">
+                        <p className="text-sm">No tasks scheduled for this date.</p>
+                        <button
+                            onClick={() => {
+                                setIsBulkEditOpen(false);
+                                resetForm();
+                            }}
+                            className="mt-4 px-4 py-2 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-tile)] text-brand-textPrimary hover:border-brand-accent/50 transition-all"
+                        >
+                            <Plus className="w-4 h-4 inline mr-2" />
+                            Create First Task
+                        </button>
+                    </div>
+                ) : (
+                    filteredTasks.map((task) => {
+                        const TypeIcon = getTypeIcon(task.type);
+                        const hierNum = getHierarchicalNumber(task, filteredTasks, selectedDate);
+                        const indentLevel = task.path?.length || 0;
+
+                        // Get siblings for reorder controls
+                        const siblings = tasks.filter(t => t.parentId === task.parentId);
+                        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                        const siblingIndex = siblings.findIndex(t => t.id === task.id);
+                        const isFirst = siblingIndex === 0;
+                        const isLast = siblingIndex === siblings.length - 1;
+
+                        return (
+                            <div
+                                key={task.id}
+                                style={{ marginLeft: `${indentLevel * 24}px` }}
+                                className={`group p-4 rounded-xl border transition-all
+                                    bg-[var(--color-bg-tile)] border-[var(--color-border-subtle)]
+                                    hover:border-[var(--color-border-strong)]
+                                    ${task.status === 'draft' ? 'opacity-60' : ''}`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    {/* Left Column: Type Icon + Arrows */}
+                                    <div className="flex flex-col items-center gap-1 shrink-0">
+                                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                            <TypeIcon size={14} />
+                                        </span>
+                                        <button
+                                            onClick={() => handleReorder(task.id, 'up')}
+                                            disabled={isFirst}
+                                            className="p-1 rounded-md text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent transition-colors"
+                                            title="Move up"
+                                        >
+                                            <ArrowUp size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleReorder(task.id, 'down')}
+                                            disabled={isLast}
+                                            className="p-1 rounded-md text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent transition-colors"
+                                            title="Move down"
+                                        >
+                                            <ArrowDown size={14} />
+                                        </button>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0 space-y-2">
+                                        {/* Title Row: Number + Title + Due Date + Actions */}
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-brand-accent shrink-0">{hierNum}</span>
+                                            <input
+                                                type="text"
+                                                defaultValue={task.title}
+                                                placeholder="Task title..."
+                                                onBlur={async (e) => {
+                                                    if (e.target.value !== task.title) {
+                                                        loadTask({ ...task, title: e.target.value });
+                                                        await hookHandleSave(true);
+                                                    }
+                                                }}
+                                                className="flex-1 text-sm font-bold bg-transparent border-0 border-b border-transparent focus:border-brand-accent/30 focus:outline-none px-0 py-1 text-brand-textPrimary placeholder:text-brand-textSecondary"
+                                            />
+                                            {/* Due Date + Draft Badge */}
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                {task.status === 'draft' && (
+                                                    <span className="px-1.5 py-0.5 rounded bg-[var(--color-bg-tile-hover)] text-[10px] text-brand-textSecondary uppercase tracking-wider font-bold">
+                                                        Draft
+                                                    </span>
+                                                )}
+                                                {task.endDate && (
+                                                    <span className="flex items-center gap-1 text-[10px] text-brand-textSecondary">
+                                                        <CalendarIcon size={10} />
+                                                        {format(new Date(task.endDate + 'T00:00:00'), 'MMM d')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {/* Actions */}
+                                            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {/* Add Subtask */}
+                                                {!['subtask'].includes(task.type) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setIsBulkEditOpen(false);
+                                                            handleAddSubtask(task);
+                                                        }}
+                                                        className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/5 transition-colors"
+                                                        title="Add subtask"
+                                                    >
+                                                        <Plus size={14} />
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => {
+                                                        setIsBulkEditOpen(false);
+                                                        handleEditClick(task);
+                                                    }}
+                                                    className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/5 transition-colors"
+                                                    title="Open in editor"
+                                                >
+                                                    <FileText size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(task.id)}
+                                                    className="p-2 rounded-lg text-brand-textSecondary hover:text-red-500 hover:bg-red-500/5 transition-colors"
+                                                    title="Delete task"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Description (editable textarea) */}
+                                        <textarea
+                                            defaultValue={task.description?.replace(/<[^>]*>/g, '') || ''}
+                                            placeholder="Add description..."
+                                            rows={2}
+                                            onBlur={async (e) => {
+                                                const plainText = e.target.value;
+                                                const currentPlain = task.description?.replace(/<[^>]*>/g, '') || '';
+                                                if (plainText !== currentPlain) {
+                                                    loadTask({ ...task, description: plainText });
+                                                    await hookHandleSave(true);
+                                                }
+                                            }}
+                                            className="w-full text-xs bg-transparent border border-transparent rounded-lg px-2 py-1.5 text-brand-textSecondary placeholder:text-brand-textMuted focus:border-[var(--color-border-subtle)] focus:bg-[var(--color-bg-tile-alt)] focus:outline-none resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })
+                )}
+
+                {/* Add Task Button */}
+                {filteredTasks.length > 0 && (
+                    <button
+                        onClick={() => {
+                            setIsBulkEditOpen(false);
+                            resetForm();
+                        }}
+                        className="w-full p-3 rounded-xl border border-dashed border-[var(--color-border-subtle)] text-brand-textSecondary hover:text-brand-textPrimary hover:border-brand-accent/50 hover:bg-[var(--color-bg-tile)] transition-all flex items-center justify-center gap-2"
+                    >
+                        <Plus size={16} />
+                        <span className="text-sm font-medium">Add Task</span>
+                    </button>
+                )}
+            </div>
+        </Modal>
+    </>);
 }

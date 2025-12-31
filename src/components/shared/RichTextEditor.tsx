@@ -150,7 +150,7 @@ export function RichTextEditor({
 
     return (
         <div
-            className={`flex flex-col rounded-xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}
+            className={`flex flex-col rounded-xl bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float ${className}`}
             style={{ backdropFilter: 'blur(var(--tile-blur, 0px))', WebkitBackdropFilter: 'blur(var(--tile-blur, 0px))' }}
             onDrop={handleDrop}
             onDragOver={handleDragOver}

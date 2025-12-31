@@ -232,7 +232,7 @@ export const TaskSummary: React.FC<TaskSummaryProps> = ({
     const allComplete = completed === total && total > 0;
 
     return (
-        <div className={`bg-[var(--color-bg-tile)] rounded-2xl p-5 border border-[var(--color-border-subtle)] shadow-layered transition-float ${className}`}>
+        <div className={`bg-[var(--color-bg-tile)] rounded-2xl p-5 border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float ${className}`}>
             {/* Main progress */}
             <div className="flex items-center gap-5 mb-4">
                 <CircularProgress current={completed} total={total} size={52} />

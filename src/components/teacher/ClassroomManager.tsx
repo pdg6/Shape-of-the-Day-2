@@ -4,6 +4,7 @@ import { db } from '../../firebase';
 import { Classroom, AnalyticsLog } from '../../types';
 import { Plus, Calendar as CalendarIcon, Users, X, Check, ChevronLeft, ChevronRight, BarChart3, TrendingUp, AlertCircle, Clock, CheckCircle, BookOpen } from 'lucide-react';
 import { Button } from '../shared/Button';
+import { GhostButton } from '../shared/GhostButton';
 import { HelpButton } from '../shared/HelpButton';
 import { handleError } from '../../utils/errorHandler';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, subDays } from 'date-fns';
@@ -213,20 +214,18 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             ) : (
                 <div className="flex items-center gap-2 self-end">
                     <Button
-                        variant="ghost"
                         size="md"
                         icon={CalendarIcon}
                         onClick={() => setInternalTab('history')}
-                        className={internalTab === 'history' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                        active={internalTab === 'history'}
                     >
                         Calendar
                     </Button>
                     <Button
-                        variant="ghost"
                         size="md"
                         icon={BarChart3}
                         onClick={() => setInternalTab('analytics')}
-                        className={internalTab === 'analytics' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                        active={internalTab === 'analytics'}
                     >
                         Analytics
                     </Button>
@@ -241,7 +240,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             disableScroll={internalTab === 'history'}
         >
             {internalTab === 'classes' && (
-                <div className="grid-auto-fit gap-6 pb-8" style={{ '--grid-min-size': '280px' } as React.CSSProperties}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
                     {classrooms.map(cls => (
                         <ClassCard
                             key={cls.id}
@@ -355,18 +354,16 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
             {internalTab === 'history' && (
                 <div className="h-full flex flex-col">
                     {/* History Toolbar */}
-                    <div className="flex items-center justify-between mb-6 bg-[var(--color-bg-tile)] p-4 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered transition-float">
+                    <div className="flex items-center justify-between mb-6 bg-[var(--color-bg-tile)] p-4 rounded-2xl border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float">
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2">
-                                <Button
-                                    variant="icon"
+                                <GhostButton
                                     size="sm"
                                     onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
                                     icon={ChevronLeft}
                                 />
                                 <span className="font-bold text-lg w-32 text-center">{format(currentMonth, 'MMMM yyyy')}</span>
-                                <Button
-                                    variant="icon"
+                                <GhostButton
                                     size="sm"
                                     onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
                                     icon={ChevronRight}
@@ -569,7 +566,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                                         </div>
                                     ))}
                                     {analyticsData.studentsNeedingSupport.length === 0 && (
-                                        <p className="text-gray-400 text-sm italic col-span-full">No students flagged for support.</p>
+                                        <p className="text-brand-textMuted text-sm italic col-span-full">No students flagged for support.</p>
                                     )}
                                 </div>
                             </div>
@@ -586,8 +583,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
                             <h3 className="text-2xl font-bold text-brand-textPrimary">
                                 {classrooms.find(c => c.id === currentClassId)?.name || 'Class'}'s schedule for {format(selectedDate, 'EEEE, MMMM do, yyyy')}
                             </h3>
-                            <Button
-                                variant="icon"
+                            <GhostButton
                                 onClick={() => setShowDaySummary(false)}
                                 className="rounded-full"
                                 icon={X}
@@ -596,7 +592,7 @@ const ClassroomManager: React.FC<ClassroomManagerProps> = ({ activeView = 'class
 
                         <div className="p-6 overflow-y-auto custom-scrollbar">
                             {getLogsForDate(selectedDate).length === 0 ? (
-                                <div className="text-center py-12 text-gray-500">
+                                <div className="text-center py-12 text-brand-textSecondary">
                                     <CalendarIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
                                     <p>No activity recorded for this day.</p>
                                 </div>

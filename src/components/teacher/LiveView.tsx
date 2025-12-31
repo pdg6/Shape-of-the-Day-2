@@ -213,20 +213,18 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
             {/* Right: View Toggle Buttons */}
             <div className="flex items-center gap-2 self-end">
                 <Button
-                    variant="ghost"
                     size="md"
                     icon={ListChecks}
                     onClick={() => handleViewChange('tasks')}
-                    className={internalView === 'tasks' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                    active={internalView === 'tasks'}
                 >
                     Tasks
                 </Button>
                 <Button
-                    variant="ghost"
                     size="md"
                     icon={Users}
                     onClick={() => handleViewChange('students')}
-                    className={internalView === 'students' ? 'text-brand-accent' : 'text-brand-textSecondary'}
+                    active={internalView === 'students'}
                 >
                     Students
                 </Button>
@@ -238,7 +236,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         <PageLayout header={headerContent}>
             {/* Content */}
             {activeStudents.length === 0 ? (
-                <div className="text-center py-12 bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered">
+                <div className="text-center py-12 bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] shadow-layered lift-dynamic transition-float">
                     <div className="w-16 h-16 bg-[var(--color-bg-tile-alt)] rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-brand-textSecondary" />
                     </div>
@@ -307,7 +305,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
 const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
     return (
-        <div className="flex-1 min-h-0 bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden shadow-layered transition-shadow duration-300 flex flex-col">
+        <div className="flex-1 min-h-0 bg-[var(--color-bg-tile)] rounded-2xl border border-[var(--color-border-subtle)] overflow-hidden shadow-layered lift-dynamic transition-float flex flex-col">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left">
                     <thead className="bg-[var(--color-bg-tile-alt)] border-b border-[var(--color-border-subtle)] sticky top-0 z-10">
@@ -373,7 +371,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
 const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ tasks, students }) => {
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-12 text-brand-textSecondary bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm">
+            <div className="text-center py-12 text-brand-textSecondary bg-[var(--color-bg-tile)] rounded-2xl border border-dashed border-[var(--color-border-subtle)] shadow-layered-sm lift-dynamic transition-float">
                 <Activity className="w-12 h-12 mb-4 opacity-20 mx-auto" />
                 <p>No tasks scheduled for today.</p>
             </div>
@@ -402,11 +400,11 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                         className={`
                             flex-shrink-0 w-72 snap-start flex flex-col h-full
                             bg-[var(--color-bg-tile)]
-                            rounded-2xl border transition-all duration-300
+                            rounded-2xl border transition-float
                             ${hasHelp
                                 ? 'border-amber-500 shadow-layered-lg shadow-amber-500/10 scale-[1.01]'
                                 : hasActivity
-                                    ? 'border-brand-accent/50 shadow-layered'
+                                    ? 'border-brand-accent/50 shadow-layered lift-dynamic'
                                     : 'border-[var(--color-border-subtle)] opacity-60 shadow-layered-sm'}
                         `}
                     >
@@ -561,7 +559,7 @@ const StudentBucketColumn: React.FC<{
                 {students.map(s => (
                     <div
                         key={s.uid}
-                        className="bg-[var(--color-bg-tile)] p-2.5 rounded-lg border border-[var(--color-border-subtle)] shadow-sm flex flex-col gap-1"
+                        className="bg-[var(--color-bg-tile)] p-2.5 rounded-lg border border-[var(--color-border-subtle)] shadow-layered-sm flex flex-col gap-1"
                     >
                         <span className="text-sm font-bold text-brand-textPrimary">
                             {s.displayName}
