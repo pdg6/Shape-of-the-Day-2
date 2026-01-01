@@ -292,7 +292,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                             autoFocus
                             data-testid="help-input"
                         />
-                        <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                        <div className="absolute bottom-2 right-2 text-xs text-brand-textSecondary">
                             {comment.length}/{maxChars}
                         </div>
                     </div>
@@ -346,7 +346,7 @@ const getFileIconColor = (mimeType: string): string => {
     if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-green-500';
     if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-orange-500';
     if (mimeType === 'application/pdf') return 'text-red-500';
-    return 'text-gray-500';
+    return 'text-brand-textMuted';
 };
 
 // Extract domain from URL
@@ -801,9 +801,9 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
                         title={isExpanded ? 'Show less' : 'Show more'}
                     >
                         {isExpanded ? (
-                            <ChevronUp className="w-5 h-5 text-gray-400" />
+                            <ChevronUp className="w-5 h-5 text-brand-textSecondary" />
                         ) : (
-                            <ChevronDown className="w-5 h-5 text-gray-400" />
+                            <ChevronDown className="w-5 h-5 text-brand-textSecondary" />
                         )}
                     </button>
                 </div>

@@ -94,7 +94,7 @@ export const Modal: React.FC<ModalProps> = ({
                 aria-modal="true"
                 aria-labelledby={titleId}
                 className={`${widthClasses[maxWidth]} w-full rounded-2xl border border-border-subtle shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto
-                    ${variant === 'page' ? 'bg-page' : 'bg-tile'}`}
+                    ${variant === 'page' ? 'bg-(--bg-page)' : 'bg-tile'}`}
                 onClick={e => e.stopPropagation()}
             >
                 {!hideHeader && (

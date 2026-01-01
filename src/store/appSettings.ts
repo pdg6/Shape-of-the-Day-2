@@ -20,6 +20,20 @@ export interface BackgroundSettings {
 
 // Theme Presets: Bundles of settings for one-click theme application
 export const THEME_PRESETS: Record<string, { name: string; settings: Partial<BackgroundSettings> }> = {
+    highContrast: {
+        name: 'High Contrast',
+        settings: {
+            bgColor: '#000000',
+            tileTheme: 'pure',
+            primaryTheme: 'pure',
+            secondaryTheme: 'sky',
+            elevationLevel: 'flat',
+            borderStyle: 'vibrant',
+            horizonEtch: 'off',
+            auraGlow: 'off',
+            particlesEnabled: false
+        }
+    },
     deepVoid: {
         name: 'Deep Void',
         settings: {
@@ -27,26 +41,12 @@ export const THEME_PRESETS: Record<string, { name: string; settings: Partial<Bac
             tileTheme: 'onyx',
             primaryTheme: 'pure',
             secondaryTheme: 'mist',
-            elevationLevel: 'moderate',
+            elevationLevel: 'subtle',
             borderStyle: 'auto',
             horizonEtch: 'top',
             auraGlow: 'off',
             particlesEnabled: true,
             particleEffect: 'swarm_large'
-        }
-    },
-    stark: {
-        name: 'Stark',
-        settings: {
-            bgColor: '#000000',
-            tileTheme: 'pure',
-            primaryTheme: 'pure',
-            secondaryTheme: 'sky',
-            elevationLevel: 'flat',
-            borderStyle: 'auto',
-            horizonEtch: 'off',
-            auraGlow: 'off',
-            particlesEnabled: false
         }
     },
     cyberPro: {

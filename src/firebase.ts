@@ -10,13 +10,13 @@ import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "AIzaSyCOcf7vTV7UxkfdMSEQVjllBq4JeWibyP8",
-    authDomain: "shape-of-the-day.firebaseapp.com",
-    projectId: "shape-of-the-day",
-    storageBucket: "shape-of-the-day.firebasestorage.app",
-    messagingSenderId: "628524163762",
-    appId: "1:628524163762:web:cd32f4f05831075b259fab",
-    measurementId: "G-WJWMVT9Z0S"
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: "G-WJWMVT9Z0S"  // Optional: tracking ID, safe to keep hardcoded
 };
 
 // Initialize Firebase

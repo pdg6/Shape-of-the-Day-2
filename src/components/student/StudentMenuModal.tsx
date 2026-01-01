@@ -263,7 +263,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                     <Zap size={18} className={backgroundSettings.particlesEnabled ? 'animate-pulse' : ''} />
                                     <span className="text-[10px] font-black uppercase tracking-widest">Dynamic Particles</span>
                                 </div>
-                                <div className={`w-10 h-5 rounded-full relative transition-colors ${backgroundSettings.particlesEnabled ? 'bg-brand-accent' : 'bg-slate-700'}`}>
+                                <div className={`w-10 h-5 rounded-full relative transition-colors ${backgroundSettings.particlesEnabled ? 'bg-brand-accent' : 'bg-tile-alt'}`}>
                                     <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${backgroundSettings.particlesEnabled ? 'right-1' : 'left-1'}`} />
                                 </div>
                             </button>

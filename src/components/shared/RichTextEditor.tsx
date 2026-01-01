@@ -150,7 +150,7 @@ export function RichTextEditor({
 
     return (
         <div
-            className={`flex flex-col rounded-xl bg-(--color-bg-tile) border border-border-subtle shadow-layered lift-dynamic transition-float tile-blur ${className}`}
+            className={`flex flex-col rounded-xl bg-transparent ${className}`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
             onDragEnter={handleDragEnter}

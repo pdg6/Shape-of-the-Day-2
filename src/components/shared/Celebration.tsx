@@ -188,7 +188,7 @@ export const CelebrationModal: React.FC<CelebrationModalProps> = ({
 
                     {/* Auto-close indicator for other types */}
                     {type !== 'milestone' && (
-                        <div className="mt-4 text-xs text-gray-400">
+                        <div className="mt-4 text-xs text-brand-textSecondary">
                             Tap anywhere to continue
                         </div>
                     )}

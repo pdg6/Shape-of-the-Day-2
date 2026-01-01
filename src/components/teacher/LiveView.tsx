@@ -250,7 +250,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                         <div className="inline-flex flex-col items-center gap-4 p-6 bg-tile-alt rounded-2xl border border-dashed border-border-subtle">
                             <div className="flex items-center gap-6">
                                 {/* QR Code */}
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+                                <div className="bg-white p-2 rounded-lg shadow-sm border border-border-subtle">
                                     <QRCodeSVG
                                         value={`${joinUrl}?code=${currentClass.joinCode}`}
                                         size={80}

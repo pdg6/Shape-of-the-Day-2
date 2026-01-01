@@ -795,10 +795,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         {/* Upload & Link buttons - Nested tile button pattern matching ClassCard */}
                                         <div className="flex items-center gap-2">
                                             <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
-                                                rounded-xl border cursor-pointer
+                                                rounded-xl border cursor-pointer transition-float button-lift-dynamic
                                                 bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
                                                 shadow-layered hover:shadow-layered-lg
-                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)">
+                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
+                                                focus-within:outline-none">
                                                 <input
                                                     ref={fileInputRef}
                                                     type="file"
@@ -821,10 +822,11 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     if (url) addLink(url);
                                                 }}
                                                 className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
-                                                    rounded-xl border
+                                                    rounded-xl border transition-float button-lift-dynamic
                                                     bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
                                                     shadow-layered hover:shadow-layered-lg
-                                                    text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)"
+                                                    text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
+                                                    focus:outline-none"
                                             >
                                                 <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
                                                 <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Link</span>

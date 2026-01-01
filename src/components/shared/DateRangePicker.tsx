@@ -131,16 +131,18 @@ export function DateRangePicker({
 
     // Set calendar month when opening
     useEffect(() => {
-        if (activeField === 'start' && isStartValid) {
+        if (activeField === 'start' && isStartValid && startDateObj) {
             setCalendarMonth(startDateObj);
-        } else if (activeField === 'end' && isEndValid) {
+        } else if (activeField === 'end' && isEndValid && endDateObj) {
             setCalendarMonth(endDateObj);
-        } else if (activeField === 'end' && isStartValid) {
+        } else if (activeField === 'end' && isStartValid && startDateObj) {
             setCalendarMonth(startDateObj);
         } else if (activeField) {
             setCalendarMonth(new Date());
         }
-    }, [activeField, isStartValid, isEndValid, startDateObj, endDateObj]);
+        // Use stable string values instead of Date objects to prevent infinite loops
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeField, startDate, endDate]);
 
     // Handle date selection
     const handleSelect = (date: Date | undefined) => {

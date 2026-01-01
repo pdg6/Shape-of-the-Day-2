@@ -192,6 +192,9 @@ const SettingsManager: React.FC = () => {
         root.style.setProperty('--color-brand-textMuted', secondary.ink);
 
         // Tile Theme (Surfaces, Cards, Navigation)
+        // Set both legacy and new variable names for full compatibility with CSS classes
+        root.style.setProperty('--color-tile', tile?.tile || '#1a1d24');
+        root.style.setProperty('--color-tile-alt', tile?.tileAlt || '#151921');
         root.style.setProperty('--color-bg-tile', tile?.tile || '#1a1d24');
         root.style.setProperty('--color-bg-tile-alt', tile?.tileAlt || '#151921');
         root.style.setProperty('--color-bg-tile-hover', tileHover);

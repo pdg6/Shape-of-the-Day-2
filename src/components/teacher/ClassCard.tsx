@@ -129,7 +129,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                         </h3>
                         <p className={`text-xs font-medium flex items-center gap-2 ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>
                             <span className="opacity-75 truncate">{classroom.subject}</span>
-                            <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-white/40' : 'bg-border-strong'}`} />
+                            <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-white/80' : 'bg-border-strong'}`} />
                             <span className="opacity-75">{classroom.gradeLevel}</span>
                         </p>
                     </div>

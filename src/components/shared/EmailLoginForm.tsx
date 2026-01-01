@@ -50,7 +50,7 @@ const EmailLoginForm = () => {
         <form onSubmit={handleSubmit} className="space-y-3 animate-in fade-in zoom-in-95 duration-200">
             <div className="space-y-2">
                 <div className="relative group">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-textSecondary group-focus-within:text-brand-accent transition-colors" />
                     <input
                         type="email"
                         placeholder="Email address" // Changed placeholder
@@ -61,7 +61,7 @@ const EmailLoginForm = () => {
                     />
                 </div>
                 <div className="relative group">
-                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-textSecondary group-focus-within:text-brand-accent transition-colors" />
                     <input
                         type="password"
                         placeholder="Password"
@@ -104,7 +104,7 @@ const EmailLoginForm = () => {
                 <button
                     type="button"
                     onClick={fillDevCredentials}
-                    className="w-full text-[10px] text-gray-400 hover:text-blue-500 transition-colors mt-2"
+                    className="w-full text-[10px] text-brand-textSecondary hover:text-brand-accent transition-colors mt-2"
                 >
                     Dev: Fill Test Credentials
                 </button>

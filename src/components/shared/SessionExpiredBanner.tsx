@@ -50,7 +50,7 @@ const SessionExpiredBanner: React.FC = () => {
                     icon: <WifiOff size={16} />,
                     text: 'No internet connection',
                     buttonText: 'Retry when online',
-                    color: 'bg-gray-500',
+                    color: 'bg-brand-textMuted',
                 };
             default:
                 return {

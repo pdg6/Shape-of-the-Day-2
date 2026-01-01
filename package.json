@@ -11,12 +11,7 @@
     "preview": "vite preview",
     "emulators": "firebase emulators:start --import=./emulator-data --export-on-exit",
     "emulators:start": "firebase emulators:start",
-    "test": "jest",
-    "test:e2e": "start-server-and-test 'npm run dev' http://localhost:5173 'cypress open'",
-    "test:e2e:headless": "start-server-and-test 'npm run dev' http://localhost:5173 'cypress run'",
-    "test:e2e:ci": "start-server-and-test 'npm run dev' http://localhost:5173 'cypress run --browser chrome'",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "test": "jest"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -54,14 +49,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@testing-library/cypress": "^10.1.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
-    "cypress": "^15.0.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
@@ -70,7 +63,6 @@
     "globals": "^16.5.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
-    "start-server-and-test": "^2.1.3",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
