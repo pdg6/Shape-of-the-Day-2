@@ -580,6 +580,7 @@ const TeacherDashboard: React.FC = () => {
                     onClose={() => setIsSettingsOpen(false)}
                     title="Menu"
                     variant="page"
+                    maxWidth="full"
                 >
                     <SettingsOverlay
                         isOpen={true}

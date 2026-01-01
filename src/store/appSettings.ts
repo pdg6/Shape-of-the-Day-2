@@ -12,9 +12,9 @@ export interface BackgroundSettings {
     primaryTheme: 'pure' | 'silver' | 'steel' | 'iron' | 'ink' | 'obsidian';
     secondaryTheme: 'sky' | 'mist' | 'ash' | 'accent' | 'lead' | 'coal';
     tileTheme: 'pure' | 'onyx' | 'slate' | 'glass' | 'cloud' | 'glacier';
-    elevationLevel: 'flat' | 'subtle' | 'moderate' | 'elevated' | 'dramatic';
-    borderStyle: 'auto' | 'accent' | 'ghost' | 'glass' | 'vibrant';
-    horizonEtch: 'off' | 'top' | 'left';
+    elevationLevel: 'flat' | 'subtle' | 'moderate' | 'elevated' | 'dramatic' | 'weightless';
+    borderStyle: 'auto' | 'accent' | 'ghost' | 'glass' | 'vibrant' | 'flux';
+    horizonEtch: 'off' | 'top' | 'left' | 'both';
     auraGlow: 'off' | 'hover' | 'active';
 }
 

@@ -113,6 +113,50 @@
     -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
 }
 
+/* Flux Border Animation - Animated gradient border */
+@keyframes flux-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@layer components {
+    .border-flux {
+        position: relative;
+    }
+
+    .border-flux::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(90deg,
+                #3b82f6,
+                #8b5cf6,
+                #ec4899,
+                #f59e0b,
+                #10b981,
+                #3b82f6);
+        background-size: 300% 100%;
+        animation: flux-gradient 4s ease infinite;
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: calc(var(--border-flux-active, 0) * 0.8);
+        pointer-events: none;
+    }
+}
+
 /* Universal Responsive Grid - No media queries needed.
    Cards automatically wrap and resize based on available space.
    Min-width can be customized via CSS variable. */

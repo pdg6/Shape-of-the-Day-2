@@ -102,6 +102,14 @@ const SettingsManager: React.FC = () => {
                 shadowSm: '0 3px 6px -1px rgba(0,0,0,0.3), inset 0 1px 0 0 rgba(255,255,255,0.08)',
                 shadow: '0 12px 28px -6px rgba(0,0,0,0.5), 0 6px 12px -3px rgba(0,0,0,0.35), inset 0 1px 0 0 rgba(255,255,255,0.1)',
                 shadowLg: '0 24px 48px -12px rgba(0,0,0,0.6), 0 10px 20px -5px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.15)'
+            },
+            weightless: {
+                tileDefault: '-6px',
+                tileHover: '-10px',
+                buttonHover: '-10px',
+                shadowSm: '0 4px 8px -1px rgba(0,0,0,0.35), inset 0 1px 0 0 rgba(255,255,255,0.1)',
+                shadow: '0 16px 36px -8px rgba(0,0,0,0.55), 0 8px 16px -4px rgba(0,0,0,0.4), inset 0 1px 0 0 rgba(255,255,255,0.12)',
+                shadowLg: '0 32px 64px -16px rgba(0,0,0,0.7), 0 14px 28px -7px rgba(0,0,0,0.5), inset 0 1px 0 0 rgba(255,255,255,0.18)'
             }
         };
 
@@ -173,10 +181,24 @@ const SettingsManager: React.FC = () => {
                 borderSubtle = isDarkTile ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)';
                 borderStrong = isDarkTile ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)';
                 break;
+            case 'flux':
+                // Flux uses CSS animation - set a marker class via a CSS variable
+                root.style.setProperty('--border-flux-active', '1');
+                borderSubtle = 'transparent';
+                borderStrong = 'transparent';
+                break;
             case 'auto':
             default:
+                root.style.setProperty('--border-flux-active', '0');
                 // Keep defaults
                 break;
+        }
+
+        // Handle 'both' horizonEtch (combines top etch + active glow)
+        if (backgroundSettings.horizonEtch === 'both') {
+            horizonTop = '0.5px solid var(--color-brand-accent)';
+            activeInsetShadow = 'inset 0 3px 6px -2px rgba(29, 78, 216, 0.45)';
+            glowOnActive = '1';
         }
 
         // 2. Inject CSS Variables
@@ -241,13 +263,19 @@ const SettingsManager: React.FC = () => {
             return;
         }
 
+        // Generate a random hex color for 'random' particle color
+        const getRandomColor = () => {
+            const hex = Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+            return `#${hex}`;
+        };
+
         const COLORS = {
             red: '#ef4444',
             green: '#10b981',
             blue: '#3b82f6',
             light: '#f2efea',
             bg: backgroundSettings.bgColor,
-            particle: backgroundSettings.particleColor
+            particle: backgroundSettings.particleColor === 'random' ? getRandomColor() : backgroundSettings.particleColor
         };
 
         const CONFIG = {
@@ -290,18 +318,12 @@ const SettingsManager: React.FC = () => {
                 this.type = types[Math.floor(Math.random() * types.length)]!;
 
                 // Color Preset Logic:
-                // - Vibrant: Multi-color icons (Red/Green/Blue)
-                // - Accent: Brand Blue (#3b82f6) for ALL
-                // - Dark: Charcoal (#262626) for ALL
-                // - Light: Light (#f2efea) for ALL
-                if (backgroundSettings.particleColor === '#3b82f6') {
-                    this.baseColor = COLORS.blue;
-                } else if (backgroundSettings.particleColor === '#262626') {
-                    this.baseColor = '#262626';
-                } else if (backgroundSettings.particleColor === '#f2efea') {
-                    this.baseColor = COLORS.light;
-                } else {
+                // - 'multi' = Vibrant: Multi-color icons (Red/Green/Blue)
+                // - Any other value = Use the color directly (Accent, Slate, Glacier, Random, etc.)
+                if (backgroundSettings.particleColor === 'multi') {
                     this.baseColor = this.type === 'red' ? COLORS.red : this.type === 'green' ? COLORS.green : COLORS.blue;
+                } else {
+                    this.baseColor = COLORS.particle;
                 }
 
                 if (isSwarm || isGravity) {

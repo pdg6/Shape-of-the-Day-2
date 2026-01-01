@@ -6,7 +6,7 @@ interface ModalProps {
     onClose: () => void;
     title?: string;
     children: ReactNode;
-    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+    maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     hideHeader?: boolean;
     variant?: 'tile' | 'page';
 }
@@ -27,7 +27,8 @@ export const Modal: React.FC<ModalProps> = ({
         md: 'max-w-md',
         lg: 'max-w-lg',
         xl: 'max-w-xl',
-        '2xl': 'max-w-2xl'
+        '2xl': 'max-w-2xl',
+        full: 'w-[95vw] max-w-5xl'
     };
 
     const modalRef = React.useRef<HTMLDivElement>(null);
@@ -93,12 +94,13 @@ export const Modal: React.FC<ModalProps> = ({
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
-                className={`${widthClasses[maxWidth]} w-full rounded-2xl border border-border-subtle shadow-layered transition-transform duration-200 absolute inset-0 m-auto h-fit max-h-[90vh] overflow-y-auto
+                className={`${widthClasses[maxWidth]} w-full rounded-2xl border border-border-subtle shadow-layered transition-transform duration-200 absolute inset-0 m-auto overflow-hidden flex flex-col
+                    ${maxWidth === 'full' ? 'h-[85vh]' : 'h-fit max-h-[90vh]'}
                     ${variant === 'page' ? 'bg-(--bg-page)' : 'bg-tile'}`}
                 onClick={e => e.stopPropagation()}
             >
                 {!hideHeader && (
-                    <div className="flex items-center justify-between px-6 pt-6 pb-4">
+                    <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
                         <h2 id={titleId} className="text-fluid-xl font-bold text-brand-textPrimary">
                             {title}
                         </h2>
@@ -111,7 +113,7 @@ export const Modal: React.FC<ModalProps> = ({
                         </button>
                     </div>
                 )}
-                <div className={hideHeader ? 'p-6' : 'px-6 pb-6'}>
+                <div className={`flex-1 min-h-0 overflow-y-auto ${hideHeader ? 'p-6' : 'px-6 pb-6'}`}>
                     {children}
                 </div>
             </div>

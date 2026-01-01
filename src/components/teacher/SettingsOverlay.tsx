@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, QrCode } from 'lucide-react';
+import { LogOut, QrCode, Minus, Triangle, Grid3X3, Magnet, Orbit, Bug, Bird } from 'lucide-react';
 import { useClassStore, THEME_PRESETS } from '../../store/appSettings';
 
 interface SettingsOverlayProps {
@@ -66,14 +66,14 @@ const GridCell: React.FC<{
 
             <div className={`relative z-10 flex flex-col items-center w-full ${immersive ? 'justify-center' : 'gap-1'}`}>
                 {immersive ? (
-                    <span className={`text-[8px] font-bold uppercase tracking-tight leading-none text-center px-1
+                    <span className={`text-[10px] font-bold uppercase tracking-tight leading-none text-center px-1
                         ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textSecondary'}`}>
                         {label}
                     </span>
                 ) : (
                     <>
                         {children}
-                        <span className={`text-[8px] font-bold uppercase tracking-tight leading-none
+                        <span className={`text-[10px] font-bold uppercase tracking-tight leading-none
                             ${isSelected ? 'text-brand-textPrimary' : 'text-brand-textMuted'}`}>
                             {label}
                         </span>
@@ -84,7 +84,20 @@ const GridCell: React.FC<{
     );
 };
 
-// Row label component
+// Settings row with label on left (desktop) or top (mobile) - grows to fill space
+const SettingsRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+    <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 flex-1">
+        <span className="text-[10px] font-black uppercase tracking-wider text-brand-textSecondary px-1 md:px-0 md:w-20 md:shrink-0 md:text-right">
+            {label}
+        </span>
+        <div className="flex-1 min-w-0 h-full">
+            {children}
+        </div>
+    </div>
+);
+
+// Legacy row label component (for action buttons that don't need inline layout)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const RowLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <span className="text-[9px] font-black uppercase tracking-wider text-brand-textSecondary px-0.5 mb-1">
         {children}
@@ -154,7 +167,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         { id: 'subtle', label: 'Subtle', lift: '-1px', shadow: '0 4px 12px rgba(0,0,0,0.25)' },
         { id: 'moderate', label: 'Moderate', lift: '-2px', shadow: '0 6px 16px rgba(0,0,0,0.3)' },
         { id: 'elevated', label: 'Elevated', lift: '-3px', shadow: '0 8px 20px rgba(0,0,0,0.35)' },
-        { id: 'dramatic', label: 'Dramatic', lift: '-4px', shadow: '0 12px 28px rgba(0,0,0,0.4)' }
+        { id: 'dramatic', label: 'Dramatic', lift: '-4px', shadow: '0 12px 28px rgba(0,0,0,0.4)' },
+        { id: 'weightless', label: 'Weightless', lift: '-6px', shadow: '0 16px 36px rgba(0,0,0,0.5)' }
     ];
 
     // Border options
@@ -163,18 +177,19 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         { id: 'accent', label: 'Accent' },
         { id: 'ghost', label: 'Ghost' },
         { id: 'glass', label: 'Glass' },
-        { id: 'vibrant', label: 'Vivid' }
+        { id: 'vibrant', label: 'Vivid' },
+        { id: 'flux', label: 'Flux' }
     ];
 
-    // Particle options - all effects
+    // Particle options - all effects with unique icons
     const particleOptions = [
-        { id: 'none', label: 'Off' },
-        { id: 'gravity', label: 'Gravity' },
-        { id: 'grid', label: 'Grid' },
-        { id: 'magnetic', label: 'Magnetic' },
-        { id: 'orbit', label: 'Orbit' },
-        { id: 'swarm_small', label: 'Swarm' },
-        { id: 'swarm_large', label: 'Big Swarm' }
+        { id: 'none', label: 'Off', icon: Minus },
+        { id: 'gravity', label: 'Geometry', icon: Triangle },
+        { id: 'grid', label: 'Grid', icon: Grid3X3 },
+        { id: 'magnetic', label: 'Magnetic', icon: Magnet },
+        { id: 'orbit', label: 'Orbit', icon: Orbit },
+        { id: 'swarm_small', label: 'Swarm', icon: Bug },
+        { id: 'swarm_large', label: 'Flock', icon: Bird }
     ];
 
     // Particle color options
@@ -182,7 +197,9 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         { id: '#262626', label: 'Onyx' },
         { id: '#3b82f6', label: 'Accent' },
         { id: '#cbd5e1', label: 'Slate' },
-        { id: 'multi', label: 'Vibrant' }
+        { id: '#e8edf2', label: 'Glacier' },
+        { id: 'multi', label: 'Vibrant' },
+        { id: 'random', label: 'Random' }
     ];
 
     const applyPreset = (presetId: string) => {
@@ -201,7 +218,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
     })?.[0] || null;
 
     return (
-        <div className="space-y-2 flex flex-col pt-0">
+        <div className="flex flex-col h-full gap-2">
             {/* Action Buttons - Top */}
             <div className="flex gap-2 mb-3">
                 {onShowJoinCode && (
@@ -232,9 +249,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
             <div className="border-t border-border-subtle my-2" />
 
             {/* Row 1: Presets */}
-            <div className="flex flex-col">
-                <RowLabel>Themes</RowLabel>
-                <div className="grid grid-cols-6 gap-1.5 p-1">
+            <SettingsRow label="Themes">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {presets.map((p) => (
                         <GridCell
                             key={p.id}
@@ -246,12 +262,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         />
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 2: Background */}
-            <div className="flex flex-col">
-                <RowLabel>Background</RowLabel>
-                <div className="grid grid-cols-6 gap-1.5 p-1">
+            <SettingsRow label="Background">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {bgOptions.map((bg) => (
                         <GridCell
                             key={bg.id}
@@ -263,12 +278,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         />
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 3: Tiles */}
-            <div className="flex flex-col">
-                <RowLabel>Tile & Buttons</RowLabel>
-                <div className="grid grid-cols-6 gap-1.5 p-1">
+            <SettingsRow label="Tiles">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {tileOptions.map((t) => (
                         <GridCell
                             key={t.id}
@@ -283,12 +297,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         />
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 4: Primary Text */}
-            <div className="flex flex-col">
-                <RowLabel>Primary Text</RowLabel>
-                <div className="grid grid-cols-6 gap-1.5 p-1">
+            <SettingsRow label="Primary">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {primaryOptions.map((t) => (
                         <GridCell
                             key={t.id}
@@ -308,12 +321,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         </GridCell>
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 5: Secondary Text */}
-            <div className="flex flex-col">
-                <RowLabel>Secondary Text</RowLabel>
-                <div className="grid grid-cols-6 gap-1.5 p-1">
+            <SettingsRow label="Secondary">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {secondaryOptions.map((t) => (
                         <GridCell
                             key={t.id}
@@ -333,12 +345,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         </GridCell>
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 6: Elevation */}
-            <div className="flex flex-col">
-                <RowLabel>Elevation</RowLabel>
-                <div className="grid grid-cols-5 gap-1.5 p-1">
+            <SettingsRow label="Elevation">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {elevationOptions.map((e) => (
                         <GridCell
                             key={e.id}
@@ -357,12 +368,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         </GridCell>
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 7: Borders */}
-            <div className="flex flex-col">
-                <RowLabel>Borders</RowLabel>
-                <div className="grid grid-cols-5 gap-1.5 p-1">
+            <SettingsRow label="Borders">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {borderOptions.map((b) => (
                         <GridCell
                             key={b.id}
@@ -383,25 +393,26 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         </GridCell>
                     ))}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 8: Border Effects (Merged Etch & Glow) */}
-            <div className="flex flex-col">
-                <RowLabel>Border Effects</RowLabel>
-                <div className="grid grid-cols-5 gap-1.5 p-1">
+            <SettingsRow label="Effects">
+                <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                     {[
                         { id: 'none', label: 'None' },
                         { id: 'etch_top', label: 'Etch (T)' },
                         { id: 'etch_left', label: 'Etch (L)' },
                         { id: 'glow_hover', label: 'Hover' },
-                        { id: 'glow_active', label: 'Active' }
+                        { id: 'glow_active', label: 'Active' },
+                        { id: 'both', label: 'Both' }
                     ].map((opt) => {
                         const isSelected = opt.id === 'none'
                             ? (backgroundSettings.horizonEtch === 'off' && backgroundSettings.auraGlow === 'off')
-                            : opt.id === 'etch_top' ? backgroundSettings.horizonEtch === 'top'
-                                : opt.id === 'etch_left' ? backgroundSettings.horizonEtch === 'left'
+                            : opt.id === 'etch_top' ? backgroundSettings.horizonEtch === 'top' && backgroundSettings.auraGlow === 'off'
+                                : opt.id === 'etch_left' ? backgroundSettings.horizonEtch === 'left' && backgroundSettings.auraGlow === 'off'
                                     : opt.id === 'glow_hover' ? backgroundSettings.auraGlow === 'hover'
-                                        : backgroundSettings.auraGlow === 'active';
+                                        : opt.id === 'glow_active' ? backgroundSettings.auraGlow === 'active' && backgroundSettings.horizonEtch !== 'both'
+                                            : backgroundSettings.horizonEtch === 'both';
 
                         const handleClick = () => {
                             if (opt.id === 'none') {
@@ -414,6 +425,8 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'hover' });
                             } else if (opt.id === 'glow_active') {
                                 setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'active' });
+                            } else if (opt.id === 'both') {
+                                setBackgroundSettings({ horizonEtch: 'both', auraGlow: 'active' });
                             }
                         };
 
@@ -442,12 +455,11 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                         );
                     })}
                 </div>
-            </div>
+            </SettingsRow>
 
             {/* Row 9: Particles */}
-            <div className="flex flex-col">
-                <RowLabel>Unecessarry, yet cool</RowLabel>
-                <div className="grid grid-cols-7 gap-1.5 p-1">
+            <SettingsRow label="Particles">
+                <div className="grid grid-cols-7 gap-1.5 p-1 h-full">
                     {particleOptions.map((p) => {
                         const isOff = p.id === 'none';
                         const isSelected = isOff
@@ -469,25 +481,18 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 label={p.label}
                             >
                                 <div className="w-full h-6 flex items-center justify-center text-brand-textSecondary">
-                                    {isOff ? (
-                                        <span className="text-[10px] font-bold">—</span>
-                                    ) : (
-                                        <div className="w-4 h-4 rounded-full bg-brand-accent/20 flex items-center justify-center">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
-                                        </div>
-                                    )}
+                                    <p.icon className={`w-4 h-4 ${isSelected ? 'text-brand-accent' : 'text-brand-textMuted'}`} />
                                 </div>
                             </GridCell>
                         );
                     })}
                 </div>
-            </div>
+            </SettingsRow>
 
-            {/* Row 10: Particle Appearance (only if particles enabled) */}
+            {/* Row 10: Particle Colours (only if particles enabled) */}
             {backgroundSettings.particlesEnabled && (
-                <div className="flex flex-col">
-                    <RowLabel>Particle Appearance</RowLabel>
-                    <div className="grid grid-cols-4 gap-1.5 p-1">
+                <SettingsRow label="Particle Colours">
+                    <div className="grid grid-cols-6 gap-1.5 p-1 h-full">
                         {particleColorOptions.map((c) => (
                             <GridCell
                                 key={c.id}
@@ -507,9 +512,13 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             </GridCell>
                         ))}
                     </div>
-                    {/* Opacity slider */}
-                    <div className="flex items-center gap-2 mt-2 px-1">
-                        <span className="text-[8px] font-bold uppercase text-brand-textMuted">Opacity</span>
+                </SettingsRow>
+            )}
+
+            {/* Row 11: Opacity slider (only if particles enabled) */}
+            {backgroundSettings.particlesEnabled && (
+                <SettingsRow label="Opacity">
+                    <div className="flex items-center gap-2 h-full">
                         <input
                             type="range"
                             min="0.05"
@@ -521,10 +530,13 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                             aria-label="Particle opacity"
                             title="Adjust particle opacity"
                         />
-                        <span className="text-[8px] font-bold text-brand-accent w-6">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
+                        <span className="text-xs font-bold text-brand-accent w-10 text-right">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
                     </div>
-                </div>
+                </SettingsRow>
             )}
+
+            {/* Bottom padding */}
+            <div className="h-2 shrink-0" />
         </div>
     );
 };
