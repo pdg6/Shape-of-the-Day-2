@@ -1,6 +1,7 @@
 import React from 'react';
 import { ListTodo, CalendarDays, ChevronLeft, ChevronRight, Settings, FolderOpen, X } from 'lucide-react';
 import { ProgressBar } from '../shared/ProgressIndicator';
+import { LogoStatic } from '../shared/Logo';
 
 interface StudentSidebarProps {
     tasksCompleted: number;
@@ -70,10 +71,9 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
                 {/* Sidebar Header - Logo/Branding with Close button on mobile */}
                 <div className="h-16 shrink-0 flex items-center justify-between px-4">
                     <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center md:w-12' : ''}`}>
-                        <img
-                            src="/shape of the day logo.png"
-                            alt="Shape of the Day"
-                            className="w-10 h-10 shrink-0 aspect-square object-contain"
+                        <LogoStatic
+                            size={50}
+                            className="shrink-0 aspect-square"
                         />
                         <div className={`
                             flex flex-col justify-center overflow-hidden

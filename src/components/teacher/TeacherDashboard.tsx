@@ -11,6 +11,7 @@ import { ClassFormModal } from './ClassFormModal';
 import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
 import { Modal } from '../shared/Modal';
+import { LogoStatic } from '../shared/Logo';
 
 
 interface MenuItem {
@@ -212,10 +213,9 @@ const TeacherDashboard: React.FC = () => {
                 {/* Sidebar Header - Logo/Branding with Close button on mobile */}
                 <div className="h-16 shrink-0 flex items-center justify-between px-4">
                     <div className={`flex items-center gap-3 transition-all duration-300 ${isCollapsed ? 'justify-center w-12 md:w-12' : ''}`}>
-                        <img
-                            src="/shape of the day logo.png"
-                            alt="Shape of the Day"
-                            className="w-10 h-10 shrink-0 aspect-square object-contain"
+                        <LogoStatic
+                            size={50}
+                            className="shrink-0 aspect-square"
                         />
                         <div className={`
                             flex flex-col justify-center overflow-hidden

@@ -1,0 +1,1095 @@
+/* =========================================
+   LOGO ANIMATION SYSTEM
+   ========================================= */
+
+/* Design Tokens */
+.logo-container {
+    --c-red: #ef4444;
+    --c-green: #10b981;
+    --c-blue: #3b82f6;
+
+    --glow-red: #f87171;
+    --glow-green: #34d399;
+    --glow-blue: #60a5fa;
+
+    --anim-duration: 2s;
+    --stroke: 2.5px;
+    --beam-w: 4px;
+    --glow-blur: 8px;
+    --mask-width: 6px;
+    --ease-physics: cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-lift-4px: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.65));
+
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 400ms var(--ease-physics);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Base Elevation State (Matches Source Snippet) */
+.logo-container[class*="logo-"] {
+    transform: translateY(-4px);
+    --current-shadow: var(--shadow-lift-4px);
+}
+
+.logo-container svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+/* Card Rectangles */
+.logo-path-base {
+    stroke-width: var(--stroke);
+    stroke-linecap: round;
+    fill: transparent;
+    filter: var(--current-shadow);
+    transition: filter 400ms var(--ease-physics);
+}
+
+.logo-card-red {
+    stroke: var(--c-red);
+}
+
+.logo-card-green {
+    stroke: var(--c-green);
+}
+
+.logo-card-blue {
+    stroke: var(--c-blue);
+}
+
+/* Beams */
+.logo-beam {
+    fill: none;
+    stroke-width: var(--beam-w);
+    stroke-linecap: round;
+    will-change: stroke-dashoffset, opacity;
+    stroke-dasharray: 40 1000;
+    filter: var(--current-shadow);
+}
+
+/* Icons Base */
+.logo-check-part {
+    fill: none;
+    stroke-linecap: round;
+    will-change: stroke-dashoffset, stroke, filter;
+}
+
+.logo-anim-stuck-circle {
+    stroke-dasharray: 76;
+    stroke-dashoffset: 76;
+}
+
+.logo-anim-stuck-hook {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+}
+
+.logo-anim-play-icon {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+}
+
+.logo-anim-circle {
+    stroke-dasharray: 76;
+    stroke-dashoffset: 76;
+}
+
+.logo-anim-mask {
+    stroke-dasharray: 25;
+    stroke-dashoffset: 25;
+}
+
+.logo-anim-check {
+    stroke-dasharray: 25;
+    stroke-dashoffset: 25;
+}
+
+.logo-check-visual {
+    stroke-width: var(--stroke);
+    filter: var(--current-shadow);
+    transition: filter 400ms var(--ease-physics);
+}
+
+.logo-check-mask {
+    stroke-width: var(--mask-width);
+    stroke: var(--color-page, #0f1115);
+    filter: none !important;
+}
+
+/* =========================================
+   MODE 1: STATIC
+   ========================================= */
+.logo-static .logo-beam {
+    display: none;
+}
+
+.logo-static .logo-path-base {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    opacity: 1;
+}
+
+.logo-static .logo-check-visual {
+    stroke-dashoffset: 0;
+    opacity: 1;
+    animation: none;
+}
+
+.logo-static .logo-check-mask {
+    opacity: 1;
+    stroke-dashoffset: 0;
+}
+
+.logo-static .logo-card-red~.logo-check-visual {
+    stroke: var(--c-red);
+}
+
+.logo-static .logo-card-green~.logo-check-visual {
+    stroke: var(--c-green);
+}
+
+.logo-static .logo-card-blue~.logo-check-visual {
+    stroke: var(--c-blue);
+}
+
+/* =========================================
+   MODE 2: BEAM (Standard)
+   ========================================= */
+.logo-beam-mode .logo-anim-red {
+    stroke: var(--glow-red);
+    filter: drop-shadow(0 0 var(--glow-blur) var(--glow-red)) var(--current-shadow);
+    animation: logo-beam-red var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-green {
+    stroke: var(--glow-green);
+    filter: drop-shadow(0 0 var(--glow-blur) var(--glow-green)) var(--current-shadow);
+    animation: logo-beam-green var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-blue {
+    stroke: var(--glow-blue);
+    filter: drop-shadow(0 0 var(--glow-blur) var(--glow-blue)) var(--current-shadow);
+    animation: logo-beam-blue var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-stuck-circle {
+    animation: logo-draw-stuck-circle var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-stuck-hook {
+    animation: logo-draw-stuck-hook var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-play-icon {
+    animation: logo-draw-play-icon var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-circle {
+    animation: logo-draw-circle var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-check {
+    animation: logo-draw-check var(--anim-duration) linear 1 forwards;
+}
+
+.logo-beam-mode .logo-anim-mask {
+    animation: logo-draw-mask var(--anim-duration) linear 1 forwards;
+}
+
+/* =========================================
+   MODE 3: TRACE
+   ========================================= */
+.logo-trace .logo-beam {
+    display: none;
+}
+
+.logo-trace .logo-path-base {
+    stroke-dasharray: 380;
+    stroke-dashoffset: 380;
+    animation: logo-draw-card-border var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-anim-stuck-circle {
+    animation: logo-trace-icon-76 var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-anim-stuck-hook {
+    animation: logo-trace-icon-30 var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-anim-play-icon {
+    animation: logo-trace-icon-60 var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-anim-circle {
+    animation: logo-trace-icon-76 var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-anim-mask {
+    animation: logo-trace-icon-25 var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-anim-check {
+    animation: logo-trace-icon-25 var(--anim-duration) linear 1 forwards;
+}
+
+.logo-trace .logo-card-red~.logo-check-visual {
+    stroke: var(--c-red);
+    filter: var(--current-shadow);
+}
+
+.logo-trace .logo-card-green~.logo-check-visual {
+    stroke: var(--c-green);
+    filter: var(--current-shadow);
+}
+
+.logo-trace .logo-card-blue~.logo-check-visual {
+    stroke: var(--c-blue);
+    filter: var(--current-shadow);
+}
+
+/* =========================================
+   MODE 4: CYCLE (LOOP)
+   ========================================= */
+.logo-cycle-loop .logo-beam {
+    display: none;
+}
+
+.logo-cycle-loop .logo-path-base {
+    stroke-dasharray: 380;
+    stroke-dashoffset: 380;
+    opacity: 0;
+    animation: logo-cycle-rect 5.5s linear infinite;
+}
+
+.logo-cycle-loop .logo-check-part {
+    opacity: 0;
+}
+
+.logo-cycle-loop .logo-card-red~.logo-check-visual {
+    stroke: var(--c-red);
+}
+
+.logo-cycle-loop .logo-card-green~.logo-check-visual {
+    stroke: var(--c-green);
+}
+
+.logo-cycle-loop .logo-card-blue~.logo-check-visual {
+    stroke: var(--c-blue);
+}
+
+/* Cycle Loop Delays */
+.logo-cycle-loop .logo-group-red .logo-path-base {
+    animation-delay: 0s;
+}
+
+.logo-cycle-loop .logo-group-green .logo-path-base {
+    animation-delay: 0.6s;
+}
+
+.logo-cycle-loop .logo-group-blue .logo-path-base {
+    animation-delay: 1.2s;
+}
+
+.logo-cycle-loop .logo-group-red .logo-anim-stuck-circle {
+    animation: logo-cycle-icon-76 5.5s linear infinite;
+    animation-delay: 1.8s;
+}
+
+.logo-cycle-loop .logo-group-red .logo-anim-stuck-hook {
+    animation: logo-cycle-icon-30 5.5s linear infinite;
+    animation-delay: 1.8s;
+}
+
+.logo-cycle-loop .logo-group-green .logo-anim-play-icon {
+    animation: logo-cycle-icon-60 5.5s linear infinite;
+    animation-delay: 2.1s;
+}
+
+.logo-cycle-loop .logo-group-blue .logo-anim-circle {
+    animation: logo-cycle-icon-76 5.5s linear infinite;
+    animation-delay: 2.4s;
+}
+
+.logo-cycle-loop .logo-group-blue .logo-anim-mask {
+    animation: logo-cycle-icon-25 5.5s linear infinite;
+    animation-delay: 2.4s;
+}
+
+.logo-cycle-loop .logo-group-blue .logo-anim-check {
+    animation: logo-cycle-icon-25 5.5s linear infinite;
+    animation-delay: 2.4s;
+}
+
+/* =========================================
+   MODE 5: CYCLE (ONCE)
+   ========================================= */
+.logo-cycle-once .logo-beam {
+    display: none;
+}
+
+.logo-cycle-once .logo-path-base {
+    stroke-dasharray: 380;
+    stroke-dashoffset: 380;
+    opacity: 0;
+    animation: logo-cycle-rect-once 0.6s linear 1 forwards;
+}
+
+.logo-cycle-once .logo-check-part {
+    opacity: 0;
+}
+
+.logo-cycle-once .logo-card-red~.logo-check-visual {
+    stroke: var(--c-red);
+}
+
+.logo-cycle-once .logo-card-green~.logo-check-visual {
+    stroke: var(--c-green);
+}
+
+.logo-cycle-once .logo-card-blue~.logo-check-visual {
+    stroke: var(--c-blue);
+}
+
+/* Cycle Once Delays */
+.logo-cycle-once .logo-group-red .logo-path-base {
+    animation-delay: 0s;
+}
+
+.logo-cycle-once .logo-group-green .logo-path-base {
+    animation-delay: 0.6s;
+}
+
+.logo-cycle-once .logo-group-blue .logo-path-base {
+    animation-delay: 1.2s;
+}
+
+.logo-cycle-once .logo-group-red .logo-anim-stuck-circle {
+    animation: logo-cycle-icon-76-once 0.7s linear 1 forwards;
+    animation-delay: 1.8s;
+}
+
+.logo-cycle-once .logo-group-red .logo-anim-stuck-hook {
+    animation: logo-cycle-icon-30-once 0.7s linear 1 forwards;
+    animation-delay: 1.8s;
+}
+
+.logo-cycle-once .logo-group-green .logo-anim-play-icon {
+    animation: logo-cycle-icon-60-once 0.7s linear 1 forwards;
+    animation-delay: 2.1s;
+}
+
+.logo-cycle-once .logo-group-blue .logo-anim-circle {
+    animation: logo-cycle-icon-76-once 0.7s linear 1 forwards;
+    animation-delay: 2.4s;
+}
+
+.logo-cycle-once .logo-group-blue .logo-anim-mask {
+    animation: logo-cycle-icon-25-once 0.7s linear 1 forwards;
+    animation-delay: 2.4s;
+}
+
+.logo-cycle-once .logo-group-blue .logo-anim-check {
+    animation: logo-cycle-icon-25-once 0.7s linear 1 forwards;
+    animation-delay: 2.4s;
+}
+
+/* =========================================
+   MODE 6: SLIDE
+   ========================================= */
+.logo-slide .logo-beam {
+    display: none;
+}
+
+.logo-slide .logo-path-base,
+.logo-slide .logo-check-part {
+    opacity: 0;
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+    animation: logo-slide-in-left 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.logo-slide .logo-card-red~.logo-check-visual {
+    stroke: var(--c-red);
+}
+
+.logo-slide .logo-card-green~.logo-check-visual {
+    stroke: var(--c-green);
+}
+
+.logo-slide .logo-card-blue~.logo-check-visual {
+    stroke: var(--c-blue);
+}
+
+/* Slide Delays */
+.logo-slide .logo-group-red .logo-path-base {
+    animation-delay: 0ms;
+}
+
+.logo-slide .logo-group-green .logo-path-base {
+    animation-delay: 200ms;
+}
+
+.logo-slide .logo-group-blue .logo-path-base {
+    animation-delay: 400ms;
+}
+
+.logo-slide .logo-group-red .logo-check-part {
+    animation-delay: 700ms;
+}
+
+.logo-slide .logo-group-green .logo-check-part {
+    animation-delay: 900ms;
+}
+
+.logo-slide .logo-group-blue .logo-check-part {
+    animation-delay: 1100ms;
+}
+
+/* =========================================
+   KEYFRAMES
+   ========================================= */
+
+/* Beam Keyframes */
+@keyframes logo-beam-red {
+    0% {
+        stroke-dashoffset: 40;
+        opacity: 0;
+    }
+
+    6.7% {
+        opacity: 1;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    26.7% {
+        stroke-dashoffset: -288;
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes logo-beam-green {
+    0% {
+        opacity: 0;
+    }
+
+    19.9% {
+        opacity: 0;
+    }
+
+    20% {
+        stroke-dashoffset: 40;
+        opacity: 0;
+    }
+
+    26.7% {
+        opacity: 1;
+    }
+
+    35% {
+        opacity: 1;
+    }
+
+    41.7% {
+        stroke-dashoffset: -234;
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes logo-beam-blue {
+    0% {
+        opacity: 0;
+    }
+
+    33.2% {
+        opacity: 0;
+    }
+
+    33.3% {
+        stroke-dashoffset: 40;
+        opacity: 0;
+    }
+
+    40% {
+        opacity: 1;
+    }
+
+    50.5% {
+        opacity: 1;
+    }
+
+    57.2% {
+        stroke-dashoffset: -259;
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+/* Standard Icon Draw Keyframes */
+@keyframes logo-draw-stuck-circle {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 76;
+        filter: drop-shadow(0 0 4px var(--glow-red));
+    }
+
+    60.5% {
+        opacity: 0;
+    }
+
+    60.6% {
+        opacity: 1;
+        stroke-dashoffset: 76;
+    }
+
+    67.6% {
+        stroke-dashoffset: 0;
+    }
+
+    69.3% {
+        stroke: var(--glow-red);
+    }
+
+    70.7% {
+        stroke: var(--c-red);
+    }
+
+    100% {
+        opacity: 1;
+        stroke: var(--c-red);
+        filter: var(--current-shadow);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-draw-stuck-hook {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 30;
+        filter: drop-shadow(0 0 4px var(--glow-red));
+    }
+
+    60.5% {
+        opacity: 0;
+    }
+
+    60.6% {
+        opacity: 1;
+        stroke-dashoffset: 30;
+    }
+
+    67.6% {
+        stroke-dashoffset: 0;
+    }
+
+    70.7% {
+        stroke: var(--c-red);
+    }
+
+    100% {
+        opacity: 1;
+        stroke: var(--c-red);
+        filter: var(--current-shadow);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-draw-play-icon {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 60;
+        filter: drop-shadow(0 0 4px var(--glow-green));
+    }
+
+    60.5% {
+        opacity: 0;
+    }
+
+    60.6% {
+        opacity: 1;
+        stroke-dashoffset: 60;
+    }
+
+    67.6% {
+        stroke-dashoffset: 0;
+    }
+
+    70.7% {
+        stroke: var(--c-green);
+    }
+
+    100% {
+        opacity: 1;
+        stroke: var(--c-green);
+        filter: var(--current-shadow);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-draw-circle {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 76;
+        filter: drop-shadow(0 0 4px var(--glow-blue));
+    }
+
+    60.5% {
+        opacity: 0;
+    }
+
+    60.6% {
+        opacity: 1;
+        stroke-dashoffset: 76;
+    }
+
+    67.6% {
+        stroke-dashoffset: 0;
+    }
+
+    70.7% {
+        stroke: var(--c-blue);
+    }
+
+    100% {
+        opacity: 1;
+        stroke: var(--c-blue);
+        filter: var(--current-shadow);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-draw-check {
+    0% {
+        opacity: 0;
+        stroke-dashoffset: 25;
+        filter: drop-shadow(0 0 4px var(--glow-blue));
+    }
+
+    60.5% {
+        opacity: 0;
+    }
+
+    60.6% {
+        opacity: 1;
+        stroke-dashoffset: 25;
+    }
+
+    67.6% {
+        stroke-dashoffset: 0;
+    }
+
+    70.7% {
+        stroke: var(--c-blue);
+    }
+
+    100% {
+        opacity: 1;
+        stroke: var(--c-blue);
+        filter: var(--current-shadow);
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-draw-mask {
+    0% {
+        stroke-dashoffset: 25;
+        opacity: 0;
+    }
+
+    60.5% {
+        opacity: 0;
+    }
+
+    60.6% {
+        opacity: 1;
+        stroke-dashoffset: 25;
+    }
+
+    67.6% {
+        stroke-dashoffset: 0;
+    }
+
+    96.7% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Trace Keyframes */
+@keyframes logo-draw-card-border {
+    0% {
+        stroke-dashoffset: 380;
+        opacity: 0.3;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    40% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes logo-trace-icon-76 {
+
+    0%,
+    44% {
+        opacity: 0;
+        stroke-dashoffset: 76;
+    }
+
+    45% {
+        opacity: 1;
+        stroke-dashoffset: 76;
+        filter: var(--current-shadow);
+    }
+
+    85% {
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-trace-icon-60 {
+
+    0%,
+    44% {
+        opacity: 0;
+        stroke-dashoffset: 60;
+    }
+
+    45% {
+        opacity: 1;
+        stroke-dashoffset: 60;
+        filter: var(--current-shadow);
+    }
+
+    85% {
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-trace-icon-30 {
+
+    0%,
+    44% {
+        opacity: 0;
+        stroke-dashoffset: 30;
+    }
+
+    45% {
+        opacity: 1;
+        stroke-dashoffset: 30;
+        filter: var(--current-shadow);
+    }
+
+    85% {
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-trace-icon-25 {
+
+    0%,
+    44% {
+        opacity: 0;
+        stroke-dashoffset: 25;
+    }
+
+    45% {
+        opacity: 1;
+        stroke-dashoffset: 25;
+        filter: var(--current-shadow);
+    }
+
+    85% {
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Cycle Loop Keyframes */
+@keyframes logo-cycle-rect {
+    0% {
+        stroke-dashoffset: 380;
+        opacity: 0;
+    }
+
+    2% {
+        opacity: 1;
+    }
+
+    12.7% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-cycle-icon-76 {
+    0% {
+        stroke-dashoffset: 76;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    1% {
+        opacity: 1;
+    }
+
+    12.7% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-cycle-icon-60 {
+    0% {
+        stroke-dashoffset: 60;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    1% {
+        opacity: 1;
+    }
+
+    12.7% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-cycle-icon-30 {
+    0% {
+        stroke-dashoffset: 30;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    1% {
+        opacity: 1;
+    }
+
+    12.7% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes logo-cycle-icon-25 {
+    0% {
+        stroke-dashoffset: 25;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    1% {
+        opacity: 1;
+    }
+
+    12.7% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    85% {
+        opacity: 1;
+        stroke-dashoffset: 0;
+    }
+
+    100% {
+        opacity: 0;
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Cycle Once Keyframes */
+@keyframes logo-cycle-rect-once {
+    0% {
+        stroke-dashoffset: 380;
+        opacity: 0;
+    }
+
+    1% {
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+}
+
+@keyframes logo-cycle-icon-76-once {
+    0% {
+        stroke-dashoffset: 76;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    5% {
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+        filter: var(--current-shadow);
+    }
+}
+
+@keyframes logo-cycle-icon-60-once {
+    0% {
+        stroke-dashoffset: 60;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    5% {
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+        filter: var(--current-shadow);
+    }
+}
+
+@keyframes logo-cycle-icon-30-once {
+    0% {
+        stroke-dashoffset: 30;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    5% {
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+        filter: var(--current-shadow);
+    }
+}
+
+@keyframes logo-cycle-icon-25-once {
+    0% {
+        stroke-dashoffset: 25;
+        opacity: 0;
+        filter: var(--current-shadow);
+    }
+
+    5% {
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+        filter: var(--current-shadow);
+    }
+}
+
+/* Slide Keyframe */
+@keyframes logo-slide-in-left {
+    0% {
+        opacity: 0;
+        transform: translateX(-60px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

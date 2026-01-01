@@ -4,6 +4,7 @@ import { Copy, Check, Users, X } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { LiveStudent } from '../../types';
+import { LogoStatic } from '../shared/Logo';
 
 interface JoinCodeOverlayProps {
     isOpen: boolean;
@@ -93,11 +94,7 @@ const JoinCodeOverlay: React.FC<JoinCodeOverlayProps> = ({ isOpen, onClose, clas
             <div className="flex items-center justify-between mb-8">
                 {/* Left: Logo + Tagline */}
                 <div className="flex items-center gap-3">
-                    <img
-                        src="/shape of the day logo.png"
-                        alt="Shape of the Day"
-                        className="w-10 h-10"
-                    />
+                    <LogoStatic size={50} />
                     <div className="flex items-baseline gap-2">
                         <span className="text-lg font-bold text-brand-textPrimary">
                             Shape of the Day

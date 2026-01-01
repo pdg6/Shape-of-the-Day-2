@@ -3,6 +3,7 @@ import { LayoutDashboard, GraduationCap } from 'lucide-react';
 import GoogleSignInButton from './GoogleSignInButton';
 import EmailLoginForm from './EmailLoginForm';
 import JoinRoom from './JoinRoom';
+import { LogoCycleLoop } from './Logo';
 
 /**
  * Props for the LandingPage component.
@@ -28,16 +29,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
 
     return (
         <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-transparent">
-            <div className="text-center mb-6 space-y-2">
-                <img
-                    src="/shape of the day logo.png"
-                    alt="Shape of the Day"
-                    className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-2"
-                />
-                <h1 className="text-3xl md:text-5xl font-black text-brand-textPrimary tracking-tighter uppercase">
+            <div className="text-center mb-8 space-y-4">
+                <LogoCycleLoop size={288} className="mb-4" />
+                <h1 className="text-4xl md:text-6xl font-black text-brand-textPrimary tracking-tighter uppercase leading-none">
                     Shape of the Day
                 </h1>
-                <p className="text-[10px] font-black text-brand-textMuted uppercase tracking-[0.2em] max-w-md mx-auto">
+                <p className="text-xs font-black text-brand-textMuted uppercase tracking-[0.3em] max-w-md mx-auto">
                     A digital organizer for teachers and students
                 </p>
             </div>
