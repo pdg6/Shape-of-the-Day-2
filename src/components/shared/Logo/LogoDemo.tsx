@@ -18,7 +18,7 @@ export const LogoDemo: React.FC = () => {
     return (
         <div
             style={{
-                backgroundColor: 'var(--color-page, #0f1115)',
+                backgroundColor: 'var(--bg-page)',
                 minHeight: '100vh',
                 padding: '2rem',
                 display: 'flex',
@@ -29,7 +29,7 @@ export const LogoDemo: React.FC = () => {
         >
             <h1
                 style={{
-                    color: 'var(--color-brand-textPrimary, #F8FAFC)',
+                    color: 'var(--color-brand-textPrimary)',
                     fontSize: '1.5rem',
                     fontWeight: 700,
                     marginBottom: '1rem',
@@ -52,7 +52,7 @@ export const LogoDemo: React.FC = () => {
                     <LogoStatic size={logoSize} />
                     <p
                         style={{
-                            color: 'var(--color-brand-textSecondary, #94A3B8)',
+                            color: 'var(--color-brand-textSecondary)',
                             marginTop: '1rem',
                             fontWeight: 600,
                         }}
@@ -66,7 +66,7 @@ export const LogoDemo: React.FC = () => {
                     <LogoBeam size={logoSize} />
                     <p
                         style={{
-                            color: 'var(--color-brand-textSecondary, #94A3B8)',
+                            color: 'var(--color-brand-textSecondary)',
                             marginTop: '1rem',
                             fontWeight: 600,
                         }}
@@ -80,7 +80,7 @@ export const LogoDemo: React.FC = () => {
                     <LogoTrace size={logoSize} />
                     <p
                         style={{
-                            color: 'var(--color-brand-textSecondary, #94A3B8)',
+                            color: 'var(--color-brand-textSecondary)',
                             marginTop: '1rem',
                             fontWeight: 600,
                         }}
@@ -94,7 +94,7 @@ export const LogoDemo: React.FC = () => {
                     <LogoCycleLoop size={logoSize} />
                     <p
                         style={{
-                            color: 'var(--color-brand-textSecondary, #94A3B8)',
+                            color: 'var(--color-brand-textSecondary)',
                             marginTop: '1rem',
                             fontWeight: 600,
                         }}
@@ -108,7 +108,7 @@ export const LogoDemo: React.FC = () => {
                     <LogoCycleOnce size={logoSize} />
                     <p
                         style={{
-                            color: 'var(--color-brand-textSecondary, #94A3B8)',
+                            color: 'var(--color-brand-textSecondary)',
                             marginTop: '1rem',
                             fontWeight: 600,
                         }}
@@ -122,7 +122,7 @@ export const LogoDemo: React.FC = () => {
                     <LogoSlide size={logoSize} />
                     <p
                         style={{
-                            color: 'var(--color-brand-textSecondary, #94A3B8)',
+                            color: 'var(--color-brand-textSecondary)',
                             marginTop: '1rem',
                             fontWeight: 600,
                         }}

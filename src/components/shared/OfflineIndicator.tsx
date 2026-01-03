@@ -37,11 +37,11 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ syncStatus, onRefre
             className={`
                 fixed bottom-4 left-1/2 -translate-x-1/2 z-50
                 flex items-center gap-2 px-4 py-2 rounded-full
-                text-sm font-bold shadow-layered border border-white/10
+                text-sm font-bold shadow-layered border border-[var(--color-border-subtle)]
                 transition-all duration-300 tracking-tight
                 ${isOnline
-                    ? 'bg-blue-600/90 text-white'
-                    : 'bg-amber-600/90 text-white'}
+                    ? 'bg-brand-accent/90 text-brand-textPrimary'
+                    : 'bg-brand-accent/70 text-brand-textPrimary'}
             `}
             role="status"
             aria-live="polite"
@@ -63,7 +63,7 @@ const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({ syncStatus, onRefre
                     {onRefresh && (
                         <button
                             onClick={onRefresh}
-                            className="ml-2 p-1 hover:bg-white/20 rounded-full transition-colors"
+                            className="ml-2 p-1 hover:bg-brand-accent/20 rounded-full transition-colors"
                             aria-label="Sync now"
                         >
                             <RefreshCw size={14} />

@@ -31,12 +31,12 @@ const getFileIcon = (mimeType: string) => {
 
 // Get file icon color based on MIME type
 const getFileIconColor = (mimeType: string): string => {
-    if (mimeType.startsWith('image/')) return 'text-pink-500';
-    if (mimeType.startsWith('video/')) return 'text-purple-500';
-    if (mimeType.startsWith('audio/')) return 'text-cyan-500';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-green-500';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-orange-500';
-    if (mimeType === 'application/pdf') return 'text-red-500';
+    if (mimeType.startsWith('image/')) return 'text-[var(--type-project-color)]';
+    if (mimeType.startsWith('video/')) return 'text-[var(--type-project-color)]';
+    if (mimeType.startsWith('audio/')) return 'text-brand-accent';
+    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-[var(--color-status-progress)]';
+    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-brand-accent';
+    if (mimeType === 'application/pdf') return 'text-[var(--color-status-stuck)]';
     return 'text-brand-textSecondary';
 };
 
@@ -156,10 +156,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
     // Get type-specific border color for left accent
     const getTypeBorderColor = (type: ItemType): string => {
         switch (type) {
-            case 'project': return 'border-l-purple-500';
-            case 'assignment': return 'border-l-blue-500';
-            case 'task': return 'border-l-green-500';
-            case 'subtask': return 'border-l-orange-500';
+            case 'project': return 'border-l-[var(--type-project-color)]';
+            case 'assignment': return 'border-l-[var(--type-assignment-color)]';
+            case 'task': return 'border-l-[var(--type-task-color)]';
+            case 'subtask': return 'border-l-brand-accent';
         }
     };
     const typeBorderColor = getTypeBorderColor(task.type || 'task');
@@ -226,10 +226,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
                 >
                     <span className={`text-xl font-black text-brand-textPrimary leading-tight
                         underline decoration-2 underline-offset-4
-                        ${task.type === 'project' ? 'decoration-purple-500' : ''}
-                        ${task.type === 'assignment' ? 'decoration-blue-500' : ''}
-                        ${task.type === 'task' || !task.type ? 'decoration-emerald-500' : ''}
-                        ${task.type === 'subtask' ? 'decoration-orange-500' : ''}
+                        ${task.type === 'project' ? 'decoration-[var(--type-project-color)]' : ''}
+                        ${task.type === 'assignment' ? 'decoration-[var(--type-assignment-color)]' : ''}
+                        ${task.type === 'task' || !task.type ? 'decoration-[var(--type-task-color)]' : ''}
+                        ${task.type === 'subtask' ? 'decoration-brand-accent' : ''}
                     `}>
                         {hierarchicalNumber}
                     </span>
@@ -425,18 +425,22 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
 interface ShapeOfDayProps {
     onNavigate?: (tab: 'tasks' | 'shape' | 'live' | 'reports' | 'classrooms', subTab?: string) => void;
+    selectedDate?: string;
+    onDateChange?: (date: string) => void;
 }
 
-const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
+const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate, selectedDate: propSelectedDate, onDateChange }) => {
     const { currentClassId, classrooms, activeStudentCount } = useClassStore();
     const { user } = useAuth();
 
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // Selected date for viewing - defaults to today
+    // Selected date for viewing - use prop if provided, otherwise internal state
     const today = toDateString();
-    const [selectedDate, setSelectedDate] = useState(today);
+    const [internalSelectedDate, setInternalSelectedDate] = useState(today);
+    const selectedDate = propSelectedDate ?? internalSelectedDate;
+    const setSelectedDate = onDateChange ?? setInternalSelectedDate;
 
 
     // Presentation mode state
@@ -576,72 +580,76 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate }) => {
                 ${isFullscreen ? 'bg-transparent p-6' : ''}`}
         >
 
-            {/* --- HEADER CARD (Compact) --- */}
-            <div className="w-full bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float shrink-0 p-6">
-                <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            {/* --- HEADER (Free-floating) - Hidden on mobile, custom header handles it --- */}
+            <div className="hidden md:flex flex-col md:flex-row justify-between items-center gap-6 shrink-0 px-2">
 
-                    {/* Left: Class Identity */}
-                    <div className="flex-1 flex flex-col justify-center">
-                        <div className="flex items-center gap-3 mb-1">
-                            <DatePicker
-                                value={selectedDate}
-                                onChange={(value) => setSelectedDate(value || toDateString())}
-                                iconOnly={true}
-                                iconColor="var(--color-brand-accent)"
-                                className="z-10"
-                            />
-                            <span className="text-fluid-base font-bold whitespace-nowrap">
-                                <span className="text-brand-textPrimary underline decoration-brand-accent">
-                                    {isValid(parsedDate) ? format(parsedDate, 'MMM d') : selectedDate}
-                                </span>
-                                <span className="text-brand-textPrimary">{' '}Shape of the Day</span>
+                {/* Left: Class Identity */}
+                <div className="flex-1 flex flex-col justify-center">
+                    <div className="flex items-center gap-3 mb-1">
+                        <DatePicker
+                            value={selectedDate}
+                            onChange={(value) => {
+                                if (value instanceof Date) {
+                                    setSelectedDate(format(value, 'yyyy-MM-dd'));
+                                } else {
+                                    setSelectedDate(value || toDateString());
+                                }
+                            }}
+                            iconOnly={true}
+                            iconColor="var(--color-brand-accent)"
+                            className="z-10"
+                        />
+                        <span className="text-fluid-base font-bold whitespace-nowrap">
+                            <span className="text-brand-textPrimary underline decoration-brand-accent">
+                                {isValid(parsedDate) ? format(parsedDate, 'MMM d') : selectedDate}
                             </span>
-                            <button
-                                onClick={() => onNavigate?.('live', 'students')}
-                                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-fluid-md font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-all cursor-pointer glow-emerald/10 hover:glow-emerald/20 shadow-layered-sm"
-                            >
-                                <Users size={12} />
-                                <span>{activeStudentCount} Active</span>
-                            </button>
+                            <span className="text-brand-textPrimary">{' '}Shape of the Day</span>
+                        </span>
+                        <button
+                            onClick={() => onNavigate?.('live', 'students')}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--color-status-progress)]/10 text-[var(--color-status-progress)] text-fluid-md font-bold border border-[var(--color-status-progress)]/20 hover:bg-[var(--color-status-progress)]/20 transition-all cursor-pointer glow-emerald/10 hover:glow-emerald/20 shadow-layered-sm"
+                        >
+                            <Users size={12} />
+                            <span>{activeStudentCount} Active</span>
+                        </button>
 
-                            {/* Fullscreen Toggle Button */}
-                            <button
-                                onClick={toggleFullscreen}
-                                className="p-1.5 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10 transition-colors"
-                                title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Enter Fullscreen (F)'}
-                            >
-                                {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-                            </button>
+                        {/* Fullscreen Toggle Button */}
+                        <button
+                            onClick={toggleFullscreen}
+                            className="p-1.5 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10 transition-colors"
+                            title={isFullscreen ? 'Exit Fullscreen (F or Esc)' : 'Enter Fullscreen (F)'}
+                        >
+                            {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                        </button>
+                    </div>
+                    <h1 className="text-fluid-3xl font-black text-brand-textPrimary tracking-tight leading-tight">
+                        {currentClass.name}
+                    </h1>
+                </div>
+
+                {/* Right: Connection Info (Compact) */}
+                <div className="shrink-0 flex items-center gap-4">
+                    <div className="text-right">
+                        <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Join at</p>
+                        <p className="text-base font-medium text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
+                            shapeoftheday.app/join
+                        </p>
+
+                        <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Class Code</p>
+                        <div className="text-3xl font-mono font-black text-brand-accent tracking-widest leading-none">
+                            {currentClass.joinCode}
                         </div>
-                        <h1 className="text-fluid-3xl font-black text-brand-textPrimary tracking-tight leading-tight">
-                            {currentClass.name}
-                        </h1>
                     </div>
 
-                    {/* Right: Connection Info (Compact) */}
-                    <div className="shrink-0 flex items-center gap-4">
-                        <div className="text-right">
-                            <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Join at</p>
-                            <p className="text-base font-medium text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
-                                shapeoftheday.app/join
-                            </p>
-
-                            <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Class Code</p>
-                            <div className="text-3xl font-mono font-black text-brand-accent tracking-widest leading-none">
-                                {currentClass.joinCode}
-                            </div>
-                        </div>
-
-                        {/* QR Code */}
-                        <div className="bg-white p-1.5 rounded-lg shadow-sm border border-border-subtle">
-                            <QRCodeSVG
-                                value={`${joinUrl}?code=${currentClass.joinCode}`}
-                                size={80}
-                                level="H"
-                                fgColor="#000000"
-                                bgColor="#ffffff"
-                            />
-                        </div>
+                    {/* QR Code */}
+                    <div className="bg-white p-1.5 rounded-lg shadow-sm border border-border-subtle">
+                        <QRCodeSVG
+                            value={`${joinUrl}?code=${currentClass.joinCode}`}
+                            size={80}
+                            level="H"
+                            fgColor="#000000"
+                            bgColor="#ffffff"
+                        />
                     </div>
                 </div>
             </div>

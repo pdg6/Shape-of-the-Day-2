@@ -126,7 +126,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         { id: '#000000', label: 'Stark' },
         { id: '#050505', label: 'Void' },
         { id: '#0F1115', label: 'Cyber' },
-        { id: '#171A21', label: 'Shadow' },
+        { id: '#171A21', label: 'Deep' },
         { id: '#C1C7D0', label: 'Ghost' },
         { id: '#D1D5DA', label: 'Vapor' }
     ];
@@ -198,7 +198,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
         { id: '#3b82f6', label: 'Accent' },
         { id: '#cbd5e1', label: 'Slate' },
         { id: '#e8edf2', label: 'Glacier' },
-        { id: 'multi', label: 'Vibrant' },
+        { id: 'vibrant', label: 'Vibrant' },
         { id: 'random', label: 'Random' }
     ];
 
@@ -504,7 +504,7 @@ const SettingsOverlay: React.FC<SettingsOverlayProps> = ({
                                 <div
                                     className="w-full h-6 rounded-md"
                                     style={{
-                                        background: c.id === 'multi'
+                                        background: c.id === 'vibrant'
                                             ? 'linear-gradient(45deg, #ef4444, #10b981, #3b82f6)'
                                             : c.id
                                     }}

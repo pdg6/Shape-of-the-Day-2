@@ -204,8 +204,8 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                     </span>
                 </div>
                 {/* Active Count Badge */}
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-500/10 text-green-500 rounded-full text-sm font-medium border border-green-500/20">
-                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                <div className="flex items-center gap-2 px-3 py-1 bg-brand-accent/10 text-brand-accent rounded-full text-sm font-medium border border-brand-accent/20">
+                    <span className="w-2 h-2 bg-brand-accent rounded-full animate-pulse shadow-[0_0_8px_var(--color-brand-accent)]" />
                     {activeStudents.length} Active
                 </div>
             </div>
@@ -237,7 +237,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
             {/* Content */}
             {activeStudents.length === 0 ? (
                 <div className="text-center py-12 bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float">
-                    <div className="w-16 h-16 bg-tile-alt rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-16 h-16 bg-[var(--color-bg-tile-alt)] rounded-full flex items-center justify-center mx-auto mb-4">
                         <Users className="w-8 h-8 text-brand-textSecondary" />
                     </div>
                     <h3 className="text-fluid-lg font-bold text-brand-textPrimary mb-1">Waiting for students...</h3>
@@ -247,7 +247,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
 
                     {/* Join Code Section */}
                     {currentClass && (
-                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-tile-alt rounded-2xl border border-dashed border-border-subtle">
+                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-[var(--color-bg-tile-alt)] rounded-2xl border border-dashed border-border-subtle">
                             <div className="flex items-center gap-6">
                                 {/* QR Code */}
                                 <div className="bg-white p-2 rounded-lg shadow-sm border border-border-subtle">
@@ -281,7 +281,7 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                                             title="Copy code"
                                         >
                                             {copied ? (
-                                                <Check className="w-4 h-4 text-green-500" />
+                                                <Check className="w-4 h-4 text-brand-accent" />
                                             ) : (
                                                 <Copy className="w-4 h-4 text-brand-textSecondary" />
                                             )}
@@ -308,12 +308,12 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
         <div className="flex-1 min-h-0 bg-(--color-bg-tile) rounded-2xl border border-border-subtle overflow-hidden shadow-layered lift-dynamic transition-float flex flex-col">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left">
-                    <thead className="bg-tile-alt border-b border-border-subtle sticky top-0 z-10">
+                    <thead className="bg-[var(--color-bg-tile-alt)] border-b border-border-subtle sticky top-0 z-10">
                         <tr>
-                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-40 bg-tile-alt">Student</th>
-                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase bg-tile-alt">Task Progress</th>
-                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase bg-tile-alt">Questions / Comments</th>
-                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-16 text-center bg-tile-alt">Actions</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-40 bg-[var(--color-bg-tile-alt)]">Student</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase bg-[var(--color-bg-tile-alt)]">Task Progress</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase bg-[var(--color-bg-tile-alt)]">Questions / Comments</th>
+                            <th className="p-4 text-xs font-bold text-brand-textSecondary uppercase w-16 text-center bg-[var(--color-bg-tile-alt)]">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border-subtle">
@@ -339,7 +339,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                     {/* Questions/Comments - expands to fill space */}
                                     <td className="p-4">
                                         {student.currentMessage ? (
-                                            <span className={`text-sm italic ${needsHelp ? 'text-red-500' : 'text-brand-textSecondary'}`} title={student.currentMessage}>
+                                            <span className={`text-sm italic ${needsHelp ? 'text-[var(--color-status-stuck)]' : 'text-brand-textSecondary'}`} title={student.currentMessage}>
                                                 "{student.currentMessage}"
                                             </span>
                                         ) : (
@@ -351,7 +351,7 @@ const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, t
                                     <td className="p-4 text-center">
                                         <button
                                             onClick={() => onDelete(student.uid, student.displayName)}
-                                            className="p-2 rounded-lg text-brand-textSecondary hover:text-red-500 hover:bg-red-500/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30"
+                                            className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
                                             title={`Remove ${student.displayName} from class`}
                                             aria-label={`Remove ${student.displayName} from class`}
                                         >
@@ -402,21 +402,21 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                             bg-(--color-bg-tile)
                             rounded-2xl border transition-float
                             ${hasHelp
-                                ? 'border-amber-500 shadow-layered-lg shadow-amber-500/10 scale-[1.01]'
+                                ? 'border-[var(--color-status-stuck)] shadow-layered-lg shadow-brand-accent/10 scale-[1.01]'
                                 : hasActivity
                                     ? 'border-brand-accent/50 shadow-layered lift-dynamic'
                                     : 'border-border-subtle opacity-60 shadow-layered-sm'}
                         `}
                     >
                         {/* Column Header */}
-                        <div className={`p-4 border-b flex flex-col gap-3 ${hasHelp ? 'border-amber-500/20 bg-amber-500/5' : 'border-border-subtle'}`}>
+                        <div className={`p-4 border-b flex flex-col gap-3 ${hasHelp ? 'border-[var(--color-status-stuck)]/20 bg-[var(--color-status-stuck)]/5' : 'border-border-subtle'}`}>
                             <div className="flex items-center justify-between">
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded shadow-sm ${hasHelp ? 'bg-amber-500 text-brand-textPrimary' : 'bg-(--color-bg-tile-hover) text-brand-textSecondary'}`}>
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded shadow-sm ${hasHelp ? 'bg-[var(--color-status-stuck)] text-brand-textPrimary' : 'bg-(--color-bg-tile-hover) text-brand-textSecondary'}`}>
                                     TASK {getHierarchicalNumber(task, tasks)}
                                 </span>
                                 {hasHelp && (
-                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-amber-500 uppercase tracking-widest">
-                                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-ping" />
+                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-[var(--color-status-stuck)] uppercase tracking-widest">
+                                        <span className="w-2 h-2 bg-[var(--color-status-stuck)] rounded-full animate-ping" />
                                         ALERT
                                     </div>
                                 )}
@@ -434,32 +434,32 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                         </div>
 
                         {/* Student Buckets - Scrollable area */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-tile-alt/50">
+                        <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar bg-[var(--color-bg-tile-alt)]/50">
                             {/* HELP BUCKET */}
                             <StudentBucketColumn
                                 label="Needs Help"
                                 students={helpStudents}
-                                color="bg-red-500/5 border-red-500/10"
-                                badgeColor="bg-red-500 text-white"
-                                textColor="text-red-500"
+                                color="bg-[var(--color-status-stuck)]/5 border-[var(--color-status-stuck)]/10"
+                                badgeColor="bg-[var(--color-status-stuck)] text-brand-textPrimary"
+                                textColor="text-[var(--color-status-stuck)]"
                             />
 
                             {/* WORKING BUCKET */}
                             <StudentBucketColumn
                                 label="Working"
                                 students={inProgressStudents}
-                                color="bg-emerald-500/5 border-emerald-500/10"
-                                badgeColor="bg-emerald-500 text-white"
-                                textColor="text-emerald-500"
+                                color="bg-[var(--color-status-progress)]/5 border-[var(--color-status-progress)]/10"
+                                badgeColor="bg-[var(--color-status-progress)] text-brand-textPrimary"
+                                textColor="text-[var(--color-status-progress)]"
                             />
 
                             {/* DONE BUCKET */}
                             <StudentBucketColumn
                                 label="Done"
                                 students={studentsCompleted}
-                                color="bg-blue-500/5 border-blue-500/10"
-                                badgeColor="bg-blue-500 text-white"
-                                textColor="text-blue-500"
+                                color="bg-[var(--color-status-complete)]/5 border-[var(--color-status-complete)]/10"
+                                badgeColor="bg-[var(--color-status-complete)] text-brand-textPrimary"
+                                textColor="text-[var(--color-status-complete)]"
                             />
 
                             {!hasActivity && (
@@ -471,7 +471,7 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                         </div>
 
                         {/* Footer Statistics */}
-                        <div className="p-4 bg-tile-alt rounded-b-xl border-t border-border-subtle space-y-4">
+                        <div className="p-4 bg-[var(--color-bg-tile-alt)] rounded-b-xl border-t border-border-subtle space-y-4">
                             {/* Engagement Metric */}
                             <div className="space-y-1.5">
                                 <div className="flex flex-col gap-0.5">

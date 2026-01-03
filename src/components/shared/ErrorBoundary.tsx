@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { LogoTrace } from './Logo';
 
 interface Props {
     children?: ReactNode;
@@ -36,6 +37,12 @@ class ErrorBoundary extends Component<Props, State> {
                 <div className="min-h-screen flex items-center justify-center bg-(--bg-page) p-6">
                     <div className="bg-tile p-10 rounded-2xl shadow-layered max-w-2xl w-full border border-border-subtle relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
+
+                        {/* Branded Logo with blueprint animation */}
+                        <div className="flex justify-center mb-6">
+                            <LogoTrace size={180} />
+                        </div>
+
                         <h1 className="text-3xl font-black text-red-600 mb-6 uppercase tracking-tight">
                             Something went wrong
                         </h1>

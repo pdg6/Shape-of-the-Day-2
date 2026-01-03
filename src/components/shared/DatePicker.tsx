@@ -8,7 +8,7 @@ import 'react-day-picker/style.css';
 // --- Types ---
 
 interface DatePickerProps {
-    value?: string; // ISO date string: YYYY-MM-DD
+    value?: string | Date | null; // ISO date string: YYYY-MM-DD or Date object
     selected?: Date | null; // Compatibility with react-datepicker props
     onChange: (value: any) => void; // Handles both Date and string back
     onClose?: () => void; // Called when picker closes (for chaining)
@@ -61,8 +61,12 @@ export function DatePicker({
     const popoverRef = useRef<HTMLDivElement>(null);
     const nativeInputRef = useRef<HTMLInputElement>(null);
 
-    // Support both value (string) and selected (Date)
-    const effectiveDate = selected || (value ? parse(value, 'yyyy-MM-dd', new Date()) : undefined);
+    // Support both value (string/Date) and selected (Date)
+    const effectiveDate = selected || (
+        value instanceof Date ? value :
+            typeof value === 'string' && value ? parse(value, 'yyyy-MM-dd', new Date()) :
+                undefined
+    );
     const isValidDate = effectiveDate && isValid(effectiveDate);
 
     // Parse min/max dates
@@ -184,7 +188,11 @@ export function DatePicker({
             <input
                 ref={nativeInputRef}
                 type="date"
-                value={value || (selected ? format(selected, 'yyyy-MM-dd') : '')}
+                value={
+                    typeof value === 'string' ? value :
+                        value instanceof Date ? format(value, 'yyyy-MM-dd') :
+                            (selected ? format(selected, 'yyyy-MM-dd') : '')
+                }
                 onChange={handleNativeChange}
                 min={minDate}
                 max={maxDate}

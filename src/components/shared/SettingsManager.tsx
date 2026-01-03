@@ -232,7 +232,7 @@ const SettingsManager: React.FC = () => {
         root.style.setProperty('--active-inset-shadow', activeInsetShadow);
         root.style.setProperty('--horizon-border-top', horizonTop);
         root.style.setProperty('--horizon-border-left', horizonLeft);
-        root.style.setProperty('--tile-blur', backgroundSettings.tileTheme === 'glass' ? '8px' : '0px');
+        root.style.setProperty('--tile-blur', backgroundSettings.tileTheme === 'glass' ? '4px' : '0px');
 
         // Map legacy utilities to dynamic tile colors for consistency
         root.style.setProperty('--color-brand-darkSurface', tile.tile);
@@ -318,9 +318,9 @@ const SettingsManager: React.FC = () => {
                 this.type = types[Math.floor(Math.random() * types.length)]!;
 
                 // Color Preset Logic:
-                // - 'multi' = Vibrant: Multi-color icons (Red/Green/Blue)
+                // - 'vibrant' = Vibrant: Multi-color icons (Red/Green/Blue)
                 // - Any other value = Use the color directly (Accent, Slate, Glacier, Random, etc.)
-                if (backgroundSettings.particleColor === 'multi') {
+                if (backgroundSettings.particleColor === 'vibrant') {
                     this.baseColor = this.type === 'red' ? COLORS.red : this.type === 'green' ? COLORS.green : COLORS.blue;
                 } else {
                     this.baseColor = COLORS.particle;
@@ -445,7 +445,7 @@ const SettingsManager: React.FC = () => {
                     if (isMouseDown && mouse.active) {
                         const dx = mouse.x - this.x;
                         const dy = mouse.y - this.y;
-                        if (Math.sqrt(dx * dx + dy * dy) < 150) {
+                        if (Math.sqrt(dx * dx + dy * dy) < 50) {
                             this.captured = true;
                         }
                     } else {

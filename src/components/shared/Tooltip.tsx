@@ -36,9 +36,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
     };
 
     const variantClasses = {
-        default: 'bg-tile-alt text-brand-textPrimary border border-border-subtle',
-        info: 'bg-blue-600/95 text-white',
-        warning: 'bg-amber-500/95 text-gray-900'
+        default: 'bg-[var(--color-bg-tile-alt)] text-brand-textPrimary border border-[var(--color-border-subtle)]',
+        info: 'bg-brand-accent/95 text-brand-textPrimary',
+        warning: 'bg-brand-accent/80 text-brand-textPrimary'
     };
 
     const handleMouseEnter = () => {
@@ -69,7 +69,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
                     transition-all duration-200
                     ${positionClasses[position]}
                     ${isVisible ? 'visible opacity-100' : 'invisible opacity-0'}
-                    px-3 py-2 text-xs font-medium rounded-lg shadow-lg
+                    px-3 py-2 text-xs font-medium rounded-lg shadow-layered
                     ${variantClasses[variant]}
                     backdrop-blur-sm pointer-events-none
                 `}
@@ -79,9 +79,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
                 {content}
                 {/* Arrow */}
                 <div className={`
-                    absolute w-2 h-2 rotate-45 border-r border-b border-border-subtle
-                    ${variant === 'default' ? 'bg-tile-alt' :
-                        variant === 'info' ? 'bg-blue-600/95' : 'bg-amber-500/95'}
+                    absolute w-2 h-2 rotate-45 border-r border-b border-[var(--color-border-subtle)]
+                    ${variant === 'default' ? 'bg-[var(--color-bg-tile-alt)]' :
+                        'bg-brand-accent/95'}
                     ${position === 'top' ? 'bottom-[-4px] left-1/2 -translate-x-1/2 rotate-45 border-r border-b' : ''}
                     ${position === 'bottom' ? 'top-[-4px] left-1/2 -translate-x-1/2 -rotate-135 border-r border-b' : ''}
                     ${position === 'left' ? 'right-[-4px] top-1/2 -translate-y-1/2 -rotate-45 border-r border-b' : ''}
@@ -103,7 +103,7 @@ interface InfoTooltipProps {
 export const InfoTooltip: React.FC<InfoTooltipProps> = ({ content, position = 'top' }) => (
     <Tooltip content={content} position={position} variant="info">
         <button
-            className="inline-flex items-center justify-center w-4 h-4 text-xs text-blue-500 bg-blue-500/10 rounded-full hover:bg-blue-500/20 transition-colors"
+            className="inline-flex items-center justify-center w-4 h-4 text-xs text-brand-accent bg-brand-accent/10 rounded-full hover:bg-brand-accent/20 transition-colors"
             aria-label="More information"
         >
             ?

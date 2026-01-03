@@ -107,7 +107,7 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
     };
 
     const isActive = activeStudentCount !== null && activeStudentCount > 0;
-    const cardColor = classroom.color || '#3B82F6'; // Default blue
+    const cardColor = classroom.color || 'var(--color-brand-accent)';
 
     return (
         <div
@@ -124,12 +124,12 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                 {/* Header / Banner */}
                 <div className="h-20 p-6 relative flex justify-between items-start">
                     <div className="z-10 w-full min-w-0">
-                        <h3 className={`text-xl font-bold leading-tight mb-1 truncate pr-2 ${isSelected ? 'text-white' : 'text-brand-textPrimary'}`}>
+                        <h3 className={`text-xl font-bold leading-tight mb-1 truncate pr-2 text-brand-textPrimary`}>
                             {classroom.name}
                         </h3>
                         <p className={`text-xs font-medium flex items-center gap-2 ${isSelected ? 'text-brand-textPrimary/80' : 'text-brand-textSecondary'}`}>
                             <span className="opacity-75 truncate">{classroom.subject}</span>
-                            <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-white/80' : 'bg-border-strong'}`} />
+                            <span className={`w-1 h-1 flex-none rounded-full ${isSelected ? 'bg-brand-textPrimary/80' : 'bg-[var(--color-border-strong)]'}`} />
                             <span className="opacity-75">{classroom.gradeLevel}</span>
                         </p>
                     </div>
@@ -165,9 +165,9 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                                     {activeStudentCount ?? '-'}
                                 </span>
                                 {isActive ? (
-                                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)] animate-pulse" title="Online" />
+                                    <span className="w-2 h-2 rounded-full bg-brand-accent shadow-[0_0_8px_var(--color-brand-accent)] animate-pulse" title="Online" />
                                 ) : (
-                                    <span className="w-2 h-2 rounded-full bg-border-strong" title="Offline" />
+                                    <span className="w-2 h-2 rounded-full bg-[var(--color-border-strong)]" title="Offline" />
                                 )}
                             </div>
                         </button>
@@ -213,10 +213,10 @@ export const ClassCard: React.FC<ClassCardProps> = ({ classroom, onEdit, onSelec
                             </span>
                             <button
                                 onClick={handleCopyCode}
-                                className={`p-1 rounded-md transition-colors ${isSelected ? 'hover:bg-white/20' : 'hover:bg-(--color-bg-tile-hover)'}`}
+                                className={`p-1 rounded-md transition-colors hover:bg-brand-accent/20`}
                                 title="Copy join code"
                             >
-                                {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-brand-textPrimary group-hover/code:text-brand-accent' : 'text-brand-textSecondary'}`} />}
+                                {copied ? <Check className="w-3.5 h-3.5 text-brand-accent" /> : <Copy className={`w-3.5 h-3.5 transition-colors ${isSelected ? 'text-brand-textPrimary group-hover/code:text-brand-accent' : 'text-brand-textSecondary'}`} />}
                             </button>
                         </div>
                     </div>

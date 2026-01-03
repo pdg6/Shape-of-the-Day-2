@@ -34,20 +34,20 @@ const TYPE_CONFIG: Record<ItemType, {
     project: {
         icon: FolderOpen,
         label: 'Project',
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-500/10'
+        color: 'text-[var(--type-project-color)]',
+        bgColor: 'bg-[var(--type-project-color)]/10'
     },
     assignment: {
         icon: FileText,
         label: 'Assignment',
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-500/10'
+        color: 'text-[var(--type-assignment-color)]',
+        bgColor: 'bg-[var(--type-assignment-color)]/10'
     },
     task: {
         icon: CheckSquare,
         label: 'Task',
-        color: 'text-emerald-500',
-        bgColor: 'bg-emerald-500/10'
+        color: 'text-[var(--type-task-color)]',
+        bgColor: 'bg-[var(--type-task-color)]/10'
     },
     subtask: {
         icon: CheckSquare,

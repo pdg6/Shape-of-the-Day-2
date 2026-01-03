@@ -64,19 +64,20 @@ export const THEME_PRESETS: Record<string, { name: string; settings: Partial<Bac
             particleEffect: 'grid'
         }
     },
-    shadow: {
-        name: 'Shadow',
+    glass: {
+        name: 'Glass',
         settings: {
-            bgColor: '#171A21',
+            bgColor: '#050505',
             tileTheme: 'glass',
-            primaryTheme: 'iron',
-            secondaryTheme: 'accent',
+            primaryTheme: 'pure',
+            secondaryTheme: 'mist',
             elevationLevel: 'moderate',
-            borderStyle: 'glass',
+            borderStyle: 'ghost',
             horizonEtch: 'left',
             auraGlow: 'off',
             particlesEnabled: true,
-            particleEffect: 'gravity'
+            particleEffect: 'orbit',
+            particleColor: 'vibrant'
         }
     },
     ghost: {
@@ -155,7 +156,7 @@ export const useClassStore = create<ClassState>((set) => ({
     backgroundSettings: (() => {
         const defaultSettings: BackgroundSettings = {
             bgColor: '#050505',
-            particleColor: 'multi',
+            particleColor: 'vibrant',
             particlesEnabled: true,
             particleEffect: 'swarm_large' as const,
             particleOpacity: 0.25,
@@ -273,7 +274,7 @@ export const useClassStore = create<ClassState>((set) => ({
     resetSettings: () => {
         const defaultSettings: BackgroundSettings = {
             bgColor: '#050505',
-            particleColor: 'multi',
+            particleColor: 'vibrant',
             particlesEnabled: true,
             particleEffect: 'swarm_large' as const,
             particleOpacity: 0.25,

@@ -42,31 +42,30 @@ const CircularProgress: React.FC<CircularProgressProps> = ({
     const segmentLength = availableLength / total;
 
     // Colors
-    const redColor = '#EF4444';
-    const emeraldColor = '#10B981';
-    const blueColor = '#3B82F6';
+    const accentColor = 'var(--color-brand-accent)';
+    const mutedColor = 'var(--color-brand-textMuted)';
 
     // Build segments array
     const segments: Array<{ color: string; opacity: number }> = [];
 
     if (!hasStarted) {
-        // All red at 50% opacity
+        // Use muted color at 50% opacity
         for (let i = 0; i < total; i++) {
-            segments.push({ color: redColor, opacity: 0.5 });
+            segments.push({ color: mutedColor, opacity: 0.5 });
         }
     } else {
         // Count-based coloring: completed first, then in-progress, rest transparent
         let remaining = total;
 
-        // Add completed segments (blue)
+        // Add completed segments (full accent)
         for (let i = 0; i < completed && remaining > 0; i++) {
-            segments.push({ color: blueColor, opacity: 1 });
+            segments.push({ color: accentColor, opacity: 1 });
             remaining--;
         }
 
-        // Add in-progress segments (emerald)
+        // Add in-progress segments (semi-accent)
         for (let i = 0; i < inProgress && remaining > 0; i++) {
-            segments.push({ color: emeraldColor, opacity: 1 });
+            segments.push({ color: accentColor, opacity: 0.6 });
             remaining--;
         }
 

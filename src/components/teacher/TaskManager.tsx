@@ -22,7 +22,8 @@ import {
     X,
     File as FileIcon,
     Trash2,
-    Layers
+    Layers,
+    Share2
 } from 'lucide-react';
 import { Select, SelectOption } from '../shared/Select';
 import { MultiSelect } from '../shared/MultiSelect';
@@ -79,19 +80,19 @@ const getTypeColorClasses = (type: ItemType): string => {
 // Get type hex color for icons
 const getTypeHexColor = (type: ItemType): string => {
     switch (type) {
-        case 'project': return '#a855f7';
-        case 'assignment': return '#3b82f6';
-        case 'task': return '#22c55e';
-        case 'subtask': return '#f97316';
+        case 'project': return 'var(--type-project-color)';
+        case 'assignment': return 'var(--type-assignment-color)';
+        case 'task': return 'var(--type-task-color)';
+        case 'subtask': return 'var(--type-subtask-color)';
     }
 };
 
 // Build type options for Select component
 const TYPE_OPTIONS: SelectOption<ItemType>[] = [
-    { value: 'project', label: 'Project', icon: FolderOpen, iconColor: '#a855f7' },
-    { value: 'assignment', label: 'Assignment', icon: FileText, iconColor: '#3b82f6' },
-    { value: 'task', label: 'Task', icon: ListChecks, iconColor: '#22c55e' },
-    { value: 'subtask', label: 'Subtask', icon: CheckSquare, iconColor: '#f97316' },
+    { value: 'project', label: 'Project', icon: FolderOpen, iconColor: 'var(--type-project-color)' },
+    { value: 'assignment', label: 'Assignment', icon: FileText, iconColor: 'var(--type-assignment-color)' },
+    { value: 'task', label: 'Task', icon: ListChecks, iconColor: 'var(--type-task-color)' },
+    { value: 'subtask', label: 'Subtask', icon: CheckSquare, iconColor: 'var(--type-subtask-color)' },
 ];
 
 interface TaskManagerProps {
@@ -519,7 +520,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     <span className="text-fluid-lg font-black text-brand-textPrimary">
                         Tasks:
                     </span>
-                    <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-4">
+                    <span className="text-fluid-lg font-black text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2">
                         {currentClass?.name || 'All Classes'}
                     </span>
                 </div>
@@ -609,13 +610,19 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 <div className="flex items-center gap-2 text-center">
                     <DatePicker
                         value={selectedDate}
-                        onChange={(value) => setSelectedDate(value || toDateString())}
+                        onChange={(value) => {
+                            if (value instanceof Date) {
+                                setSelectedDate(format(value, 'yyyy-MM-dd'));
+                            } else {
+                                setSelectedDate(value || toDateString());
+                            }
+                        }}
                         iconOnly={true}
                         iconColor="var(--color-brand-accent)"
                     />
 
                     <span className="text-fluid-base font-bold whitespace-nowrap">
-                        <span className="text-brand-textPrimary underline decoration-brand-accent">
+                        <span className="text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2">
                             {(() => {
                                 const d = new Date(selectedDate + 'T00:00:00');
                                 return isValid(d) ? format(d, 'MMM d') : selectedDate;
@@ -652,7 +659,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     {/* LEFT PANEL: Task Editor */}
                     <div className="flex-1 lg:col-span-3 flex flex-col">
                         {/* Main Form Area - Outer box removed for "Free-Floating" model */}
-                        <div className={`w-full space-y-6 flex-1 flex flex-col relative z-40 ${editingTaskId ? 'active' : ''}`}>
+                        <div className={`w-full space-y-6 flex-1 flex flex-col relative z-20 ${editingTaskId ? 'active' : ''}`}>
 
 
                             {/* Title Input with Type selector and predictive number */}
@@ -712,7 +719,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         />
                                     </div>
                                     {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                    <div className="absolute bottom-6 left-6 flex flex-wrap items-center gap-2">
+                                    <div className="absolute bottom-6 left-6 right-6 flex flex-wrap items-center gap-2">
                                         {/* Inline attachments with image thumbnails */}
                                         {activeFormData.attachments && activeFormData.attachments.map(attachment => (
                                             <div
@@ -753,7 +760,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 )}
                                                 <button
                                                     onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-1 hover:bg-red-500/10 text-brand-textSecondary hover:text-red-500 rounded-lg transition-all"
+                                                    className="p-1 hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] rounded-lg transition-all"
                                                     title="Remove attachment"
                                                 >
                                                     <X size={12} />
@@ -766,7 +773,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 key={link.id}
                                                 className="flex items-center gap-1.5 px-2.5 py-1.5 bg-(--color-bg-tile) rounded-lg border border-border-subtle shadow-layered-sm text-xs max-w-[280px] button-lift-dynamic transition-float"
                                             >
-                                                <LinkIcon size={12} className="text-blue-500 shrink-0" />
+                                                <LinkIcon size={12} className="text-brand-accent shrink-0" />
                                                 <a
                                                     href={link.url}
                                                     target="_blank"
@@ -778,7 +785,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 </a>
                                                 <button
                                                     onClick={() => hookRemoveLink(link.id)}
-                                                    className="p-1 hover:bg-red-500/10 text-brand-textSecondary hover:text-red-500 rounded-lg transition-all"
+                                                    className="p-1 hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] rounded-lg transition-all"
                                                     title="Remove link"
                                                 >
                                                     <X size={12} />
@@ -792,45 +799,100 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 <span>Fetching title...</span>
                                             </div>
                                         )}
-                                        {/* Upload & Link buttons - Nested tile button pattern matching ClassCard */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
-                                                rounded-xl border cursor-pointer transition-float button-lift-dynamic
-                                                bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
-                                                shadow-layered hover:shadow-layered-lg
-                                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
-                                                focus-within:outline-none">
-                                                <input
-                                                    ref={fileInputRef}
-                                                    type="file"
-                                                    multiple
-                                                    accept={ALLOWED_FILE_TYPES.join(',')}
-                                                    onChange={handleFileSelect}
-                                                    disabled={isUploading}
-                                                    title="Upload files"
-                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                />
-                                                {isUploading ? <Loader size={16} className="animate-spin text-brand-accent" /> : <Upload size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />}
-                                                <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">
-                                                    {isUploading ? 'Wait...' : 'Upload'}
-                                                </span>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    const url = prompt('Enter URL:');
-                                                    if (url) addLink(url);
-                                                }}
-                                                className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
-                                                    rounded-xl border transition-float button-lift-dynamic
+                                        {/* Upload, Link & Connect buttons - Nested tile button pattern matching ClassCard */}
+                                        <div className="flex items-center justify-between w-full">
+                                            {/* Left: Upload & Link */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
+                                                    rounded-xl border cursor-pointer transition-float button-lift-dynamic
                                                     bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
                                                     shadow-layered hover:shadow-layered-lg
                                                     text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
-                                                    focus:outline-none"
-                                            >
-                                                <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Link</span>
-                                            </button>
+                                                    focus-within:outline-none">
+                                                    <input
+                                                        ref={fileInputRef}
+                                                        type="file"
+                                                        multiple
+                                                        accept={ALLOWED_FILE_TYPES.join(',')}
+                                                        onChange={handleFileSelect}
+                                                        disabled={isUploading}
+                                                        title="Upload files"
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                    />
+                                                    {isUploading ? <Loader size={16} className="animate-spin text-brand-accent" /> : <Upload size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />}
+                                                    <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">
+                                                        {isUploading ? 'Wait...' : 'Upload'}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const url = prompt('Enter URL:');
+                                                        if (url) addLink(url);
+                                                    }}
+                                                    className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
+                                                        rounded-xl border transition-float button-lift-dynamic
+                                                        bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
+                                                        shadow-layered hover:shadow-layered-lg
+                                                        text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
+                                                        focus:outline-none"
+                                                >
+                                                    <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Link</span>
+                                                </button>
+                                            </div>
+                                            {/* Right: Connect button */}
+                                            <div className="w-auto">
+                                                <Select<string>
+                                                    value={activeFormData.parentId}
+                                                    onChange={async (value) => {
+                                                        if (value === '__add_child__') {
+                                                            if (!editingTaskId) {
+                                                                if (!activeFormData.title.trim()) {
+                                                                    handleError(new Error("⚠️ Please add a title before adding children."));
+                                                                    return;
+                                                                }
+                                                                await handleSave();
+                                                                const savedTask = tasks.find(t => t.title === activeFormData.title);
+                                                                if (savedTask) {
+                                                                    handleAddSubtask(savedTask);
+                                                                }
+                                                            } else {
+                                                                const currentTask = tasks.find(t => t.id === editingTaskId);
+                                                                if (currentTask) {
+                                                                    handleAddSubtask(currentTask);
+                                                                }
+                                                            }
+                                                        } else {
+                                                            updateActiveCard('parentId', value);
+                                                        }
+                                                    }}
+                                                    options={[
+                                                        ...(['project', 'assignment'].includes(activeFormData.type) ? [
+                                                            { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: 'var(--type-task-color)' },
+                                                            { value: '__divider_top__', label: '──────────', disabled: true },
+                                                        ] : []),
+                                                        ...(activeFormData.type === 'task' ? [
+                                                            { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: 'var(--type-subtask-color)' },
+                                                            { value: '__divider_top__', label: '──────────', disabled: true },
+                                                        ] : []),
+                                                        ...availableParents.map(parent => ({
+                                                            value: parent.id,
+                                                            label: `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
+                                                            icon: getTypeIcon(parent.type),
+                                                            iconColor: getTypeHexColor(parent.type),
+                                                        })),
+                                                    ]}
+                                                    placeholder="Connected to:"
+                                                    icon={Share2}
+                                                    nullable
+                                                    searchable
+                                                    hideChevron
+                                                    iconSize={16}
+                                                    dropUp
+                                                    buttonClassName="py-2.5 px-4 min-h-[44px] text-[9px] font-black uppercase tracking-widest"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -872,7 +934,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                     {/* ADD TO CLASS */}
                                     <div className="flex flex-col gap-1">
                                         <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Add to Class:</span>
-                                        <div className="w-[200px]">
+                                        <div className="w-[150px] md:w-auto">
                                             {loadingRooms ? (
                                                 <Loader className="w-4 h-4 animate-spin text-brand-textSecondary" />
                                             ) : rooms.length === 0 ? (
@@ -884,7 +946,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     options={rooms.map(room => ({
                                                         value: room.id,
                                                         label: room.name,
-                                                        color: room.color || '#3B82F6',
+                                                        color: room.color || 'var(--color-brand-accent)',
                                                     }))}
                                                     placeholder="Select classes..."
                                                     primaryValue={currentClassId || undefined}
@@ -893,61 +955,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         </div>
                                     </div>
 
-                                    {/* CONNECT TASKS */}
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Connect to:</span>
-                                        <div className="w-[44px]">
-                                            <Select<string>
-                                                value={activeFormData.parentId}
-                                                onChange={async (value) => {
-                                                    if (value === '__add_child__') {
-                                                        if (!editingTaskId) {
-                                                            if (!activeFormData.title.trim()) {
-                                                                handleError(new Error("⚠️ Please add a title before adding children."));
-                                                                return;
-                                                            }
-                                                            await handleSave();
-                                                            const savedTask = tasks.find(t => t.title === activeFormData.title);
-                                                            if (savedTask) {
-                                                                handleAddSubtask(savedTask);
-                                                            }
-                                                        } else {
-                                                            const currentTask = tasks.find(t => t.id === editingTaskId);
-                                                            if (currentTask) {
-                                                                handleAddSubtask(currentTask);
-                                                            }
-                                                        }
-                                                    } else {
-                                                        updateActiveCard('parentId', value);
-                                                    }
-                                                }}
-                                                options={[
-                                                    ...(['project', 'assignment'].includes(activeFormData.type) ? [
-                                                        { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: '#22c55e' },
-                                                        { value: '__divider_top__', label: '──────────', disabled: true },
-                                                    ] : []),
-                                                    ...(activeFormData.type === 'task' ? [
-                                                        { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: '#f97316' },
-                                                        { value: '__divider_top__', label: '──────────', disabled: true },
-                                                    ] : []),
-                                                    ...availableParents.map(parent => ({
-                                                        value: parent.id,
-                                                        label: `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
-                                                        icon: getTypeIcon(parent.type),
-                                                        iconColor: getTypeHexColor(parent.type),
-                                                    })),
-                                                ]}
-                                                placeholder=""
-                                                icon={Plus}
-                                                nullable
-                                                searchable
-                                                hideText
-                                                hideChevron
-                                                iconSize={20}
-                                                dropUp
-                                            />
-                                        </div>
-                                    </div>
+
                                 </div>
 
                                 {/* Right: Delete + Save */}
@@ -959,7 +967,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         disabled={isSubmitting}
                                         className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
                                             bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary
-                                            button-lift-dynamic hover:border-red-400/50 hover:text-brand-textPrimary
+                                            button-lift-dynamic hover:border-[var(--color-status-stuck)]/50 hover:text-brand-textPrimary
                                             disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]
                                             ${isNewTask ? 'invisible pointer-events-none' : ''}`}
                                     >
@@ -1002,51 +1010,65 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             {/* Mobile Overlay - closes accordion when clicking outside */}
                             {isMobileTasksOpen && (
                                 <div
-                                    className="lg:hidden fixed inset-0 top-12 bg-black/30 z-40"
+                                    className="lg:hidden fixed inset-0 top-12 bg-black/30 z-30"
                                     onClick={() => setIsMobileTasksOpen(false)}
                                     aria-hidden="true"
                                 />
                             )}
 
                             {/* Mobile Accordion Header for Task List - only visible on mobile */}
-                            <div className="lg:hidden relative z-50 flex items-center w-full py-2.5 px-4 mt-2 rounded-lg border border-border-subtle bg-(--color-bg-tile)">
-                                {/* Left: Date Picker - Full display for more presence */}
-                                <DatePicker
-                                    value={selectedDate}
-                                    onChange={(value) => setSelectedDate(value || toDateString())}
-                                    className="shrink-0 scale-90 -ml-2"
-                                />
-
-                                {/* Center: Title with task count */}
-                                <div className="flex-1 flex items-center justify-center gap-2 -ml-4">
-                                    <span className="font-medium text-brand-textSecondary">
-                                        Tasks:
+                            <div className="lg:hidden relative z-30 flex items-center justify-between w-full py-2.5 px-4 mt-2 rounded-lg border border-border-subtle bg-(--color-bg-tile)">
+                                {/* Left: Calendar Icon + Date + Schedule */}
+                                <div className="flex items-center gap-2">
+                                    <DatePicker
+                                        value={selectedDate}
+                                        onChange={(value) => {
+                                            if (value instanceof Date) {
+                                                setSelectedDate(format(value, 'yyyy-MM-dd'));
+                                            } else {
+                                                setSelectedDate(value || toDateString());
+                                            }
+                                        }}
+                                        iconOnly={true}
+                                        iconColor="var(--color-brand-accent)"
+                                        className="shrink-0"
+                                    />
+                                    <span className="font-bold text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2">
+                                        {(() => {
+                                            const d = new Date(selectedDate + 'T00:00:00');
+                                            return isValid(d) ? format(d, 'MMM d') : selectedDate;
+                                        })()}
                                     </span>
-                                    <span className="font-bold text-brand-textPrimary">{filteredTasks.length}</span>
+                                    <span className="font-medium text-brand-textSecondary">Schedule</span>
                                 </div>
 
-                                {/* Right: Expand/collapse toggle */}
-                                <button
-                                    type="button"
-                                    onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
-                                    className="p-1 rounded hover:bg-(--color-bg-tile-hover) transition-colors"
-                                    title={isMobileTasksOpen ? "Close tasks list" : "Open tasks list"}
-                                >
-                                    <ChevronDown
-                                        size={18}
-                                        className={`text-brand-textSecondary transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
+                                {/* Right: Task count + Expand toggle */}
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm">
+                                        <span className="font-medium text-brand-textPrimary"># of tasks:</span>
+                                        <span className="font-bold text-brand-accent ml-1">{filteredTasks.length}</span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
+                                        className="p-1 rounded hover:bg-(--color-bg-tile-hover) transition-colors"
+                                        title={isMobileTasksOpen ? "Close tasks list" : "Open tasks list"}
+                                    >
+                                        <ChevronDown
+                                            size={18}
+                                            className={`text-brand-textSecondary transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
+                                        />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
-                                px-4 space-y-3 relative z-50 bg-(--color-bg-tile) lg:bg-transparent
-                                lg:pt-0 lg:pb-4 overflow-visible
+                                lg:space-y-3 lg:pt-0 lg:pb-4 lg:overflow-visible lg:relative lg:bg-transparent
                                 ${isMobileTasksOpen
-                                    ? 'flex-1 pt-3 pb-4 rounded-lg overflow-y-auto custom-scrollbar'
-                                    : 'max-h-0 overflow-hidden lg:max-h-none lg:overflow-visible'
+                                    ? 'fixed inset-x-0 bottom-0 top-auto max-h-[60vh] z-40 bg-[var(--bg-page)] rounded-t-2xl px-4 pt-4 pb-6 space-y-3 overflow-y-auto custom-scrollbar shadow-2xl'
+                                    : 'hidden lg:block'
                                 }
                                 transition-all duration-300 ease-in-out
                             `}>
@@ -1120,7 +1142,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                                                     {/* Content: Title + Due Date */}
                                                     <div className="flex-1 min-w-0">
-                                                        <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-white' : 'text-brand-textPrimary/90'}`}>
+                                                        <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
                                                             {task.title}
                                                         </h5>
 
@@ -1141,7 +1163,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                     <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                                                         {/* Checkmark for published (non-draft) tasks */}
                                                         {task.status !== 'draft' && (
-                                                            <div className="p-1 text-green-500" title="Published">
+                                                            <div className="p-1 text-brand-accent" title="Published">
                                                                 <Check size={14} />
                                                             </div>
                                                         )}
@@ -1306,7 +1328,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(task.id)}
-                                                    className="p-2 rounded-lg text-brand-textSecondary hover:text-red-500 hover:bg-red-500/5 transition-colors"
+                                                    className="p-2 rounded-lg text-brand-textSecondary hover:text-[var(--color-status-stuck)] hover:bg-[var(--color-status-stuck)]/5 transition-colors"
                                                     title="Delete task"
                                                 >
                                                     <Trash2 size={14} />

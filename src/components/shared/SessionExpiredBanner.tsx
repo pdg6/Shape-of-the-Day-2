@@ -36,14 +36,14 @@ const SessionExpiredBanner: React.FC = () => {
                     icon: <AlertTriangle size={16} />,
                     text: 'Session expired',
                     buttonText: 'Tap to reconnect',
-                    color: 'bg-amber-500',
+                    color: 'bg-brand-accent/90',
                 };
             case 'token_refresh_failed':
                 return {
                     icon: <RefreshCw size={16} />,
                     text: 'Connection lost',
                     buttonText: 'Try again',
-                    color: 'bg-red-500',
+                    color: 'bg-brand-accent/80',
                 };
             case 'network_error':
                 return {
@@ -57,7 +57,7 @@ const SessionExpiredBanner: React.FC = () => {
                     icon: <AlertTriangle size={16} />,
                     text: 'Authentication issue',
                     buttonText: 'Reconnect',
-                    color: 'bg-amber-500',
+                    color: 'bg-brand-accent/90',
                 };
         }
     };
@@ -69,9 +69,9 @@ const SessionExpiredBanner: React.FC = () => {
             className={`
                 fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-50
                 flex items-center gap-2 px-4 py-2 rounded-full
-                text-sm font-medium shadow-lg
+                text-sm font-medium shadow-layered
                 transition-all duration-300 cursor-pointer
-                ${content.color} text-white
+                ${content.color} text-brand-textPrimary
                 hover:scale-105 active:scale-95
             `}
             onClick={handleReconnect}

@@ -184,7 +184,7 @@ export function MultiSelect<T extends string | number = string>({
                 ) : value.length > 0 && primaryOption ? (
                     <span
                         className="absolute left-3 top-1/2 -translate-y-1/2"
-                        style={{ color: primaryOption.color || '#22c55e' }}
+                        style={{ color: primaryOption.color || 'var(--color-brand-accent)' }}
                     >
                         <Check size={16} strokeWidth={3} />
                     </span>
@@ -280,7 +280,7 @@ export function MultiSelect<T extends string | number = string>({
                                         {/* Colored checkmark when selected */}
                                         <span
                                             className={`absolute left-3 top-1/2 -translate-y-1/2 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
-                                            style={{ color: option.color || '#22c55e' }}
+                                            style={{ color: option.color || 'var(--color-brand-accent)' }}
                                         >
                                             <Check size={16} strokeWidth={3} />
                                         </span>

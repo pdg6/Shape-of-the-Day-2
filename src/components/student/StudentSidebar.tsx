@@ -60,7 +60,7 @@ const StudentSidebar: React.FC<StudentSidebarProps> = ({
             <aside className={`
                 fixed md:static inset-y-0 left-0 z-50
                 ${isCollapsed ? 'md:w-20' : 'md:w-72'} w-72
-                bg-transparent
+                bg-[var(--bg-page)] md:bg-transparent
                 transform transition-transform duration-300 ease-in-out
                 flex flex-col h-full overflow-hidden
                 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}

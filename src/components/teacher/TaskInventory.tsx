@@ -147,7 +147,7 @@ function TreeItem({
                             {task.title}
                         </span>
                         {task.status === 'done' && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-green-500/10 text-green-500 font-medium shrink-0">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--color-status-progress)]/10 text-[var(--color-status-progress)] font-medium shrink-0">
                                 Done
                             </span>
                         )}
@@ -162,7 +162,7 @@ function TreeItem({
                             e.stopPropagation();
                             onEdit(task);
                         }}
-                        className="p-1.5 min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-blue-500/10 text-brand-textSecondary hover:text-blue-500 transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center"
+                        className="p-1.5 min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-[var(--color-brand-accent)]/10 text-brand-textSecondary hover:text-[var(--color-brand-accent)] transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center"
                         title="Edit task"
                     >
                         <Pencil size={14} />
@@ -173,7 +173,7 @@ function TreeItem({
                             e.stopPropagation();
                             onDelete(task);
                         }}
-                        className="p-1.5 min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-red-500/10 text-brand-textSecondary hover:text-red-500 transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center"
+                        className="p-1.5 min-w-11 min-h-11 sm:min-w-0 sm:min-h-0 rounded-lg hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] transition-float hover:shadow-layered-lg button-lift-dynamic flex items-center justify-center"
                         title="Delete task"
                     >
                         <Trash2 size={14} />
@@ -194,7 +194,7 @@ function TreeItem({
             {/* Quick Add Input Row */}
             {isQuickAddActive && (
                 <div
-                    className="flex items-center gap-2 p-2 bg-green-500/10 rounded-lg mx-2 mb-1 border-2 border-dashed border-green-500/30 ml-(--depth-margin)"
+                    className="flex items-center gap-2 p-2 bg-[var(--color-status-progress)]/10 rounded-lg mx-2 mb-1 border-2 border-dashed border-[var(--color-status-progress)]/30 ml-(--depth-margin)"
                     style={{ '--depth-margin': `${(depth + 1) * 20 + 8}px` } as React.CSSProperties}
                 >
                     <span className={`shrink-0 w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(allowedChildTypes[0] || 'task')}`}>
@@ -224,16 +224,16 @@ function TreeItem({
                             }, 150);
                         }}
                         placeholder={`New ${getTypeLabel(allowedChildTypes[0] || 'task').toLowerCase()} title...`}
-                        className="flex-1 px-2 py-1 text-sm bg-tile border border-border-subtle rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                        className="flex-1 px-2 py-1 text-sm bg-tile border border-border-subtle rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-status-progress)]/20 focus:border-[var(--color-status-progress)]"
                         disabled={isQuickAddSaving}
                     />
                     {isQuickAddSaving ? (
-                        <Loader size={16} className="animate-spin text-green-500" />
+                        <Loader size={16} className="animate-spin text-[var(--color-status-progress)]" />
                     ) : (
                         <button
                             onClick={onQuickAddSave}
                             disabled={!quickAddTitle.trim()}
-                            className="p-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            className="p-1.5 rounded-lg bg-[var(--color-status-progress)] text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             title="Save"
                         >
                             <Plus size={14} />
@@ -792,7 +792,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                                 options={rooms.map(room => ({
                                     value: room.id,
                                     label: room.name,
-                                    iconColor: room.color || '#6B7280',
+                                    iconColor: room.color || 'var(--color-brand-textSecondary)',
                                 }))}
                                 placeholder="All Classes"
                                 icon={Filter}
@@ -930,7 +930,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             <button
                                 onClick={() => setMobileActiveTab('projects')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-float ${mobileActiveTab === 'projects'
-                                    ? 'bg-purple-500/10 text-purple-500'
+                                    ? 'bg-[var(--type-project-color)]/10 text-[var(--type-project-color)]'
                                     : 'text-brand-textSecondary hover:text-brand-textPrimary'
                                     }`}
                             >
@@ -941,7 +941,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             <button
                                 onClick={() => setMobileActiveTab('assignments')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-float ${mobileActiveTab === 'assignments'
-                                    ? 'bg-blue-500/10 text-blue-500'
+                                    ? 'bg-[var(--type-assignment-color)]/10 text-[var(--type-assignment-color)]'
                                     : 'text-brand-textSecondary hover:text-brand-textPrimary'
                                     }`}
                             >
@@ -952,7 +952,7 @@ export default function TaskInventory({ onEditTask, onCopyToBoard }: TaskInvento
                             <button
                                 onClick={() => setMobileActiveTab('tasks')}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-bold transition-float ${mobileActiveTab === 'tasks'
-                                    ? 'bg-green-500/10 text-green-500'
+                                    ? 'bg-[var(--type-task-color)]/10 text-[var(--type-task-color)]'
                                     : 'text-brand-textSecondary hover:text-brand-textPrimary'
                                     }`}
                             >

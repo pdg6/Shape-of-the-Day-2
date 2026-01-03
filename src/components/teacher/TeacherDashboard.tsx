@@ -12,6 +12,9 @@ import SettingsOverlay from './SettingsOverlay';
 import JoinCodeOverlay from './JoinCodeOverlay';
 import { Modal } from '../shared/Modal';
 import { LogoStatic } from '../shared/Logo';
+import { DatePicker } from '../shared/DatePicker';
+import { toDateString } from '../../utils/dateHelpers';
+import { format } from 'date-fns';
 
 
 interface MenuItem {
@@ -54,6 +57,7 @@ const TeacherDashboard: React.FC = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isJoinCodeOpen, setIsJoinCodeOpen] = useState(false);
+    const [shapeSelectedDate, setShapeSelectedDate] = useState(toDateString());
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
 
@@ -176,7 +180,7 @@ const TeacherDashboard: React.FC = () => {
                             setTasksSubTab('create');
                         }}
                     />;
-            case 'shape': return <ShapeOfDay onNavigate={handleDeepNavigation} />;
+            case 'shape': return <ShapeOfDay onNavigate={handleDeepNavigation} selectedDate={shapeSelectedDate} onDateChange={setShapeSelectedDate} />;
             case 'live': return <LiveView activeView={liveViewSubTab} />;
             case 'classrooms': return <ClassroomManager activeView="classes" onNavigate={handleDeepNavigation} onShowJoinCode={() => setIsJoinCodeOpen(true)} />;
             case 'reports': return <ClassroomManager activeView={reportsSubTab === 'calendar' ? 'history' : 'analytics'} onNavigate={handleDeepNavigation} onShowJoinCode={() => setIsJoinCodeOpen(true)} />;
@@ -201,7 +205,7 @@ const TeacherDashboard: React.FC = () => {
                 className={`
                     fixed lg:static inset-y-0 left-0 z-50
                     ${isCollapsed ? 'lg:w-20' : 'lg:w-64'} w-64
-                    bg-transparent
+                    bg-[var(--bg-page)] lg:bg-transparent
                     transform transition-transform duration-300 ease-in-out
                     flex flex-col h-full
                     ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
@@ -559,6 +563,21 @@ const TeacherDashboard: React.FC = () => {
                         >
                             <QrCode className="w-5 h-5" />
                         </button>
+                    ) : activeTab === 'shape' ? (
+                        <DatePicker
+                            value={shapeSelectedDate}
+                            onChange={(value) => {
+                                if (value instanceof Date) {
+                                    setShapeSelectedDate(format(value, 'yyyy-MM-dd'));
+                                } else if (typeof value === 'string' && value) {
+                                    setShapeSelectedDate(value);
+                                } else {
+                                    setShapeSelectedDate(toDateString());
+                                }
+                            }}
+                            iconOnly={true}
+                            iconColor="var(--color-brand-accent)"
+                        />
                     ) : (
                         <span className="text-sm font-medium text-brand-textSecondary whitespace-nowrap">
                             {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}

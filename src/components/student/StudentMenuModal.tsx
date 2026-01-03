@@ -135,7 +135,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             {/* Class Name */}
                             <div className="bg-tile rounded-xl p-3 flex items-center justify-between border border-border-subtle shadow-layered-sm">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                                    <div className="p-2 rounded-lg bg-[var(--color-status-progress)]/10 text-[var(--color-status-progress)]">
                                         <BookOpen size={20} />
                                     </div>
                                     <div className="text-left">
@@ -150,7 +150,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         <div className="bg-tile rounded-xl p-4 border border-border-subtle shadow-layered-sm space-y-3">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
+                                    <div className="p-2 rounded-lg bg-[var(--color-status-in-progress)]/10 text-[var(--color-status-in-progress)]">
                                         <CheckCircle size={20} />
                                     </div>
                                     <span className="font-black uppercase tracking-widest text-xs text-brand-textPrimary">Progress</span>
@@ -175,7 +175,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             {/* Visual Presets Info */}
                             <div className="bg-tile-alt rounded-xl p-3 border border-border-subtle">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                                    <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
                                         <Sparkles size={20} />
                                     </div>
                                     <div className="min-w-0">
@@ -271,7 +271,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                             {/* Reset Button */}
                             <button
                                 onClick={resetSettings}
-                                className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-tile-alt text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-red-500 hover:border-red-500/50 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-tile-alt text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-[var(--color-status-stuck)] hover:border-[var(--color-status-stuck)]/50 transition-all flex items-center justify-center gap-2"
                             >
                                 <Trash2 size={14} />
                                 Reset to Defaults
@@ -291,7 +291,7 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                                 onClose();
                             }
                         }}
-                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-600 rounded-xl p-4 flex items-center justify-center gap-3 transition-float button-lift-dynamic border border-red-500/20 shadow-layered-sm font-black uppercase tracking-widest text-xs"
+                        className="w-full bg-[var(--color-status-stuck)]/10 hover:bg-[var(--color-status-stuck)]/20 text-[var(--color-status-stuck)] rounded-xl p-4 flex items-center justify-center gap-3 transition-float button-lift-dynamic border border-[var(--color-status-stuck)]/20 shadow-layered-sm font-black uppercase tracking-widest text-xs"
                     >
                         <LogOut size={18} />
                         <span>Sign Out</span>

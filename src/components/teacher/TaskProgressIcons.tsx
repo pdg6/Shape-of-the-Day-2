@@ -41,27 +41,27 @@ const getStatusColors = (status: string | undefined): { bg: string; text: string
     switch (normalizedStatus) {
         case 'help':
             return {
-                bg: 'bg-(--color-status-stuck)',
-                text: 'text-white',
-                border: 'border-red-600'
+                bg: 'bg-[var(--color-status-stuck)]',
+                text: 'text-brand-textPrimary',
+                border: 'border-brand-accent/50'
             };
         case 'in_progress':
             return {
-                bg: 'bg-(--color-status-progress)',
-                text: 'text-white',
-                border: 'border-emerald-600'
+                bg: 'bg-[var(--color-status-progress)]',
+                text: 'text-brand-textPrimary',
+                border: 'border-brand-accent'
             };
         case 'done':
             return {
-                bg: 'bg-(--color-status-complete)',
-                text: 'text-white',
-                border: 'border-blue-600'
+                bg: 'bg-[var(--color-status-complete)]',
+                text: 'text-brand-textPrimary',
+                border: 'border-brand-accent'
             };
         default: // todo, draft, undefined
             return {
-                bg: 'bg-tile-alt',
+                bg: 'bg-[var(--color-bg-tile-alt)]',
                 text: 'text-brand-textSecondary',
-                border: 'border-border-subtle'
+                border: 'border-[var(--color-border-subtle)]'
             };
     }
 };
@@ -163,7 +163,7 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
                                     bg-tile-alt
                                     text-brand-textPrimary
                                     text-xs font-medium
-                                    rounded-md shadow-lg border border-border-subtle
+                                    rounded-md shadow-layered border border-[var(--color-border-subtle)]
                                     whitespace-nowrap
                                     opacity-0 invisible
                                     group-hover:opacity-100 group-hover:visible
