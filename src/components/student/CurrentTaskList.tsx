@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, ExternalLink, File, FileText, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation, ChevronDown, ChevronUp } from 'lucide-react';
-import { Task, TaskStatus } from '../../types';
-
+import { HelpCircle, Play, CheckCircle, RotateCcw, X, LucideIcon, Send, MessageCircle, ExternalLink, File, FileText, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation, ChevronDown, ChevronUp, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 import { sanitizeComment, filterProfanity } from '../../utils/security';
 import { sanitizeHelpRequest } from '../../utils/textSanitizer';
-import { addQuestionToTask } from '../../services/firestoreService';
+import { addQuestionToTask, subscribeToTaskQuestions } from '../../services/firestoreService';
+import { Task, TaskStatus, QuestionEntry } from '../../types';
 import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
 
 import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
+import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
+import { formatMessageToHtml } from '../../utils/markdownFormatter';
 
 /**
  * Configuration for the different task status actions.
@@ -64,12 +66,7 @@ const STATUS_ACTIONS: StatusAction[] = [
     }
 ];
 
-// Pre-defined help options
-const HELP_OPTIONS = [
-    { id: 'dont-understand', label: "I don't understand", text: "I don't understand" },
-    { id: 'stuck', label: "I'm stuck", text: "I'm stuck on something" },
-    { id: 'question', label: "I have a question", text: "I have a question about" },
-];
+
 
 /**
  * Props for the HelpModal component.
@@ -91,8 +88,7 @@ interface HelpModalProps {
 const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, studentName, classroomId }) => {
     const [comment, setComment] = useState(task.comment || '');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submittedQuestions, setSubmittedQuestions] = useState<string[]>([]);
-    const [selectedOption, setSelectedOption] = useState<string | null>(null);
+    // const [submittedQuestions, setSubmittedQuestions] = useState<string[]>([]); // Cleaned up as unnecessary
     const maxChars = 200;
     const overlayRef = useRef<HTMLDivElement>(null);
     const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -110,17 +106,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
         setComment(filtered);
     };
 
-    /**
-     * Handle selecting a pre-defined option
-     */
-    const handleOptionSelect = (option: typeof HELP_OPTIONS[0]) => {
-        setSelectedOption(option.id);
-        // If comment is empty or matches a previous option, set to the new option text
-        const optionTexts = HELP_OPTIONS.map(o => o.text);
-        if (!comment.trim() || optionTexts.some(t => comment.startsWith(t))) {
-            setComment(option.text + ': ');
-        }
-    };
+
 
     /**
      * Submit the help request to the task's question history
@@ -132,7 +118,7 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
         try {
             const sanitized = sanitizeComment(comment, maxChars);
 
-            // Save to task's questionHistory in Firestore
+            // Save to questions subcollection (Sanitized/Escaped for DB/Teacher Safety)
             await addQuestionToTask(task.id, {
                 studentId: auth.currentUser.uid,
                 studentName: studentName,
@@ -140,15 +126,15 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 question: sanitized,
             });
 
-            // Also update the comment for immediate display
-            onUpdateComment(task.id, sanitized);
+            // Update local state (Use processed but UN-ESCAPED text for the UI so it doesn't show &#39;)
+            // We want the text to remain editable and readable in the textarea.
+            onUpdateComment(task.id, comment);
 
-            // Track submitted question
-            setSubmittedQuestions(prev => [...prev, sanitized]);
+            // Track submitted question (Legacy local state - subscription handles the real list now)
+            // setSubmittedQuestions(prev => [...prev, sanitized]);
 
             toast.success('Help request sent to teacher!');
             setComment('');
-            setSelectedOption(null);
         } catch (error) {
             console.error('Error submitting help request:', error);
             toast.error('Failed to send help request');
@@ -177,10 +163,29 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
-    // Get previous questions for this task
-    const previousQuestions = task.questionHistory?.filter(
-        q => q.classroomId === classroomId
-    ) || [];
+    // Subscribe to real-time questions
+    const [questions, setQuestions] = useState<QuestionEntry[]>([]);
+
+    useEffect(() => {
+        const studentId = auth.currentUser?.uid;
+        if (!studentId) return;
+
+        const unsubscribe = subscribeToTaskQuestions(
+            task.id,
+            (fetchedQuestions) => {
+                setQuestions(fetchedQuestions);
+            },
+            classroomId,
+            studentId // Pass studentId to filter query and satisfy security rules
+        );
+
+        return () => unsubscribe();
+    }, [task.id, classroomId]);
+
+    // Use the subscribed questions + legacy history if any (merged deduped)
+    // Actually, let's just use the new system. Legacy questions are "archived" unless migrated.
+    // For "Shape of the Day", we just use the new live questions.
+    const displayQuestions = questions;
 
     return (
         <div
@@ -192,21 +197,21 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="help-modal-title"
-                className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl shadow-layered-lg border border-border-subtle transform transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col"
+                aria-labelledby="help-modal-title"
+                className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl border transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-border-subtle shadow-layered-lg"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="flex items-start justify-between p-4 border-b border-border-subtle">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <HelpCircle className="w-5 h-5 text-status-question" />
-                            <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary">
-                                Need Help?
+                            <div className="p-2 rounded-full bg-status-question/10 text-status-question">
+                                <HelpCircle className="w-5 h-5" />
+                            </div>
+                            <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary line-clamp-1" title={task.title}>
+                                {task.title}
                             </h2>
                         </div>
-                        <p className="text-sm text-brand-textSecondary">
-                            {task.title}
-                        </p>
                     </div>
                     <button
                         ref={closeButtonRef}
@@ -218,107 +223,106 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                     </button>
                 </div>
 
-                {/* Previous Questions */}
-                {(previousQuestions.length > 0 || submittedQuestions.length > 0) && (
-                    <div className="px-4 pt-3 max-h-32 overflow-y-auto border-b border-border-subtle">
-                        <div className="flex items-center gap-2 mb-2">
-                            <MessageCircle size={14} className="text-brand-textMuted" />
-                            <span className="text-xs font-black text-brand-textMuted uppercase">Previous Requests</span>
-                        </div>
-                        <div className="space-y-2 pb-3">
-                            {previousQuestions.map((q, idx) => (
-                                <div key={q.id || idx} className="text-xs bg-tile-alt p-2 rounded-lg border border-border-subtle">
-                                    <span className="text-brand-textSecondary">
-                                        "{q.question}"
-                                    </span>
+                {/* Previous Requests (Threaded Chat) */}
+                {(displayQuestions.length > 0) && (
+                    <div className="flex-1 min-h-0 bg-[var(--color-bg-tile-alt)]/30 border-b border-border-subtle flex flex-col">
+                        {/* Chat Content */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
+                            {/* Reverse mapping so newest is at bottom visually if we unreversed? No, Firestore order is DESC (Newest first).
+                                For a chat log, we usually want Oldest at top, Newest at bottom.
+                                Firestore returns Newest First. So we should reverse the array for display.
+                            */}
+                            {[...displayQuestions].map((q, idx) => (
+                                <div key={q.id || idx} className="flex flex-col gap-2">
+                                    {/* Student Bubble (Right) */}
+                                    <div className="self-end max-w-[85%] flex flex-col items-end gap-1">
+                                        <div className="bg-brand-accent/10 border border-[var(--color-brand-accent)] text-brand-textPrimary rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-sm w-full">
+                                            <CodeBlockRenderer
+                                                html={formatMessageToHtml(q.question)}
+                                                className="prose-p:my-0 prose-pre:my-2"
+                                            />
+                                        </div>
+                                        <span className="text-[9px] text-brand-textSecondary font-medium px-1">
+                                            {q.askedAt?.toDate ? format(q.askedAt.toDate(), 'h:mm a') : 'Just now'}
+                                        </span>
+                                    </div>
+
+                                    {/* Teacher Response Bubble (Left) */}
                                     {q.resolved && q.teacherResponse && (
-                                        <div className="mt-1 pl-2 border-l-2 border-brand-accent text-brand-accent">
-                                            Teacher: {q.teacherResponse}
+                                        <div className="self-start max-w-[85%] flex flex-col items-start gap-1 animate-in slide-in-from-left-2">
+                                            <div className="bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-2xl rounded-tl-sm px-4 py-2 text-sm shadow-md w-full">
+                                                <span className="block text-[10px] font-black text-brand-accent uppercase mb-1">Teacher</span>
+                                                <CodeBlockRenderer
+                                                    html={formatMessageToHtml(q.teacherResponse)}
+                                                    className="prose-p:my-0 prose-pre:my-2"
+                                                />
+                                            </div>
+                                            <span className="text-[9px] text-brand-textSecondary font-medium px-1">
+                                                {q.resolvedAt?.toDate ? format(q.resolvedAt.toDate(), 'h:mm a') : 'Responded'}
+                                            </span>
                                         </div>
                                     )}
-                                </div>
-                            ))}
-                            {submittedQuestions.map((q, idx) => (
-                                <div key={`new-${idx}`} className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
-                                    <span className="text-emerald-500">
-                                        âœ“ "{q}" (just submitted)
-                                    </span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 )}
 
-                {/* Pre-defined Options */}
-                <div className="px-4 pt-4">
-                    <p className="text-sm font-bold text-brand-textPrimary mb-2">
-                        What kind of help do you need?
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                        {HELP_OPTIONS.map((option) => (
-                            <button
-                                key={option.id}
-                                onClick={() => handleOptionSelect(option)}
-                                className={`px-3 py-1.5 rounded-full text-sm font-bold border-2 transition-all ${selectedOption === option.id
-                                    ? 'bg-status-question/10 text-status-question border-status-question'
-                                    : 'bg-tile-alt text-brand-textSecondary border-border-subtle hover:border-status-question/50'
-                                    }`}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
                 {/* Content */}
-                <div className="p-4 flex-1 overflow-y-auto">
-                    <label className="block text-sm font-bold text-brand-textPrimary mb-1">
-                        Tell your teacher more:
-                    </label>
-                    {/* PRIVACY: Teacher visibility warning */}
-                    <p className="text-[10px] font-black uppercase tracking-widest text-status-stuck mb-2 flex items-center gap-1">
-                        <span>âš ï¸</span>
-                        <span>Your teacher will see this message</span>
-                    </p>
-                    <div className="relative">
+                <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
                         <textarea
                             value={comment}
                             onChange={handleCommentChange}
-                            placeholder="Describe what you need help with..."
+                            placeholder={questions.length > 0 ? "Type a reply..." : "Describe what you need help with..."}
                             maxLength={maxChars}
                             autoComplete="off"
                             spellCheck={true}
-                            className="w-full h-24 p-3 rounded-xl bg-tile-alt border border-border-subtle text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
+                            className="w-full h-32 p-3 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
                             autoFocus
                             data-testid="help-input"
                         />
-                        <div className="absolute bottom-2 right-2 text-xs text-brand-textSecondary">
-                            {comment.length}/{maxChars}
+                        <div className="flex justify-between items-start px-1 mt-2">
+                            <span className="text-xs text-brand-textSecondary ml-auto">
+                                {comment.length}/{maxChars}
+                            </span>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-border-subtle flex justify-between gap-3">
+                <div className="p-4 border-t border-border-subtle flex items-center justify-between gap-3 bg-[var(--color-bg-tile)]">
+                    {/* Ask AI Button (New Location) */}
                     <button
-                        onClick={onClose}
-                        className="px-4 py-2 bg-tile-alt hover:bg-(--color-bg-tile-hover) text-brand-textPrimary rounded-xl text-sm font-bold transition-float button-lift-dynamic border border-border-subtle shadow-layered-sm"
+                        type="button"
+                        className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl text-xs font-bold transition-colors border border-purple-500/20 opacity-50 cursor-not-allowed"
+                        title="Coming Soon"
                     >
-                        Close
+                        <Sparkles className="w-4 h-4" />
+                        <span>Ask AI</span>
                     </button>
-                    <button
-                        onClick={handleSubmitHelp}
-                        disabled={!comment.trim() || isSubmitting}
-                        className="flex items-center gap-2 px-4 py-2 bg-status-question hover:bg-status-question/90 disabled:bg-tile-alt text-white disabled:text-brand-textMuted rounded-lg text-sm font-bold transition-colors disabled:cursor-not-allowed uppercase tracking-wider"
-                        data-testid="submit-help-btn"
-                    >
-                        {isSubmitting ? (
-                            <span className="animate-spin">â³</span>
-                        ) : (
-                            <Send size={14} />
-                        )}
-                        Send Help Request
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={onClose}
+                            className="px-3 py-2 text-brand-textMuted hover:text-brand-textPrimary text-sm font-bold transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSubmitHelp}
+                            disabled={!comment.trim() || isSubmitting}
+                            className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 disabled:bg-tile-alt text-white disabled:text-brand-textMuted rounded-xl text-sm font-bold transition-all shadow-lg shadow-brand-accent/20 disabled:shadow-none disabled:cursor-not-allowed"
+                            data-testid="submit-help-btn"
+                        >
+                            {isSubmitting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Send size={14} />
+                            )}
+                            Ask Teacher
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

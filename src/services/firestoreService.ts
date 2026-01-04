@@ -692,17 +692,13 @@ export const addQuestionToTask = async (
     taskId: string,
     questionData: Partial<QuestionEntry>
 ): Promise<string> => {
-    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
-    const snapshot = await getDoc(taskRef);
+    // REFACTOR: Use subcollection instead of array
+    const questionsRef = collection(db, 'tasks', taskId, 'questions');
 
-    if (!snapshot.exists()) {
-        throw new Error('Task not found');
-    }
+    // Auto-generate ID or let Firestore do it (we'll do manually to match return type)
+    const newQuestionRef = doc(questionsRef);
+    const questionId = newQuestionRef.id;
 
-    const task = snapshot.data();
-    const questionHistory = task.questionHistory || [];
-
-    const questionId = `q_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
     const newQuestion: QuestionEntry = {
         id: questionId,
         studentId: questionData.studentId!,
@@ -713,11 +709,7 @@ export const addQuestionToTask = async (
         resolved: false,
     };
 
-    await updateDoc(taskRef, {
-        questionHistory: [...questionHistory, newQuestion],
-        updatedAt: serverTimestamp(),
-    });
-
+    await setDoc(newQuestionRef, newQuestion);
     return questionId;
 };
 
@@ -733,29 +725,13 @@ export const resolveQuestion = async (
     questionId: string,
     teacherResponse: string = ''
 ): Promise<void> => {
-    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
-    const snapshot = await getDoc(taskRef);
+    // REFACTOR: Update subcollection document
+    const questionRef = doc(db, 'tasks', taskId, 'questions', questionId);
 
-    if (!snapshot.exists()) {
-        throw new Error('Task not found');
-    }
-
-    const task = snapshot.data();
-    const questionHistory = (task.questionHistory || []).map(q => {
-        if (q.id === questionId) {
-            return {
-                ...q,
-                resolved: true,
-                resolvedAt: serverTimestamp(),
-                teacherResponse,
-            };
-        }
-        return q;
-    });
-
-    await updateDoc(taskRef, {
-        questionHistory,
-        updatedAt: serverTimestamp(),
+    await updateDoc(questionRef, {
+        resolved: true,
+        resolvedAt: serverTimestamp(),
+        teacherResponse,
     });
 };
 
@@ -767,23 +743,47 @@ export const resolveQuestion = async (
  */
 export const getTaskQuestions = async (
     taskId: string,
-    classroomId: string | null = null
+    classroomId: string | null = null,
+    studentId: string | null = null
 ): Promise<QuestionEntry[]> => {
-    const taskRef = doc(db, 'tasks', taskId).withConverter(taskConverter);
-    const snapshot = await getDoc(taskRef);
+    const questionsRef = collection(db, 'tasks', taskId, 'questions');
+    let q = query(questionsRef, orderBy('askedAt', 'desc'));
 
-    if (!snapshot.exists()) {
-        return [];
+    // if (classroomId) {
+    //     q = query(q, where('classroomId', '==', classroomId));
+    // }
+    if (studentId) {
+        q = query(q, where('studentId', '==', studentId));
     }
 
-    const task = snapshot.data();
-    let questions = task.questionHistory || [];
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionEntry));
+};
 
-    if (classroomId) {
-        questions = questions.filter(q => q.classroomId === classroomId);
+/**
+ * Subscribe to questions for a task (Real-time)
+ */
+export const subscribeToTaskQuestions = (
+    taskId: string,
+    callback: (questions: QuestionEntry[]) => void,
+    classroomId: string | null = null,
+    studentId: string | null = null
+): Unsubscribe => {
+    const questionsRef = collection(db, 'tasks', taskId, 'questions');
+    let q = query(questionsRef, orderBy('askedAt', 'desc')); // Newest first
+
+    // ClassroomId filter is redundant within a specific task subcollection
+    // if (classroomId) {
+    //     q = query(q, where('classroomId', '==', classroomId));
+    // }
+    if (studentId) {
+        q = query(q, where('studentId', '==', studentId));
     }
 
-    return questions;
+    return onSnapshot(q, (snapshot) => {
+        const questions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuestionEntry));
+        callback(questions);
+    });
 };
 
 /**

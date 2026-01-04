@@ -10,6 +10,8 @@ import { Button } from '../shared/Button';
 import TaskProgressIcons from './TaskProgressIcons';
 import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 import { PageLayout } from '../shared/PageLayout';
+import { TeacherChatModal } from './TeacherChatModal';
+import { MessageCircle } from 'lucide-react';
 
 /**
  * LiveView Component
@@ -31,6 +33,14 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
     const [internalView, setInternalView] = useState<'students' | 'tasks'>(activeView);
+
+    // Chat State
+    const [chatSession, setChatSession] = useState<{
+        studentId: string;
+        studentName: string;
+        taskId: string;
+        taskTitle: string;
+    } | null>(null);
 
     // Sync internal state with prop changes
     useEffect(() => {
@@ -59,6 +69,28 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                 alert('Failed to remove student. Please try again.');
             }
         }
+    };
+
+    // Handle opening chat
+    const handleOpenChat = (student: LiveStudent, taskId?: string) => {
+        // If taskId is provided, use it.
+        // Otherwise try to find their current task.
+        const targetTaskId = taskId || student.currentTaskId;
+
+        if (!targetTaskId) {
+            alert("This student doesn't have an active task to chat about yet.");
+            return;
+        }
+
+        const task = tasks.find(t => t.id === targetTaskId);
+        const taskTitle = task ? task.title : 'Unknown Task';
+
+        setChatSession({
+            studentId: student.uid,
+            studentName: student.displayName,
+            taskId: targetTaskId,
+            taskTitle: taskTitle
+        });
     };
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
@@ -261,11 +293,24 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                     students={activeStudents}
                     tasks={relevantTasks}
                     onDelete={handleDeleteStudent}
+                    onChat={handleOpenChat}
                 />
             ) : (
                 <TaskListView
                     tasks={relevantTasks}
                     students={activeStudents}
+                    onChat={handleOpenChat}
+                />
+            )}
+
+            {/* Chat Modal */}
+            {chatSession && (
+                <TeacherChatModal
+                    taskId={chatSession.taskId}
+                    studentId={chatSession.studentId}
+                    studentName={chatSession.studentName}
+                    taskTitle={chatSession.taskTitle}
+                    onClose={() => setChatSession(null)}
                 />
             )}
         </PageLayout>
@@ -340,7 +385,12 @@ const EmptySessionView: React.FC<{
 
 // --- Sub-Components ---
 
-const StudentListView: React.FC<{ students: LiveStudent[], tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
+const StudentListView: React.FC<{
+    students: LiveStudent[],
+    tasks: Task[],
+    onDelete: (uid: string, name: string) => void,
+    onChat: (student: LiveStudent, taskId?: string) => void
+}> = ({ students, tasks, onDelete, onChat }) => {
     return (
         <div className="flex-1 min-h-0 bg-(--color-bg-tile) rounded-2xl border border-border-subtle overflow-hidden shadow-layered lift-dynamic transition-float flex flex-col">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -376,9 +426,21 @@ const StudentListView: React.FC<{ students: LiveStudent[], tasks: Task[], onDele
                                     {/* Questions/Comments - expands to fill space */}
                                     <td className="p-4">
                                         {student.currentMessage ? (
-                                            <span className={`text-sm italic ${needsHelp ? 'text-[var(--color-status-stuck)]' : 'text-brand-textSecondary'}`} title={student.currentMessage}>
+                                            <button
+                                                onClick={() => onChat(student)}
+                                                className={`text-sm italic hover:underline text-left ${needsHelp ? 'text-[var(--color-status-stuck)]' : 'text-brand-textSecondary'}`}
+                                                title="Click to chat"
+                                            >
                                                 "{student.currentMessage}"
-                                            </span>
+                                            </button>
+                                        ) : needsHelp ? (
+                                            <button
+                                                onClick={() => onChat(student)}
+                                                className="flex items-center gap-1.5 px-2 py-1 bg-[var(--color-status-stuck)]/10 text-[var(--color-status-stuck)] text-xs font-bold rounded-lg border border-[var(--color-status-stuck)]/20 hover:bg-[var(--color-status-stuck)]/20 transition-colors"
+                                            >
+                                                <MessageCircle className="w-3 h-3" />
+                                                Review Request
+                                            </button>
                                         ) : (
                                             <span className="text-sm text-brand-textSecondary/60">—</span>
                                         )}
@@ -405,7 +467,11 @@ const StudentListView: React.FC<{ students: LiveStudent[], tasks: Task[], onDele
     );
 };
 
-const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ tasks, students }) => {
+const TaskListView: React.FC<{
+    tasks: Task[],
+    students: LiveStudent[],
+    onChat: (student: LiveStudent, taskId?: string) => void
+}> = ({ tasks, students, onChat }) => {
     if (tasks.length === 0) {
         return (
             <div className="text-center py-12 text-brand-textSecondary bg-(--color-bg-tile) rounded-2xl border border-dashed border-border-subtle shadow-layered-sm lift-dynamic transition-float">
@@ -482,6 +548,8 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                 color="bg-[var(--color-status-stuck)]/5 border-[var(--color-status-stuck)]/10"
                                 badgeColor="bg-[var(--color-status-stuck)] text-brand-textPrimary"
                                 textColor="text-[var(--color-status-stuck)]"
+                                taskId={task.id}
+                                onChat={onChat}
                             />
 
                             {/* WORKING BUCKET */}
@@ -491,6 +559,8 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                 color="bg-[var(--color-status-progress)]/5 border-[var(--color-status-progress)]/10"
                                 badgeColor="bg-[var(--color-status-progress)] text-brand-textPrimary"
                                 textColor="text-[var(--color-status-progress)]"
+                                taskId={task.id}
+                                onChat={onChat}
                             />
 
                             {/* DONE BUCKET */}
@@ -500,6 +570,8 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
                                 color="bg-[var(--color-status-complete)]/5 border-[var(--color-status-complete)]/10"
                                 badgeColor="bg-[var(--color-status-complete)] text-brand-textPrimary"
                                 textColor="text-[var(--color-status-complete)]"
+                                taskId={task.id}
+                                onChat={onChat}
                             />
 
                             {!hasActivity && (
@@ -581,8 +653,10 @@ const StudentBucketColumn: React.FC<{
     students: LiveStudent[],
     color: string,
     badgeColor: string,
-    textColor: string
-}> = ({ label, students, color, badgeColor, textColor }) => {
+    textColor: string,
+    taskId: string,
+    onChat: (student: LiveStudent, taskId?: string) => void
+}> = ({ label, students, color, badgeColor, textColor, taskId, onChat }) => {
     if (students.length === 0) return null;
 
     return (
@@ -597,9 +671,10 @@ const StudentBucketColumn: React.FC<{
             </div>
             <div className="space-y-2">
                 {students.map(s => (
-                    <div
+                    <button
                         key={s.uid}
-                        className="bg-(--color-bg-tile) p-2.5 rounded-lg border border-border-subtle shadow-layered-sm flex flex-col gap-1"
+                        onClick={() => onChat(s, taskId)}
+                        className="w-full text-left bg-(--color-bg-tile) p-2.5 rounded-lg border border-border-subtle shadow-layered-sm flex flex-col gap-1 hover:border-brand-accent/50 hover:shadow-layered transition-all active:scale-95"
                     >
                         <span className="text-sm font-bold text-brand-textPrimary">
                             {s.displayName}
@@ -609,7 +684,7 @@ const StudentBucketColumn: React.FC<{
                                 "{s.currentMessage}"
                             </span>
                         )}
-                    </div>
+                    </button>
                 ))}
             </div>
         </div>

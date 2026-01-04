@@ -103,6 +103,25 @@ service cloud.firestore {
       
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.teacherId;
       allow update, delete: if isSignedIn() && request.auth.uid == resource.data.teacherId;
+
+      // QUESTIONS SUBCOLLECTION (Refactored for AI/Analytics)
+      match /questions/{questionId} {
+        // Students can read their own questions; Teachers (task owners) can read all
+        allow read: if isSignedIn() && (
+          request.auth.uid == resource.data.studentId || 
+          get(/databases/$(database)/documents/tasks/$(taskId)).data.teacherId == request.auth.uid
+        );
+        
+        // Students can create questions (must tag themselves correctly)
+        allow create: if isSignedIn() && 
+                      request.resource.data.studentId == request.auth.uid &&
+                      request.resource.data.question.size() > 0 &&
+                      request.resource.data.question.size() <= 500; // Genkit limit safety
+        
+        // Teachers can update (to resolve/answer)
+        allow update: if isSignedIn() && 
+                      get(/databases/$(database)/documents/tasks/$(taskId)).data.teacherId == request.auth.uid;
+      }
     }
     
     // ========================================================================

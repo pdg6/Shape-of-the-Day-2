@@ -88,6 +88,7 @@ export interface Task {
 
     // --- Question History ---
     // Note: This is stored separately and NOT copied when duplicating tasks
+    /** @deprecated Use the 'questions' subcollection instead */
     questionHistory?: QuestionEntry[]; // Array of student questions for this task
 
     // --- Teacher-side scheduling fields ---
