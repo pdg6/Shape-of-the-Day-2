@@ -24,8 +24,8 @@ const LoadingSpinner = () => (
     <div className="h-screen w-screen flex items-center justify-center bg-(--bg-page)">
         <div className="flex flex-col items-center gap-4">
             <div className="w-12 h-12 border-4 border-brand-accent/20 border-t-brand-accent rounded-full animate-spin" />
-            <p className="text-sm font-bold text-brand-textSecondary animate-pulse uppercase tracking-widest">
-                INITIALIZING THE DAY...
+            <p className="text-sm font-medium text-brand-textSecondary animate-pulse">
+                Initializing the day...
             </p>
         </div>
     </div>

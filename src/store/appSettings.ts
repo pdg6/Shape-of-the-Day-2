@@ -158,14 +158,14 @@ export const useClassStore = create<ClassState>((set) => ({
             bgColor: '#050505',
             particleColor: 'vibrant',
             particlesEnabled: true,
-            particleEffect: 'swarm_large' as const,
+            particleEffect: 'orbit' as const,
             particleOpacity: 0.25,
             primaryTheme: 'pure',
             secondaryTheme: 'mist',
-            tileTheme: 'onyx',
+            tileTheme: 'glass',
             elevationLevel: 'moderate',
-            borderStyle: 'auto',
-            horizonEtch: 'top',
+            borderStyle: 'ghost',
+            horizonEtch: 'left',
             auraGlow: 'off'
         };
 
@@ -276,14 +276,14 @@ export const useClassStore = create<ClassState>((set) => ({
             bgColor: '#050505',
             particleColor: 'vibrant',
             particlesEnabled: true,
-            particleEffect: 'swarm_large' as const,
+            particleEffect: 'orbit' as const,
             particleOpacity: 0.25,
             primaryTheme: 'pure',
             secondaryTheme: 'mist',
-            tileTheme: 'onyx',
+            tileTheme: 'glass',
             elevationLevel: 'moderate',
-            borderStyle: 'auto',
-            horizonEtch: 'top',
+            borderStyle: 'ghost',
+            horizonEtch: 'left',
             auraGlow: 'off'
         };
         if (typeof window !== 'undefined') {

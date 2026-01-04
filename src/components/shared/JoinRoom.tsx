@@ -81,8 +81,8 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '', accentCol
         try {
             let targetClassId = '';
 
-            // Query Firestore for classroom with matching join code
-            const q = query(collection(db, 'classrooms'), where('joinCode', '==', code));
+            // Query Firestore for classroom with matching join code (use sanitized version)
+            const q = query(collection(db, 'classrooms'), where('joinCode', '==', sanitizedCode));
             const snapshot = await getDocs(q);
 
             const firstDoc = snapshot.docs[0];
@@ -101,14 +101,17 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoin, initialCode = '', accentCol
             // 3. Create the Live Student Document in the target class
             const newStudentData: LiveStudent = {
                 uid: uid,
-                displayName: sanitizedName,
+                displayName: sanitizedName.trim(),
                 joinedAt: serverTimestamp() as any,
                 currentStatus: 'todo',
+                taskStatuses: {},
                 taskHistory: [],
                 metrics: {
                     tasksCompleted: 0,
                     activeTasks: []
-                }
+                },
+                lastSeen: serverTimestamp(),
+                lastActive: serverTimestamp()
             };
 
             try {

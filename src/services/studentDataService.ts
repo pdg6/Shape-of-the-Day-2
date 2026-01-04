@@ -373,6 +373,25 @@ class StudentDataService {
     }
 
     /**
+     * Update student display name in Firestore
+     */
+    async updateDisplayName(displayName: string): Promise<void> {
+        const currentUser = auth.currentUser;
+        if (!currentUser || !this.classId) return;
+
+        try {
+            const studentRef = doc(db, 'classrooms', this.classId, 'live_students', currentUser.uid);
+            await updateDoc(studentRef, {
+                displayName,
+                lastActive: serverTimestamp()
+            });
+            console.log('[StudentData] Updated display name:', displayName);
+        } catch (error) {
+            console.error('[StudentData] Failed to update display name:', error);
+        }
+    }
+
+    /**
      * Process all pending operations from the queue
      */
     private async processPendingOperations(): Promise<void> {

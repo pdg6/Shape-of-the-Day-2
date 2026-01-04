@@ -28,13 +28,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
     const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
 
     return (
-        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-transparent">
-            <div className="text-center mb-8 space-y-4">
-                <LogoCycleLoop size={288} className="mb-4" />
-                <h1 className="text-4xl md:text-6xl font-black text-brand-textPrimary tracking-tighter uppercase leading-none">
+        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-transparent select-none">
+            <div className="text-center mb-8 space-y-2">
+                <LogoCycleLoop size={220} className="mb-1" />
+                <h1 className="text-3xl md:text-4xl font-black text-brand-textPrimary tracking-tighter uppercase leading-none">
                     Shape of the Day
                 </h1>
-                <p className="text-xs font-black text-brand-textMuted uppercase tracking-[0.3em] max-w-md mx-auto">
+                <p className="text-sm font-medium text-brand-textSecondary max-w-md mx-auto">
                     A digital organizer for teachers and students
                 </p>
             </div>
@@ -72,7 +72,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                                 <GraduationCap className="w-10 h-10" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-textSecondary">Join a room to see your daily tasks.</p>
+                                <p className="text-sm font-medium text-brand-textSecondary">Join a room to see your daily tasks.</p>
                             </div>
                             <JoinRoom onJoin={onJoin} accentColor="emerald" />
                         </div>
@@ -82,7 +82,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                                 <LayoutDashboard className="w-10 h-10" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
+                                <p className="text-sm font-medium text-brand-textSecondary">Manage your classroom, tasks, and schedule.</p>
                             </div>
                             <div>
 
@@ -96,7 +96,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
                                     <div className="absolute inset-0 flex items-center">
                                         <div className="w-full border-t border-border-subtle"></div>
                                     </div>
-                                    <div className="relative flex justify-center text-[10px] font-black uppercase tracking-widest">
+                                    <div className="relative flex justify-center text-xs font-medium">
                                         <span className="bg-tile px-3 text-brand-textMuted">Or continue with</span>
                                     </div>
                                 </div>

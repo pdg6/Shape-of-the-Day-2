@@ -3,7 +3,7 @@ import { collection, onSnapshot, query, deleteDoc, doc } from 'firebase/firestor
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
 import { db, auth } from '../../firebase';
 import { useClassStore } from '../../store/appSettings';
-import { LiveStudent, Task } from '../../types';
+import { LiveStudent, Task, Classroom } from '../../types';
 import { Activity, Users, Copy, Check, ListChecks, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '../shared/Button';
@@ -83,12 +83,12 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         return () => unsubscribe();
     }, [currentClassId]);
 
-    // Helper to check if a student was active within the last 90 minutes
+    // Help to check if a student was active within the last 45 minutes
     const isRecentlyActive = (student: LiveStudent): boolean => {
         if (!student.lastSeen) return true; // If no lastSeen, show them (new student)
 
         const now = Date.now();
-        const INACTIVITY_LIMIT_MS = 90 * 60 * 1000; // 90 minutes
+        const INACTIVITY_LIMIT_MS = 45 * 60 * 1000; // 45 minutes
 
         let lastSeenTime = 0;
         if (typeof student.lastSeen.toDate === 'function') {
@@ -109,34 +109,52 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
     // Get today's date for filtering tasks
     const today = new Date().toISOString().split('T')[0] ?? '';
 
-    // Fetch Active Tasks for the Class - ONLY tasks active TODAY
+    // Fetch Active Tasks for the Class
     useEffect(() => {
         const user = auth.currentUser;
         if (!currentClassId || !user) return;
 
         const unsubscribe = subscribeToClassroomTasks(currentClassId, (taskData: Task[]) => {
-            // Filter to only show tasks that are active TODAY
-            const todaysTasks = taskData.filter(task => {
-                const startDate = task.startDate || '';
-                const endDate = task.endDate || task.startDate || '';
-                // Check if today falls within the task's date range
-                const isActiveToday = today >= startDate && today <= endDate;
-                // Exclude draft tasks
-                return isActiveToday && task.status !== 'draft';
-            });
-            setTasks(todaysTasks);
+            // Store all non-draft tasks in state, filter for display later
+            setTasks(taskData.filter(task => task.status !== 'draft'));
         }, user.uid);
 
         return () => unsubscribe();
-    }, [currentClassId, today]);
+    }, [currentClassId]);
 
-    // Auto-remove inactive students (90 minutes)
+    // DERIVED STATE: Filter tasks to show only what's relevant for the "Shape of the Day"
+    // 1. Tasks scheduled for TODAY
+    // 2. Tasks actively being worked on by any live student (even if from past/future)
+    const relevantTasks = React.useMemo(() => {
+        const activeTaskIds = new Set<string>();
+
+        // Collect all task IDs that students are interacting with
+        students.forEach(s => {
+            if (s.metrics?.activeTasks) {
+                s.metrics.activeTasks.forEach(id => activeTaskIds.add(id));
+            }
+            if (s.taskStatuses) {
+                Object.keys(s.taskStatuses).forEach(id => activeTaskIds.add(id));
+            }
+        });
+
+        return tasks.filter(task => {
+            const startDate = task.startDate || '';
+            const endDate = task.endDate || task.startDate || '';
+            const isScheduledForToday = today >= startDate && today <= endDate;
+            const isActive = activeTaskIds.has(task.id);
+
+            return isScheduledForToday || isActive;
+        }).sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+    }, [tasks, students, today]);
+
+    // Auto-remove inactive students (45 minutes)
     useEffect(() => {
         if (!currentClassId || students.length === 0) return;
 
         const checkInactivity = async () => {
             const now = Date.now();
-            const INACTIVITY_LIMIT_MS = 90 * 60 * 1000; // 90 minutes
+            const INACTIVITY_LIMIT_MS = 45 * 60 * 1000; // 45 minutes
 
             const inactiveStudents = students.filter(student => {
                 if (!student.lastSeen) return false;
@@ -236,74 +254,93 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         <PageLayout header={headerContent}>
             {/* Content */}
             {activeStudents.length === 0 ? (
-                <div className="text-center py-12 bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float">
-                    <div className="w-16 h-16 bg-[var(--color-bg-tile-alt)] rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Users className="w-8 h-8 text-brand-textSecondary" />
-                    </div>
-                    <h3 className="text-fluid-lg font-bold text-brand-textPrimary mb-1">Waiting for students...</h3>
-                    <p className="text-fluid-sm text-brand-textSecondary max-w-sm mx-auto mb-6">
-                        Share this code with your students to get started.
-                    </p>
-
-                    {/* Join Code Section */}
-                    {currentClass && (
-                        <div className="inline-flex flex-col items-center gap-4 p-6 bg-[var(--color-bg-tile-alt)] rounded-2xl border border-dashed border-border-subtle">
-                            <div className="flex items-center gap-6">
-                                {/* QR Code */}
-                                <div className="bg-white p-2 rounded-lg shadow-sm border border-border-subtle">
-                                    <QRCodeSVG
-                                        value={`${joinUrl}?code=${currentClass.joinCode}`}
-                                        size={80}
-                                        level="H"
-                                        fgColor="#000000"
-                                        bgColor="#ffffff"
-                                    />
-                                </div>
-
-                                {/* Code & URL */}
-                                <div className="text-left">
-                                    <p className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Join at</p>
-                                    <p className="text-fluid-sm font-medium text-brand-textPrimary mb-3">
-                                        shapeoftheday.app/join
-                                    </p>
-                                    <p className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Class Code</p>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-2xl font-mono font-black text-brand-accent tracking-widest">
-                                            {currentClass.joinCode}
-                                        </span>
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(currentClass.joinCode);
-                                                setCopied(true);
-                                                setTimeout(() => setCopied(false), 2000);
-                                            }}
-                                            className="p-1.5 rounded-lg hover:bg-(--color-bg-tile-hover) transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
-                                            title="Copy code"
-                                        >
-                                            {copied ? (
-                                                <Check className="w-4 h-4 text-brand-accent" />
-                                            ) : (
-                                                <Copy className="w-4 h-4 text-brand-textSecondary" />
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                /* ... QR code section ... */
+                <EmptySessionView currentClass={currentClass} joinUrl={joinUrl} copied={copied} setCopied={setCopied} />
             ) : internalView === 'students' ? (
-                <StudentListView students={activeStudents} totalTasks={tasks.length} tasks={tasks} onDelete={handleDeleteStudent} />
+                <StudentListView
+                    students={activeStudents}
+                    tasks={relevantTasks}
+                    onDelete={handleDeleteStudent}
+                />
             ) : (
-                <TaskListView tasks={tasks} students={activeStudents} />
+                <TaskListView
+                    tasks={relevantTasks}
+                    students={activeStudents}
+                />
             )}
         </PageLayout>
     );
 };
 
+const EmptySessionView: React.FC<{
+    currentClass: Classroom | undefined,
+    joinUrl: string,
+    copied: boolean,
+    setCopied: (v: boolean) => void
+}> = ({ currentClass, joinUrl, copied, setCopied }) => {
+    return (
+        <div className="text-center py-12 bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float">
+            <div className="w-16 h-16 bg-[var(--color-bg-tile-alt)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-brand-textSecondary" />
+            </div>
+            <h3 className="text-fluid-lg font-bold text-brand-textPrimary mb-1">Waiting for students...</h3>
+            <p className="text-fluid-sm text-brand-textSecondary max-w-sm mx-auto mb-6">
+                Share this code with your students to get started.
+            </p>
+
+            {/* Join Code Section */}
+            {currentClass && (
+                <div className="inline-flex flex-col items-center gap-4 p-6 bg-[var(--color-bg-tile-alt)] rounded-2xl border border-dashed border-border-subtle">
+                    <div className="flex items-center gap-6">
+                        {/* QR Code */}
+                        <div className="bg-white p-2 rounded-lg shadow-sm border border-border-subtle">
+                            <QRCodeSVG
+                                value={`${joinUrl}?code=${currentClass.joinCode}`}
+                                size={80}
+                                level="H"
+                                fgColor="#000000"
+                                bgColor="#ffffff"
+                            />
+                        </div>
+
+                        {/* Code & URL */}
+                        <div className="text-left">
+                            <p className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Join at</p>
+                            <p className="text-fluid-sm font-medium text-brand-textPrimary mb-3">
+                                shapeoftheday.app/join
+                            </p>
+                            <p className="text-xs font-bold text-brand-textSecondary uppercase tracking-wider mb-1">Class Code</p>
+                            <div className="flex items-center gap-2">
+                                <span className="text-2xl font-mono font-black text-brand-accent tracking-widest">
+                                    {currentClass.joinCode}
+                                </span>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(currentClass.joinCode);
+                                        setCopied(true);
+                                        setTimeout(() => setCopied(false), 2000);
+                                    }}
+                                    className="p-1.5 rounded-lg hover:bg-(--color-bg-tile-hover) transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
+                                    title="Copy code"
+                                >
+                                    {copied ? (
+                                        <Check className="w-4 h-4 text-brand-accent" />
+                                    ) : (
+                                        <Copy className="w-4 h-4 text-brand-textSecondary" />
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // --- Sub-Components ---
 
-const StudentListView: React.FC<{ students: LiveStudent[], totalTasks: number, tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
+const StudentListView: React.FC<{ students: LiveStudent[], tasks: Task[], onDelete: (uid: string, name: string) => void }> = ({ students, tasks, onDelete }) => {
     return (
         <div className="flex-1 min-h-0 bg-(--color-bg-tile) rounded-2xl border border-border-subtle overflow-hidden shadow-layered lift-dynamic transition-float flex flex-col">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -384,8 +421,11 @@ const TaskListView: React.FC<{ tasks: Task[], students: LiveStudent[] }> = ({ ta
     return (
         <div className="flex-1 flex overflow-x-auto pb-6 gap-6 custom-scrollbar snap-x">
             {sortedTasks.map(task => {
-                // Calculate stats for this task
-                const helpStudents = students.filter(s => s.taskStatuses?.[task.id] === 'help');
+                // Calculate stats for this task - include normalized 'help' statuses
+                const helpStudents = students.filter(s => {
+                    const status = s.taskStatuses?.[task.id] as string | undefined;
+                    return status === 'help' || status === 'stuck' || status === 'question';
+                });
                 const inProgressStudents = students.filter(s => s.taskStatuses?.[task.id] === 'in_progress');
                 const studentsCompleted = students.filter(s => s.taskStatuses?.[task.id] === 'done');
                 const totalWorking = helpStudents.length + inProgressStudents.length + studentsCompleted.length;

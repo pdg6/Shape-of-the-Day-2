@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Task, TaskStatus } from '../../types';
+import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 
 /**
  * TaskProgressIcons Component
@@ -15,23 +16,7 @@ interface TaskProgressIconsProps {
     maxVisible?: number;  // Maximum icons visible before scrolling, default 10
 }
 
-// Get hierarchical number for nested tasks (matches existing app logic)
-const getHierarchicalNumber = (task: Task | undefined, allTasks: Task[]): string => {
-    if (!task) return '...';
-    const siblings = task.parentId
-        ? allTasks.filter(t => t && t.parentId === task.parentId)
-        : allTasks.filter(t => t && !t.parentId);
 
-    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-    const myIndex = siblings.findIndex(t => t.id === task.id) + 1;
-
-    if (!task.parentId) return String(myIndex);
-
-    const parent = allTasks.find(t => t.id === task.parentId);
-    if (!parent) return String(myIndex);
-
-    return `${getHierarchicalNumber(parent, allTasks)}.${myIndex}`;
-};
 
 // Get status color classes
 const getStatusColors = (status: string | undefined): { bg: string; text: string; border: string } => {
@@ -142,7 +127,6 @@ const TaskProgressIcons: React.FC<TaskProgressIconsProps> = ({
                                 w-7 h-7 min-w-7
                                 flex items-center justify-center
                                 rounded-full
-                                border-2 ${colors.border}
                                 ${colors.bg} ${colors.text}
                                 text-xs font-bold
                                 transition-all duration-200

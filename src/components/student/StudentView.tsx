@@ -299,6 +299,7 @@ const StudentView: React.FC<StudentViewProps> = ({
      * Handles the submission of the student's name from the modal.
      */
     const handleNameSubmit = (name: string) => {
+        studentDataService.updateDisplayName(name); // Sync to live session
         onNameSubmit(name);
         setShowNameModal(false);
     };

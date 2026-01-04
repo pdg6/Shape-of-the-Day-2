@@ -1,7 +1,17 @@
 import React from 'react';
-import { LogOut, User, BookOpen, CheckCircle, ListTodo, FolderOpen, CalendarDays, Palette, Layers, Box, Zap, Trash2, Edit3, Sparkles } from 'lucide-react';
-import { useClassStore } from '../../store/appSettings';
+import { LogOut, User, BookOpen, CheckCircle, ListTodo, FolderOpen, CalendarDays, Trash2, Edit3, Minus, Triangle, Grid3X3, Magnet, Orbit, Bug, Bird } from 'lucide-react';
+import { useClassStore, THEME_PRESETS } from '../../store/appSettings';
 import { Modal } from '../shared/Modal';
+
+// Simple settings section label
+const SettingsSection: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+    <div className="space-y-1.5">
+        <span className="text-[9px] font-black uppercase tracking-wider text-brand-textMuted px-0.5">
+            {label}
+        </span>
+        {children}
+    </div>
+);
 
 interface StudentMenuModalProps {
     isOpen: boolean;
@@ -169,114 +179,310 @@ const StudentMenuModal: React.FC<StudentMenuModalProps> = ({
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        {/* Theme Section */}
-                        <div className="space-y-4">
-                            {/* Visual Presets Info */}
-                            <div className="bg-tile-alt rounded-xl p-3 border border-border-subtle">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-brand-accent/10 text-brand-accent">
-                                        <Sparkles size={20} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="text-sm font-bold text-brand-textPrimary">Visual Presets</h3>
-                                        <p className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Customize your background</p>
-                                    </div>
-                                </div>
+                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300 max-h-[60vh] overflow-y-auto pr-1">
+                        {/* Theme Presets */}
+                        <SettingsSection label="Themes">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {Object.entries(THEME_PRESETS).map(([id, preset]) => {
+                                    const isSelected = preset.settings.bgColor === backgroundSettings.bgColor &&
+                                        preset.settings.tileTheme === backgroundSettings.tileTheme &&
+                                        preset.settings.primaryTheme === backgroundSettings.primaryTheme;
+                                    return (
+                                        <button
+                                            key={id}
+                                            onClick={() => setBackgroundSettings(preset.settings)}
+                                            className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${isSelected ? 'bg-brand-accent/10 border-2 border-brand-accent text-brand-accent' : 'bg-tile border border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                            style={{ backgroundColor: preset.settings.bgColor }}
+                                        >
+                                            {preset.name}
+                                        </button>
+                                    );
+                                })}
                             </div>
+                        </SettingsSection>
 
-                            {/* Canvas Style */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 px-1">
-                                    <Palette size={14} className="text-brand-textMuted" />
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Canvas Style</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
+                        {/* Background */}
+                        <SettingsSection label="Background">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: '#000000', label: 'Stark' },
+                                    { id: '#050505', label: 'Void' },
+                                    { id: '#0F1115', label: 'Cyber' },
+                                    { id: '#171A21', label: 'Deep' },
+                                    { id: '#C1C7D0', label: 'Ghost' },
+                                    { id: '#D1D5DA', label: 'Vapor' }
+                                ].map(bg => (
+                                    <button
+                                        key={bg.id}
+                                        onClick={() => setBackgroundSettings({ bgColor: bg.id })}
+                                        className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${backgroundSettings.bgColor === bg.id ? 'border-2 border-brand-accent' : 'border border-border-subtle hover:border-brand-accent/30'}`}
+                                        style={{ backgroundColor: bg.id }}
+                                    >
+                                        <span className={bg.id.startsWith('#C') || bg.id.startsWith('#D') ? 'text-gray-800' : 'text-white/80'}>{bg.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Tiles */}
+                        <SettingsSection label="Tiles">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: 'pure', label: 'Pure', color: '#000000' },
+                                    { id: 'onyx', label: 'Onyx', color: '#1A1D24' },
+                                    { id: 'slate', label: 'Slate', color: '#1E293B' },
+                                    { id: 'glass', label: 'Glass', color: 'rgba(255, 255, 255, 0.1)' },
+                                    { id: 'cloud', label: 'Cloud', color: '#E2E8F0' },
+                                    { id: 'glacier', label: 'Glacier', color: '#FFFFFF' }
+                                ].map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setBackgroundSettings({ tileTheme: t.id as any })}
+                                        className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${backgroundSettings.tileTheme === t.id ? 'border-2 border-brand-accent text-brand-accent' : 'border border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                        style={t.id === 'glass'
+                                            ? { background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))', backdropFilter: 'blur(4px)' }
+                                            : { backgroundColor: t.color }
+                                        }
+                                    >
+                                        <span className={['cloud', 'glacier'].includes(t.id) ? 'text-gray-800' : ''}>{t.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Primary Text */}
+                        <SettingsSection label="Primary Text">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: 'pure', label: 'Pure', color: '#FFFFFF' },
+                                    { id: 'silver', label: 'Silver', color: '#CBD5E1' },
+                                    { id: 'steel', label: 'Steel', color: '#64748B' },
+                                    { id: 'iron', label: 'Iron', color: '#334155' },
+                                    { id: 'ink', label: 'Ink', color: '#111827' },
+                                    { id: 'obsidian', label: 'Obsidian', color: '#020617' }
+                                ].map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setBackgroundSettings({ primaryTheme: t.id as any })}
+                                        className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float flex items-center justify-center gap-1 ${backgroundSettings.primaryTheme === t.id ? 'bg-brand-accent/10 border-2 border-brand-accent' : 'bg-tile border border-border-subtle hover:border-brand-accent/30'}`}
+                                    >
+                                        <span style={{ color: t.color }} className="font-black">Aa</span>
+                                        <span className="text-brand-textMuted">{t.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Secondary Text */}
+                        <SettingsSection label="Secondary Text">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: 'sky', label: 'Sky', color: '#7DD3FC' },
+                                    { id: 'mist', label: 'Mist', color: '#E2E8F0' },
+                                    { id: 'ash', label: 'Ash', color: '#94A3B8' },
+                                    { id: 'accent', label: 'Accent', color: '#3B82F6' },
+                                    { id: 'lead', label: 'Lead', color: '#334155' },
+                                    { id: 'coal', label: 'Coal', color: '#1F2937' }
+                                ].map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => setBackgroundSettings({ secondaryTheme: t.id as any })}
+                                        className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float flex items-center justify-center gap-1 ${backgroundSettings.secondaryTheme === t.id ? 'bg-brand-accent/10 border-2 border-brand-accent' : 'bg-tile border border-border-subtle hover:border-brand-accent/30'}`}
+                                    >
+                                        <span style={{ color: t.color }} className="font-black">Aa</span>
+                                        <span className="text-brand-textMuted">{t.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Elevation */}
+                        <SettingsSection label="Elevation">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: 'flat', label: 'Flat' },
+                                    { id: 'subtle', label: 'Subtle' },
+                                    { id: 'moderate', label: 'Moderate' },
+                                    { id: 'elevated', label: 'Elevated' },
+                                    { id: 'dramatic', label: 'Dramatic' },
+                                    { id: 'weightless', label: 'Weightless' }
+                                ].map(e => (
+                                    <button
+                                        key={e.id}
+                                        onClick={() => setBackgroundSettings({ elevationLevel: e.id as any })}
+                                        className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${backgroundSettings.elevationLevel === e.id ? 'bg-brand-accent/10 border-2 border-brand-accent text-brand-accent' : 'bg-tile border border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                    >
+                                        {e.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Borders */}
+                        <SettingsSection label="Borders">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: 'auto', label: 'Auto' },
+                                    { id: 'accent', label: 'Accent' },
+                                    { id: 'ghost', label: 'Ghost' },
+                                    { id: 'glass', label: 'Glass' },
+                                    { id: 'vibrant', label: 'Vivid' },
+                                    { id: 'flux', label: 'Flux' }
+                                ].map(b => (
+                                    <button
+                                        key={b.id}
+                                        onClick={() => setBackgroundSettings({ borderStyle: b.id as any })}
+                                        className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${backgroundSettings.borderStyle === b.id ? 'bg-brand-accent/10 border-2 border-brand-accent text-brand-accent' : 'bg-tile border border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                    >
+                                        {b.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Effects */}
+                        <SettingsSection label="Effects">
+                            <div className="grid grid-cols-3 gap-1.5">
+                                {[
+                                    { id: 'none', label: 'None' },
+                                    { id: 'etch_top', label: 'Etch (T)' },
+                                    { id: 'etch_left', label: 'Etch (L)' },
+                                    { id: 'glow_hover', label: 'Hover' },
+                                    { id: 'glow_active', label: 'Active' },
+                                    { id: 'both', label: 'Both' }
+                                ].map(opt => {
+                                    const isSelected = opt.id === 'none'
+                                        ? (backgroundSettings.horizonEtch === 'off' && backgroundSettings.auraGlow === 'off')
+                                        : opt.id === 'etch_top' ? backgroundSettings.horizonEtch === 'top' && backgroundSettings.auraGlow === 'off'
+                                            : opt.id === 'etch_left' ? backgroundSettings.horizonEtch === 'left' && backgroundSettings.auraGlow === 'off'
+                                                : opt.id === 'glow_hover' ? backgroundSettings.auraGlow === 'hover'
+                                                    : opt.id === 'glow_active' ? backgroundSettings.auraGlow === 'active' && backgroundSettings.horizonEtch !== 'both'
+                                                        : backgroundSettings.horizonEtch === 'both';
+
+                                    const handleClick = () => {
+                                        if (opt.id === 'none') {
+                                            setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'off' });
+                                        } else if (opt.id === 'etch_top') {
+                                            setBackgroundSettings({ horizonEtch: 'top', auraGlow: 'off' });
+                                        } else if (opt.id === 'etch_left') {
+                                            setBackgroundSettings({ horizonEtch: 'left', auraGlow: 'off' });
+                                        } else if (opt.id === 'glow_hover') {
+                                            setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'hover' });
+                                        } else if (opt.id === 'glow_active') {
+                                            setBackgroundSettings({ horizonEtch: 'off', auraGlow: 'active' });
+                                        } else if (opt.id === 'both') {
+                                            setBackgroundSettings({ horizonEtch: 'both', auraGlow: 'active' });
+                                        }
+                                    };
+
+                                    return (
+                                        <button
+                                            key={opt.id}
+                                            onClick={handleClick}
+                                            className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${isSelected ? 'bg-brand-accent/10 border-2 border-brand-accent text-brand-accent' : 'bg-tile border border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Particles */}
+                        <SettingsSection label="Particles">
+                            <div className="grid grid-cols-4 gap-1.5">
+                                {[
+                                    { id: 'none', label: 'Off', icon: Minus },
+                                    { id: 'gravity', label: 'Geo', icon: Triangle },
+                                    { id: 'grid', label: 'Grid', icon: Grid3X3 },
+                                    { id: 'magnetic', label: 'Mag', icon: Magnet },
+                                    { id: 'orbit', label: 'Orbit', icon: Orbit },
+                                    { id: 'swarm_small', label: 'Swarm', icon: Bug },
+                                    { id: 'swarm_large', label: 'Flock', icon: Bird }
+                                ].map(p => {
+                                    const isOff = p.id === 'none';
+                                    const isSelected = isOff
+                                        ? !backgroundSettings.particlesEnabled
+                                        : backgroundSettings.particlesEnabled && backgroundSettings.particleEffect === p.id;
+
+                                    return (
+                                        <button
+                                            key={p.id}
+                                            onClick={() => {
+                                                if (isOff) {
+                                                    setBackgroundSettings({ particlesEnabled: false });
+                                                } else {
+                                                    setBackgroundSettings({ particlesEnabled: true, particleEffect: p.id as any });
+                                                }
+                                            }}
+                                            className={`py-2 px-1 rounded-lg text-[8px] font-black uppercase tracking-wider transition-float flex flex-col items-center gap-1 ${isSelected ? 'bg-brand-accent/10 border-2 border-brand-accent text-brand-accent' : 'bg-tile border border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                        >
+                                            <p.icon size={14} />
+                                            {p.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </SettingsSection>
+
+                        {/* Particle Colours (only if particles enabled) */}
+                        {backgroundSettings.particlesEnabled && (
+                            <SettingsSection label="Particle Colors">
+                                <div className="grid grid-cols-3 gap-1.5">
                                     {[
-                                        { id: 'industrial', color: '#0f1115', particle: '#f2efea', label: 'Industrial' },
-                                        { id: 'midnight', color: '#020617', particle: '#3b82f6', label: 'Midnight' },
-                                        { id: 'ocean', color: '#082f49', particle: '#0ea5e9', label: 'Ocean' },
-                                        { id: 'emerald', color: '#064e3b', particle: '#10b981', label: 'Emerald' }
-                                    ].map(preset => (
+                                        { id: '#262626', label: 'Onyx' },
+                                        { id: '#3b82f6', label: 'Accent' },
+                                        { id: '#cbd5e1', label: 'Slate' },
+                                        { id: '#e8edf2', label: 'Glacier' },
+                                        { id: 'vibrant', label: 'Vibrant' },
+                                        { id: 'random', label: 'Random' }
+                                    ].map(c => (
                                         <button
-                                            key={preset.id}
-                                            onClick={() => setBackgroundSettings({
-                                                bgColor: preset.color,
-                                                particleColor: preset.particle
-                                            })}
-                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.bgColor === preset.color ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-tile border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
+                                            key={c.id}
+                                            onClick={() => setBackgroundSettings({ particleColor: c.id })}
+                                            className={`py-2 px-2 rounded-lg text-[9px] font-black uppercase tracking-wider transition-float ${backgroundSettings.particleColor === c.id ? 'border-2 border-brand-accent' : 'border border-border-subtle hover:border-brand-accent/30'}`}
+                                            style={{
+                                                background: c.id === 'vibrant'
+                                                    ? 'linear-gradient(45deg, #ef4444, #10b981, #3b82f6)'
+                                                    : c.id === 'random'
+                                                        ? 'linear-gradient(45deg, #f59e0b, #8b5cf6, #ec4899)'
+                                                        : c.id
+                                            }}
                                         >
-                                            {preset.label}
+                                            <span className={['#e8edf2', '#cbd5e1'].includes(c.id) ? 'text-gray-800' : 'text-white/90'}>{c.label}</span>
                                         </button>
                                     ))}
                                 </div>
-                            </div>
+                            </SettingsSection>
+                        )}
 
-                            {/* Tile Theme */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 px-1">
-                                    <Layers size={14} className="text-brand-textMuted" />
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Tile Aesthetics</span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                        { id: 'onyx', label: 'Onyx' },
-                                        { id: 'slate', label: 'Slate' },
-                                        { id: 'glacier', label: 'Glacier' }
-                                    ].map(theme => (
-                                        <button
-                                            key={theme.id}
-                                            onClick={() => setBackgroundSettings({ tileTheme: theme.id as any })}
-                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.tileTheme === theme.id ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-tile border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
-                                        >
-                                            {theme.label}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Elevation */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 px-1">
-                                    <Box size={14} className="text-brand-textMuted" />
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-brand-textMuted">Physics / Elevation</span>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {['subtle', 'moderate', 'elevated'].map(level => (
-                                        <button
-                                            key={level}
-                                            onClick={() => setBackgroundSettings({ elevationLevel: level as any })}
-                                            className={`py-2 px-3 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-float ${backgroundSettings.elevationLevel === level ? 'bg-brand-accent/10 border-brand-accent text-brand-accent' : 'bg-tile border-border-subtle text-brand-textSecondary hover:border-brand-accent/30'}`}
-                                        >
-                                            {level}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Particles Toggle */}
-                            <button
-                                onClick={() => setBackgroundSettings({ particlesEnabled: !backgroundSettings.particlesEnabled })}
-                                className={`w-full flex items-center justify-between p-3 rounded-xl border transition-float ${backgroundSettings.particlesEnabled ? 'bg-brand-accent/10 border-brand-accent text-brand-accent shadow-layered-sm' : 'bg-tile border-border-subtle text-brand-textSecondary'}`}
-                            >
+                        {/* Opacity slider (only if particles enabled) */}
+                        {backgroundSettings.particlesEnabled && (
+                            <SettingsSection label="Opacity">
                                 <div className="flex items-center gap-3">
-                                    <Zap size={18} className={backgroundSettings.particlesEnabled ? 'animate-pulse' : ''} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Dynamic Particles</span>
+                                    <input
+                                        type="range"
+                                        min="0.05"
+                                        max="1.0"
+                                        step="0.05"
+                                        value={backgroundSettings.particleOpacity}
+                                        onChange={(e) => setBackgroundSettings({ particleOpacity: parseFloat(e.target.value) })}
+                                        className="flex-1 h-1.5 bg-tile-alt rounded-lg appearance-none cursor-pointer accent-brand-accent"
+                                        aria-label="Particle opacity"
+                                    />
+                                    <span className="text-xs font-bold text-brand-accent w-10 text-right">{Math.round(backgroundSettings.particleOpacity * 100)}%</span>
                                 </div>
-                                <div className={`w-10 h-5 rounded-full relative transition-colors ${backgroundSettings.particlesEnabled ? 'bg-brand-accent' : 'bg-tile-alt'}`}>
-                                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all shadow-sm ${backgroundSettings.particlesEnabled ? 'right-1' : 'left-1'}`} />
-                                </div>
-                            </button>
+                            </SettingsSection>
+                        )}
 
-                            {/* Reset Button */}
-                            <button
-                                onClick={resetSettings}
-                                className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-tile-alt text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-[var(--color-status-stuck)] hover:border-[var(--color-status-stuck)]/50 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Trash2 size={14} />
-                                Reset to Defaults
-                            </button>
-                        </div>
+                        {/* Reset Button */}
+                        <button
+                            onClick={resetSettings}
+                            className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-tile-alt text-[10px] font-black uppercase tracking-widest text-brand-textMuted hover:text-[var(--color-status-stuck)] hover:border-[var(--color-status-stuck)]/50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <Trash2 size={14} />
+                            Reset to Defaults
+                        </button>
                     </div>
                 )}
 

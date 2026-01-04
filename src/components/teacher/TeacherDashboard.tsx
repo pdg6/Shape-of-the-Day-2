@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, ListTodo, Presentation, Pencil, Calendar, Users, ListChecks } from 'lucide-react';
+import { Activity, School, Menu, X, Settings, Plus, BarChart2, ChevronLeft, ChevronRight, QrCode, ListTodo, Presentation, Library, Calendar, Users, ListChecks } from 'lucide-react';
 import { useAuth } from '../../context/auth-context';
 import { useClassStore } from '../../store/appSettings';
 import TaskManager from './TaskManager';
@@ -364,13 +364,13 @@ const TeacherDashboard: React.FC = () => {
                                             <li>
                                                 <button
                                                     onClick={() => setTasksSubTab('browse')}
-                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${tasksSubTab === 'browse' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/edit`}
-                                                    title="Edit"
+                                                    className={`${isCollapsed ? 'w-10 h-10 p-0 justify-center' : 'w-full text-left p-2.5'} text-xs rounded-xl font-bold transition-float button-lift-dynamic flex items-center gap-2 border ${tasksSubTab === 'browse' ? 'text-brand-accent bg-brand-accent/5 border-brand-accent/20 shadow-layered-sm' : 'text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) border-transparent hover:border-brand-accent/20 shadow-none hover:shadow-layered-sm'} group/inventory`}
+                                                    title="Inventory"
                                                 >
-                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${tasksSubTab === 'browse' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/edit:scale-110'}`}>
-                                                        <Pencil size={14} className="transition-transform group-hover/edit:scale-110" />
+                                                    <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${tasksSubTab === 'browse' ? 'text-brand-accent' : 'text-brand-textSecondary group-hover/inventory:scale-110'}`}>
+                                                        <Library size={14} className="transition-transform group-hover/inventory:scale-110" />
                                                     </div>
-                                                    <span className={`${isCollapsed ? 'hidden' : ''}`}>Edit</span>
+                                                    <span className={`${isCollapsed ? 'hidden' : ''}`}>Inventory</span>
                                                 </button>
                                             </li>
                                         </ul>
