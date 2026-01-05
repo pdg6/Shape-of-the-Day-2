@@ -234,7 +234,7 @@ export const bulkSaveTasks = async (
             pathTitles,
             rootId,
             teacherId,
-            status: 'todo',
+            status: item.status || 'todo',
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
             presentationOrder: 1, // Default, can be refined

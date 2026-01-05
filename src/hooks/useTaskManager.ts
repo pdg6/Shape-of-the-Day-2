@@ -87,27 +87,48 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
         });
     }, [tasks, filterText, filterType]);
 
-    const buildHierarchy = useCallback((parentId: string | null): Task[] => {
-        const directChildren = filteredTasks.filter(t => {
-            // Treat null and undefined parentId as root-level tasks
-            if (parentId === null) {
-                return t.parentId === null || t.parentId === undefined;
+    const hierarchicalTasks = useMemo(() => {
+        // 1. Group by parentId to build adjacency list
+        const childrenMap = new Map<string, Task[]>();
+        const allIds = new Set(filteredTasks.map(t => t.id));
+        const roots: Task[] = [];
+
+        filteredTasks.forEach(t => {
+            // A task is an effective root if:
+            // a) It has no parentId (null/undefined)
+            // b) Its parentId refers to a task that is NOT in the current filtered set (orphan)
+            const isEffectiveRoot = !t.parentId || !allIds.has(t.parentId);
+
+            if (isEffectiveRoot) {
+                roots.push(t);
+            } else {
+                const pId = t.parentId as string;
+                if (!childrenMap.has(pId)) {
+                    childrenMap.set(pId, []);
+                }
+                childrenMap.get(pId)?.push(t);
             }
-            return t.parentId === parentId;
         });
 
-        // Sort by presentationOrder
-        directChildren.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+        // 2. Sort roots by presentationOrder
+        roots.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
 
-        let sortedHierarchy: Task[] = [];
-        for (const child of directChildren) {
-            sortedHierarchy.push(child);
-            sortedHierarchy = sortedHierarchy.concat(buildHierarchy(child.id));
-        }
-        return sortedHierarchy;
+        // 3. Recursive build
+        const buildList = (items: Task[]): Task[] => {
+            let result: Task[] = [];
+            for (const item of items) {
+                result.push(item);
+                const children = childrenMap.get(item.id);
+                if (children) {
+                    children.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                    result.push(...buildList(children));
+                }
+            }
+            return result;
+        };
+
+        return buildList(roots);
     }, [filteredTasks]);
-
-    const hierarchicalTasks = useMemo(() => buildHierarchy(null), [buildHierarchy]);
 
     // --- Actions ---
     const handleSave = async (isAutoSave: boolean = false) => {
@@ -144,7 +165,13 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
                 }
             }
 
-            const statusToSave: TaskStatus = isAutoSave ? 'draft' : 'todo';
+            // Determine status:
+            // 1. Start with current form status or default to 'todo'
+            // 2. If manual save (user clicked Save) and status is 'draft', promote to 'todo'
+            let statusToSave = formData.status || 'todo';
+            if (!isAutoSave && statusToSave === 'draft') {
+                statusToSave = 'todo';
+            }
 
             const taskToSave: Partial<Task> & { id?: string } = {
                 ...formData,

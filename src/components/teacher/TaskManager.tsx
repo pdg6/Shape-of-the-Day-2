@@ -372,7 +372,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                 : true;
 
             // Include task if it's in the selected date range OR if it's a draft
-            return startDate && endDate && isAssignedToCurrentClass && (isInRange || isDraft);
+            if (isDraft) return true;
+            return startDate && endDate && isAssignedToCurrentClass && isInRange;
         });
     }, [hierarchicalTasks, selectedDate, currentClassId]);
 

@@ -154,11 +154,20 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                 context: context,
             });
 
-            // Clear attachments after successful send to keep chat clean? 
-            // Or keep them for subsequent messages? Let's keep them for now but allow clearing.
+            // Clear attachments after successful send
             setAttachments([]);
 
             const AIResponse = result.data as any;
+
+            // Strip ### from AI Response items and set status to draft
+            if (AIResponse.items) {
+                AIResponse.items = AIResponse.items.map((item: any) => ({
+                    ...item,
+                    title: item.title?.replace(/^###\s+/g, '').replace(/###/g, ''),
+                    description: item.description?.replace(/^###\s+/g, '').replace(/###/g, ''),
+                    status: 'draft'
+                }));
+            }
 
             const assistantMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -244,19 +253,16 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
 
                                             {/* Breakdown Summary for multiple items */}
                                             {msg.suggestion.items.length > 1 && (
-                                                <div className="py-2 px-3 rounded-lg bg-black/20 border border-white/5 space-y-1.5">
+                                                <div className="py-2 px-3 rounded-lg bg-black/20 border border-white/5 space-y-1.5 max-h-[200px] overflow-y-auto custom-scrollbar">
                                                     <p className="text-[10px] font-bold text-brand-textMuted uppercase tracking-wider">Breakdown Hierarchy:</p>
                                                     <div className="space-y-1">
-                                                        {msg.suggestion.items.slice(1, 5).map((item: any, idx: number) => (
+                                                        {msg.suggestion.items.slice(1).map((item: any, idx: number) => (
                                                             <div key={idx} className="flex items-center gap-2 text-[11px] text-brand-textSecondary">
                                                                 <div className="w-1 h-1 rounded-full bg-brand-accent/40" />
                                                                 <span className="opacity-50 uppercase font-bold text-[9px] w-12">{item.type}</span>
                                                                 <span className="truncate">{item.title}</span>
                                                             </div>
                                                         ))}
-                                                        {msg.suggestion.items.length > 5 && (
-                                                            <p className="text-[9px] text-brand-textMuted ml-3 italic">+ {msg.suggestion.items.length - 5} more items...</p>
-                                                        )}
                                                     </div>
                                                 </div>
                                             )}
@@ -282,27 +288,28 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                                                                 return;
                                                             }
 
-                                                            const loadingToast = toast.loading('Syncing hierarchy...');
+                                                            const loadingToast = toast.loading('Adding to schedule...');
                                                             try {
                                                                 // Ensure items have the correct selectedRoomIds from the editor
                                                                 const itemsToSync = msg.suggestion!.items.map(item => ({
                                                                     ...item,
+                                                                    status: 'draft', // Explicitly set to draft
                                                                     selectedRoomIds: currentFormData.selectedRoomIds.length > 0
                                                                         ? currentFormData.selectedRoomIds
                                                                         : item.selectedRoomIds
                                                                 }));
 
                                                                 await bulkSaveTasks(user.uid, itemsToSync);
-                                                                toast.success('Full breakdown synced!', { id: loadingToast });
+                                                                toast.success('Tasks added to schedule as drafts!', { id: loadingToast });
                                                             } catch (error) {
                                                                 console.error('Bulk Sync Error:', error);
-                                                                toast.error('Sync failed', { id: loadingToast });
+                                                                toast.error('Failed to add tasks', { id: loadingToast });
                                                             }
                                                         }}
                                                         className="flex-[2] flex items-center justify-center gap-2 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:bg-brand-accent/90 shadow-lg shadow-brand-accent/20 transition-all button-lift-dynamic"
                                                     >
                                                         <Save size={12} />
-                                                        <span>Sync Breakdown</span>
+                                                        <span>Add Tasks to Schedule</span>
                                                     </button>
                                                 )}
                                             </div>
