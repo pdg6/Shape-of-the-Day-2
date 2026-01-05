@@ -9,7 +9,6 @@ import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
 
 import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
-import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 import { formatMessageToHtml } from '../../utils/markdownFormatter';
 
@@ -196,7 +195,6 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 ref={overlayRef}
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="help-modal-title"
                 aria-labelledby="help-modal-title"
                 className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl border transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-border-subtle shadow-layered-lg"
                 onClick={(e) => e.stopPropagation()}
@@ -678,18 +676,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
             {task.description && (
                 <div className={`mt-3 overflow-hidden min-w-0 ${isDone ? 'opacity-60' : ''}`}>
                     <div className="select-text w-full min-w-0">
-                        {containsHtml(task.description) ? (
-                            <CodeBlockRenderer
-                                key={`desc-${task.id}-${isExpanded}`}
-                                html={task.description}
-                                isExpanded={isExpanded}
-                                className="text-sm text-brand-textSecondary"
-                            />
-                        ) : (
-                            <p className={`text-sm leading-relaxed text-brand-textSecondary whitespace-pre-wrap ${!isExpanded ? 'line-clamp-2' : ''}`}>
-                                {task.description}
-                            </p>
-                        )}
+                        <CodeBlockRenderer
+                            key={`desc-${task.id}-${isExpanded}`}
+                            html={formatMessageToHtml(task.description)}
+                            isExpanded={isExpanded}
+                            className="text-sm text-brand-textSecondary"
+                        />
                     </div>
                 </div>
             )}

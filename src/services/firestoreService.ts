@@ -180,6 +180,84 @@ export const saveTask = async (
 };
 
 /**
+ * Saves multiple tasks in a batch, resolving temporary IDs and hierarchical paths.
+ * Useful for AI-generated breakdowns.
+ */
+export const bulkSaveTasks = async (
+    teacherId: string,
+    items: any[]
+): Promise<string[]> => {
+    const batch = writeBatch(db);
+    const idMap: Record<string, string> = {}; // tempId -> realId
+    const savedIds: string[] = [];
+
+    // 1. First pass: Create references and map tempIds to realIds
+    items.forEach(item => {
+        const taskRef = doc(collection(db, 'tasks')).withConverter(taskConverter);
+        if (item.tempId) {
+            idMap[item.tempId] = taskRef.id;
+        }
+        savedIds.push(taskRef.id);
+        (item as any)._ref = taskRef;
+    });
+
+    // 2. Second pass: Build hierarchical data
+    // We navigate the flat list and build paths.
+    // To ensure paths are correct, we might need multiple passes or a recursive resolve.
+    const resolvedItems: Record<string, any> = {};
+
+    const resolveHierarchy = (item: any) => {
+        if (resolvedItems[item.tempId || item.title]) return resolvedItems[item.tempId || item.title];
+
+        let parentId = item.parentId;
+        let path: string[] = [];
+        let pathTitles: string[] = [];
+        let rootId: string | null = null;
+
+        if (parentId && idMap[parentId]) {
+            // Find parent in the same batch
+            const parentItem = items.find(i => i.tempId === parentId);
+            if (parentItem) {
+                const parentInfo = resolveHierarchy(parentItem);
+                const realParentId = idMap[parentId];
+                path = [...parentInfo.path, realParentId];
+                pathTitles = [...parentInfo.pathTitles, parentItem.title];
+                rootId = parentInfo.rootId || realParentId;
+                parentId = realParentId; // Switch to real ID
+            }
+        }
+
+        const resolved = {
+            ...item,
+            parentId,
+            path,
+            pathTitles,
+            rootId,
+            teacherId,
+            status: 'todo',
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            presentationOrder: 1, // Default, can be refined
+        };
+
+        // Clean up temp fields
+        delete resolved.tempId;
+        delete resolved._ref;
+
+        resolvedItems[item.tempId || item.title] = resolved;
+        return resolved;
+    };
+
+    items.forEach(item => {
+        const resolvedData = resolveHierarchy(item);
+        batch.set((item as any)._ref, resolvedData);
+    });
+
+    await batch.commit();
+    return savedIds;
+};
+
+/**
  * Get all tasks for a classroom (from root collection)
  * @param {string} classroomId 
  * @param {string} teacherId - Required: filter by teacher for security

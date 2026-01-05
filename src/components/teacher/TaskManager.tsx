@@ -40,6 +40,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { httpsCallable } from 'firebase/functions';
 import { db, auth, storage, functions } from '../../firebase';
 import { subscribeToClassroomTasks } from '../../services/firestoreService';
+import { AiAssistant } from './AiAssistant';
 import { ItemType, Task, ALLOWED_CHILD_TYPES, ALLOWED_PARENT_TYPES, Attachment } from '../../types';
 import { useClassStore } from '../../store/appSettings';
 import { useTaskManager } from '../../hooks/useTaskManager';
@@ -998,6 +999,27 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                         <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* AI ASSISTANT SECTION */}
+                            <div className="mt-8">
+                                <AiAssistant
+                                    currentFormData={activeFormData}
+                                    taskId={editingTaskId}
+                                    onApply={(suggestion) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            title: suggestion.title,
+                                            description: suggestion.description,
+                                            type: suggestion.type as ItemType,
+                                            // Optional: Merge other fields if AI provides them
+                                            ...(suggestion.startDate && { startDate: suggestion.startDate }),
+                                            ...(suggestion.endDate && { endDate: suggestion.endDate }),
+                                            ...(suggestion.links && { links: suggestion.links }),
+                                        }));
+                                        setIsDirty(true);
+                                    }}
+                                />
                             </div>
                         </div>
                     </div>

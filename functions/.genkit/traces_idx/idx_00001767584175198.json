@@ -1,0 +1,6 @@
+{"id":"12cb2034ba163e1d884d7e41a38c6723","type":"flow","start":1767584975827,"name":"generateScheduleFlow","status":0}
+{"id":"12cb2034ba163e1d884d7e41a38c6723","type":"flow","start":1767584975827,"name":"generateScheduleFlow","end":1767584975848.151,"status":2}
+{"id":"a01a8840ca1af32f68147a041b7f4972","type":"util","start":1767584996387,"name":"generate","status":0}
+{"id":"a01a8840ca1af32f68147a041b7f4972","type":"util","start":1767584996387,"name":"generate","end":1767584996449.567,"status":2}
+{"id":"6b23ed1057559f0be1c52fbbb9ad8c1e","type":"flow","start":1767585019513,"name":"generateScheduleFlow","status":0}
+{"id":"6b23ed1057559f0be1c52fbbb9ad8c1e","type":"flow","start":1767585019513,"name":"generateScheduleFlow","end":1767585019517.043,"status":2}
