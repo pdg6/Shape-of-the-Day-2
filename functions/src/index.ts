@@ -229,17 +229,8 @@ export const suggestTasksFlow = ai.defineFlow(
             ${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
             
             Follow the Gold Standard schema and strict rules.`,
-            tools: [
-                {
-                    googleSearchRetrieval: {
-                        dynamicRetrievalConfig: {
-                            mode: "MODE_DYNAMIC",
-                            dynamicThreshold: 0.7,
-                        }
-                    }
-                }
-            ],
             config: {
+                tools: [{ googleSearch: {} }],
                 systemInstruction: CURRICULUM_SYSTEM_PROMPT,
                 temperature: 0,
                 responseMimeType: 'application/json',
@@ -367,17 +358,8 @@ export const refineTaskFlow = ai.defineFlow(
         const response = await genai.models.generateContent({
             model: 'gemini-1.5-flash',
             contents: combinedPrompt,
-            tools: [
-                {
-                    googleSearchRetrieval: {
-                        dynamicRetrievalConfig: {
-                            mode: "MODE_DYNAMIC",
-                            dynamicThreshold: 0.7,
-                        }
-                    }
-                }
-            ],
             config: {
+                tools: [{ googleSearch: {} }],
                 systemInstruction: CURRICULUM_SYSTEM_PROMPT,
                 temperature: 0,
                 responseMimeType: 'application/json',

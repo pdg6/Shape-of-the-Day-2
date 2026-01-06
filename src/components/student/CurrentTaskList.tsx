@@ -89,298 +89,331 @@ interface HelpModalProps {
     onExpandInstructions: () => Promise<void>;
 }
 
-/**
- * HelpModal Component (formerly QuestionOverlay)
- *
- * A modal overlay that appears when a student clicks "Help".
- * Provides pre-defined options + custom text input.
- */
-const previousFocusRef = useRef<HTMLElement | null>(null);
-const [isExpanding, setIsExpanding] = useState(false);
+const HelpModal: React.FC<HelpModalProps> = ({
+    task,
+    onClose,
+    onUpdateComment,
+    studentName,
+    classroomId,
+    stuckCount,
+    hasExpandedInstructions,
+    onExpandInstructions
+}) => {
+    const [comment, setComment] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAskingAI, setIsAskingAI] = useState(false);
+    const maxChars = 500;
+    const previousFocusRef = useRef<HTMLElement | null>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const overlayRef = useRef<HTMLDivElement>(null);
+    const [isExpanding, setIsExpanding] = useState(false);
 
-/**
- * Handles comment input with Unicode normalization, sanitization, and profanity filtering.
- */
-const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const raw = e.target.value.slice(0, maxChars);
-    // Apply Unicode normalization and control character removal
-    const normalized = sanitizeHelpRequest(raw);
-    // Apply profanity filter
-    const filtered = filterProfanity(normalized);
-    setComment(filtered);
-};
+    /**
+     * Handles comment input with Unicode normalization, sanitization, and profanity filtering.
+     */
+    const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const raw = e.target.value.slice(0, maxChars);
+        // Apply Unicode normalization and control character removal
+        const normalized = sanitizeHelpRequest(raw);
+        // Apply profanity filter
+        const filtered = filterProfanity(normalized);
+        setComment(filtered);
+    };
 
+    /**
+     * Submit the help request to the task's question history
+     */
+    const handleSubmitHelp = async () => {
+        if (!comment.trim() || !auth.currentUser) return;
 
+        setIsSubmitting(true);
+        try {
+            const sanitized = sanitizeComment(comment, maxChars);
 
-/**
- * Submit the help request to the task's question history
- */
-const handleSubmitHelp = async () => {
-    if (!comment.trim() || !auth.currentUser) return;
+            // Save to questions subcollection (Sanitized/Escaped for DB/Teacher Safety)
+            await addQuestionToTask(task.id, {
+                studentId: auth.currentUser.uid,
+                studentName: studentName,
+                classroomId: classroomId,
+                question: sanitized,
+            });
 
-    setIsSubmitting(true);
-    try {
-        const sanitized = sanitizeComment(comment, maxChars);
+            // Update local state (Use processed but UN-ESCAPED text for the UI so it doesn't show &#39;)
+            // We want the text to remain editable and readable in the textarea.
+            onUpdateComment(task.id, comment);
 
-        // Save to questions subcollection (Sanitized/Escaped for DB/Teacher Safety)
-        await addQuestionToTask(task.id, {
-            studentId: auth.currentUser.uid,
-            studentName: studentName,
-            classroomId: classroomId,
-            question: sanitized,
-        });
+            toast.success('Help request sent to teacher!');
+            setComment('');
+        } catch (error) {
+            console.error('Error submitting help request:', error);
+            toast.error('Failed to send help request');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
-        // Update local state (Use processed but UN-ESCAPED text for the UI so it doesn't show &#39;)
-        // We want the text to remain editable and readable in the textarea.
-        onUpdateComment(task.id, comment);
-
-        // Track submitted question (Legacy local state - subscription handles the real list now)
-        // setSubmittedQuestions(prev => [...prev, sanitized]);
-
-        toast.success('Help request sent to teacher!');
-        setComment('');
-    } catch (error) {
-        console.error('Error submitting help request:', error);
-        toast.error('Failed to send help request');
-    } finally {
-        setIsSubmitting(false);
-    }
     /**
      * Ask the AI Tutor for help
      */
-};
+    const handleAskAI = async () => {
+        if (!comment.trim() || !auth.currentUser) return;
+
+        setIsAskingAI(true);
+        try {
+            const studentId = auth.currentUser.uid;
+
+            // 1. Submit the student's question to the database first
+            const sanitized = sanitizeComment(comment, maxChars);
+            await addQuestionToTask(task.id, {
+                studentId,
+                studentName,
+                classroomId,
+                question: sanitized,
+            });
+
+            // 2. Call AI service to get response
+            const response = await askAIQuestion(task.id, sanitized, classroomId);
+
+            toast.success('AI Tutor is thinking...');
+            setComment('');
+        } catch (error) {
+            console.error('Error asking AI:', error);
+            toast.error('AI Tutor is unavailable right now');
+        } finally {
+            setIsAskingAI(false);
+        }
     };
 
-const handleExpandInstructions = async () => {
-    setIsExpanding(true);
-    try {
-        await onExpandInstructions();
-        // Once expanded, we can close or stay open. 
-        // The instructions will update in the TaskCard behind.
-    } catch (error) {
-        console.error('Error expanding instructions:', error);
-    } finally {
-        setIsExpanding(false);
-    }
-};
-
-// Focus management
-useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement;
-    return () => {
-        previousFocusRef.current?.focus();
+    const handleExpandInstructions = async () => {
+        setIsExpanding(true);
+        try {
+            await onExpandInstructions();
+            // Once expanded, we can close or stay open. 
+            // The instructions will update in the TaskCard behind.
+        } catch (error) {
+            console.error('Error expanding instructions:', error);
+        } finally {
+            setIsExpanding(false);
+        }
     };
-}, []);
 
-// Handle Escape key
-const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-        onClose();
-    }
-}, [onClose]);
+    // Focus management
+    useEffect(() => {
+        previousFocusRef.current = document.activeElement as HTMLElement;
+        return () => {
+            previousFocusRef.current?.focus();
+        };
+    }, []);
 
-useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-}, [handleKeyDown]);
+    // Handle Escape key
+    const handleKeyDown = useCallback((event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+            onClose();
+        }
+    }, [onClose]);
 
-// Subscribe to real-time questions
-const [questions, setQuestions] = useState<QuestionEntry[]>([]);
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [handleKeyDown]);
 
-useEffect(() => {
-    const studentId = auth.currentUser?.uid;
-    if (!studentId) return;
+    // Subscribe to real-time questions
+    const [questions, setQuestions] = useState<QuestionEntry[]>([]);
 
-    const unsubscribe = subscribeToTaskQuestions(
-        task.id,
-        (fetchedQuestions) => {
-            setQuestions(fetchedQuestions);
-        },
-        classroomId,
-        studentId // Pass studentId to filter query and satisfy security rules
-    );
+    useEffect(() => {
+        const studentId = auth.currentUser?.uid;
+        if (!studentId) return;
 
-    return () => unsubscribe();
-}, [task.id, classroomId]);
+        const unsubscribe = subscribeToTaskQuestions(
+            task.id,
+            (fetchedQuestions) => {
+                setQuestions(fetchedQuestions);
+            },
+            classroomId,
+            studentId // Pass studentId to filter query and satisfy security rules
+        );
 
-// Use the subscribed questions + legacy history if any (merged deduped)
-// Actually, let's just use the new system. Legacy questions are "archived" unless migrated.
-// For "Shape of the Day", we just use the new live questions.
-const displayQuestions = questions;
+        return () => unsubscribe();
+    }, [task.id, classroomId]);
 
-return (
-    <div
-        className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300"
-        onClick={onClose}
-    >
+    // Use the subscribed questions + legacy history if any (merged deduped)
+    // Actually, let's just use the new system. Legacy questions are "archived" unless migrated.
+    // For "Shape of the Day", we just use the new live questions.
+    const displayQuestions = questions;
+
+    return (
         <div
-            ref={overlayRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="help-modal-title"
-            className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl border transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-border-subtle shadow-layered-lg"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300"
+            onClick={onClose}
         >
-            {/* Header */}
-            <div className="flex items-start justify-between p-4 border-b border-border-subtle">
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <div className="p-2 rounded-full bg-status-question/10 text-status-question">
-                            <HelpCircle className="w-5 h-5" />
+            <div
+                ref={overlayRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="help-modal-title"
+                className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl border transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-border-subtle shadow-layered-lg"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-start justify-between p-4 border-b border-border-subtle">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <div className="p-2 rounded-full bg-status-question/10 text-status-question">
+                                <HelpCircle className="w-5 h-5" />
+                            </div>
+                            <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary line-clamp-1" title={task.title}>
+                                {task.title}
+                            </h2>
                         </div>
-                        <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary line-clamp-1" title={task.title}>
-                            {task.title}
-                        </h2>
                     </div>
+                    <button
+                        ref={closeButtonRef}
+                        onClick={onClose}
+                        className="p-1 text-brand-textMuted hover:text-brand-textPrimary transition-colors"
+                        aria-label="Close"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
-                <button
-                    ref={closeButtonRef}
-                    onClick={onClose}
-                    className="p-1 text-brand-textMuted hover:text-brand-textPrimary transition-colors"
-                    aria-label="Close"
-                >
-                    <X className="w-5 h-5" />
-                </button>
-            </div>
 
-            {/* Previous Requests (Threaded Chat) */}
-            {(displayQuestions.length > 0) && (
-                <div className="flex-1 min-h-0 bg-[var(--color-bg-tile-alt)]/30 border-b border-border-subtle flex flex-col">
-                    {/* Chat Content */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
-                        {/* Reverse mapping so newest is at bottom visually if we unreversed? No, Firestore order is DESC (Newest first).
+                {/* Previous Requests (Threaded Chat) */}
+                {(displayQuestions.length > 0) && (
+                    <div className="flex-1 min-h-0 bg-[var(--color-bg-tile-alt)]/30 border-b border-border-subtle flex flex-col">
+                        {/* Chat Content */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
+                            {/* Reverse mapping so newest is at bottom visually if we unreversed? No, Firestore order is DESC (Newest first).
                                 For a chat log, we usually want Oldest at top, Newest at bottom.
                                 Firestore returns Newest First. So we should reverse the array for display.
                             */}
-                        {[...displayQuestions].map((q, idx) => (
-                            <div key={q.id || idx} className="flex flex-col gap-2">
-                                {/* Student Bubble (Right) */}
-                                <div className="self-end max-w-[85%] flex flex-col items-end gap-1">
-                                    <div className="bg-brand-accent/10 border border-[var(--color-brand-accent)] text-brand-textPrimary rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-sm w-full">
-                                        <CodeBlockRenderer
-                                            html={formatMessageToHtml(q.question)}
-                                            className="prose-p:my-0 prose-pre:my-2"
-                                        />
-                                    </div>
-                                    <span className="text-[9px] text-brand-textSecondary font-medium px-1">
-                                        {q.askedAt?.toDate ? format(q.askedAt.toDate(), 'h:mm a') : 'Just now'}
-                                    </span>
-                                </div>
-
-                                {/* Teacher/AI Response Bubble (Left) */}
-                                {q.resolved && q.teacherResponse && (
-                                    <div className="self-start max-w-[85%] flex flex-col items-start gap-1 animate-in slide-in-from-left-2">
-                                        <div className="bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-2xl rounded-tl-sm px-4 py-2 text-sm shadow-md w-full">
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <span className="block text-[10px] font-black text-brand-accent uppercase">
-                                                    {q.teacherResponse.includes('AI') || q.teacherResponse.length > 200 ? 'AI Tutor' : 'Teacher'}
-                                                </span>
-                                                {q.teacherResponse.includes('AI') && <Sparkles className="w-3 h-3 text-brand-accent" />}
-                                            </div>
+                            {[...displayQuestions].map((q, idx) => (
+                                <div key={q.id || idx} className="flex flex-col gap-2">
+                                    {/* Student Bubble (Right) */}
+                                    <div className="self-end max-w-[85%] flex flex-col items-end gap-1">
+                                        <div className="bg-brand-accent/10 border border-[var(--color-brand-accent)] text-brand-textPrimary rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-sm w-full">
                                             <CodeBlockRenderer
-                                                html={formatMessageToHtml(q.teacherResponse)}
+                                                html={formatMessageToHtml(q.question)}
                                                 className="prose-p:my-0 prose-pre:my-2"
                                             />
                                         </div>
                                         <span className="text-[9px] text-brand-textSecondary font-medium px-1">
-                                            {q.resolvedAt?.toDate ? format(q.resolvedAt.toDate(), 'h:mm a') : 'Responded'}
+                                            {q.askedAt?.toDate ? format(q.askedAt.toDate(), 'h:mm a') : 'Just now'}
                                         </span>
                                     </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
-            {/* Content */}
-            <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                    <textarea
-                        value={comment}
-                        onChange={handleCommentChange}
-                        placeholder={questions.length > 0 ? "Type a reply..." : "Describe what you need help with..."}
-                        maxLength={maxChars}
-                        autoComplete="off"
-                        spellCheck={true}
-                        className="w-full h-32 p-3 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
-                        autoFocus
-                        data-testid="help-input"
-                    />
-                    <div className="flex justify-between items-start px-1 mt-2">
-                        <span className="text-xs text-brand-textSecondary ml-auto">
-                            {comment.length}/{maxChars}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-border-subtle flex flex-col gap-3 bg-[var(--color-bg-tile)]">
-                {/* Special Stuck Support */}
-                {stuckCount >= 2 && !hasExpandedInstructions && (
-                    <div className="p-3 mb-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="flex items-center gap-2 mb-2 font-bold uppercase tracking-wider">
-                            <AlertTriangle className="w-4 h-4 text-amber-400" />
-                            Still Stuck?
+                                    {/* Teacher/AI Response Bubble (Left) */}
+                                    {q.resolved && q.teacherResponse && (
+                                        <div className="self-start max-w-[85%] flex flex-col items-start gap-1 animate-in slide-in-from-left-2">
+                                            <div className="bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-2xl rounded-tl-sm px-4 py-2 text-sm shadow-md w-full">
+                                                <div className="flex items-center gap-1.5 mb-1">
+                                                    <span className="block text-[10px] font-black text-brand-accent uppercase">
+                                                        {q.teacherResponse.includes('AI') || q.teacherResponse.length > 200 ? 'AI Tutor' : 'Teacher'}
+                                                    </span>
+                                                    {q.teacherResponse.includes('AI') && <Sparkles className="w-3 h-3 text-brand-accent" />}
+                                                </div>
+                                                <CodeBlockRenderer
+                                                    html={formatMessageToHtml(q.teacherResponse)}
+                                                    className="prose-p:my-0 prose-pre:my-2"
+                                                />
+                                            </div>
+                                            <span className="text-[9px] text-brand-textSecondary font-medium px-1">
+                                                {q.resolvedAt?.toDate ? format(q.resolvedAt.toDate(), 'h:mm a') : 'Responded'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
-                        <p className="mb-3 leading-relaxed">
-                            I noticed you've been working hard on this. Would you like me to break down these instructions into simple, action-oriented steps?
-                        </p>
-                        <button
-                            onClick={handleExpandInstructions}
-                            disabled={isExpanding}
-                            className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                            {isExpanding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                            SIMPLIFY INSTRUCTIONS
-                        </button>
                     </div>
                 )}
 
-                <div className="flex items-center justify-between gap-3">
-                    {/* Ask AI Button */}
-                    <button
-                        type="button"
-                        onClick={handleAskAI}
-                        disabled={!comment.trim() || isAskingAI || isSubmitting}
-                        className="flex items-center gap-2 px-3 py-2 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent rounded-xl text-xs font-bold transition-all border border-brand-accent/20 shadow-sm hover:shadow-md disabled:bg-tile-alt disabled:text-brand-textMuted disabled:border-transparent disabled:opacity-50 disabled:cursor-not-allowed group/ai"
-                    >
-                        {isAskingAI ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                            <Sparkles className="w-4 h-4 group-hover/ai:animate-pulse" />
-                        )}
-                        <span>Ask AI Tutor</span>
-                    </button>
+                {/* Content */}
+                <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                        <textarea
+                            value={comment}
+                            onChange={handleCommentChange}
+                            placeholder={questions.length > 0 ? "Type a reply..." : "Describe what you need help with..."}
+                            maxLength={maxChars}
+                            autoComplete="off"
+                            spellCheck={true}
+                            className="w-full h-32 p-3 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
+                            autoFocus
+                            data-testid="help-input"
+                        />
+                        <div className="flex justify-between items-start px-1 mt-2">
+                            <span className="text-xs text-brand-textSecondary ml-auto">
+                                {comment.length}/{maxChars}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                    <div className="flex items-center gap-2">
+                {/* Footer */}
+                <div className="p-4 border-t border-border-subtle flex flex-col gap-3 bg-[var(--color-bg-tile)]">
+                    {/* Special Stuck Support */}
+                    {stuckCount >= 2 && !hasExpandedInstructions && (
+                        <div className="p-3 mb-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="flex items-center gap-2 mb-2 font-bold uppercase tracking-wider">
+                                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                                Still Stuck?
+                            </div>
+                            <p className="mb-3 leading-relaxed">
+                                I noticed you've been working hard on this. Would you like me to break down these instructions into simple, action-oriented steps?
+                            </p>
+                            <button
+                                onClick={handleExpandInstructions}
+                                disabled={isExpanding}
+                                className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {isExpanding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                SIMPLIFY INSTRUCTIONS
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between gap-3">
+                        {/* Ask AI Button */}
                         <button
-                            onClick={onClose}
-                            className="px-3 py-2 text-brand-textMuted hover:text-brand-textPrimary text-sm font-bold transition-colors"
+                            type="button"
+                            onClick={handleAskAI}
+                            disabled={!comment.trim() || isAskingAI || isSubmitting}
+                            className="flex items-center gap-2 px-3 py-2 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent rounded-xl text-xs font-bold transition-all border border-brand-accent/20 shadow-sm hover:shadow-md disabled:bg-tile-alt disabled:text-brand-textMuted disabled:border-transparent disabled:opacity-50 disabled:cursor-not-allowed group/ai"
                         >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSubmitHelp}
-                            disabled={!comment.trim() || isSubmitting}
-                            className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 disabled:bg-tile-alt text-white disabled:text-brand-textMuted rounded-xl text-sm font-bold transition-all shadow-lg shadow-brand-accent/20 disabled:shadow-none disabled:cursor-not-allowed"
-                            data-testid="submit-help-btn"
-                        >
-                            {isSubmitting ? (
+                            {isAskingAI ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
-                                <Send size={14} />
+                                <Sparkles className="w-4 h-4 group-hover/ai:animate-pulse" />
                             )}
-                            Ask Teacher
+                            <span>Ask AI Tutor</span>
                         </button>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={onClose}
+                                className="px-3 py-2 text-brand-textMuted hover:text-brand-textPrimary text-sm font-bold transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitHelp}
+                                disabled={!comment.trim() || isSubmitting}
+                                className="flex items-center gap-2 px-4 py-2 bg-brand-accent hover:bg-brand-accent/90 disabled:bg-tile-alt text-white disabled:text-brand-textMuted rounded-xl text-sm font-bold transition-all shadow-lg shadow-brand-accent/20 disabled:shadow-none disabled:cursor-not-allowed"
+                                data-testid="submit-help-btn"
+                            >
+                                {isSubmitting ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <Send size={14} />
+                                )}
+                                Ask Teacher
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-);
-    };
+    );
+};
 
 // --- Utility Functions ---
 
