@@ -11,7 +11,11 @@ import TaskProgressIcons from './TaskProgressIcons';
 import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 import { PageLayout } from '../shared/PageLayout';
 import { TeacherChatModal } from './TeacherChatModal';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Brain, Sparkles, Loader2 } from 'lucide-react';
+import { analyzeStruggles, suggestScaffolding } from '../../services/aiService';
+import { AiInsightModal } from './AiInsightModal';
+import { StruggleAnalysis } from '../../types';
+import toast from 'react-hot-toast';
 
 /**
  * LiveView Component
@@ -40,6 +44,14 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         studentName: string;
         taskId: string;
         taskTitle: string;
+    } | null>(null);
+
+    // AI Insight State
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [insightState, setInsightState] = useState<{
+        type: 'struggles' | 'scaffolding';
+        data?: StruggleAnalysis;
+        tasks?: Task[];
     } | null>(null);
 
     // Sync internal state with prop changes
@@ -91,6 +103,36 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
             taskId: targetTaskId,
             taskTitle: taskTitle
         });
+    };
+
+    const handleAnalyzeStruggles = async () => {
+        if (!currentClassId) return;
+        setIsAnalyzing(true);
+        try {
+            const result = await analyzeStruggles(currentClassId);
+            setInsightState({ type: 'struggles', data: result });
+        } catch (error) {
+            console.error('Error analyzing struggles:', error);
+            toast.error('Failed to analyze struggles');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleSuggestScaffolding = async () => {
+        if (!currentClassId) return;
+        setIsAnalyzing(true);
+        try {
+            // First analyze struggles for context if possible, or just call scaffolding directly
+            const struggleResult = await analyzeStruggles(currentClassId);
+            const scaffoldResult = await suggestScaffolding(currentClassId, struggleResult.summary);
+            setInsightState({ type: 'scaffolding', tasks: scaffoldResult.suggestedTasks });
+        } catch (error) {
+            console.error('Error suggesting scaffolding:', error);
+            toast.error('Failed to suggest scaffolding');
+        } finally {
+            setIsAnalyzing(false);
+        }
     };
 
     const currentClass = classrooms.find(c => c.id === currentClassId);
@@ -260,24 +302,55 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                 </div>
             </div>
 
-            {/* Right: View Toggle Buttons */}
-            <div className="flex items-center gap-2 self-end">
-                <Button
-                    size="md"
-                    icon={ListChecks}
-                    onClick={() => handleViewChange('tasks')}
-                    active={internalView === 'tasks'}
-                >
-                    Tasks
-                </Button>
-                <Button
-                    size="md"
-                    icon={Users}
-                    onClick={() => handleViewChange('students')}
-                    active={internalView === 'students'}
-                >
-                    Students
-                </Button>
+            {/* Right: AI Tools & View Toggle Buttons */}
+            <div className="flex items-center gap-4 self-end">
+                {/* AI Multi-Tool - Contextual to active view */}
+                <div className="flex items-center gap-1.5 p-1 bg-[var(--color-bg-tile-alt)] rounded-xl border border-[var(--color-border-subtle)] shadow-layered-sm">
+                    {internalView === 'students' ? (
+                        <button
+                            onClick={handleAnalyzeStruggles}
+                            disabled={isAnalyzing}
+                            title="Analyze Class Struggles"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all
+                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white/5 disabled:opacity-50"
+                        >
+                            {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4 text-purple-400" />}
+                            <span className="hidden sm:inline">Struggles</span>
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSuggestScaffolding}
+                            disabled={isAnalyzing}
+                            title="Suggest Scaffolding Tasks"
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all
+                                text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white/5 disabled:opacity-50"
+                        >
+                            {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-brand-accent" />}
+                            <span className="hidden sm:inline">Scaffold</span>
+                        </button>
+                    )}
+                </div>
+
+                <div className="flex gap-1.5 p-1 bg-[var(--color-bg-tile-alt)] rounded-xl border border-[var(--color-border-subtle)] shadow-layered-sm">
+                    <Button
+                        size="sm"
+                        icon={ListChecks}
+                        onClick={() => handleViewChange('tasks')}
+                        active={internalView === 'tasks'}
+                        className="!rounded-lg"
+                    >
+                        Tasks
+                    </Button>
+                    <Button
+                        size="sm"
+                        icon={Users}
+                        onClick={() => handleViewChange('students')}
+                        active={internalView === 'students'}
+                        className="!rounded-lg"
+                    >
+                        Students
+                    </Button>
+                </div>
             </div>
         </>
     );
@@ -311,6 +384,16 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
                     studentName={chatSession.studentName}
                     taskTitle={chatSession.taskTitle}
                     onClose={() => setChatSession(null)}
+                />
+            )}
+            {/* AI Insight Modal */}
+            {insightState && (
+                <AiInsightModal
+                    classroomId={currentClassId}
+                    type={insightState.type}
+                    insight={insightState.data}
+                    suggestedTasks={insightState.tasks}
+                    onClose={() => setInsightState(null)}
                 />
             )}
         </PageLayout>

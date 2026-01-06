@@ -537,7 +537,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         ${contentMode === 'ai' ? 'border-brand-accent' : 'border-border-subtle hover:border-brand-accent/50'}`}
                 >
                     <Sparkles className="w-5 h-5 text-brand-accent" />
-                    <span>AI Assistant</span>
+                    <span>Assistant</span>
                 </button>
 
                 <button
@@ -565,7 +565,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         ${contentMode === 'bulk' ? 'border-brand-accent' : 'border-border-subtle hover:border-brand-accent/50'}`}
                 >
                     <Layers className="w-5 h-5 text-brand-accent" />
-                    <span>Edit All</span>
+                    <span>Edit</span>
                 </button>
             </div>
 
@@ -1206,9 +1206,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         )}
                     </div>
 
-                    {/* RIGHT PANEL: Task List */}
                     <div className="flex-1 min-h-0 lg:col-span-1 flex flex-col">
-                        <div className="flex-1 min-h-0 flex flex-col justify-end lg:justify-start overflow-y-auto custom-scrollbar pb-2 lg:pb-0 lg:p-0">
+                        <div className="flex-1 min-h-0 flex flex-col justify-end lg:justify-start overflow-y-auto custom-scrollbar pb-2 pt-2 lg:pb-4 lg:pt-4 lg:px-4">
 
 
                             {/* Mobile Overlay - closes accordion when clicking outside */}
@@ -1301,6 +1300,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                 key={task.id}
                                                 onClick={() => {
                                                     loadTask(task);
+                                                    setContentMode('task'); // Ensure editor is visible
                                                     setIsMobileTasksOpen(false); // Close accordion on mobile
                                                 }}
                                                 style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
@@ -1344,11 +1344,18 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                         </div>
                                                     </div>
 
-                                                    {/* Content: Title + Due Date */}
+                                                    {/* Content: Title + Due Date + Description Preview */}
                                                     <div className="flex-1 min-w-0">
-                                                        <h5 className={`font-bold text-sm line-clamp-2 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
+                                                        <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
                                                             {task.title}
                                                         </h5>
+
+                                                        {/* Description Preview (Cleaned) */}
+                                                        {task.description && (
+                                                            <p className="text-[10px] text-brand-textSecondary mt-0.5 line-clamp-2 leading-relaxed opacity-70">
+                                                                {task.description.replace(/<[^>]*>/g, '').trim()}
+                                                            </p>
+                                                        )}
 
                                                         {/* Due Date */}
                                                         {task.endDate && (

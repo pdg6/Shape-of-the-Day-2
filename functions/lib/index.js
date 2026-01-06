@@ -45,19 +45,17 @@ const ai = genkit({
 export const CurriculumSchema = z.object({
     id: z.string().optional().describe("Firestore ID if updating, otherwise ignore"),
     tempId: z.string().optional().describe("Temporary ID used for linking children in a hierarchical response"),
-    title: z.string().describe("The main display title of the curriculum item"),
-    description: z.string().optional().describe("Markdown summary of the task (Legacy fallback)"),
-    structuredContent: z.object({
-        rationale: z.string().describe("A concise explanation of the learning objective. Value only, no labels."),
-        instructions: z.array(z.string()).describe("Step-by-step verifiable action items. Max 5 steps."),
-        keyConcepts: z.array(z.string()).describe("List of technical terms or concepts covered (e.g., 'Loops', 'Variables')"),
-        troubleshooting: z.string().optional().describe("Specific debugging advice or an AI prompt for help."),
-    }).describe("The core pedagogical content broken into logical sections."),
     type: z.enum(['project', 'assignment', 'task', 'subtask']).describe("Hierarchy level"),
+    title: z.string().describe("The main display title of the curriculum item"),
+    structuredContent: z.object({
+        keyConcepts: z.array(z.string()).describe("List of 3-5 technical terms or skills covered. Value only."),
+        troubleshooting: z.string().optional().describe("A first-person 'Ask the AI' prompt for when a student is stuck. Example: 'Help me fix the...' or 'How do I...'"),
+        rationale: z.string().describe("A concise explanation of the learning objective. Value only, no labels."),
+        instructions: z.array(z.string()).describe("Step-by-step verifiable action items. Max 5 steps. Value only."),
+    }).describe("The core pedagogical content broken into logical sections."),
     parentId: z.string().nullable().describe("UUID or tempId of the parent item, or null if root"),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("YYYY-MM-DD format"),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("YYYY-MM-DD format"),
-    selectedRoomIds: z.array(z.string()).describe("List of classroom IDs"),
     links: z.array(z.object({
         id: z.string(),
         url: z.string().url(),
@@ -65,43 +63,59 @@ export const CurriculumSchema = z.object({
         addedAt: z.string().datetime().optional()
     })).optional(),
     accessibilityAudit: z.object({
-        hasVisualDualCoding: z.boolean().describe("True if UI colors also have text labels"),
         readingLevelGrade: z.number().max(10).describe("Estimated reading grade level (max 10)"),
-        hasAiPrompt: z.boolean().describe("True if an 'Ask the AI' prompt is included for complex tasks")
+        hasVisualDualCoding: z.boolean().describe("True if UI colors also have text labels"),
+        hasAiPrompt: z.boolean().describe("True if troubleshooting prompt is included"),
+        hasAlternativePath: z.boolean().describe("True if the activity has a simplified 'Plan B' for accessibility")
     }).describe("Self-correction log. Must be true/valid for the task to be accepted.")
 });
+/**
+ * Backend Scrubber: Recursively strips unwanted markdown headers and labels from AI output.
+ */
+const scrubAiOutput = (obj) => {
+    if (typeof obj === 'string') {
+        return obj
+            .replace(/^(###?\s*)+(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit):?\s*/im, '')
+            .replace(/^###+\s*/gm, '')
+            .replace(/^\*\*(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit)\*\*:?\s*/im, '')
+            .replace(/^(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit):?\s*/im, '')
+            .replace(/^[#*>\-]+\s*/, '')
+            .trim();
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(scrubAiOutput);
+    }
+    if (typeof obj === 'object' && obj !== null) {
+        const scrubbed = {};
+        for (const key in obj) {
+            scrubbed[key] = scrubAiOutput(obj[key]);
+        }
+        return scrubbed;
+    }
+    return obj;
+};
 const CURRICULUM_SYSTEM_PROMPT = `
-Role: You are the Lead Curriculum Architect for a Grade 8-12 PBL platform. 
-Objective: Transform raw teacher notes into structured, machine-readable curriculum objects.
+You are a curriculum designer for a Grade 9-10 classroom platform.
 
-Target Audience: Beginners (Grade 9-10).
-Constraint: Students do not have terminal access. All instructions must be GUI-based (VS Code, Godot, Browser).
+Your job: Convert teacher notes into structured JSON curriculum items.
 
-Hierarchy Definitions (Standardizing the "Shape")
-- **Project**: The "North Star" outcome (multi-week goal).
-- **Assignment**: A major milestone/deliverable (multi-session).
-- **Task**: A single session goal or logical grouping of steps.
-- **Subtask**: Atomic technical steps.
+AUDIENCE: Beginner students with NO terminal access. All instructions must use GUI tools (VS Code, Godot Editor, Browser).
 
-The "Think-First" Protocol (Internal Processing)
-Before generating JSON, assess the following:
-1. Scope: Is this a multi-week Project or a 15-minute Task?
-2. Dependencies: Does this task require a parent "Assignment"?
-3. Clarity: Are the instructions atomic? (e.g., "Open file" and "Paste code" are two steps).
-4. Recursive Deepening: If a task requires more than 5 steps, you MUST break it into a parent item with children subtasks.
+ITEM TYPES:
+- project: Multi-week goal
+- assignment: Multi-session milestone  
+- task: Single session activity
+- subtask: One atomic action
 
-Field Generation Rules
-1. **rationale**: A single sentence explaining the *value* of the task. Do NOT use labels like "Why:" or "Rationale:". Just state the reason directly. (e.g., "To understand how variables store player health.")
-2. **instructions**: Create an array of strings. Each string is one discrete step. Focus on "Visual Anchors" (e.g., "In the Inspector Panel...", "Look for the blue icon...").
-3. **troubleshooting**: If the task involves logic/coding, provide a specific question the student can ask an AI if they fail.
-4. **Contextual Grounding**: If the provided context includes specific filenames (e.g., "Movement.gd") or links, reference them by name in the instructions.
-
-Strict Tone Guidelines
-- Active Voice: "Click the button," not "The button should be clicked."
-- Reading Level: Max Grade 10. Simple sentences.
-- **NEGATIVE CONSTRAINTS**:
-  - NO Markdown Headers in text fields (No symbols).
-  - NO "Steps:" or "Why:" labels. The content must be raw text only.
+OUTPUT RULES:
+1. "rationale" field: One sentence stating the learning value. Just the value, nothing else.
+2. "instructions" field: Array of discrete action strings. Max 5 steps.
+3. "troubleshooting" field: Create a first-person AI prompt for the student (e.g. "I'm having trouble with... can you help?").
+4. "keyConcepts" field: 3-5 technical terms (skills/concepts).
+5. STRICT PLAIN TEXT ONLY. NEVER include markdown headers (###), bold (**), or labels (e.g., "Why:", "Steps:").
+6. The presence of any "###" or "**Label:**" will result in a parsing error and task rejection.
+7. Use active voice: "Click the button" not "The button should be clicked"
+8. Keep reading level at Grade 10 or below.
 `;
 // --- RAG Components ---
 /**
@@ -181,17 +195,14 @@ export const suggestTasksFlow = ai.defineFlow({
     const { subject, gradeLevel } = input;
     const response = await genai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: `Generate 3 educational curriculum items (tasks/projects) for a classroom.
+        contents: `Generate 3 educational curriculum items (tasks/projects).
             Subject: ${subject}
             ${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
             
-            Each item should be clear, engaging, and follow the requested schema and strict rules.`,
+            Follow the Gold Standard schema and strict rules.`,
         config: {
             systemInstruction: CURRICULUM_SYSTEM_PROMPT,
-            // thinkingConfig: {
-            //     includeThoughts: true,
-            //     thinkingLevel: 'HIGH' as any, // Using string value with cast to bypass SDK type issues
-            // },
+            temperature: 0,
             responseMimeType: 'application/json',
             responseSchema: {
                 type: 'object',
@@ -201,31 +212,30 @@ export const suggestTasksFlow = ai.defineFlow({
                         items: {
                             type: 'object',
                             properties: {
-                                title: { type: 'string' },
-                                description: { type: 'string' },
                                 type: { type: 'string', enum: ['project', 'assignment', 'task', 'subtask'] },
+                                title: { type: 'string', description: 'Concise title.' },
                                 structuredContent: {
                                     type: 'object',
                                     properties: {
-                                        rationale: { type: 'string' },
-                                        instructions: { type: 'array', items: { type: 'string' } },
                                         keyConcepts: { type: 'array', items: { type: 'string' } },
-                                        troubleshooting: { type: 'string' },
+                                        troubleshooting: { type: 'string', description: 'Student-facing AI prompt. Example: "I\'m stuck on... help?"' },
+                                        rationale: { type: 'string', description: 'Learning value. No labels.' },
+                                        instructions: { type: 'array', items: { type: 'string' } },
                                     },
                                     required: ['rationale', 'instructions', 'keyConcepts'],
                                 },
-                                selectedRoomIds: { type: 'array', items: { type: 'string' } },
                                 accessibilityAudit: {
                                     type: 'object',
                                     properties: {
-                                        hasVisualDualCoding: { type: 'boolean' },
                                         readingLevelGrade: { type: 'number' },
-                                        hasAiPrompt: { type: 'boolean' }
+                                        hasVisualDualCoding: { type: 'boolean' },
+                                        hasAiPrompt: { type: 'boolean' },
+                                        hasAlternativePath: { type: 'boolean' }
                                     },
-                                    required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt']
+                                    required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt', 'hasAlternativePath']
                                 }
                             },
-                            required: ['title', 'type', 'structuredContent', 'selectedRoomIds', 'accessibilityAudit'],
+                            required: ['title', 'type', 'structuredContent', 'accessibilityAudit'],
                         }
                     }
                 },
@@ -243,8 +253,9 @@ export const suggestTasksFlow = ai.defineFlow({
     }
     try {
         const output = JSON.parse(text);
+        const scrubbedTasks = (output?.tasks || []).map(scrubAiOutput);
         return {
-            tasks: output?.tasks || [],
+            tasks: scrubbedTasks,
             thoughts
         };
     }
@@ -301,26 +312,14 @@ export const refineTaskFlow = ai.defineFlow({
         promptParts.push(`Grade Level Context: ${gradeLevel}`);
     if (totalContext)
         promptParts.push(`ADDITIONAL CONTEXT MATERIALS:\n${totalContext}`);
-    promptParts.push(`
-Scoping Instructions:
-If the objective is large, break it down into a logical hierarchy:
-1. Project (Root)
-2. Assignment (Child of Project)
-3. Task (Child of Assignment)
-4. Subtask (Child of Task)
-
-Use 'tempId' to link children to parents within this response.
-Ensure it follows the schema and all strict pedagogical and accessibility rules. NO MARKDOWN HEADERS.`);
+    promptParts.push(`Scoping: Break down Project -> Assignment -> Task -> Subtask. Use tempId for linking. Ensure strict plain text output (NO ### HEADERS).`);
     const combinedPrompt = promptParts.join('\n\n');
     const response = await genai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: combinedPrompt,
         config: {
             systemInstruction: CURRICULUM_SYSTEM_PROMPT,
-            // thinkingConfig: {
-            //     includeThoughts: true,
-            //     thinkingLevel: 'HIGH' as any,
-            // },
+            temperature: 0,
             responseMimeType: 'application/json',
             responseSchema: {
                 type: 'object',
@@ -332,32 +331,31 @@ Ensure it follows the schema and all strict pedagogical and accessibility rules.
                             properties: {
                                 id: { type: 'string' },
                                 tempId: { type: 'string' },
-                                title: { type: 'string' },
-                                description: { type: 'string' },
                                 type: { type: 'string', enum: ['project', 'assignment', 'task', 'subtask'] },
-                                parentId: { type: 'string', nullable: true },
+                                title: { type: 'string', description: 'Concise title.' },
                                 structuredContent: {
                                     type: 'object',
                                     properties: {
-                                        rationale: { type: 'string' },
-                                        instructions: { type: 'array', items: { type: 'string' } },
                                         keyConcepts: { type: 'array', items: { type: 'string' } },
-                                        troubleshooting: { type: 'string' },
+                                        troubleshooting: { type: 'string', description: 'Student-facing prompt.' },
+                                        rationale: { type: 'string', description: 'Learning value.' },
+                                        instructions: { type: 'array', items: { type: 'string' } },
                                     },
                                     required: ['rationale', 'instructions', 'keyConcepts'],
                                 },
-                                selectedRoomIds: { type: 'array', items: { type: 'string' } },
+                                parentId: { type: 'string', nullable: true },
                                 accessibilityAudit: {
                                     type: 'object',
                                     properties: {
-                                        hasVisualDualCoding: { type: 'boolean' },
                                         readingLevelGrade: { type: 'number' },
-                                        hasAiPrompt: { type: 'boolean' }
+                                        hasVisualDualCoding: { type: 'boolean' },
+                                        hasAiPrompt: { type: 'boolean' },
+                                        hasAlternativePath: { type: 'boolean' }
                                     },
-                                    required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt']
+                                    required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt', 'hasAlternativePath']
                                 }
                             },
-                            required: ['title', 'type', 'structuredContent', 'selectedRoomIds', 'accessibilityAudit'],
+                            required: ['title', 'type', 'structuredContent', 'accessibilityAudit'],
                         }
                     }
                 },
@@ -378,8 +376,9 @@ Ensure it follows the schema and all strict pedagogical and accessibility rules.
         if (!output || !output.items) {
             throw new Error('Failed to generate items from AI: Invalid structured output');
         }
+        const scrubbedItems = (output.items || []).map(scrubAiOutput);
         return {
-            ...output,
+            items: scrubbedItems,
             thoughts
         };
     }
@@ -422,50 +421,94 @@ export const refineTask = onCall({ cors: true }, async (request) => {
         throw new HttpsError('internal', error.message || 'Failed to refine task');
     }
 });
+/**
+ * Helper to index content into the vector database.
+ */
+async function indexContent(taskId, sourceId, filename, text) {
+    if (!text || text.trim().length === 0)
+        return;
+    // Use Genkit indexer
+    await ai.index({
+        indexer: curriculumIndexer,
+        documents: [{
+                content: [{ text }],
+                metadata: { taskId, filename }
+            }],
+        options: { taskId, filename }
+    });
+    console.log(`[AI] Indexed ${filename} for task ${taskId}`);
+}
 // Triggered when a task document is updated.
-// If attachments have changed, extract text and generate embeddings.
+// If attachments or links have changed, extract text and generate embeddings.
 export const onTaskAttachmentChange = onDocumentUpdated('tasks/{taskId}', async (event) => {
     const beforeData = event.data?.before.data();
     const afterData = event.data?.after.data();
     const taskId = event.params.taskId;
     if (!afterData)
         return;
-    // Check if attachments changed
-    const beforeAttachments = (beforeData?.attachments || []);
+    // 1. Process File Attachments
     const afterAttachments = (afterData.attachments || []);
-    if (JSON.stringify(beforeAttachments) === JSON.stringify(afterAttachments)) {
-        return; // No attachment change
-    }
-    console.log(`[AI] Processing attachments for task ${taskId}`);
-    // For each NEW attachment, generate embedding
+    const beforeAttachments = (beforeData?.attachments || []);
     for (const attachment of afterAttachments) {
-        // Skip if already processed
-        const existingDoc = await db.collection('task_embeddings').doc(`${taskId}_${attachment.id}`).get();
-        if (existingDoc.exists)
+        const isNew = !beforeAttachments.some((pa) => pa.id === attachment.id);
+        if (!isNew)
             continue;
         try {
-            // TODO: Download file from storage and extract text
-            // For now, we'll use the task description as a placeholder
-            const textContent = `${afterData.title}\n\n${afterData.description || ''}\n\nAttachment: ${attachment.filename}`;
-            // Generate embedding using Vertex AI
-            const embeddingResult = await ai.embed({
-                embedder: googleAI.embedder('text-embedding-004'),
-                content: textContent,
-            });
-            // Store in task_embeddings collection
-            await db.collection('task_embeddings').doc(`${taskId}_${attachment.id}`).set({
-                taskId: taskId,
-                attachmentId: attachment.id,
-                filename: attachment.filename,
-                embedding: embeddingResult,
-                textChunk: textContent.substring(0, 1000), // Store first 1000 chars for reference
-                createdAt: FieldValue.serverTimestamp(),
-                type: 'source_material',
-            });
-            console.log(`[AI] Embedded attachment ${attachment.id} for task ${taskId}`);
+            // Skip if already processed
+            const existingDoc = await db.collection('task_embeddings')
+                .where('taskId', '==', taskId)
+                .where('filename', '==', attachment.filename)
+                .limit(1)
+                .get();
+            if (!existingDoc.empty)
+                continue;
+            console.log(`[AI] Processing new attachment: ${attachment.filename}`);
+            const response = await fetch(attachment.url);
+            if (!response.ok)
+                throw new Error('Failed to download attachment');
+            const buffer = Buffer.from(await response.arrayBuffer());
+            let text = '';
+            if (attachment.mimeType === 'application/pdf') {
+                const data = await pdf(buffer);
+                text = data.text;
+            }
+            else if (attachment.mimeType?.startsWith('text/')) {
+                text = buffer.toString('utf-8');
+            }
+            if (text) {
+                await indexContent(taskId, attachment.id, attachment.filename, text);
+            }
         }
         catch (error) {
-            console.error(`[AI] Failed to embed attachment ${attachment.id}:`, error);
+            console.error(`[AI] Failed to process attachment ${attachment.id}:`, error);
+        }
+    }
+    // 2. Process YouTube Links
+    const afterLinks = (afterData.links || []);
+    const beforeLinks = (beforeData?.links || []);
+    for (const link of afterLinks) {
+        const isNew = !beforeLinks.some((pl) => pl.id === link.id);
+        if (!isNew)
+            continue;
+        if (link.url.includes('youtube.com') || link.url.includes('youtu.be')) {
+            try {
+                const existingDoc = await db.collection('task_embeddings')
+                    .where('taskId', '==', taskId)
+                    .where('filename', '==', `Transcript: ${link.title}`)
+                    .limit(1)
+                    .get();
+                if (!existingDoc.empty)
+                    continue;
+                console.log(`[AI] Processing new YouTube link: ${link.url}`);
+                const transcriptData = await YoutubeTranscript.fetchTranscript(link.url);
+                const transcript = transcriptData.map(t => t.text).join(' ');
+                if (transcript) {
+                    await indexContent(taskId, link.id, `Transcript: ${link.title || 'YouTube Video'}`, transcript);
+                }
+            }
+            catch (error) {
+                console.log(`[AI] Failed to fetch transcript for ${link.url}:`, error);
+            }
         }
     }
 });
@@ -500,18 +543,28 @@ export const answerQuestionFlow = ai.defineFlow({
     const contextChunks = documents.map((doc) => doc.content[0]?.text).filter(Boolean);
     // 3. Generate answer using Gemini with context
     const context = contextChunks.length > 0
-        ? `Context from teacher's materials:\n${contextChunks.join('\n\n')}`
+        ? `Context from teacher's materials (Notes, PDFs, Transcripts):\n${contextChunks.join('\n\n')}`
         : 'No additional context available.';
-    const prompt = `You are a helpful teaching assistant for a classroom.
+    const prompt = `You are a supportive, encouraging AI Tutor for a student working on a specific task.
         
+PEDAGOGICAL RULES:
+1. NEVER provide a step-by-step solution.
+2. NEVER complete the task for the student. 
+3. If a student asks you to solve it or give the answer, politely decline and explain that you are here to help them learn by doing it themselves.
+4. Instead of answers, provide:
+   - Conceptual hints.
+   - Clarifying questions (e.g., "What do you think happens when you click that?")
+   - Guidance on where to look in the provided materials.
+5. Reference the teacher's materials (attached files/videos) by name when possible.
+
 Task Title: ${task?.title}
-Task Description: ${task?.description || 'No description provided.'}
+${task?.description ? `Task Description: ${task.description}` : ''}
 
 ${context}
 
 Student Question: ${question}
 
-Please provide a helpful, age-appropriate answer. If you don't have enough information to answer, say so and suggest the student ask their teacher.`;
+Provide a "tutor-style" response that guides them toward the answer. Use a friendly, Grade 9-10 appropriate tone.`;
     const response = await genai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: prompt,

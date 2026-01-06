@@ -273,34 +273,41 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                                             {msg.suggestions.map((item, idx) => {
                                                 const indentation = item.parentId ? 'ml-6 border-l-2 border-brand-accent/10 pl-4' : '';
 
+
                                                 // Build unified markdown description
                                                 let descriptionHtml = '';
-                                                if (item.structuredContent) {
-                                                    // Defensive: Strip potential headers the AI might inject despite prompt rules
-                                                    const cleanRationale = item.structuredContent.rationale
-                                                        .replace(/^###?\s*Why:?\s*/i, '')
-                                                        .replace(/^\*\*Why\*\*:?\s*/i, '')
-                                                        .replace(/^Why:?\s*/i, '');
 
+                                                if (item.structuredContent) {
+                                                    // Helper to strip unwanted "chatty" prefixes
+                                                    const cleanContent = (text: string) => {
+                                                        if (!text) return '';
+                                                        return text
+                                                            .trim()
+                                                            .replace(/^(###?\s*)+(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit):?\s*/im, '')
+                                                            .replace(/^###+\s*/gm, '')
+                                                            .replace(/^\*\*(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit)\*\*:?\s*/im, '')
+                                                            .replace(/^(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit):?\s*/im, '')
+                                                            .replace(/^[#*>\-]+\s*/, '')
+                                                            .trim();
+                                                    };
+
+                                                    const cleanRationale = cleanContent(item.structuredContent.rationale);
+                                                    const cleanInstructions = item.structuredContent.instructions.map(cleanContent);
                                                     const cleanTroubleshooting = item.structuredContent.troubleshooting
-                                                        ? item.structuredContent.troubleshooting
-                                                            .replace(/^###?\s*Troubleshooting:?\s*/i, '')
-                                                            .replace(/^\*\*Troubleshooting\*\*:?\s*/i, '')
+                                                        ? cleanContent(item.structuredContent.troubleshooting)
                                                         : '';
 
                                                     const markdown = [
-                                                        cleanRationale,
-                                                        item.structuredContent.instructions.map((s, i) => `${i + 1}. ${s}`).join('\n'),
-                                                        cleanTroubleshooting ? `> **Troubleshooting**: ${cleanTroubleshooting}` : ''
+                                                        `**Objective**: ${cleanRationale}`,
+                                                        cleanInstructions.map((s, i) => `${i + 1}. ${s}`).join('\n'),
+                                                        cleanTroubleshooting ? `> [!TIP]\n> **Student Prompt**: ${cleanTroubleshooting}` : ''
                                                     ].filter(Boolean).join('\n\n');
                                                     descriptionHtml = formatMessageToHtml(markdown);
-                                                } else {
-                                                    descriptionHtml = formatMessageToHtml(item.description || '');
                                                 }
 
                                                 return (
                                                     <div key={idx} className={`${indentation} overflow-visible rounded-2xl bg-(--color-bg-tile) border border-border-subtle shadow-layered hover:shadow-layered-lg transition-float lift-dynamic`}>
-                                                        {/* Suggestion Header - Sleeker, matching main editor */}
+                                                        {/* Suggestion Header */}
                                                         <div className="px-4 py-2.5 bg-(--color-bg-tile-alt)/50 border-b border-border-subtle flex items-center justify-between rounded-t-2xl">
                                                             <div className="flex items-center gap-3 min-w-0">
                                                                 <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0
@@ -327,7 +334,7 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                                                             </div>
                                                         </div>
 
-                                                        {/* Content - Unified Markdown Block */}
+                                                        {/* Content */}
                                                         <div className="p-4 space-y-4">
                                                             <div className="prose prose-sm prose-invert max-w-none opacity-90">
                                                                 <CodeBlockRenderer
@@ -337,15 +344,32 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                                                                 />
                                                             </div>
 
-                                                            {item.structuredContent?.keyConcepts && item.structuredContent.keyConcepts.length > 0 && (
-                                                                <div className="flex flex-wrap gap-1.5 opacity-60">
-                                                                    {item.structuredContent.keyConcepts.map((concept, i) => (
-                                                                        <span key={i} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[9px] font-bold text-brand-textSecondary italic">
-                                                                            #{concept}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            )}
+                                                            <div className="flex items-center justify-between gap-4">
+                                                                {item.structuredContent?.keyConcepts && item.structuredContent.keyConcepts.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-1.5 overflow-hidden">
+                                                                        {item.structuredContent.keyConcepts.map((concept, i) => (
+                                                                            <span key={i} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[9px] font-bold text-brand-textSecondary italic whitespace-nowrap">
+                                                                                #{concept}
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+
+                                                                {item.accessibilityAudit && (
+                                                                    <div className="flex gap-2 shrink-0">
+                                                                        <div className="flex flex-col items-center">
+                                                                            <span className="text-[8px] font-black text-brand-textMuted uppercase tabular-nums">Grade</span>
+                                                                            <span className="text-[10px] font-black text-brand-accent">{item.accessibilityAudit.readingLevelGrade}</span>
+                                                                        </div>
+                                                                        {item.accessibilityAudit.hasAlternativePath && (
+                                                                            <div className="flex flex-col items-center" title="Has 'Plan B' path">
+                                                                                <span className="text-[8px] font-black text-brand-textMuted uppercase">Path B</span>
+                                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1" />
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
 
                                                             <div className="flex gap-2 pt-1">
                                                                 <button
@@ -379,9 +403,10 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                                                             const itemsToSync = msg.suggestions!.map(item => ({
                                                                 ...item,
                                                                 status: 'draft',
+                                                                description: item.structuredContent?.instructions?.map((s, i) => `${i + 1}. ${s}`).join('\n') || '',
                                                                 selectedRoomIds: currentFormData.selectedRoomIds.length > 0
                                                                     ? currentFormData.selectedRoomIds
-                                                                    : item.selectedRoomIds
+                                                                    : []
                                                             }));
 
                                                             await bulkSaveTasks(user.uid, itemsToSync);

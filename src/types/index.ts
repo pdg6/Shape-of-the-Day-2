@@ -111,6 +111,12 @@ export interface Task {
     teacherId?: string;      // UID of the teacher who created this
     createdAt?: any;         // Firebase Timestamp
     updatedAt?: any;         // Firebase Timestamp
+    accessibilityAudit?: {
+        readingLevelGrade: number;
+        hasVisualDualCoding: boolean;
+        hasAiPrompt: boolean;
+        hasAlternativePath: boolean;
+    };
 }
 
 // Interface for URL link attachments on tasks
@@ -138,6 +144,12 @@ export interface TaskFormData {
     endDate: string;
     selectedRoomIds: string[];
     attachments?: Attachment[]; // File/image attachments
+    accessibilityAudit?: {
+        readingLevelGrade: number;
+        hasVisualDualCoding: boolean;
+        hasAiPrompt: boolean;
+        hasAlternativePath: boolean;
+    };
 }
 
 // Type for task card in the multi-card editor
@@ -221,4 +233,10 @@ export interface AnalyticsLog {
         statusWasStuck: boolean;
         questionsAsked: string[];
     }[];
+}
+// Interface for classroom struggle analysis
+export interface StruggleAnalysis {
+    summary: string;
+    topStruggles: string[];
+    suggestions: string[];
 }

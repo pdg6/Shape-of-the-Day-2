@@ -18,6 +18,8 @@ import {
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 import { formatMessageToHtml } from '../../utils/markdownFormatter';
 
+import { askAIQuestion, expandTaskInstructions } from '../../services/aiService';
+
 /**
  * Configuration for the different task status actions.
  * Reduced to 3 actions: Help, In Progress, Complete
@@ -82,6 +84,9 @@ interface HelpModalProps {
     onUpdateComment: (taskId: string, comment: string) => void;
     studentName: string;
     classroomId: string;
+    stuckCount: number;
+    hasExpandedInstructions: boolean;
+    onExpandInstructions: () => Promise<void>;
 }
 
 /**
@@ -90,220 +95,263 @@ interface HelpModalProps {
  * A modal overlay that appears when a student clicks "Help".
  * Provides pre-defined options + custom text input.
  */
-const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, studentName, classroomId }) => {
-    const [comment, setComment] = useState(task.comment || '');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    // const [submittedQuestions, setSubmittedQuestions] = useState<string[]>([]); // Cleaned up as unnecessary
-    const maxChars = 200;
-    const overlayRef = useRef<HTMLDivElement>(null);
-    const closeButtonRef = useRef<HTMLButtonElement>(null);
-    const previousFocusRef = useRef<HTMLElement | null>(null);
+const previousFocusRef = useRef<HTMLElement | null>(null);
+const [isExpanding, setIsExpanding] = useState(false);
 
+/**
+ * Handles comment input with Unicode normalization, sanitization, and profanity filtering.
+ */
+const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const raw = e.target.value.slice(0, maxChars);
+    // Apply Unicode normalization and control character removal
+    const normalized = sanitizeHelpRequest(raw);
+    // Apply profanity filter
+    const filtered = filterProfanity(normalized);
+    setComment(filtered);
+};
+
+
+
+/**
+ * Submit the help request to the task's question history
+ */
+const handleSubmitHelp = async () => {
+    if (!comment.trim() || !auth.currentUser) return;
+
+    setIsSubmitting(true);
+    try {
+        const sanitized = sanitizeComment(comment, maxChars);
+
+        // Save to questions subcollection (Sanitized/Escaped for DB/Teacher Safety)
+        await addQuestionToTask(task.id, {
+            studentId: auth.currentUser.uid,
+            studentName: studentName,
+            classroomId: classroomId,
+            question: sanitized,
+        });
+
+        // Update local state (Use processed but UN-ESCAPED text for the UI so it doesn't show &#39;)
+        // We want the text to remain editable and readable in the textarea.
+        onUpdateComment(task.id, comment);
+
+        // Track submitted question (Legacy local state - subscription handles the real list now)
+        // setSubmittedQuestions(prev => [...prev, sanitized]);
+
+        toast.success('Help request sent to teacher!');
+        setComment('');
+    } catch (error) {
+        console.error('Error submitting help request:', error);
+        toast.error('Failed to send help request');
+    } finally {
+        setIsSubmitting(false);
+    }
     /**
-     * Handles comment input with Unicode normalization, sanitization, and profanity filtering.
+     * Ask the AI Tutor for help
      */
-    const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        const raw = e.target.value.slice(0, maxChars);
-        // Apply Unicode normalization and control character removal
-        const normalized = sanitizeHelpRequest(raw);
-        // Apply profanity filter
-        const filtered = filterProfanity(normalized);
-        setComment(filtered);
+};
     };
 
+const handleExpandInstructions = async () => {
+    setIsExpanding(true);
+    try {
+        await onExpandInstructions();
+        // Once expanded, we can close or stay open. 
+        // The instructions will update in the TaskCard behind.
+    } catch (error) {
+        console.error('Error expanding instructions:', error);
+    } finally {
+        setIsExpanding(false);
+    }
+};
 
-
-    /**
-     * Submit the help request to the task's question history
-     */
-    const handleSubmitHelp = async () => {
-        if (!comment.trim() || !auth.currentUser) return;
-
-        setIsSubmitting(true);
-        try {
-            const sanitized = sanitizeComment(comment, maxChars);
-
-            // Save to questions subcollection (Sanitized/Escaped for DB/Teacher Safety)
-            await addQuestionToTask(task.id, {
-                studentId: auth.currentUser.uid,
-                studentName: studentName,
-                classroomId: classroomId,
-                question: sanitized,
-            });
-
-            // Update local state (Use processed but UN-ESCAPED text for the UI so it doesn't show &#39;)
-            // We want the text to remain editable and readable in the textarea.
-            onUpdateComment(task.id, comment);
-
-            // Track submitted question (Legacy local state - subscription handles the real list now)
-            // setSubmittedQuestions(prev => [...prev, sanitized]);
-
-            toast.success('Help request sent to teacher!');
-            setComment('');
-        } catch (error) {
-            console.error('Error submitting help request:', error);
-            toast.error('Failed to send help request');
-        } finally {
-            setIsSubmitting(false);
-        }
+// Focus management
+useEffect(() => {
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    return () => {
+        previousFocusRef.current?.focus();
     };
+}, []);
 
-    // Focus management
-    useEffect(() => {
-        previousFocusRef.current = document.activeElement as HTMLElement;
-        return () => {
-            previousFocusRef.current?.focus();
-        };
-    }, []);
+// Handle Escape key
+const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+        onClose();
+    }
+}, [onClose]);
 
-    // Handle Escape key
-    const handleKeyDown = useCallback((event: KeyboardEvent) => {
-        if (event.key === 'Escape') {
-            onClose();
-        }
-    }, [onClose]);
+useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+}, [handleKeyDown]);
 
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [handleKeyDown]);
+// Subscribe to real-time questions
+const [questions, setQuestions] = useState<QuestionEntry[]>([]);
 
-    // Subscribe to real-time questions
-    const [questions, setQuestions] = useState<QuestionEntry[]>([]);
+useEffect(() => {
+    const studentId = auth.currentUser?.uid;
+    if (!studentId) return;
 
-    useEffect(() => {
-        const studentId = auth.currentUser?.uid;
-        if (!studentId) return;
+    const unsubscribe = subscribeToTaskQuestions(
+        task.id,
+        (fetchedQuestions) => {
+            setQuestions(fetchedQuestions);
+        },
+        classroomId,
+        studentId // Pass studentId to filter query and satisfy security rules
+    );
 
-        const unsubscribe = subscribeToTaskQuestions(
-            task.id,
-            (fetchedQuestions) => {
-                setQuestions(fetchedQuestions);
-            },
-            classroomId,
-            studentId // Pass studentId to filter query and satisfy security rules
-        );
+    return () => unsubscribe();
+}, [task.id, classroomId]);
 
-        return () => unsubscribe();
-    }, [task.id, classroomId]);
+// Use the subscribed questions + legacy history if any (merged deduped)
+// Actually, let's just use the new system. Legacy questions are "archived" unless migrated.
+// For "Shape of the Day", we just use the new live questions.
+const displayQuestions = questions;
 
-    // Use the subscribed questions + legacy history if any (merged deduped)
-    // Actually, let's just use the new system. Legacy questions are "archived" unless migrated.
-    // For "Shape of the Day", we just use the new live questions.
-    const displayQuestions = questions;
-
-    return (
+return (
+    <div
+        className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300"
+        onClick={onClose}
+    >
         <div
-            className="fixed inset-0 z-overlay flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-all duration-300"
-            onClick={onClose}
+            ref={overlayRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="help-modal-title"
+            className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl border transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-border-subtle shadow-layered-lg"
+            onClick={(e) => e.stopPropagation()}
         >
-            <div
-                ref={overlayRef}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="help-modal-title"
-                className="bg-(--color-bg-tile) w-full max-w-md rounded-2xl border transition-all duration-300 max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-border-subtle shadow-layered-lg"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-start justify-between p-4 border-b border-border-subtle">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <div className="p-2 rounded-full bg-status-question/10 text-status-question">
-                                <HelpCircle className="w-5 h-5" />
-                            </div>
-                            <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary line-clamp-1" title={task.title}>
-                                {task.title}
-                            </h2>
+            {/* Header */}
+            <div className="flex items-start justify-between p-4 border-b border-border-subtle">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <div className="p-2 rounded-full bg-status-question/10 text-status-question">
+                            <HelpCircle className="w-5 h-5" />
                         </div>
+                        <h2 id="help-modal-title" className="font-bold text-lg text-brand-textPrimary line-clamp-1" title={task.title}>
+                            {task.title}
+                        </h2>
                     </div>
-                    <button
-                        ref={closeButtonRef}
-                        onClick={onClose}
-                        className="p-1 text-brand-textMuted hover:text-brand-textPrimary transition-colors"
-                        aria-label="Close"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
                 </div>
+                <button
+                    ref={closeButtonRef}
+                    onClick={onClose}
+                    className="p-1 text-brand-textMuted hover:text-brand-textPrimary transition-colors"
+                    aria-label="Close"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+            </div>
 
-                {/* Previous Requests (Threaded Chat) */}
-                {(displayQuestions.length > 0) && (
-                    <div className="flex-1 min-h-0 bg-[var(--color-bg-tile-alt)]/30 border-b border-border-subtle flex flex-col">
-                        {/* Chat Content */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
-                            {/* Reverse mapping so newest is at bottom visually if we unreversed? No, Firestore order is DESC (Newest first).
+            {/* Previous Requests (Threaded Chat) */}
+            {(displayQuestions.length > 0) && (
+                <div className="flex-1 min-h-0 bg-[var(--color-bg-tile-alt)]/30 border-b border-border-subtle flex flex-col">
+                    {/* Chat Content */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar flex flex-col-reverse">
+                        {/* Reverse mapping so newest is at bottom visually if we unreversed? No, Firestore order is DESC (Newest first).
                                 For a chat log, we usually want Oldest at top, Newest at bottom.
                                 Firestore returns Newest First. So we should reverse the array for display.
                             */}
-                            {[...displayQuestions].map((q, idx) => (
-                                <div key={q.id || idx} className="flex flex-col gap-2">
-                                    {/* Student Bubble (Right) */}
-                                    <div className="self-end max-w-[85%] flex flex-col items-end gap-1">
-                                        <div className="bg-brand-accent/10 border border-[var(--color-brand-accent)] text-brand-textPrimary rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-sm w-full">
+                        {[...displayQuestions].map((q, idx) => (
+                            <div key={q.id || idx} className="flex flex-col gap-2">
+                                {/* Student Bubble (Right) */}
+                                <div className="self-end max-w-[85%] flex flex-col items-end gap-1">
+                                    <div className="bg-brand-accent/10 border border-[var(--color-brand-accent)] text-brand-textPrimary rounded-2xl rounded-tr-sm px-4 py-2 text-sm shadow-sm w-full">
+                                        <CodeBlockRenderer
+                                            html={formatMessageToHtml(q.question)}
+                                            className="prose-p:my-0 prose-pre:my-2"
+                                        />
+                                    </div>
+                                    <span className="text-[9px] text-brand-textSecondary font-medium px-1">
+                                        {q.askedAt?.toDate ? format(q.askedAt.toDate(), 'h:mm a') : 'Just now'}
+                                    </span>
+                                </div>
+
+                                {/* Teacher/AI Response Bubble (Left) */}
+                                {q.resolved && q.teacherResponse && (
+                                    <div className="self-start max-w-[85%] flex flex-col items-start gap-1 animate-in slide-in-from-left-2">
+                                        <div className="bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-2xl rounded-tl-sm px-4 py-2 text-sm shadow-md w-full">
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <span className="block text-[10px] font-black text-brand-accent uppercase">
+                                                    {q.teacherResponse.includes('AI') || q.teacherResponse.length > 200 ? 'AI Tutor' : 'Teacher'}
+                                                </span>
+                                                {q.teacherResponse.includes('AI') && <Sparkles className="w-3 h-3 text-brand-accent" />}
+                                            </div>
                                             <CodeBlockRenderer
-                                                html={formatMessageToHtml(q.question)}
+                                                html={formatMessageToHtml(q.teacherResponse)}
                                                 className="prose-p:my-0 prose-pre:my-2"
                                             />
                                         </div>
                                         <span className="text-[9px] text-brand-textSecondary font-medium px-1">
-                                            {q.askedAt?.toDate ? format(q.askedAt.toDate(), 'h:mm a') : 'Just now'}
+                                            {q.resolvedAt?.toDate ? format(q.resolvedAt.toDate(), 'h:mm a') : 'Responded'}
                                         </span>
                                     </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
-                                    {/* Teacher Response Bubble (Left) */}
-                                    {q.resolved && q.teacherResponse && (
-                                        <div className="self-start max-w-[85%] flex flex-col items-start gap-1 animate-in slide-in-from-left-2">
-                                            <div className="bg-[var(--color-bg-tile)] border border-[var(--color-border-subtle)] text-brand-textPrimary rounded-2xl rounded-tl-sm px-4 py-2 text-sm shadow-md w-full">
-                                                <span className="block text-[10px] font-black text-brand-accent uppercase mb-1">Teacher</span>
-                                                <CodeBlockRenderer
-                                                    html={formatMessageToHtml(q.teacherResponse)}
-                                                    className="prose-p:my-0 prose-pre:my-2"
-                                                />
-                                            </div>
-                                            <span className="text-[9px] text-brand-textSecondary font-medium px-1">
-                                                {q.resolvedAt?.toDate ? format(q.resolvedAt.toDate(), 'h:mm a') : 'Responded'}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+            {/* Content */}
+            <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                    <textarea
+                        value={comment}
+                        onChange={handleCommentChange}
+                        placeholder={questions.length > 0 ? "Type a reply..." : "Describe what you need help with..."}
+                        maxLength={maxChars}
+                        autoComplete="off"
+                        spellCheck={true}
+                        className="w-full h-32 p-3 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
+                        autoFocus
+                        data-testid="help-input"
+                    />
+                    <div className="flex justify-between items-start px-1 mt-2">
+                        <span className="text-xs text-brand-textSecondary ml-auto">
+                            {comment.length}/{maxChars}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-border-subtle flex flex-col gap-3 bg-[var(--color-bg-tile)]">
+                {/* Special Stuck Support */}
+                {stuckCount >= 2 && !hasExpandedInstructions && (
+                    <div className="p-3 mb-1 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 animate-in fade-in slide-in-from-bottom-2">
+                        <div className="flex items-center gap-2 mb-2 font-bold uppercase tracking-wider">
+                            <AlertTriangle className="w-4 h-4 text-amber-400" />
+                            Still Stuck?
                         </div>
+                        <p className="mb-3 leading-relaxed">
+                            I noticed you've been working hard on this. Would you like me to break down these instructions into simple, action-oriented steps?
+                        </p>
+                        <button
+                            onClick={handleExpandInstructions}
+                            disabled={isExpanding}
+                            className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            {isExpanding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                            SIMPLIFY INSTRUCTIONS
+                        </button>
                     </div>
                 )}
 
-                {/* Content */}
-                <div className="p-4 flex-1 overflow-y-auto flex flex-col gap-4">
-                    <div className="flex flex-col gap-2">
-                        <textarea
-                            value={comment}
-                            onChange={handleCommentChange}
-                            placeholder={questions.length > 0 ? "Type a reply..." : "Describe what you need help with..."}
-                            maxLength={maxChars}
-                            autoComplete="off"
-                            spellCheck={true}
-                            className="w-full h-32 p-3 rounded-xl bg-[var(--color-bg-tile-alt)] border border-[var(--color-border-subtle)] text-brand-textPrimary placeholder-brand-textSecondary focus:outline-none focus:ring-2 focus:ring-brand-accent/20 resize-none transition-all"
-                            autoFocus
-                            data-testid="help-input"
-                        />
-                        <div className="flex justify-between items-start px-1 mt-2">
-                            <span className="text-xs text-brand-textSecondary ml-auto">
-                                {comment.length}/{maxChars}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer */}
-                <div className="p-4 border-t border-border-subtle flex items-center justify-between gap-3 bg-[var(--color-bg-tile)]">
-                    {/* Ask AI Button (New Location) */}
+                <div className="flex items-center justify-between gap-3">
+                    {/* Ask AI Button */}
                     <button
                         type="button"
-                        className="flex items-center gap-2 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-xl text-xs font-bold transition-colors border border-purple-500/20 opacity-50 cursor-not-allowed"
-                        title="Coming Soon"
+                        onClick={handleAskAI}
+                        disabled={!comment.trim() || isAskingAI || isSubmitting}
+                        className="flex items-center gap-2 px-3 py-2 bg-brand-accent/10 hover:bg-brand-accent/20 text-brand-accent rounded-xl text-xs font-bold transition-all border border-brand-accent/20 shadow-sm hover:shadow-md disabled:bg-tile-alt disabled:text-brand-textMuted disabled:border-transparent disabled:opacity-50 disabled:cursor-not-allowed group/ai"
                     >
-                        <Sparkles className="w-4 h-4" />
-                        <span>Ask AI</span>
+                        {isAskingAI ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Sparkles className="w-4 h-4 group-hover/ai:animate-pulse" />
+                        )}
+                        <span>Ask AI Tutor</span>
                     </button>
 
                     <div className="flex items-center gap-2">
@@ -330,8 +378,9 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
                 </div>
             </div>
         </div>
-    );
-};
+    </div>
+);
+    };
 
 // --- Utility Functions ---
 
@@ -365,6 +414,7 @@ interface TaskCardProps {
     formatDateRange: (assigned?: string, due?: string) => string;
     isExpanded: boolean;
     onToggleExpand: () => void;
+    expandedInstruction?: string;
 }
 
 
@@ -379,7 +429,7 @@ interface TaskCardProps {
  * - Resources section (links, files)
  * - Collapsible status buttons: single icon expands to show all 4 in fixed positions
  */
-const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onOpenHelpModal, assignedDate, formatDateRange, isExpanded, onToggleExpand }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onOpenHelpModal, assignedDate, formatDateRange, isExpanded, onToggleExpand, expandedInstruction }) => {
     // Removed local isExpanded state - now controlled by parent for accordion behavior
     const [isStatusExpanded, setIsStatusExpanded] = useState(false);
     const [showStatusText, setShowStatusText] = useState(false);
@@ -635,15 +685,35 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
             </div>
 
             {/* Description - Always render single instance, control visibility via isExpanded */}
-            {task.description && (
+            {(task.description || expandedInstruction) && (
                 <div className={`mt-3 overflow-hidden min-w-0 ${isDone ? 'opacity-60' : ''}`}>
                     <div className="select-text w-full min-w-0">
-                        <CodeBlockRenderer
-                            key={`desc-${task.id}-${isExpanded}`}
-                            html={formatMessageToHtml(task.description)}
-                            isExpanded={isExpanded}
-                            className="text-sm text-brand-textSecondary"
-                        />
+                        {expandedInstruction ? (
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-2 py-1 px-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] font-black text-amber-400 uppercase tracking-widest w-fit">
+                                    <Sparkles className="w-3 h-3" /> Simplified Steps
+                                </div>
+                                <CodeBlockRenderer
+                                    key={`expanded-${task.id}`}
+                                    html={formatMessageToHtml(expandedInstruction)}
+                                    isExpanded={true}
+                                    className="text-sm text-brand-textPrimary leading-relaxed"
+                                />
+                                <button
+                                    onClick={() => onToggleExpand()}
+                                    className="text-[10px] text-brand-textMuted hover:text-brand-textSecondary transition-colors underline underline-offset-2"
+                                >
+                                    Show original instructions
+                                </button>
+                            </div>
+                        ) : (
+                            <CodeBlockRenderer
+                                key={`desc-${task.id}-${isExpanded}`}
+                                html={formatMessageToHtml(task.description)}
+                                isExpanded={isExpanded}
+                                className="text-sm text-brand-textSecondary"
+                            />
+                        )}
                     </div>
                 </div>
             )}
@@ -803,6 +873,10 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
     // Accordion behavior: only one task can be expanded at a time
     const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
+    // Stuck Tracking & Instruction Expansion
+    const [stuckCounts, setStuckCounts] = useState<Record<string, number>>({});
+    const [expandedInstructions, setExpandedInstructions] = useState<Record<string, string>>({});
+
     // Track task completion for celebrations
     const completedCount = tasks.filter(t => t.status === 'done').length;
     const currentProgress = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
@@ -860,7 +934,30 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
     };
 
     const handleOpenHelpModal = (task: Task) => {
+        // Track stuck count increment when help is opened manually or status changes
+        setStuckCounts(prev => ({
+            ...prev,
+            [task.id]: (prev[task.id] || 0) + 1
+        }));
         setHelpModalTask(task);
+    };
+
+    const handleExpandInstructions = async (task: Task) => {
+        try {
+            const expanded = await expandTaskInstructions(task.id, task.description || '');
+            setExpandedInstructions(prev => ({
+                ...prev,
+                [task.id]: expanded
+            }));
+            // Auto-expand the task card to show the new instructions
+            setExpandedTaskId(task.id);
+            toast.success('Instructions simplified!');
+            setHelpModalTask(null); // Close help modal to show result
+        } catch (error) {
+            console.error('Error expanding instructions:', error);
+            toast.error('Failed to simplify instructions.');
+            throw error;
+        }
     };
 
     const handleCloseHelpModal = () => {
@@ -904,6 +1001,7 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
                     formatDateRange={formatDateRange}
                     isExpanded={expandedTaskId === task.id}
                     onToggleExpand={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                    expandedInstruction={expandedInstructions[task.id]}
                 />
             ))}
 
@@ -914,6 +1012,9 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
                     onUpdateComment={onUpdateComment}
                     studentName={studentName}
                     classroomId={classroomId}
+                    stuckCount={stuckCounts[helpModalTask.id] || 0}
+                    hasExpandedInstructions={!!expandedInstructions[helpModalTask.id]}
+                    onExpandInstructions={() => handleExpandInstructions(helpModalTask)}
                 />
             )}
 

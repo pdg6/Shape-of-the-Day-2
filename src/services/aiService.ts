@@ -149,6 +149,57 @@ export const fetchUrlMetadata = async (url: string): Promise<UrlMetadataResponse
 };
 
 /**
+ * Interface for classroom struggle analysis.
+ */
+export interface StruggleAnalysis {
+    summary: string;
+    topStruggles: string[];
+    suggestions: string[];
+}
+
+/**
+ * Analyzes student struggles in a classroom.
+ */
+export const analyzeStruggles = async (classroomId: string, taskIds?: string[]): Promise<StruggleAnalysis> => {
+    try {
+        const analyzeStrugglesFn = httpsCallable<{ classroomId: string; taskIds?: string[] }, StruggleAnalysis>(functions, 'analyzeStruggles');
+        const result = await analyzeStrugglesFn({ classroomId, taskIds });
+        return result.data;
+    } catch (error) {
+        console.error('[AI Service] Error analyzing struggles:', error);
+        throw error;
+    }
+};
+
+/**
+ * Suggests scaffolding tasks based on class struggles.
+ */
+export const suggestScaffolding = async (classroomId: string, struggleSummary?: string): Promise<{ suggestedTasks: Task[] }> => {
+    try {
+        const suggestScaffoldingFn = httpsCallable<{ classroomId: string; struggleSummary?: string }, { suggestedTasks: Task[] }>(functions, 'suggestScaffolding');
+        const result = await suggestScaffoldingFn({ classroomId, struggleSummary });
+        return result.data;
+    } catch (error) {
+        console.error('[AI Service] Error suggesting scaffolding:', error);
+        throw error;
+    }
+};
+
+/**
+ * Expands task instructions into granular steps for student support.
+ */
+export const expandTaskInstructions = async (taskId: string, currentInstructions: string[]): Promise<string[]> => {
+    try {
+        const expandTaskInstructionsFn = httpsCallable<{ taskId: string; currentInstructions: string[] }, { expandedInstructions: string[] }>(functions, 'expandTaskInstructions');
+        const result = await expandTaskInstructionsFn({ taskId, currentInstructions });
+        return result.data.expandedInstructions;
+    } catch (error) {
+        console.error('[AI Service] Error expanding instructions:', error);
+        throw error;
+    }
+};
+
+/**
  * Response from the generateSchedule Cloud Function (placeholder)
  */
 interface GenerateScheduleResponse {

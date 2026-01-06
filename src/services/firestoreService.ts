@@ -705,21 +705,23 @@ export const deleteTaskWithChildren = async (
 };
 
 /**
- * Cascade schedule dates and status from parent to all children.
- * When a parent task is saved with new dates, all its descendants get updated too.
+ * Cascade schedule dates, status, and room assignments from parent to all children.
+ * When a parent task is saved, all its descendants get updated to maintain consistency.
  * 
  * @param {string} teacherId - The teacher's ID
  * @param {string} parentTaskId - The parent task ID
  * @param {string} startDate - New start date to apply
  * @param {string} endDate - New end date to apply
+ * @param {string[]} selectedRoomIds - New room assignments to apply
  * @param {string} status - Status to cascade (if not 'draft', promotes children from 'draft' to 'todo')
  * @returns {Promise<number>} Number of children updated
  */
-export const cascadeChildDates = async (
+export const cascadeParentChanges = async (
     teacherId: string,
     parentTaskId: string,
     startDate: string,
     endDate: string,
+    selectedRoomIds: string[],
     status?: string
 ): Promise<number> => {
     const { descendants } = await getTaskWithChildren(parentTaskId, teacherId);
@@ -733,6 +735,7 @@ export const cascadeChildDates = async (
         const updates: Record<string, any> = {
             startDate,
             endDate,
+            selectedRoomIds,
             updatedAt: serverTimestamp()
         };
 

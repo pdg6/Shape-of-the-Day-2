@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Task, TaskFormData, ItemType, TaskStatus, Attachment, LinkAttachment } from '../types';
 import { useClassStore } from '../store/appSettings';
-import { saveTask, deleteTaskWithChildren, reorderTasks, cascadeChildDates } from '../services/firestoreService';
+import { saveTask, deleteTaskWithChildren, reorderTasks, cascadeParentChanges } from '../services/firestoreService';
 import { auth } from '../firebase';
 import { serverTimestamp } from 'firebase/firestore';
 
@@ -197,15 +197,16 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
 
             const savedId = await saveTask(user.uid, taskToSave);
 
-            // Cascade dates and status to children when saving a parent
+            // Cascade dates, status, and rooms to children when saving a parent
             const taskId = editingTaskId || savedId;
             const hasChildren = tasks.some(t => t.parentId === taskId);
             if (hasChildren && formData.startDate && formData.endDate) {
-                await cascadeChildDates(
+                await cascadeParentChanges(
                     user.uid,
                     taskId,
                     formData.startDate,
                     formData.endDate,
+                    formData.selectedRoomIds,
                     statusToSave
                 );
             }
