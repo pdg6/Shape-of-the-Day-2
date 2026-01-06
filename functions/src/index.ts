@@ -2,6 +2,11 @@
  * Firebase Cloud Functions - Shape of the Day AI Agents
  * 
  * Entry point for all Cloud Functions.
+ */
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+/**
  * Exports:
  * - onTaskAttachmentChange: Ingests new attachments into Vector DB (disabled - needs Genkit setup)
  * - answerStudentQuestion: Callable function for AI Q&A (disabled - needs Genkit setup)
@@ -22,7 +27,7 @@ import { getStorage } from 'firebase-admin/storage';
 // Genkit AI imports
 import { genkit } from 'genkit';
 import { z } from '@genkit-ai/core';
-import { textEmbedding004 } from '@genkit-ai/vertexai';
+import { googleAI } from '@genkit-ai/google-genai';
 import { GoogleGenAI } from '@google/genai';
 
 // Initialize Firebase Admin
@@ -36,14 +41,12 @@ const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
 
 // Initialize New Google Gen AI SDK
 const genai = new GoogleGenAI({
-    vertexai: true,
-    project: PROJECT_ID,
-    location: LOCATION,
+    apiKey: process.env.GOOGLE_GENAI_API_KEY,
 });
 
 // Genkit configuration (keeping for RAG and Flow structure)
 const ai = genkit({
-    plugins: [], // Moving model logic to direct SDK
+    plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })], // Moving model logic to direct SDK
 });
 
 // --- Schemas ---
@@ -54,10 +57,10 @@ export const CurriculumSchema = z.object({
     title: z.string().describe("The main display title of the curriculum item"),
     description: z.string().optional().describe("Markdown summary of the task (Legacy fallback)"),
     structuredContent: z.object({
-        rationale: z.string().describe("The 'Why'. A concise explanation of the learning objective."),
-        instructions: z.array(z.string()).describe("The 'How'. Step-by-step verifiable action items. Max 5 steps."),
+        rationale: z.string().describe("A concise explanation of the learning objective. Value only, no labels."),
+        instructions: z.array(z.string()).describe("Step-by-step verifiable action items. Max 5 steps."),
         keyConcepts: z.array(z.string()).describe("List of technical terms or concepts covered (e.g., 'Loops', 'Variables')"),
-        troubleshooting: z.string().optional().describe("The 'Stuck?' prompt. Specific debugging advice or an AI prompt for help."),
+        troubleshooting: z.string().optional().describe("Specific debugging advice or an AI prompt for help."),
     }).describe("The core pedagogical content broken into logical sections."),
     type: z.enum(['project', 'assignment', 'task', 'subtask']).describe("Hierarchy level"),
     parentId: z.string().nullable().describe("UUID or tempId of the parent item, or null if root"),
@@ -106,7 +109,9 @@ Field Generation Rules
 Strict Tone Guidelines
 - Active Voice: "Click the button," not "The button should be clicked."
 - Reading Level: Max Grade 10. Simple sentences.
-- No Markdown Headers: Do not use ### or ** in the text fields. The UI will handle formatting.
+- **NEGATIVE CONSTRAINTS**:
+  - NO Markdown Headers in text fields (No symbols).
+  - NO "Steps:" or "Why:" labels. The content must be raw text only.
 `;
 
 // --- RAG Components ---
@@ -166,7 +171,7 @@ export const curriculumIndexer = ai.defineIndexer(
             if (!textContent) continue;
 
             const embeddingResult = await ai.embed({
-                embedder: textEmbedding004,
+                embedder: googleAI.embedder('text-embedding-004'),
                 content: textContent,
             });
 
@@ -211,10 +216,10 @@ export const suggestTasksFlow = ai.defineFlow(
             Each item should be clear, engaging, and follow the requested schema and strict rules.`,
             config: {
                 systemInstruction: CURRICULUM_SYSTEM_PROMPT,
-                thinkingConfig: {
-                    includeThoughts: true,
-                    thinkingLevel: 'HIGH' as any, // Using string value with cast to bypass SDK type issues
-                },
+                // thinkingConfig: {
+                //     includeThoughts: true,
+                //     thinkingLevel: 'HIGH' as any, // Using string value with cast to bypass SDK type issues
+                // },
                 responseMimeType: 'application/json',
                 responseSchema: {
                     type: 'object',
@@ -238,8 +243,17 @@ export const suggestTasksFlow = ai.defineFlow(
                                         required: ['rationale', 'instructions', 'keyConcepts'],
                                     },
                                     selectedRoomIds: { type: 'array', items: { type: 'string' } },
+                                    accessibilityAudit: {
+                                        type: 'object',
+                                        properties: {
+                                            hasVisualDualCoding: { type: 'boolean' },
+                                            readingLevelGrade: { type: 'number' },
+                                            hasAiPrompt: { type: 'boolean' }
+                                        },
+                                        required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt']
+                                    }
                                 },
-                                required: ['title', 'type', 'structuredContent', 'selectedRoomIds'],
+                                required: ['title', 'type', 'structuredContent', 'selectedRoomIds', 'accessibilityAudit'],
                             }
                         }
                     },
@@ -342,10 +356,10 @@ Ensure it follows the schema and all strict pedagogical and accessibility rules.
             contents: combinedPrompt,
             config: {
                 systemInstruction: CURRICULUM_SYSTEM_PROMPT,
-                thinkingConfig: {
-                    includeThoughts: true,
-                    thinkingLevel: 'HIGH' as any,
-                },
+                // thinkingConfig: {
+                //     includeThoughts: true,
+                //     thinkingLevel: 'HIGH' as any,
+                // },
                 responseMimeType: 'application/json',
                 responseSchema: {
                     type: 'object',
@@ -372,8 +386,17 @@ Ensure it follows the schema and all strict pedagogical and accessibility rules.
                                         required: ['rationale', 'instructions', 'keyConcepts'],
                                     },
                                     selectedRoomIds: { type: 'array', items: { type: 'string' } },
+                                    accessibilityAudit: {
+                                        type: 'object',
+                                        properties: {
+                                            hasVisualDualCoding: { type: 'boolean' },
+                                            readingLevelGrade: { type: 'number' },
+                                            hasAiPrompt: { type: 'boolean' }
+                                        },
+                                        required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt']
+                                    }
                                 },
-                                required: ['title', 'type', 'structuredContent', 'selectedRoomIds'],
+                                required: ['title', 'type', 'structuredContent', 'selectedRoomIds', 'accessibilityAudit'],
                             }
                         }
                     },
@@ -483,7 +506,7 @@ export const onTaskAttachmentChange = onDocumentUpdated(
 
                 // Generate embedding using Vertex AI
                 const embeddingResult = await ai.embed({
-                    embedder: textEmbedding004,
+                    embedder: googleAI.embedder('text-embedding-004'),
                     content: textContent,
                 });
 
