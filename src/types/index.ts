@@ -66,7 +66,13 @@ export interface QuestionEntry {
 export interface Task {
     id: string;             // Unique identifier for the task
     title: string;          // The main display title
-    description: string;    // Detailed description
+    description: string;    // Detailed description (Legacy/Markdown fallback)
+    structuredContent?: {
+        rationale: string;
+        instructions: string[];
+        keyConcepts: string[];
+        troubleshooting?: string;
+    };
     status: TaskStatus;     // Current status (must be one of the values above)
     dueDate?: string;       // Optional: Date when task is due (e.g., "2023-11-27" or "Nov 27")
     comment?: string;       // Optional: Student's comment or question
@@ -119,6 +125,12 @@ export interface LinkAttachment {
 export interface TaskFormData {
     title: string;
     description: string;
+    structuredContent?: {
+        rationale: string;
+        instructions: string[];
+        keyConcepts: string[];
+        troubleshooting?: string;
+    };
     type: ItemType;
     parentId: string | null;
     links?: LinkAttachment[]; // Array of URL links

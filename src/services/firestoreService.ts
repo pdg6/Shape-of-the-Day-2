@@ -63,6 +63,7 @@ export const taskConverter: FirestoreDataConverter<Task> = {
             id: snapshot.id,
             title: data.title || '',
             description: data.description || '',
+            structuredContent: data.structuredContent,
             status: data.status || 'todo',
             type: data.type as ItemType || 'task',
             parentId: data.parentId === undefined ? null : data.parentId,
@@ -697,6 +698,51 @@ export const deleteTaskWithChildren = async (
                 childIds: childIds.filter((id: string) => id !== taskId)
             });
         }
+    }
+
+    await batch.commit();
+    return count;
+};
+
+/**
+ * Cascade schedule dates and status from parent to all children.
+ * When a parent task is saved with new dates, all its descendants get updated too.
+ * 
+ * @param {string} teacherId - The teacher's ID
+ * @param {string} parentTaskId - The parent task ID
+ * @param {string} startDate - New start date to apply
+ * @param {string} endDate - New end date to apply
+ * @param {string} status - Status to cascade (if not 'draft', promotes children from 'draft' to 'todo')
+ * @returns {Promise<number>} Number of children updated
+ */
+export const cascadeChildDates = async (
+    teacherId: string,
+    parentTaskId: string,
+    startDate: string,
+    endDate: string,
+    status?: string
+): Promise<number> => {
+    const { descendants } = await getTaskWithChildren(parentTaskId, teacherId);
+
+    if (descendants.length === 0) return 0;
+
+    const batch = writeBatch(db);
+    let count = 0;
+
+    for (const child of descendants) {
+        const updates: Record<string, any> = {
+            startDate,
+            endDate,
+            updatedAt: serverTimestamp()
+        };
+
+        // If parent is promoted from draft to todo, also promote children
+        if (status && status !== 'draft' && child.status === 'draft') {
+            updates.status = 'todo';
+        }
+
+        batch.update(doc(db, 'tasks', child.id), updates);
+        count++;
     }
 
     await batch.commit();

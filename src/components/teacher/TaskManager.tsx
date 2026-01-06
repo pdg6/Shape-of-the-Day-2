@@ -23,7 +23,8 @@ import {
     File as FileIcon,
     Trash2,
     Layers,
-    Share2
+    Share2,
+    Sparkles
 } from 'lucide-react';
 import { Select, SelectOption } from '../shared/Select';
 import { MultiSelect } from '../shared/MultiSelect';
@@ -60,33 +61,11 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 // Generate unique ID for cards
 
 
-// Get type-specific icon
-const getTypeIcon = (type: ItemType) => {
-    switch (type) {
-        case 'project': return FolderOpen;
-        case 'assignment': return FileText;
-        case 'task': return ListChecks;
-        case 'subtask': return CheckSquare;
-    }
-};
-
-// Get type label
-// No longer used: const getTypeLabel = (type: ItemType): string => ...
-
-// Get type color classes (use semantic CSS classes from index.css)
-const getTypeColorClasses = (type: ItemType): string => {
-    return `type-${type}`;
-};
-
-// Get type hex color for icons
-const getTypeHexColor = (type: ItemType): string => {
-    switch (type) {
-        case 'project': return 'var(--type-project-color)';
-        case 'assignment': return 'var(--type-assignment-color)';
-        case 'task': return 'var(--type-task-color)';
-        case 'subtask': return 'var(--type-subtask-color)';
-    }
-};
+import {
+    getTypeIcon,
+    getTypeColorClasses,
+    getTypeHexColor
+} from '../../utils/uiHelpers';
 
 // Build type options for Select component
 const TYPE_OPTIONS: SelectOption<ItemType>[] = [
@@ -95,6 +74,9 @@ const TYPE_OPTIONS: SelectOption<ItemType>[] = [
     { value: 'task', label: 'Task', icon: ListChecks, iconColor: 'var(--type-task-color)' },
     { value: 'subtask', label: 'Subtask', icon: CheckSquare, iconColor: 'var(--type-subtask-color)' },
 ];
+
+// Content mode type for the left panel
+type ContentMode = 'ai' | 'task' | 'bulk';
 
 interface TaskManagerProps {
     initialTask?: Task;
@@ -116,7 +98,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false);
-    const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
+    const [contentMode, setContentMode] = useState<ContentMode>('task');
+    const [deleteDialogTask, setDeleteDialogTask] = useState<{ id: string; title: string } | null>(null);
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -179,7 +162,22 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     };
 
     const handleDelete = async (taskId: string) => {
-        await hookHandleDelete(taskId, false); // Keep children by default in this context
+        // Check if task has children (hook will return 'has_children')
+        const result = await hookHandleDelete(taskId, true, false); // Don't skip confirm
+
+        if (result === 'has_children') {
+            // Show custom dialog for tasks with children
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                setDeleteDialogTask({ id: taskId, title: task.title });
+            }
+        }
+    };
+
+    const confirmDelete = async (deleteChildren: boolean) => {
+        if (!deleteDialogTask) return;
+        await hookHandleDelete(deleteDialogTask.id, deleteChildren, true); // Skip confirm
+        setDeleteDialogTask(null);
     };
 
     const handleReorder = async (taskId: string, direction: 'up' | 'down') => {
@@ -527,69 +525,47 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                     </span>
                 </div>
 
-                {/* Drafts - inline between title and New Task */}
-                <div className="flex items-center gap-2 flex-wrap flex-1">
-                    {(() => {
-                        const drafts = tasks.filter(t => t.status === 'draft');
-                        return (
-                            <>
-                                {drafts.length > 0 && (
-                                    <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-wider">Drafts:</span>
-                                )}
-                                {drafts.slice(0, 4).map(draft => {
-                                    const isActive = editingTaskId === draft.id;
-                                    const hierNum = getHierarchicalNumber(draft, filteredTasks, draft.endDate);
-                                    return (
-                                        <button
-                                            key={draft.id}
-                                            onClick={() => loadTask(draft)}
-                                            title={draft.title}
-                                            className={`
-                                                flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all
-                                                ${isActive
-                                                    ? 'bg-(--color-bg-tile-hover) text-brand-textPrimary border border-border-subtle'
-                                                    : 'bg-black/5 text-brand-textSecondary hover:bg-(--color-bg-tile-hover) hover:text-brand-textPrimary border border-transparent'}
-                                            `}
-                                        >
-                                            <span className="font-bold">{hierNum}.</span>
-                                            <span className="truncate max-w-[60px]">{draft.title || 'Untitled'}</span>
-                                        </button>
-                                    );
-                                })}
-                                {drafts.length > 4 && (
-                                    <span className="text-xs text-brand-textSecondary">+{drafts.length - 4} more</span>
-                                )}
-                            </>
-                        );
-                    })()}
-                </div>
-
-                {/* Bulk Edit Button */}
+                {/* Mode Buttons: AI Assistant + New Task + Bulk Edit */}
                 <button
-                    onClick={() => setIsBulkEditOpen(true)}
-                    title="Edit all tasks"
-                    className="flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float ml-auto
-                        bg-(--color-bg-tile) border border-border-subtle text-brand-textPrimary
+                    onClick={() => setContentMode('ai')}
+                    title="AI Curriculum Assistant"
+                    className={`flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float ml-auto
+                        bg-(--color-bg-tile) border text-brand-textPrimary
                         shadow-layered
                         hover:shadow-layered-lg
-                        button-lift-dynamic hover:border-brand-accent/50 min-h-[44px]"
+                        button-lift-dynamic min-h-[44px]
+                        ${contentMode === 'ai' ? 'border-brand-accent' : 'border-border-subtle hover:border-brand-accent/50'}`}
                 >
-                    <Layers className="w-5 h-5 text-brand-accent" />
-                    <span>Bulk Edit</span>
+                    <Sparkles className="w-5 h-5 text-brand-accent" />
+                    <span>AI Assistant</span>
                 </button>
 
-                {/* New Task Button */}
                 <button
-                    onClick={() => resetForm()}
+                    onClick={() => { resetForm(); setContentMode('task'); }}
                     title="Create new task"
-                    className="flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float
-                        bg-(--color-bg-tile) border border-border-subtle text-brand-textPrimary
+                    className={`flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float
+                        bg-(--color-bg-tile) border text-brand-textPrimary
                         shadow-layered
                         hover:shadow-layered-lg
-                        button-lift-dynamic hover:border-brand-accent/50 min-h-[44px]"
+                        button-lift-dynamic min-h-[44px]
+                        ${contentMode === 'task' ? 'border-brand-accent' : 'border-border-subtle hover:border-brand-accent/50'}`}
                 >
                     <Plus className="w-5 h-5 text-brand-accent" />
                     <span>New Task</span>
+                </button>
+
+                <button
+                    onClick={() => setContentMode('bulk')}
+                    title="Edit all tasks"
+                    className={`flex items-center gap-2 px-4 py-1 rounded-xl font-bold transition-float
+                        bg-(--color-bg-tile) border text-brand-textPrimary
+                        shadow-layered
+                        hover:shadow-layered-lg
+                        button-lift-dynamic min-h-[44px]
+                        ${contentMode === 'bulk' ? 'border-brand-accent' : 'border-border-subtle hover:border-brand-accent/50'}`}
+                >
+                    <Layers className="w-5 h-5 text-brand-accent" />
+                    <span>Edit All</span>
                 </button>
             </div>
 
@@ -654,356 +630,16 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     return (<>
         <PageLayout
             header={<div className="hidden lg:grid lg:grid-cols-4 w-full items-center gap-6">{headerContent}</div>}
+            disableScroll={true}
         >
-            <div className="flex-1 min-h-0 flex flex-col">
+            <div className="h-full flex flex-col">
                 <div className="flex-1 min-h-0 flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
 
-                    {/* LEFT PANEL: Task Editor */}
-                    <div className="flex-1 lg:col-span-3 flex flex-col">
-                        {/* Main Form Area - Outer box removed for "Free-Floating" model */}
-                        <div className={`w-full space-y-6 flex-1 flex flex-col relative z-20 ${editingTaskId ? 'active' : ''}`}>
-
-
-                            {/* Title Input with Type selector and predictive number */}
-                            <div className="rounded-xl border border-border-subtle focus-within:border-border-strong bg-(--color-bg-tile) transition-float
-                                shadow-layered lift-dynamic flex items-center tile-blur">
-                                {/* Predictive Task Number - shows when typing or editing */}
-                                {(activeFormData.title.trim() || editingTaskId) && (
-                                    <span className="text-sm font-black text-brand-accent bg-brand-accent/10 px-2.5 py-1 rounded-lg ml-3 shrink-0">
-                                        {(() => {
-                                            if (editingTaskId) {
-                                                const task = tasks.find(t => t.id === editingTaskId);
-                                                return task ? getHierarchicalNumber(task, filteredTasks, selectedDate) : '...';
-                                            }
-                                            return getPredictiveNumber(activeFormData.parentId, filteredTasks, selectedDate, currentClassId);
-                                        })()}
-                                    </span>
-                                )}
-                                <input
-                                    type="text"
-                                    value={activeFormData.title}
-                                    onChange={(e) => updateActiveCard('title', e.target.value)}
-                                    placeholder="Title for this task..."
-                                    className="flex-1 text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textSecondary placeholder:opacity-100 text-brand-textPrimary"
-                                />
-                                {/* Type selector - CUSTOM STYLE: No elevation, no background hover */}
-                                <div className="flex items-center gap-1.5 pr-3 shrink-0">
-                                    <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Type:</span>
-                                    <div className="w-[120px]">
-                                        <Select<ItemType>
-                                            value={activeFormData.type}
-                                            onChange={(value) => updateActiveCard('type', value || 'task')}
-                                            options={TYPE_OPTIONS.map(opt => ({
-                                                ...opt,
-                                                disabled: activeFormData.parentId
-                                                    ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
-                                                    : false
-                                            }))}
-                                            icon={getTypeIcon(activeFormData.type)}
-                                            iconColor={getTypeHexColor(activeFormData.type)}
-                                            buttonClassName="text-sm py-1 border-0 bg-transparent !shadow-none hover:bg-transparent hover:!translate-y-0"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Description & Attachments Section */}
-                            <div className="flex-1 min-h-[300px] relative rounded-xl bg-(--color-bg-tile) border border-border-subtle shadow-layered lift-dynamic transition-float overflow-hidden tile-blur">
-                                <div className="absolute inset-0 flex flex-col">
-                                    <div className="flex-1 overflow-y-auto">
-                                        <RichTextEditor
-                                            value={activeFormData.description}
-                                            onChange={(value) => updateActiveCard('description', value)}
-                                            onDrop={handleFileDrop}
-                                            placeholder="Describe this task..."
-                                            secondaryPlaceholder="Add text, links, or drag files here"
-                                            className="h-full text-brand-textPrimary text-sm"
-                                        />
-                                    </div>
-                                    {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
-                                    <div className="absolute bottom-6 left-6 right-6 flex flex-wrap items-center gap-2">
-                                        {/* Inline attachments with image thumbnails */}
-                                        {activeFormData.attachments && activeFormData.attachments.map(attachment => (
-                                            <div
-                                                key={attachment.id}
-                                                className="flex items-center gap-1.5 px-2 py-1.5 bg-(--color-bg-tile) rounded-lg border border-border-subtle shadow-layered-sm text-xs group button-lift-dynamic transition-float cursor-default"
-                                                title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
-                                            >
-                                                {attachment.mimeType.startsWith('image/') ? (
-                                                    /* Image thumbnail preview */
-                                                    <a
-                                                        href={attachment.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                                                    >
-                                                        <img
-                                                            src={attachment.url}
-                                                            alt={attachment.filename}
-                                                            className="w-10 h-10 object-cover rounded border border-white/10"
-                                                        />
-                                                        <span className="text-brand-textPrimary truncate max-w-[80px]">
-                                                            {attachment.filename}
-                                                        </span>
-                                                    </a>
-                                                ) : (
-                                                    /* Non-image file icon */
-                                                    <>
-                                                        <FileIcon size={12} className="text-brand-textSecondary" />
-                                                        <a
-                                                            href={attachment.url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
-                                                        >
-                                                            {attachment.filename}
-                                                        </a>
-                                                    </>
-                                                )}
-                                                <button
-                                                    onClick={() => removeAttachment(attachment.id)}
-                                                    className="p-1 hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] rounded-lg transition-all"
-                                                    title="Remove attachment"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {/* Inline links display - Multiple links */}
-                                        {activeFormData.links && activeFormData.links.map((link) => (
-                                            <div
-                                                key={link.id}
-                                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-(--color-bg-tile) rounded-lg border border-border-subtle shadow-layered-sm text-xs max-w-[280px] button-lift-dynamic transition-float"
-                                            >
-                                                <LinkIcon size={12} className="text-brand-accent shrink-0" />
-                                                <a
-                                                    href={link.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-brand-textPrimary hover:text-brand-accent truncate"
-                                                    title={link.url}
-                                                >
-                                                    {link.title || (() => { try { return new URL(link.url).hostname; } catch { return link.url; } })()}
-                                                </a>
-                                                <button
-                                                    onClick={() => hookRemoveLink(link.id)}
-                                                    className="p-1 hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] rounded-lg transition-all"
-                                                    title="Remove link"
-                                                >
-                                                    <X size={12} />
-                                                </button>
-                                            </div>
-                                        ))}
-                                        {/* Loading indicator while fetching link metadata */}
-                                        {isLoadingLinkTitle && (
-                                            <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-brand-textSecondary">
-                                                <Loader size={12} className="animate-spin" />
-                                                <span>Fetching title...</span>
-                                            </div>
-                                        )}
-                                        {/* Upload, Link & Connect buttons - Nested tile button pattern matching ClassCard */}
-                                        <div className="flex items-center justify-between w-full">
-                                            {/* Left: Upload & Link */}
-                                            <div className="flex items-center gap-2">
-                                                <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
-                                                    rounded-xl border cursor-pointer transition-float button-lift-dynamic
-                                                    bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
-                                                    shadow-layered hover:shadow-layered-lg
-                                                    text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
-                                                    focus-within:outline-none">
-                                                    <input
-                                                        ref={fileInputRef}
-                                                        type="file"
-                                                        multiple
-                                                        accept={ALLOWED_FILE_TYPES.join(',')}
-                                                        onChange={handleFileSelect}
-                                                        disabled={isUploading}
-                                                        title="Upload files"
-                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                    />
-                                                    {isUploading ? <Loader size={16} className="animate-spin text-brand-accent" /> : <Upload size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />}
-                                                    <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">
-                                                        {isUploading ? 'Wait...' : 'Upload'}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const url = prompt('Enter URL:');
-                                                        if (url) addLink(url);
-                                                    }}
-                                                    className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
-                                                        rounded-xl border transition-float button-lift-dynamic
-                                                        bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
-                                                        shadow-layered hover:shadow-layered-lg
-                                                        text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
-                                                        focus:outline-none"
-                                                >
-                                                    <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Link</span>
-                                                </button>
-                                            </div>
-                                            {/* Right: Connect button */}
-                                            <div className="w-auto">
-                                                <Select<string>
-                                                    value={activeFormData.parentId}
-                                                    onChange={async (value) => {
-                                                        if (value === '__add_child__') {
-                                                            if (!editingTaskId) {
-                                                                if (!activeFormData.title.trim()) {
-                                                                    handleError(new Error("⚠️ Please add a title before adding children."));
-                                                                    return;
-                                                                }
-                                                                await handleSave();
-                                                                const savedTask = tasks.find(t => t.title === activeFormData.title);
-                                                                if (savedTask) {
-                                                                    handleAddSubtask(savedTask);
-                                                                }
-                                                            } else {
-                                                                const currentTask = tasks.find(t => t.id === editingTaskId);
-                                                                if (currentTask) {
-                                                                    handleAddSubtask(currentTask);
-                                                                }
-                                                            }
-                                                        } else {
-                                                            updateActiveCard('parentId', value);
-                                                        }
-                                                    }}
-                                                    options={[
-                                                        ...(['project', 'assignment'].includes(activeFormData.type) ? [
-                                                            { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: 'var(--type-task-color)' },
-                                                            { value: '__divider_top__', label: '──────────', disabled: true },
-                                                        ] : []),
-                                                        ...(activeFormData.type === 'task' ? [
-                                                            { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: 'var(--type-subtask-color)' },
-                                                            { value: '__divider_top__', label: '──────────', disabled: true },
-                                                        ] : []),
-                                                        ...availableParents.map(parent => ({
-                                                            value: parent.id,
-                                                            label: `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
-                                                            icon: getTypeIcon(parent.type),
-                                                            iconColor: getTypeHexColor(parent.type),
-                                                        })),
-                                                    ]}
-                                                    placeholder="Connected to:"
-                                                    icon={Share2}
-                                                    nullable
-                                                    searchable
-                                                    hideChevron
-                                                    iconSize={16}
-                                                    dropUp
-                                                    buttonClassName="py-2.5 px-4 min-h-[44px] text-[9px] font-black uppercase tracking-widest"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            {/* Action Row: Dates + Class + Connect (left) | Delete + Save (right) */}
-                            <div className="flex items-end justify-between gap-4 flex-wrap">
-                                {/* Left: Dates + Class Selector + Connect Tasks */}
-                                <div className="flex items-end gap-4 flex-wrap -mt-1">
-                                    {/* DATES */}
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Dates:</span>
-                                        <div className="hidden lg:block">
-                                            <DateRangePicker
-                                                startDate={activeFormData.startDate}
-                                                endDate={activeFormData.endDate}
-                                                onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                                onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                                startPlaceholder="Start"
-                                                endPlaceholder="Due"
-                                                compactMode={false}
-                                            />
-                                        </div>
-                                        {/* Mobile: Compact single button */}
-                                        <div className="lg:hidden">
-                                            <DateRangePicker
-                                                startDate={activeFormData.startDate}
-                                                endDate={activeFormData.endDate}
-                                                onStartDateChange={(value) => updateActiveCard('startDate', value)}
-                                                onEndDateChange={(value) => updateActiveCard('endDate', value)}
-                                                startPlaceholder="Start"
-                                                endPlaceholder="Due"
-                                                compactMode={true}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* ADD TO CLASS */}
-                                    <div className="flex flex-col gap-1">
-                                        <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Add to Class:</span>
-                                        <div className="w-[150px] md:w-auto">
-                                            {loadingRooms ? (
-                                                <Loader className="w-4 h-4 animate-spin text-brand-textSecondary" />
-                                            ) : rooms.length === 0 ? (
-                                                <span className="text-xs text-brand-textSecondary">No classes found</span>
-                                            ) : (
-                                                <MultiSelect<string>
-                                                    value={activeFormData.selectedRoomIds}
-                                                    onChange={(values) => updateActiveCard('selectedRoomIds', values)}
-                                                    options={rooms.map(room => ({
-                                                        value: room.id,
-                                                        label: room.name,
-                                                        color: room.color || 'var(--color-brand-accent)',
-                                                    }))}
-                                                    placeholder="Select classes..."
-                                                    primaryValue={currentClassId || undefined}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-
-
-                                </div>
-
-                                {/* Right: Delete + Save */}
-                                <div className="flex items-center gap-2">
-                                    {/* Delete Button */}
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(editingTaskId!)}
-                                        disabled={isSubmitting}
-                                        className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
-                                            bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary
-                                            button-lift-dynamic hover:border-[var(--color-status-stuck)]/50 hover:text-brand-textPrimary
-                                            disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]
-                                            ${isNewTask ? 'invisible pointer-events-none' : ''}`}
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                        <span>Delete</span>
-                                    </button>
-
-                                    {/* Save Button */}
-                                    <button
-                                        onClick={async () => {
-                                            if (!activeFormData.title.trim()) {
-                                                handleError(new Error("⚠️ Please include a title before saving."));
-                                                return;
-                                            }
-                                            await handleSave();
-                                        }}
-                                        disabled={isSubmitting || !activeFormData.title.trim()}
-                                        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
-                                            bg-(--color-bg-tile) border border-border-subtle text-brand-textPrimary
-                                            button-lift-dynamic hover:border-brand-accent/50
-                                            disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
-                                    >
-                                        {isSubmitting || saveState === 'saving' ? (
-                                            <Loader className="w-3.5 h-3.5 animate-spin text-brand-accent" />
-                                        ) : (
-                                            <Check className="w-3.5 h-3.5 text-brand-accent" />
-                                        )}
-                                        <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* AI ASSISTANT SECTION */}
-                            <div className="mt-8">
+                    {/* LEFT PANEL: Content based on mode */}
+                    <div className="flex-1 lg:col-span-3 flex flex-col min-h-0">
+                        {/* AI ASSISTANT MODE */}
+                        {contentMode === 'ai' && (
+                            <div className="flex-1 min-h-0">
                                 <AiAssistant
                                     currentFormData={activeFormData}
                                     taskId={editingTaskId}
@@ -1012,22 +648,567 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             ...prev,
                                             title: suggestion.title,
                                             description: suggestion.description,
+                                            structuredContent: suggestion.structuredContent || null,
                                             type: suggestion.type as ItemType,
-                                            // Optional: Merge other fields if AI provides them
                                             ...(suggestion.startDate && { startDate: suggestion.startDate }),
                                             ...(suggestion.endDate && { endDate: suggestion.endDate }),
                                             ...(suggestion.links && { links: suggestion.links }),
                                         }));
                                         setIsDirty(true);
+                                        setContentMode('task'); // Switch to task mode after applying
                                     }}
                                 />
                             </div>
-                        </div>
+                        )}
+
+                        {/* TASK EDITOR MODE */}
+                        {contentMode === 'task' && (
+                            <div className={`w-full space-y-6 flex-1 flex flex-col relative z-20 ${editingTaskId ? 'active' : ''}`}>
+                                {/* Title Input with Type selector and predictive number */}
+                                <div className="rounded-xl border border-border-subtle focus-within:border-border-strong bg-(--color-bg-tile) transition-float
+                                    shadow-layered lift-dynamic flex items-center tile-blur">
+                                    {/* Predictive Task Number - shows when typing or editing */}
+                                    {(activeFormData.title.trim() || editingTaskId) && (
+                                        <span className="text-sm font-black text-brand-accent bg-brand-accent/10 px-2.5 py-1 rounded-lg ml-3 shrink-0">
+                                            {(() => {
+                                                if (editingTaskId) {
+                                                    const task = tasks.find(t => t.id === editingTaskId);
+                                                    return task ? getHierarchicalNumber(task, filteredTasks, selectedDate) : '...';
+                                                }
+                                                return getPredictiveNumber(activeFormData.parentId, filteredTasks, selectedDate, currentClassId);
+                                            })()}
+                                        </span>
+                                    )}
+                                    <input
+                                        type="text"
+                                        value={activeFormData.title}
+                                        onChange={(e) => updateActiveCard('title', e.target.value)}
+                                        placeholder="Title for this task..."
+                                        className="flex-1 text-base font-bold bg-transparent border-0 focus:ring-0 focus:outline-none px-4 py-3 transition-all placeholder:text-brand-textSecondary placeholder:opacity-100 text-brand-textPrimary"
+                                    />
+                                    {/* Type selector - CUSTOM STYLE: No elevation, no background hover */}
+                                    <div className="flex items-center gap-1.5 pr-3 shrink-0">
+                                        <span className="text-[10px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Type:</span>
+                                        <div className="w-[120px]">
+                                            <Select<ItemType>
+                                                value={activeFormData.type}
+                                                onChange={(value) => updateActiveCard('type', value || 'task')}
+                                                options={TYPE_OPTIONS.map(opt => ({
+                                                    ...opt,
+                                                    disabled: activeFormData.parentId
+                                                        ? !ALLOWED_CHILD_TYPES[tasks.find(t => t.id === activeFormData.parentId)?.type || 'task'].includes(opt.value)
+                                                        : false
+                                                }))}
+                                                icon={getTypeIcon(activeFormData.type)}
+                                                iconColor={getTypeHexColor(activeFormData.type)}
+                                                buttonClassName="text-sm py-1 border-0 bg-transparent !shadow-none hover:bg-transparent hover:!translate-y-0"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Description & Attachments Section */}
+                                <div className="flex-1 min-h-[300px] relative rounded-xl bg-(--color-bg-tile) border border-border-subtle shadow-layered lift-dynamic transition-float tile-blur">
+                                    <div className="absolute inset-0 flex flex-col">
+                                        <div className="flex-1 overflow-y-auto">
+                                            {/* Pedagogical Rationale & Hierarchy Context */}
+                                            {activeFormData.structuredContent && (
+                                                <div className="px-6 py-4 bg-brand-accent/[0.03] border-b border-border-subtle group/rationale relative overflow-hidden">
+                                                    <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/rationale:opacity-30 transition-opacity">
+                                                        <Sparkles size={40} className="text-brand-accent rotate-12" />
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-3">
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1.5">
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-accent">Pedagogical Rationale</span>
+                                                                <div className="h-px flex-1 bg-brand-accent/10" />
+                                                            </div>
+                                                            <p className="text-xs text-brand-textSecondary leading-relaxed italic pr-8">
+                                                                "{activeFormData.structuredContent.rationale}"
+                                                            </p>
+                                                        </div>
+
+                                                        {activeFormData.structuredContent.keyConcepts && activeFormData.structuredContent.keyConcepts.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {activeFormData.structuredContent.keyConcepts.map((concept, i) => (
+                                                                    <span key={i} className="px-2 py-0.5 rounded-md bg-brand-accent/10 border border-brand-accent/20 text-[9px] font-bold text-brand-accent italic">
+                                                                        #{concept}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            <RichTextEditor
+                                                value={activeFormData.description}
+                                                onChange={(value) => updateActiveCard('description', value)}
+                                                onDrop={handleFileDrop}
+                                                placeholder="Describe this task..."
+                                                secondaryPlaceholder="Add text, links, or drag files here"
+                                                className="h-full text-brand-textPrimary text-sm"
+                                            />
+                                        </div>
+                                        {/* Bottom bar: Attachments + Links + Upload/Link buttons */}
+                                        <div className="absolute bottom-6 left-6 right-6 flex flex-wrap items-center gap-2">
+                                            {/* Inline attachments with image thumbnails */}
+                                            {activeFormData.attachments && activeFormData.attachments.map(attachment => (
+                                                <div
+                                                    key={attachment.id}
+                                                    className="flex items-center gap-1.5 px-2 py-1.5 bg-(--color-bg-tile) rounded-lg border border-border-subtle shadow-layered-sm text-xs group button-lift-dynamic transition-float cursor-default"
+                                                    title={`${attachment.filename} (${(attachment.size / 1024).toFixed(1)} KB)`}
+                                                >
+                                                    {attachment.mimeType.startsWith('image/') ? (
+                                                        /* Image thumbnail preview */
+                                                        <a
+                                                            href={attachment.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                                                        >
+                                                            <img
+                                                                src={attachment.url}
+                                                                alt={attachment.filename}
+                                                                className="w-10 h-10 object-cover rounded border border-white/10"
+                                                            />
+                                                            <span className="text-brand-textPrimary truncate max-w-[80px]">
+                                                                {attachment.filename}
+                                                            </span>
+                                                        </a>
+                                                    ) : (
+                                                        /* Non-image file icon */
+                                                        <>
+                                                            <FileIcon size={12} className="text-brand-textSecondary" />
+                                                            <a
+                                                                href={attachment.url}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-brand-textPrimary hover:text-brand-accent truncate max-w-[100px]"
+                                                            >
+                                                                {attachment.filename}
+                                                            </a>
+                                                        </>
+                                                    )}
+                                                    <button
+                                                        onClick={() => removeAttachment(attachment.id)}
+                                                        className="p-1 hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] rounded-lg transition-all"
+                                                        title="Remove attachment"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {/* Inline links display - Multiple links */}
+                                            {activeFormData.links && activeFormData.links.map((link) => (
+                                                <div
+                                                    key={link.id}
+                                                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-(--color-bg-tile) rounded-lg border border-border-subtle shadow-layered-sm text-xs max-w-[280px] button-lift-dynamic transition-float"
+                                                >
+                                                    <LinkIcon size={12} className="text-brand-accent shrink-0" />
+                                                    <a
+                                                        href={link.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-brand-textPrimary hover:text-brand-accent truncate"
+                                                        title={link.url}
+                                                    >
+                                                        {link.title || (() => { try { return new URL(link.url).hostname; } catch { return link.url; } })()}
+                                                    </a>
+                                                    <button
+                                                        onClick={() => hookRemoveLink(link.id)}
+                                                        className="p-1 hover:bg-[var(--color-status-stuck)]/10 text-brand-textSecondary hover:text-[var(--color-status-stuck)] rounded-lg transition-all"
+                                                        title="Remove link"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            {/* Loading indicator while fetching link metadata */}
+                                            {isLoadingLinkTitle && (
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-brand-textSecondary">
+                                                    <Loader size={12} className="animate-spin" />
+                                                    <span>Fetching title...</span>
+                                                </div>
+                                            )}
+                                            {/* Upload, Link & Connect buttons - Nested tile button pattern matching ClassCard */}
+                                            <div className="flex items-center justify-between w-full">
+                                                {/* Left: Upload & Link */}
+                                                <div className="flex items-center gap-2">
+                                                    <div className="group/btn relative flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
+                                                        rounded-xl border cursor-pointer transition-float button-lift-dynamic
+                                                        bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
+                                                        shadow-layered hover:shadow-layered-lg
+                                                        text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
+                                                        focus-within:outline-none">
+                                                        <input
+                                                            ref={fileInputRef}
+                                                            type="file"
+                                                            multiple
+                                                            accept={ALLOWED_FILE_TYPES.join(',')}
+                                                            onChange={handleFileSelect}
+                                                            disabled={isUploading}
+                                                            title="Upload files"
+                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                        />
+                                                        {isUploading ? <Loader size={16} className="animate-spin text-brand-accent" /> : <Upload size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />}
+                                                        <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">
+                                                            {isUploading ? 'Wait...' : 'Upload'}
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const url = prompt('Enter URL:');
+                                                            if (url) addLink(url);
+                                                        }}
+                                                        className="group/btn flex items-center justify-center gap-2 py-2.5 px-4 min-h-[44px]
+                                                            rounded-xl border transition-float button-lift-dynamic
+                                                            bg-(--color-bg-tile) border-border-subtle hover:border-brand-accent/50
+                                                            shadow-layered hover:shadow-layered-lg
+                                                            text-brand-textSecondary hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover)
+                                                            focus:outline-none"
+                                                    >
+                                                        <LinkIcon size={16} className="w-4 h-4 transition-colors group-hover/btn:text-brand-accent" />
+                                                        <span className="text-[9px] font-black uppercase tracking-widest transition-colors group-hover/btn:text-brand-textPrimary">Link</span>
+                                                    </button>
+                                                </div>
+                                                {/* Right: Connect button */}
+                                                <div className="w-auto">
+                                                    <Select<string>
+                                                        value={activeFormData.parentId}
+                                                        onChange={async (value) => {
+                                                            if (value === '__add_child__') {
+                                                                if (!editingTaskId) {
+                                                                    if (!activeFormData.title.trim()) {
+                                                                        handleError(new Error("⚠️ Please add a title before adding children."));
+                                                                        return;
+                                                                    }
+                                                                    await handleSave();
+                                                                    const savedTask = tasks.find(t => t.title === activeFormData.title);
+                                                                    if (savedTask) {
+                                                                        handleAddSubtask(savedTask);
+                                                                    }
+                                                                } else {
+                                                                    const currentTask = tasks.find(t => t.id === editingTaskId);
+                                                                    if (currentTask) {
+                                                                        handleAddSubtask(currentTask);
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                updateActiveCard('parentId', value);
+                                                            }
+                                                        }}
+                                                        options={[
+                                                            ...(['project', 'assignment'].includes(activeFormData.type) ? [
+                                                                { value: '__add_child__', label: '+ Add Task', icon: Plus, iconColor: 'var(--type-task-color)' },
+                                                                { value: '__divider_top__', label: '──────────', disabled: true },
+                                                            ] : []),
+                                                            ...(activeFormData.type === 'task' ? [
+                                                                { value: '__add_child__', label: '+ Add Subtask', icon: Plus, iconColor: 'var(--type-subtask-color)' },
+                                                                { value: '__divider_top__', label: '──────────', disabled: true },
+                                                            ] : []),
+                                                            ...availableParents.map(parent => ({
+                                                                value: parent.id,
+                                                                label: `${getHierarchicalNumber(parent, tasks)}. ${parent.title}`,
+                                                                icon: getTypeIcon(parent.type),
+                                                                iconColor: getTypeHexColor(parent.type),
+                                                            })),
+                                                        ]}
+                                                        placeholder="Connected to:"
+                                                        icon={Share2}
+                                                        nullable
+                                                        searchable
+                                                        hideChevron
+                                                        iconSize={16}
+                                                        dropUp
+                                                        buttonClassName="py-2.5 px-4 min-h-[44px] text-[9px] font-black uppercase tracking-widest"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                {/* Action Row: Dates + Class + Connect (left) | Delete + Save (right) */}
+                                <div className="flex items-end justify-between gap-4 flex-wrap">
+                                    {/* Left: Dates + Class Selector + Connect Tasks */}
+                                    <div className="flex items-end gap-4 flex-wrap -mt-1">
+                                        {/* DATES */}
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Dates:</span>
+                                            <div className="hidden lg:block">
+                                                <DateRangePicker
+                                                    startDate={activeFormData.startDate}
+                                                    endDate={activeFormData.endDate}
+                                                    onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                                    onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                                    startPlaceholder="Start"
+                                                    endPlaceholder="Due"
+                                                    compactMode={false}
+                                                />
+                                            </div>
+                                            {/* Mobile: Compact single button */}
+                                            <div className="lg:hidden">
+                                                <DateRangePicker
+                                                    startDate={activeFormData.startDate}
+                                                    endDate={activeFormData.endDate}
+                                                    onStartDateChange={(value) => updateActiveCard('startDate', value)}
+                                                    onEndDateChange={(value) => updateActiveCard('endDate', value)}
+                                                    startPlaceholder="Start"
+                                                    endPlaceholder="Due"
+                                                    compactMode={true}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* ADD TO CLASS */}
+                                        <div className="flex flex-col gap-1">
+                                            <span className="text-[9px] font-bold text-brand-textSecondary uppercase tracking-widest pl-1">Add to Class:</span>
+                                            <div className="w-[150px] md:w-auto">
+                                                {loadingRooms ? (
+                                                    <Loader className="w-4 h-4 animate-spin text-brand-textSecondary" />
+                                                ) : rooms.length === 0 ? (
+                                                    <span className="text-xs text-brand-textSecondary">No classes found</span>
+                                                ) : (
+                                                    <MultiSelect<string>
+                                                        value={activeFormData.selectedRoomIds}
+                                                        onChange={(values) => updateActiveCard('selectedRoomIds', values)}
+                                                        options={rooms.map(room => ({
+                                                            value: room.id,
+                                                            label: room.name,
+                                                            color: room.color || 'var(--color-brand-accent)',
+                                                        }))}
+                                                        placeholder="Select classes..."
+                                                        primaryValue={currentClassId || undefined}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+
+                                    {/* Right: Delete + Save */}
+                                    <div className="flex items-center gap-2">
+                                        {/* Delete Button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(editingTaskId!)}
+                                            disabled={isSubmitting}
+                                            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+                                                bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary
+                                                button-lift-dynamic hover:border-[var(--color-status-stuck)]/50 hover:text-brand-textPrimary
+                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]
+                                                ${isNewTask ? 'invisible pointer-events-none' : ''}`}
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <span>Delete</span>
+                                        </button>
+
+                                        {/* Save Button */}
+                                        <button
+                                            onClick={async () => {
+                                                if (!activeFormData.title.trim()) {
+                                                    handleError(new Error("⚠️ Please include a title before saving."));
+                                                    return;
+                                                }
+                                                await handleSave();
+                                            }}
+                                            disabled={isSubmitting || !activeFormData.title.trim()}
+                                            className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold
+                                                bg-(--color-bg-tile) border border-border-subtle text-brand-textPrimary
+                                                button-lift-dynamic hover:border-brand-accent/50
+                                                disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap min-h-[44px]"
+                                        >
+                                            {isSubmitting || saveState === 'saving' ? (
+                                                <Loader className="w-3.5 h-3.5 animate-spin text-brand-accent" />
+                                            ) : (
+                                                <Check className="w-3.5 h-3.5 text-brand-accent" />
+                                            )}
+                                            <span>{isSubmitting || saveState === 'saving' ? 'Saving...' : 'Save'}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* BULK EDIT MODE */}
+                        {contentMode === 'bulk' && (
+                            <div className="flex-1 min-h-0 flex flex-col">
+                                {/* Scrollable task list */}
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
+                                    {filteredTasks.length === 0 ? (
+                                        <div className="text-center py-12 text-brand-textSecondary">
+                                            <p className="text-sm">No tasks scheduled for this date.</p>
+                                            <button
+                                                onClick={() => {
+                                                    setContentMode('task');
+                                                    resetForm();
+                                                }}
+                                                className="mt-4 px-4 py-2 rounded-xl border border-border-subtle bg-(--color-bg-tile) text-brand-textPrimary hover:border-brand-accent/50 transition-all"
+                                            >
+                                                <Plus className="w-4 h-4 inline mr-2" />
+                                                Create First Task
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        filteredTasks.map((task) => {
+                                            const TypeIcon = getTypeIcon(task.type);
+                                            const hierNum = getHierarchicalNumber(task, filteredTasks, selectedDate);
+                                            const indentLevel = task.path?.length || 0;
+
+                                            // Get siblings for reorder controls
+                                            const siblings = tasks.filter(t => t.parentId === task.parentId);
+                                            siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                                            const siblingIndex = siblings.findIndex(t => t.id === task.id);
+                                            const isFirst = siblingIndex === 0;
+                                            const isLast = siblingIndex === siblings.length - 1;
+
+                                            return (
+                                                <div
+                                                    key={task.id}
+                                                    style={{ marginLeft: `${indentLevel * 24}px` }}
+                                                    className={`group p-4 rounded-xl border transition-all
+                                                        bg-(--color-bg-tile) border-border-subtle shadow-layered lift-dynamic
+                                                        hover:border-border-strong
+                                                        ${task.status === 'draft' ? 'opacity-60' : ''}`}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        {/* Left Column: Type Icon + Arrows */}
+                                                        <div className="flex flex-col items-center gap-1 shrink-0">
+                                                            <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                                <TypeIcon size={14} />
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleReorder(task.id, 'up')}
+                                                                disabled={isFirst}
+                                                                className="p-1 rounded-md text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent transition-colors"
+                                                                title="Move up"
+                                                            >
+                                                                <ArrowUp size={14} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReorder(task.id, 'down')}
+                                                                disabled={isLast}
+                                                                className="p-1 rounded-md text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent transition-colors"
+                                                                title="Move down"
+                                                            >
+                                                                <ArrowDown size={14} />
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Content */}
+                                                        <div className="flex-1 min-w-0 space-y-2">
+                                                            {/* Title Row: Number + Title + Due Date + Actions */}
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-sm font-bold text-brand-accent shrink-0">{hierNum}</span>
+                                                                <input
+                                                                    type="text"
+                                                                    defaultValue={task.title}
+                                                                    placeholder="Task title..."
+                                                                    onBlur={async (e) => {
+                                                                        if (e.target.value !== task.title) {
+                                                                            loadTask({ ...task, title: e.target.value });
+                                                                            await hookHandleSave(true);
+                                                                        }
+                                                                    }}
+                                                                    className="flex-1 text-sm font-bold bg-transparent border-0 border-b border-transparent focus:border-brand-accent/30 focus:outline-none px-0 py-1 text-brand-textPrimary placeholder:text-brand-textSecondary"
+                                                                />
+                                                                {/* Due Date + Draft Badge */}
+                                                                <div className="flex items-center gap-2 shrink-0">
+                                                                    {task.status === 'draft' && (
+                                                                        <span className="px-1.5 py-0.5 rounded bg-(--color-bg-tile-hover) text-[10px] text-brand-textSecondary uppercase tracking-wider font-bold">
+                                                                            Draft
+                                                                        </span>
+                                                                    )}
+                                                                    {task.endDate && (
+                                                                        <span className="flex items-center gap-1 text-[10px] text-brand-textSecondary">
+                                                                            <CalendarIcon size={10} />
+                                                                            {format(new Date(task.endDate + 'T00:00:00'), 'MMM d')}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                {/* Actions */}
+                                                                <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    {/* Add Subtask */}
+                                                                    {!['subtask'].includes(task.type) && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setContentMode('task');
+                                                                                handleAddSubtask(task);
+                                                                            }}
+                                                                            className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/5 transition-colors"
+                                                                            title="Add subtask"
+                                                                        >
+                                                                            <Plus size={14} />
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setContentMode('task');
+                                                                            handleEditClick(task);
+                                                                        }}
+                                                                        className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/5 transition-colors"
+                                                                        title="Open in editor"
+                                                                    >
+                                                                        <FileText size={14} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDelete(task.id)}
+                                                                        className="p-2 rounded-lg text-brand-textSecondary hover:text-[var(--color-status-stuck)] hover:bg-[var(--color-status-stuck)]/5 transition-colors"
+                                                                        title="Delete task"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Description (editable textarea) */}
+                                                            <textarea
+                                                                defaultValue={task.description?.replace(/<[^>]*>/g, '') || ''}
+                                                                placeholder="Add description..."
+                                                                rows={2}
+                                                                onBlur={async (e) => {
+                                                                    const plainText = e.target.value;
+                                                                    const currentPlain = task.description?.replace(/<[^>]*>/g, '') || '';
+                                                                    if (plainText !== currentPlain) {
+                                                                        loadTask({ ...task, description: plainText });
+                                                                        await hookHandleSave(true);
+                                                                    }
+                                                                }}
+                                                                className="w-full text-xs bg-transparent border border-transparent rounded-lg px-2 py-1.5 text-brand-textSecondary placeholder:text-brand-textMuted focus:border-border-subtle focus:bg-tile-alt focus:outline-none resize-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+
+                                    {/* Add Task Button */}
+                                    {filteredTasks.length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                setContentMode('task');
+                                                resetForm();
+                                            }}
+                                            className="w-full p-3 rounded-xl border border-dashed border-border-subtle text-brand-textSecondary hover:text-brand-textPrimary hover:border-brand-accent/50 hover:bg-(--color-bg-tile) transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <Plus size={16} />
+                                            <span className="text-sm font-medium">Add Task</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* RIGHT PANEL: Task List */}
                     <div className="flex-1 min-h-0 lg:col-span-1 flex flex-col">
-                        <div className="flex-1 min-h-0 flex flex-col justify-end lg:justify-between overflow-visible pb-2 lg:pb-0 lg:p-0">
+                        <div className="flex-1 min-h-0 flex flex-col justify-end lg:justify-start overflow-y-auto custom-scrollbar pb-2 lg:pb-0 lg:p-0">
 
 
                             {/* Mobile Overlay - closes accordion when clicking outside */}
@@ -1088,7 +1269,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             {/* Task List - collapsible on mobile, always visible on lg+ */}
                             <div className={`
-                                lg:space-y-3 lg:pt-0 lg:pb-4 lg:overflow-visible lg:relative lg:bg-transparent
+                                lg:space-y-3 lg:pt-0 lg:pb-4 lg:relative lg:bg-transparent
                                 ${isMobileTasksOpen
                                     ? 'fixed inset-x-0 bottom-0 top-auto max-h-[60vh] z-40 bg-[var(--bg-page)] rounded-t-2xl px-4 pt-4 pb-6 space-y-3 overflow-y-auto custom-scrollbar shadow-2xl'
                                     : 'hidden lg:block'
@@ -1119,7 +1300,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             <div
                                                 key={task.id}
                                                 onClick={() => {
-                                                    handleEditClick(task);
+                                                    loadTask(task);
                                                     setIsMobileTasksOpen(false); // Close accordion on mobile
                                                 }}
                                                 style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
@@ -1165,7 +1346,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
 
                                                     {/* Content: Title + Due Date */}
                                                     <div className="flex-1 min-w-0">
-                                                        <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
+                                                        <h5 className={`font-bold text-sm line-clamp-2 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
                                                             {task.title}
                                                         </h5>
 
@@ -1196,21 +1377,35 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                                                 Draft
                                                             </div>
                                                         )}
-                                                        {/* Add Subtask Button */}
-                                                        {!['subtask'].includes(task.type) && (
+                                                        {/* Action Buttons - visible on hover */}
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            {/* Save Button */}
                                                             <button
                                                                 type="button"
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
                                                                     e.preventDefault();
-                                                                    handleAddSubtask(task);
+                                                                    handleSave(false);
                                                                 }}
-                                                                className="group/btn p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm opacity-0 group-hover:opacity-100 hover:shadow-layered button-lift-dynamic hover:text-brand-textPrimary hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50 focus:outline-none"
-                                                                title="Add subtask"
+                                                                className="p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm hover:shadow-layered button-lift-dynamic hover:text-brand-accent hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50 focus:outline-none"
+                                                                title="Save task"
                                                             >
-                                                                <Plus size={14} className="transition-colors group-hover/btn:text-brand-accent" />
+                                                                <Check size={14} />
                                                             </button>
-                                                        )}
+                                                            {/* Delete Button */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    e.preventDefault();
+                                                                    handleDelete(task.id);
+                                                                }}
+                                                                className="p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm hover:shadow-layered button-lift-dynamic hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 focus:outline-none"
+                                                                title="Delete task"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1224,177 +1419,43 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
             </div>
         </PageLayout>
 
-        {/* Bulk Edit Modal */}
-        <Modal
-            isOpen={isBulkEditOpen}
-            onClose={() => setIsBulkEditOpen(false)}
-            title={`${format(new Date(selectedDate + 'T00:00:00'), 'MMM d')} Schedule`}
-            maxWidth="2xl"
-            variant="page"
-        >
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar pr-2">
-                {filteredTasks.length === 0 ? (
-                    <div className="text-center py-12 text-brand-textSecondary">
-                        <p className="text-sm">No tasks scheduled for this date.</p>
+        {/* Delete Confirmation Dialog */}
+        {deleteDialogTask && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-(--color-bg-tile) tile-blur rounded-2xl border border-border-subtle shadow-layered-lg p-6 max-w-md w-full mx-4">
+                    <h3 className="text-lg font-black text-brand-textPrimary mb-2">
+                        Delete "{deleteDialogTask.title}"?
+                    </h3>
+                    <p className="text-sm text-brand-textSecondary mb-6">
+                        This task has children. What would you like to do with them?
+                    </p>
+
+                    <div className="flex flex-col gap-3">
                         <button
-                            onClick={() => {
-                                setIsBulkEditOpen(false);
-                                resetForm();
-                            }}
-                            className="mt-4 px-4 py-2 rounded-xl border border-border-subtle bg-(--color-bg-tile) text-brand-textPrimary hover:border-brand-accent/50 transition-all"
+                            onClick={() => confirmDelete(true)}
+                            className="w-full py-3 px-4 rounded-xl border border-[var(--color-status-stuck)] bg-[var(--color-status-stuck)]/10 text-[var(--color-status-stuck)] font-bold hover:bg-[var(--color-status-stuck)]/20 transition-all"
                         >
-                            <Plus className="w-4 h-4 inline mr-2" />
-                            Create First Task
+                            <Trash2 className="w-4 h-4 inline mr-2" />
+                            Delete All (including children)
+                        </button>
+
+                        <button
+                            onClick={() => confirmDelete(false)}
+                            className="w-full py-3 px-4 rounded-xl border border-brand-accent bg-brand-accent/10 text-brand-accent font-bold hover:bg-brand-accent/20 transition-all"
+                        >
+                            <Share2 className="w-4 h-4 inline mr-2" />
+                            Make Children Standalone
+                        </button>
+
+                        <button
+                            onClick={() => setDeleteDialogTask(null)}
+                            className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-(--color-bg-tile) text-brand-textSecondary font-bold hover:text-brand-textPrimary hover:border-border-strong transition-all"
+                        >
+                            Cancel
                         </button>
                     </div>
-                ) : (
-                    filteredTasks.map((task) => {
-                        const TypeIcon = getTypeIcon(task.type);
-                        const hierNum = getHierarchicalNumber(task, filteredTasks, selectedDate);
-                        const indentLevel = task.path?.length || 0;
-
-                        // Get siblings for reorder controls
-                        const siblings = tasks.filter(t => t.parentId === task.parentId);
-                        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-                        const siblingIndex = siblings.findIndex(t => t.id === task.id);
-                        const isFirst = siblingIndex === 0;
-                        const isLast = siblingIndex === siblings.length - 1;
-
-                        return (
-                            <div
-                                key={task.id}
-                                style={{ marginLeft: `${indentLevel * 24}px` }}
-                                className={`group p-4 rounded-xl border transition-all
-                                    bg-(--color-bg-tile) border-border-subtle
-                                    hover:border-border-strong
-                                    ${task.status === 'draft' ? 'opacity-60' : ''}`}
-                            >
-                                <div className="flex items-start gap-3">
-                                    {/* Left Column: Type Icon + Arrows */}
-                                    <div className="flex flex-col items-center gap-1 shrink-0">
-                                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
-                                            <TypeIcon size={14} />
-                                        </span>
-                                        <button
-                                            onClick={() => handleReorder(task.id, 'up')}
-                                            disabled={isFirst}
-                                            className="p-1 rounded-md text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent transition-colors"
-                                            title="Move up"
-                                        >
-                                            <ArrowUp size={14} />
-                                        </button>
-                                        <button
-                                            onClick={() => handleReorder(task.id, 'down')}
-                                            disabled={isLast}
-                                            className="p-1 rounded-md text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent transition-colors"
-                                            title="Move down"
-                                        >
-                                            <ArrowDown size={14} />
-                                        </button>
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0 space-y-2">
-                                        {/* Title Row: Number + Title + Due Date + Actions */}
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-brand-accent shrink-0">{hierNum}</span>
-                                            <input
-                                                type="text"
-                                                defaultValue={task.title}
-                                                placeholder="Task title..."
-                                                onBlur={async (e) => {
-                                                    if (e.target.value !== task.title) {
-                                                        loadTask({ ...task, title: e.target.value });
-                                                        await hookHandleSave(true);
-                                                    }
-                                                }}
-                                                className="flex-1 text-sm font-bold bg-transparent border-0 border-b border-transparent focus:border-brand-accent/30 focus:outline-none px-0 py-1 text-brand-textPrimary placeholder:text-brand-textSecondary"
-                                            />
-                                            {/* Due Date + Draft Badge */}
-                                            <div className="flex items-center gap-2 shrink-0">
-                                                {task.status === 'draft' && (
-                                                    <span className="px-1.5 py-0.5 rounded bg-(--color-bg-tile-hover) text-[10px] text-brand-textSecondary uppercase tracking-wider font-bold">
-                                                        Draft
-                                                    </span>
-                                                )}
-                                                {task.endDate && (
-                                                    <span className="flex items-center gap-1 text-[10px] text-brand-textSecondary">
-                                                        <CalendarIcon size={10} />
-                                                        {format(new Date(task.endDate + 'T00:00:00'), 'MMM d')}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            {/* Actions */}
-                                            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {/* Add Subtask */}
-                                                {!['subtask'].includes(task.type) && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setIsBulkEditOpen(false);
-                                                            handleAddSubtask(task);
-                                                        }}
-                                                        className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/5 transition-colors"
-                                                        title="Add subtask"
-                                                    >
-                                                        <Plus size={14} />
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => {
-                                                        setIsBulkEditOpen(false);
-                                                        handleEditClick(task);
-                                                    }}
-                                                    className="p-2 rounded-lg text-brand-textSecondary hover:text-brand-accent hover:bg-brand-accent/5 transition-colors"
-                                                    title="Open in editor"
-                                                >
-                                                    <FileText size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(task.id)}
-                                                    className="p-2 rounded-lg text-brand-textSecondary hover:text-[var(--color-status-stuck)] hover:bg-[var(--color-status-stuck)]/5 transition-colors"
-                                                    title="Delete task"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Description (editable textarea) */}
-                                        <textarea
-                                            defaultValue={task.description?.replace(/<[^>]*>/g, '') || ''}
-                                            placeholder="Add description..."
-                                            rows={2}
-                                            onBlur={async (e) => {
-                                                const plainText = e.target.value;
-                                                const currentPlain = task.description?.replace(/<[^>]*>/g, '') || '';
-                                                if (plainText !== currentPlain) {
-                                                    loadTask({ ...task, description: plainText });
-                                                    await hookHandleSave(true);
-                                                }
-                                            }}
-                                            className="w-full text-xs bg-transparent border border-transparent rounded-lg px-2 py-1.5 text-brand-textSecondary placeholder:text-brand-textMuted focus:border-border-subtle focus:bg-tile-alt focus:outline-none resize-none"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
-                )}
-
-                {/* Add Task Button */}
-                {filteredTasks.length > 0 && (
-                    <button
-                        onClick={() => {
-                            setIsBulkEditOpen(false);
-                            resetForm();
-                        }}
-                        className="w-full p-3 rounded-xl border border-dashed border-border-subtle text-brand-textSecondary hover:text-brand-textPrimary hover:border-brand-accent/50 hover:bg-(--color-bg-tile) transition-all flex items-center justify-center gap-2"
-                    >
-                        <Plus size={16} />
-                        <span className="text-sm font-medium">Add Task</span>
-                    </button>
-                )}
+                </div>
             </div>
-        </Modal>
+        )}
     </>);
 }

@@ -1,39 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Loader, ArrowRight, Save, RotateCcw, Link as LinkIcon, FilePlus, X, Paperclip, Youtube } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
+import { Sparkles, Send, Loader, ArrowRight, Save, RotateCcw, Link as LinkIcon, FilePlus, X, Paperclip, Youtube, Brain } from 'lucide-react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { functions, storage, auth } from '../../firebase';
+import { storage, auth } from '../../firebase';
 import { bulkSaveTasks } from '../../services/firestoreService';
-import { TaskFormData, ItemType } from '../../types';
+import { TaskFormData, Task } from '../../types';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 import { formatMessageToHtml } from '../../utils/markdownFormatter';
+import * as aiService from '../../services/aiService';
+import { useAiStore, AiMessage } from '../../store/aiStore';
 import toast from 'react-hot-toast';
-
-interface Message {
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
-    suggestion?: {
-        items: any[];
-    };
-}
 
 interface AiAssistantProps {
     currentFormData: TaskFormData;
-    onApply: (suggestion: any) => void;
+    onApply: (suggestion: Task) => void;
     taskId?: string | null;
 }
 
 export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantProps) => {
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: '1',
-            role: 'assistant',
-            content: "I'm your Curriculum Architect. I can help refine your notes, suggest improvements for accessibility, or brainstorm Project/Assignment structures. What are we building today?"
-        }
-    ]);
+    const {
+        messages,
+        addMessage,
+        updateMessage,
+        clearMessages,
+        isProcessing,
+        setProcessing
+    } = useAiStore();
+
     const [input, setInput] = useState('');
-    const [isThinking, setIsThinking] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [attachments, setAttachments] = useState<any[]>([]);
     const [showLinkInput, setShowLinkInput] = useState(false);
@@ -41,13 +34,25 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    // Initial message if empty
+    useEffect(() => {
+        // Double-check if we already have an assistant message to prevent duplicates
+        const hasAssistantMessage = messages.some(m => m.role === 'assistant');
+        if (!hasAssistantMessage && !isProcessing) {
+            addMessage({
+                role: 'assistant',
+                content: "Hi! I'm your Curriculum Architect. I'm ready to help you structure your lessons, refine your curriculum for accessibility, or brainstorm creative ideas for the classroom. How can I support your planning today?"
+            });
+        }
+    }, [messages.length, addMessage, isProcessing]);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isThinking]);
+    }, [messages, isProcessing]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -64,14 +69,11 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
             const downloadUrl = await getDownloadURL(storageRef);
 
             // 2. Extract Text via Cloud Function
-            const processFile = httpsCallable(functions, 'processFile');
-            const result = await processFile({
+            const text = await aiService.processFileContent({
                 fileUrl: downloadUrl,
                 filename: file.name,
                 contentType: file.type
             });
-
-            const { text } = result.data as { text: string };
 
             setAttachments(prev => [...prev, {
                 type: 'file',
@@ -98,9 +100,7 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
         const loadingToast = toast.loading('Fetching link context...');
 
         try {
-            const fetchUrlMetadata = httpsCallable(functions, 'fetchUrlMetadata');
-            const result = await fetchUrlMetadata({ url: linkInput });
-            const data = result.data as any;
+            const data = await aiService.fetchUrlMetadata(linkInput);
 
             setAttachments(prev => [...prev, {
                 type: 'link',
@@ -123,21 +123,27 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
     };
 
     const handleSend = async () => {
-        if (!input.trim() || isThinking) return;
+        if (!input.trim() || isProcessing) return;
 
-        const userMsg: Message = {
-            id: Date.now().toString(),
-            role: 'user',
-            content: input
-        };
-
-        setMessages(prev => [...prev, userMsg]);
+        const currentInput = input;
         setInput('');
-        setIsThinking(true);
+
+        // 1. Add User Message
+        addMessage({
+            role: 'user',
+            content: currentInput
+        });
+
+        setProcessing(true);
+
+        // 2. Add placeholder assistant message for thinking state
+        const assistantMsgId = addMessage({
+            role: 'assistant',
+            content: '',
+            isThinking: true
+        });
 
         try {
-            const refineTask = httpsCallable(functions, 'refineTask');
-
             // Extract context from current form and attachments
             const context = [];
             if (currentFormData.description) context.push(`Current Draft Description: ${currentFormData.description}`);
@@ -148,65 +154,67 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                 context.push(`ATTACHMENT [${att.type} - ${att.name}]:\n${att.content}`);
             });
 
-            const result = await refineTask({
-                rawContent: input,
+            // Get existing items from the chat for multi-turn refinement
+            const existingItems = messages
+                .filter(m => m.role === 'assistant' && m.suggestions)
+                .flatMap(m => m.suggestions || []);
+
+            const response = await aiService.refineTask({
+                rawContent: currentInput,
                 taskId: taskId || undefined,
                 context: context,
+                existingItems: existingItems as Task[]
             });
+
+            const { items, thoughts } = response;
 
             // Clear attachments after successful send
             setAttachments([]);
 
-            const AIResponse = result.data as any;
+            // Set status to draft for all items
+            const processedItems = items.map((item: any) => ({
+                ...item,
+                status: 'draft'
+            }));
 
-            // Strip ### from AI Response items and set status to draft
-            if (AIResponse.items) {
-                AIResponse.items = AIResponse.items.map((item: any) => ({
-                    ...item,
-                    title: item.title?.replace(/^###\s+/g, '').replace(/###/g, ''),
-                    description: item.description?.replace(/^###\s+/g, '').replace(/###/g, ''),
-                    status: 'draft'
-                }));
-            }
+            // 3. Update placeholder message with AI Response
+            updateMessage(assistantMsgId, {
+                content: processedItems.length > 1
+                    ? `I've broken down this objective into **${processedItems.length} items**. Here is the recommended hierarchy:`
+                    : `I've analyzed your request. Here's a suggestion for a **${processedItems[0]?.type || 'item'}**:`,
+                suggestions: processedItems as Task[],
+                thoughts: thoughts,
+                isThinking: false
+            });
 
-            const assistantMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: AIResponse.items?.length > 1
-                    ? `I've broken down this objective into **${AIResponse.items.length} items**. Here is the recommended hierarchy:`
-                    : `I've analyzed your request. Here's a suggestion for a **${AIResponse.items?.[0]?.type || 'item'}**:`,
-                suggestion: AIResponse
-            };
-
-            setMessages(prev => [...prev, assistantMsg]);
         } catch (error: any) {
             console.error('AI Error:', error);
             toast.error(error.message || 'Failed to get AI response');
-            setMessages(prev => [...prev, {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: "I encountered an error trying to process that. Please try rephrasing or check your connection."
-            }]);
+            updateMessage(assistantMsgId, {
+                content: "I encountered an error trying to process that. Please try rephrasing or check your connection.",
+                isThinking: false
+            });
         } finally {
-            setIsThinking(false);
+            setProcessing(false);
         }
     };
 
     return (
-        <div className="flex flex-col h-full bg-(--color-bg-tile-alt) rounded-2xl border border-border-subtle overflow-hidden shadow-layered transition-float">
+        <div className="flex flex-col h-full bg-(--color-bg-tile-alt) tile-blur rounded-2xl border border-border-subtle overflow-hidden shadow-layered transition-float">
             {/* Header */}
-            <div className="px-4 py-3 border-b border-border-subtle bg-(--color-bg-tile) flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-border-subtle bg-(--color-bg-tile) tile-blur flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-brand-accent animate-pulse" />
                     <span className="font-black text-sm uppercase tracking-widest text-brand-textPrimary">AI Curriculum Assistant</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => setMessages([messages[0]])}
-                        className="p-1.5 rounded-lg text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white/5 transition-all"
-                        title="Clear chat"
+                        onClick={clearMessages}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-brand-textSecondary hover:text-brand-textPrimary hover:bg-white/5 transition-all text-[10px] font-bold uppercase tracking-wider"
+                        title="Start New Chat"
                     >
-                        <RotateCcw size={14} />
+                        <RotateCcw size={12} />
+                        <span>New Chat</span>
                     </button>
                 </div>
             </div>
@@ -219,116 +227,189 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                             max-w-[90%] px-4 py-3 rounded-2xl shadow-sm text-sm
                             ${msg.role === 'user'
                                 ? 'bg-brand-accent text-white rounded-tr-sm'
-                                : 'bg-(--color-bg-tile) border border-border-subtle text-brand-textPrimary rounded-tl-sm'}
+                                : 'bg-(--color-bg-tile) tile-blur border border-border-subtle text-brand-textPrimary rounded-tl-sm'}
                         `}>
                             {msg.role === 'assistant' ? (
                                 <div className="space-y-3">
-                                    <div dangerouslySetInnerHTML={{ __html: formatMessageToHtml(msg.content) }} />
-
-                                    {msg.suggestion && msg.suggestion.items && msg.suggestion.items.length > 0 && (
-                                        <div className="mt-4 p-4 rounded-xl bg-(--color-bg-tile-alt) border border-brand-accent/20 space-y-3">
-                                            {/* Primary Item Preview */}
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-accent">
-                                                    {msg.suggestion.items.length > 1 ? 'Root Objective' : 'Generated Item'}
-                                                </span>
-                                                <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase 
-                                                    ${msg.suggestion.items[0].type === 'project' ? 'bg-type-project-color/20 text-type-project-color' :
-                                                        msg.suggestion.items[0].type === 'assignment' ? 'bg-type-assignment-color/20 text-type-assignment-color' :
-                                                            msg.suggestion.items[0].type === 'task' ? 'bg-type-task-color/20 text-type-task-color' :
-                                                                'bg-type-subtask-color/20 text-type-subtask-color'}
-                                                `}>
-                                                    {msg.suggestion.items[0].type}
-                                                </div>
-                                            </div>
-
-                                            <h4 className="font-bold text-brand-textPrimary">{msg.suggestion.items[0].title}</h4>
-
-                                            <div className="text-xs text-brand-textSecondary line-clamp-2">
-                                                <CodeBlockRenderer
-                                                    html={formatMessageToHtml(msg.suggestion.items[0].description)}
-                                                    isExpanded={false}
-                                                />
-                                            </div>
-
-                                            {/* Breakdown Summary for multiple items */}
-                                            {msg.suggestion.items.length > 1 && (
-                                                <div className="py-2 px-3 rounded-lg bg-black/20 border border-white/5 space-y-1.5 max-h-[200px] overflow-y-auto custom-scrollbar">
-                                                    <p className="text-[10px] font-bold text-brand-textMuted uppercase tracking-wider">Breakdown Hierarchy:</p>
-                                                    <div className="space-y-1">
-                                                        {msg.suggestion.items.slice(1).map((item: any, idx: number) => (
-                                                            <div key={idx} className="flex items-center gap-2 text-[11px] text-brand-textSecondary">
-                                                                <div className="w-1 h-1 rounded-full bg-brand-accent/40" />
-                                                                <span className="opacity-50 uppercase font-bold text-[9px] w-12">{item.type}</span>
-                                                                <span className="truncate">{item.title}</span>
-                                                            </div>
-                                                        ))}
+                                    {msg.isThinking ? (
+                                        <div className="flex flex-col gap-3 py-4 px-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="relative">
+                                                    <div className="w-10 h-10 rounded-full bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center">
+                                                        <Sparkles className="w-5 h-5 text-brand-accent animate-pulse" />
                                                     </div>
+                                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-accent rounded-full animate-ping" />
                                                 </div>
-                                            )}
-
-                                            <div className="flex gap-2 pt-1">
-                                                <button
-                                                    onClick={() => {
-                                                        onApply(msg.suggestion!.items[0]);
-                                                        toast.success('Applied to editor!');
-                                                    }}
-                                                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-white/5 border border-white/10 text-brand-textPrimary text-xs font-bold hover:bg-white/10 transition-all"
-                                                >
-                                                    <ArrowRight size={12} />
-                                                    <span>Pin Item</span>
-                                                </button>
-
-                                                {msg.suggestion.items.length > 1 && (
-                                                    <button
-                                                        onClick={async () => {
-                                                            const user = auth.currentUser;
-                                                            if (!user) {
-                                                                toast.error("Please sign in to sync");
-                                                                return;
-                                                            }
-
-                                                            const loadingToast = toast.loading('Adding to schedule...');
-                                                            try {
-                                                                // Ensure items have the correct selectedRoomIds from the editor
-                                                                const itemsToSync = msg.suggestion!.items.map(item => ({
-                                                                    ...item,
-                                                                    status: 'draft', // Explicitly set to draft
-                                                                    selectedRoomIds: currentFormData.selectedRoomIds.length > 0
-                                                                        ? currentFormData.selectedRoomIds
-                                                                        : item.selectedRoomIds
-                                                                }));
-
-                                                                await bulkSaveTasks(user.uid, itemsToSync);
-                                                                toast.success('Tasks added to schedule as drafts!', { id: loadingToast });
-                                                            } catch (error) {
-                                                                console.error('Bulk Sync Error:', error);
-                                                                toast.error('Failed to add tasks', { id: loadingToast });
-                                                            }
-                                                        }}
-                                                        className="flex-[2] flex items-center justify-center gap-2 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:bg-brand-accent/90 shadow-lg shadow-brand-accent/20 transition-all button-lift-dynamic"
-                                                    >
-                                                        <Save size={12} />
-                                                        <span>Add Tasks to Schedule</span>
-                                                    </button>
-                                                )}
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-xs font-black uppercase tracking-widest text-brand-textPrimary">Curriculum Architect</span>
+                                                    <span className="text-[10px] text-brand-textSecondary uppercase tracking-tighter animate-pulse">Analyzing pedagogical requirements...</span>
+                                                </div>
                                             </div>
+                                            <div className="flex gap-1.5 px-13">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-brand-accent/40 animate-bounce [animation-delay:-0.3s]" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-brand-accent/40 animate-bounce [animation-delay:-0.15s]" />
+                                                <div className="w-1.5 h-1.5 rounded-full bg-brand-accent/40 animate-bounce" />
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="prose prose-sm prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: formatMessageToHtml(msg.content) }} />
+                                    )}
+
+                                    {/* Stream of Thought Section */}
+                                    {msg.thoughts && (
+                                        <div className="mt-4 px-4 py-3 rounded-2xl bg-brand-accent/5 border border-brand-accent/10 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <Brain className="w-4 h-4 text-brand-accent animate-pulse" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-brand-textPrimary">AI Reasoning Process</span>
+                                            </div>
+                                            <div className="text-xs text-brand-textSecondary leading-relaxed italic opacity-80 whitespace-pre-wrap">
+                                                {msg.thoughts}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {msg.suggestions && msg.suggestions.length > 0 && (
+                                        <div className="mt-4 space-y-4">
+                                            {msg.suggestions.map((item, idx) => {
+                                                const indentation = item.parentId ? 'ml-6 border-l-2 border-brand-accent/10 pl-4' : '';
+
+                                                // Build unified markdown description
+                                                let descriptionHtml = '';
+                                                if (item.structuredContent) {
+                                                    // Defensive: Strip potential headers the AI might inject despite prompt rules
+                                                    const cleanRationale = item.structuredContent.rationale
+                                                        .replace(/^###?\s*Why:?\s*/i, '')
+                                                        .replace(/^\*\*Why\*\*:?\s*/i, '')
+                                                        .replace(/^Why:?\s*/i, '');
+
+                                                    const cleanTroubleshooting = item.structuredContent.troubleshooting
+                                                        ? item.structuredContent.troubleshooting
+                                                            .replace(/^###?\s*Troubleshooting:?\s*/i, '')
+                                                            .replace(/^\*\*Troubleshooting\*\*:?\s*/i, '')
+                                                        : '';
+
+                                                    const markdown = [
+                                                        cleanRationale,
+                                                        item.structuredContent.instructions.map((s, i) => `${i + 1}. ${s}`).join('\n'),
+                                                        cleanTroubleshooting ? `> **Troubleshooting**: ${cleanTroubleshooting}` : ''
+                                                    ].filter(Boolean).join('\n\n');
+                                                    descriptionHtml = formatMessageToHtml(markdown);
+                                                } else {
+                                                    descriptionHtml = formatMessageToHtml(item.description || '');
+                                                }
+
+                                                return (
+                                                    <div key={idx} className={`${indentation} overflow-visible rounded-2xl bg-(--color-bg-tile) border border-border-subtle shadow-layered hover:shadow-layered-lg transition-float lift-dynamic`}>
+                                                        {/* Suggestion Header - Sleeker, matching main editor */}
+                                                        <div className="px-4 py-2.5 bg-(--color-bg-tile-alt)/50 border-b border-border-subtle flex items-center justify-between rounded-t-2xl">
+                                                            <div className="flex items-center gap-3 min-w-0">
+                                                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0
+                                                                    ${item.type === 'project' ? 'bg-type-project-color/20 text-type-project-color' :
+                                                                        item.type === 'assignment' ? 'bg-type-assignment-color/20 text-type-assignment-color' :
+                                                                            item.type === 'task' ? 'bg-type-task-color/20 text-type-task-color' :
+                                                                                'bg-type-subtask-color/20 text-type-subtask-color'}
+                                                                `}>
+                                                                    {item.type[0].toUpperCase()}
+                                                                </div>
+                                                                <h4 className="text-sm font-black text-brand-textPrimary truncate tracking-tight leading-tight">
+                                                                    {item.title}
+                                                                </h4>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                <div className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tighter
+                                                                    ${item.type === 'project' ? 'bg-type-project-color/20 text-type-project-color' :
+                                                                        item.type === 'assignment' ? 'bg-type-assignment-color/20 text-type-assignment-color' :
+                                                                            item.type === 'task' ? 'bg-type-task-color/20 text-type-task-color' :
+                                                                                'bg-type-subtask-color/20 text-type-subtask-color'}
+                                                                `}>
+                                                                    {item.type}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Content - Unified Markdown Block */}
+                                                        <div className="p-4 space-y-4">
+                                                            <div className="prose prose-sm prose-invert max-w-none opacity-90">
+                                                                <CodeBlockRenderer
+                                                                    html={descriptionHtml}
+                                                                    isExpanded={true}
+                                                                    className="text-xs text-brand-textSecondary leading-relaxed"
+                                                                />
+                                                            </div>
+
+                                                            {item.structuredContent?.keyConcepts && item.structuredContent.keyConcepts.length > 0 && (
+                                                                <div className="flex flex-wrap gap-1.5 opacity-60">
+                                                                    {item.structuredContent.keyConcepts.map((concept, i) => (
+                                                                        <span key={i} className="px-2 py-0.5 rounded-md bg-white/5 border border-white/5 text-[9px] font-bold text-brand-textSecondary italic">
+                                                                            #{concept}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+
+                                                            <div className="flex gap-2 pt-1">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        onApply(item);
+                                                                        toast.success('Applied to editor!');
+                                                                    }}
+                                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 border border-white/10 text-brand-textPrimary text-xs font-bold hover:bg-white/10 transition-all button-lift-dynamic shadow-layered-sm"
+                                                                >
+                                                                    <ArrowRight size={14} className="text-brand-accent" />
+                                                                    <span>Apply to Editor</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {/* Bulk Sync Button */}
+                                            {msg.suggestions.length > 1 && (
+                                                <button
+                                                    onClick={async () => {
+                                                        const user = auth.currentUser;
+                                                        if (!user) {
+                                                            toast.error("Please sign in to sync");
+                                                            return;
+                                                        }
+
+                                                        const loadingToast = toast.loading('Adding all items to schedule...');
+                                                        try {
+                                                            const itemsToSync = msg.suggestions!.map(item => ({
+                                                                ...item,
+                                                                status: 'draft',
+                                                                selectedRoomIds: currentFormData.selectedRoomIds.length > 0
+                                                                    ? currentFormData.selectedRoomIds
+                                                                    : item.selectedRoomIds
+                                                            }));
+
+                                                            await bulkSaveTasks(user.uid, itemsToSync);
+                                                            toast.success('Full hierarchy synced successfully!', { id: loadingToast });
+                                                        } catch (error) {
+                                                            console.error('Bulk Sync Error:', error);
+                                                            toast.error('Failed to sync hierarchy', { id: loadingToast });
+                                                        }
+                                                    }}
+                                                    className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-brand-accent text-white text-sm font-black uppercase tracking-wider hover:bg-brand-accent/90 shadow-lg shadow-brand-accent/20 transition-all button-lift-dynamic"
+                                                >
+                                                    <Save size={16} />
+                                                    <span>Sync Entire Hierarchy to Schedule</span>
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                msg.content
+                                <div className="prose prose-sm prose-invert max-w-none">
+                                    {msg.content}
+                                </div>
                             )}
+
                         </div>
                     </div>
                 ))}
 
-                {isThinking && (
-                    <div className="flex items-center gap-2 text-brand-textSecondary text-xs animate-pulse">
-                        <Loader className="w-3 h-3 animate-spin" />
-                        <span>Curriculum Architect is thinking...</span>
-                    </div>
-                )}
                 <div ref={messagesEndRef} />
             </div>
 
@@ -389,7 +470,7 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                             placeholder="Describe a task or ask for ideas..."
                             rows={1}
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
+                                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                                     e.preventDefault();
                                     handleSend();
                                 }
@@ -400,7 +481,7 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                             {/* Attachment Controls */}
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                disabled={isUploading || isThinking}
+                                disabled={isUploading || isProcessing}
                                 title="Attach File (PDF/Text)"
                                 className="p-2 rounded-lg text-brand-textSecondary hover:bg-white/5 transition-all text-xs"
                             >
@@ -408,7 +489,7 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                             </button>
                             <button
                                 onClick={() => setShowLinkInput(!showLinkInput)}
-                                disabled={isUploading || isThinking}
+                                disabled={isUploading || isProcessing}
                                 title="Attach Link (YouTube/Web)"
                                 className="p-2 rounded-lg text-brand-textSecondary hover:bg-white/5 transition-all text-xs"
                             >
@@ -416,10 +497,10 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                             </button>
                             <button
                                 onClick={handleSend}
-                                disabled={!input.trim() || isThinking || isUploading}
+                                disabled={!input.trim() || isProcessing || isUploading}
                                 className="p-2 rounded-lg text-brand-accent hover:bg-brand-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                             >
-                                {isThinking || isUploading ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
+                                {isProcessing || isUploading ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
                             </button>
                         </div>
                     </div>
@@ -434,7 +515,7 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
 
                     <div className="mb-0.5 flex items-center justify-between text-[10px] text-brand-textMuted font-bold uppercase tracking-widest px-1">
                         <div className="flex gap-3">
-                            <span>Enter to send</span>
+                            <span>Ctrl + Enter to send</span>
                             {attachments.length > 0 && <span className="text-brand-accent underline underline-offset-2">{attachments.length} attachments included</span>}
                         </div>
                         <div className="flex items-center gap-2">

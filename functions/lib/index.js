@@ -20,23 +20,37 @@ import { getStorage } from 'firebase-admin/storage';
 // Genkit AI imports
 import { genkit } from 'genkit';
 import { z } from '@genkit-ai/core';
-import { vertexAI, gemini15Flash, textEmbedding004 } from '@genkit-ai/vertexai';
+import { textEmbedding004 } from '@genkit-ai/vertexai';
+import { GoogleGenAI } from '@google/genai';
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
 const storage = getStorage();
-// Genkit configuration
+// Project configuration from environment
+const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || 'shape-of-the-day';
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
+// Initialize New Google Gen AI SDK
+const genai = new GoogleGenAI({
+    vertexai: true,
+    project: PROJECT_ID,
+    location: LOCATION,
+});
+// Genkit configuration (keeping for RAG and Flow structure)
 const ai = genkit({
-    plugins: [
-        vertexAI({ location: 'us-central1' }),
-    ],
+    plugins: [], // Moving model logic to direct SDK
 });
 // --- Schemas ---
 export const CurriculumSchema = z.object({
     id: z.string().optional().describe("Firestore ID if updating, otherwise ignore"),
     tempId: z.string().optional().describe("Temporary ID used for linking children in a hierarchical response"),
     title: z.string().describe("The main display title of the curriculum item"),
-    description: z.string().describe("Markdown content explaining the Why, How, and What. Must include '###' headers."),
+    description: z.string().optional().describe("Markdown summary of the task (Legacy fallback)"),
+    structuredContent: z.object({
+        rationale: z.string().describe("The 'Why'. A concise explanation of the learning objective."),
+        instructions: z.array(z.string()).describe("The 'How'. Step-by-step verifiable action items. Max 5 steps."),
+        keyConcepts: z.array(z.string()).describe("List of technical terms or concepts covered (e.g., 'Loops', 'Variables')"),
+        troubleshooting: z.string().optional().describe("The 'Stuck?' prompt. Specific debugging advice or an AI prompt for help."),
+    }).describe("The core pedagogical content broken into logical sections."),
     type: z.enum(['project', 'assignment', 'task', 'subtask']).describe("Hierarchy level"),
     parentId: z.string().nullable().describe("UUID or tempId of the parent item, or null if root"),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("YYYY-MM-DD format"),
@@ -55,30 +69,35 @@ export const CurriculumSchema = z.object({
     }).describe("Self-correction log. Must be true/valid for the task to be accepted.")
 });
 const CURRICULUM_SYSTEM_PROMPT = `
-Role & Objective:
-You are the Lead Curriculum Architect for a Grade 8-12 PBL platform. Your goal is to translate teacher resources into a structured, strictly typed JSON curriculum. You function as a bridge between complex technical tools (Godot, VS Code, Figma) and beginner students with no terminal access.
+Role: You are the Lead Curriculum Architect for a Grade 8-12 PBL platform. 
+Objective: Transform raw teacher notes into structured, machine-readable curriculum objects.
 
-Hierarchical Scoping & Sequencing:
-Identify the scope of the curriculum item based on time and actionability:
-- Project: Large scope spanning multiple weeks.
-- Assignment: Medium scope spanning multiple days.
-- Task: Short scope that can be completed in minutes or hours.
-- Subtask: Atomic action items. If an action item must be completed before the next step, it should be categorized as a subtask.
-- Default to more tasks and subtasks if action items have dependencies.
+Target Audience: Beginners (Grade 9-10).
+Constraint: Students do not have terminal access. All instructions must be GUI-based (VS Code, Godot, Browser).
 
-The "Think-First" Protocol:
-Before generating any JSON, you must perform the following reasoning steps:
-1. Resource Audit: Scan the teacher's input. If a video is present, identify the exact timestamps for key concepts.
-2. Accessibility Check: Review the complexity. Is this a "High Ceiling" task? If so, draft a specific "Ask the AI" prompt to help students debug.
-3. Terminal Translation: Identify any CLI commands (e.g., git clone). Mentally convert them to GUI actions (e.g., "Download ZIP from GitHub").
+Hierarchy Definitions (Standardizing the "Shape")
+- **Project**: The "North Star" outcome (multi-week goal).
+- **Assignment**: A major milestone/deliverable (multi-session).
+- **Task**: A single session goal or logical grouping of steps.
+- **Subtask**: Atomic technical steps.
 
-Strict Output Rules:
-- Tone: Active, encouraging, and clear. Max Reading Level: Grade 10.
-- Visuals: Never rely on color alone (e.g., "Click the Red Button" -> "Click the 'Stop' button (Red Square)").
-- The 'Why': Every description must start with a ### Why header explaining the concept.
-- The 'How': Use ### Steps for instructions. Break long processes into multiple subtask items (max 5 steps per item).
-- Handling "Hard" Tasks: If a task involves coding logic or debugging that might frustrate a beginner, you MUST append a block like this to the description: 
-  > **Stuck?** Copy this into your AI Assistant: "[Specific Prompt tailored to the task]"
+The "Think-First" Protocol (Internal Processing)
+Before generating JSON, assess the following:
+1. Scope: Is this a multi-week Project or a 15-minute Task?
+2. Dependencies: Does this task require a parent "Assignment"?
+3. Clarity: Are the instructions atomic? (e.g., "Open file" and "Paste code" are two steps).
+4. Recursive Deepening: If a task requires more than 5 steps, you MUST break it into a parent item with children subtasks.
+
+Field Generation Rules
+1. **rationale**: A single sentence explaining the *value* of the task. Do NOT use labels like "Why:" or "Rationale:". Just state the reason directly. (e.g., "To understand how variables store player health.")
+2. **instructions**: Create an array of strings. Each string is one discrete step. Focus on "Visual Anchors" (e.g., "In the Inspector Panel...", "Look for the blue icon...").
+3. **troubleshooting**: If the task involves logic/coding, provide a specific question the student can ask an AI if they fail.
+4. **Contextual Grounding**: If the provided context includes specific filenames (e.g., "Movement.gd") or links, reference them by name in the instructions.
+
+Strict Tone Guidelines
+- Active Voice: "Click the button," not "The button should be clicked."
+- Reading Level: Max Grade 10. Simple sentences.
+- No Markdown Headers: Do not use ### or ** in the text fields. The UI will handle formatting.
 `;
 // --- RAG Components ---
 /**
@@ -152,20 +171,74 @@ export const suggestTasksFlow = ai.defineFlow({
     }),
     outputSchema: z.object({
         tasks: z.array(CurriculumSchema),
+        thoughts: z.string().optional(),
     }),
 }, async (input) => {
     const { subject, gradeLevel } = input;
-    const response = await ai.generate({
-        model: vertexAI.model('gemini-2.5-pro'),
-        system: CURRICULUM_SYSTEM_PROMPT,
-        prompt: `Generate 3 educational curriculum items (tasks/projects) for a classroom.
+    const response = await genai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Generate 3 educational curriculum items (tasks/projects) for a classroom.
             Subject: ${subject}
             ${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
             
             Each item should be clear, engaging, and follow the requested schema and strict rules.`,
-        output: { schema: z.object({ tasks: z.array(CurriculumSchema) }) },
+        config: {
+            systemInstruction: CURRICULUM_SYSTEM_PROMPT,
+            thinkingConfig: {
+                includeThoughts: true,
+                thinkingLevel: 'HIGH', // Using string value with cast to bypass SDK type issues
+            },
+            responseMimeType: 'application/json',
+            responseSchema: {
+                type: 'object',
+                properties: {
+                    tasks: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                title: { type: 'string' },
+                                description: { type: 'string' },
+                                type: { type: 'string', enum: ['project', 'assignment', 'task', 'subtask'] },
+                                structuredContent: {
+                                    type: 'object',
+                                    properties: {
+                                        rationale: { type: 'string' },
+                                        instructions: { type: 'array', items: { type: 'string' } },
+                                        keyConcepts: { type: 'array', items: { type: 'string' } },
+                                        troubleshooting: { type: 'string' },
+                                    },
+                                    required: ['rationale', 'instructions', 'keyConcepts'],
+                                },
+                                selectedRoomIds: { type: 'array', items: { type: 'string' } },
+                            },
+                            required: ['title', 'type', 'structuredContent', 'selectedRoomIds'],
+                        }
+                    }
+                },
+                required: ['tasks']
+            }
+        }
     });
-    return response.output || { tasks: [] };
+    const text = response.text;
+    const thoughts = response.candidates?.[0]?.content?.parts
+        ?.filter((p) => p.thought)
+        ?.map((p) => p.text)
+        .join('\n') || '';
+    if (!text) {
+        return { tasks: [], thoughts };
+    }
+    try {
+        const output = JSON.parse(text);
+        return {
+            tasks: output?.tasks || [],
+            thoughts
+        };
+    }
+    catch (e) {
+        console.error('Failed to parse AI response:', e);
+        return { tasks: [], thoughts };
+    }
 });
 /**
  * Refines a raw curriculum description into a structured CurriculumSchema object.
@@ -178,12 +251,14 @@ export const refineTaskFlow = ai.defineFlow({
         gradeLevel: z.string().optional().describe('The grade level context (e.g., Grade 9)'),
         context: z.array(z.string()).optional().describe('Additional context strings (e.g. text from files/links)'),
         taskId: z.string().nullable().optional().describe('If provided, will attempt to retrieve context from the RAG store'),
+        existingItems: z.array(CurriculumSchema).optional().describe('Previously generated items for multi-turn refinement'),
     }),
     outputSchema: z.object({
-        items: z.array(CurriculumSchema).describe("A flat list of items that form a hierarchy")
+        items: z.array(CurriculumSchema).describe("A flat list of items that form a hierarchy"),
+        thoughts: z.string().optional(),
     }),
 }, async (input) => {
-    const { rawContent, subject, gradeLevel, context, taskId } = input;
+    const { rawContent, subject, gradeLevel, context, taskId, existingItems } = input;
     // 1. Retrieve additional context from the RAG store if taskId is provided
     let retrievedContext = '';
     if (taskId) {
@@ -199,35 +274,97 @@ export const refineTaskFlow = ai.defineFlow({
         ...(context || []),
         retrievedContext
     ].filter(Boolean).join('\n\n');
-    const response = await ai.generate({
-        model: vertexAI.model('gemini-2.5-pro'),
-        system: CURRICULUM_SYSTEM_PROMPT,
-        prompt: `Convert the following raw curriculum notes into a structured item (task/project):
-            
-            NOTES:
-            ${rawContent}
-            
-            ${subject ? `Subject Context: ${subject}` : ''}
-            ${gradeLevel ? `Grade Level Context: ${gradeLevel}` : ''}
-            
-            ${totalContext ? `ADDITIONAL CONTEXT MATERIALS:\n${totalContext}` : ''}
-            
-            SCoping Instructions:
-            If the objective is large, break it down into a logical hierarchy:
-            1. Project (Root)
-            2. Assignment (Child of Project)
-            3. Task (Child of Assignment)
-            4. Subtask (Child of Task)
-            
-            Use 'tempId' to link children to parents within this response.
-            
-            Ensure it follows the schema and all strict formatting and accessibility rules.`,
-        output: { schema: z.object({ items: z.array(CurriculumSchema) }) },
-    });
-    if (!response.output || !response.output.items) {
-        throw new Error('Failed to generate items from AI');
+    const promptParts = [
+        `Convert or refine the following curriculum notes into structured items:`,
+        `NOTES:\n${rawContent}`,
+    ];
+    if (existingItems && existingItems.length > 0) {
+        promptParts.push(`EXISTING DRAFT ITEMS:\n${JSON.stringify(existingItems, null, 2)}`);
+        promptParts.push(`INSTRUCTION: Update or expand upon these existing items based on the notes above.`);
     }
-    return response.output;
+    if (subject)
+        promptParts.push(`Subject Context: ${subject}`);
+    if (gradeLevel)
+        promptParts.push(`Grade Level Context: ${gradeLevel}`);
+    if (totalContext)
+        promptParts.push(`ADDITIONAL CONTEXT MATERIALS:\n${totalContext}`);
+    promptParts.push(`
+Scoping Instructions:
+If the objective is large, break it down into a logical hierarchy:
+1. Project (Root)
+2. Assignment (Child of Project)
+3. Task (Child of Assignment)
+4. Subtask (Child of Task)
+
+Use 'tempId' to link children to parents within this response.
+Ensure it follows the schema and all strict pedagogical and accessibility rules. NO MARKDOWN HEADERS.`);
+    const combinedPrompt = promptParts.join('\n\n');
+    const response = await genai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: combinedPrompt,
+        config: {
+            systemInstruction: CURRICULUM_SYSTEM_PROMPT,
+            thinkingConfig: {
+                includeThoughts: true,
+                thinkingLevel: 'HIGH',
+            },
+            responseMimeType: 'application/json',
+            responseSchema: {
+                type: 'object',
+                properties: {
+                    items: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                id: { type: 'string' },
+                                tempId: { type: 'string' },
+                                title: { type: 'string' },
+                                description: { type: 'string' },
+                                type: { type: 'string', enum: ['project', 'assignment', 'task', 'subtask'] },
+                                parentId: { type: 'string', nullable: true },
+                                structuredContent: {
+                                    type: 'object',
+                                    properties: {
+                                        rationale: { type: 'string' },
+                                        instructions: { type: 'array', items: { type: 'string' } },
+                                        keyConcepts: { type: 'array', items: { type: 'string' } },
+                                        troubleshooting: { type: 'string' },
+                                    },
+                                    required: ['rationale', 'instructions', 'keyConcepts'],
+                                },
+                                selectedRoomIds: { type: 'array', items: { type: 'string' } },
+                            },
+                            required: ['title', 'type', 'structuredContent', 'selectedRoomIds'],
+                        }
+                    }
+                },
+                required: ['items']
+            }
+        }
+    });
+    const text = response.text;
+    const thoughts = response.candidates?.[0]?.content?.parts
+        ?.filter((p) => p.thought)
+        ?.map((p) => p.text)
+        .join('\n') || '';
+    if (!text) {
+        throw new Error('Failed to generate items from AI: Empty response');
+    }
+    try {
+        const output = JSON.parse(text);
+        if (!output || !output.items) {
+            throw new Error('Failed to generate items from AI: Invalid structured output');
+        }
+        return {
+            ...output,
+            thoughts
+        };
+    }
+    catch (e) {
+        console.error('Failed to parse AI response:', e);
+        throw new Error('Failed to parse AI response');
+    }
 });
 // --- Firebase Callable Wrappers for Flows ---
 export const suggestTasks = onCall({ cors: true }, async (request) => {
@@ -244,7 +381,7 @@ export const suggestTasks = onCall({ cors: true }, async (request) => {
     }
 });
 export const refineTask = onCall({ cors: true }, async (request) => {
-    const { rawContent, subject, gradeLevel, context, taskId } = request.data;
+    const { rawContent, subject, gradeLevel, context, taskId, existingItems } = request.data;
     if (!rawContent) {
         throw new HttpsError('invalid-argument', 'rawContent is required');
     }
@@ -254,7 +391,8 @@ export const refineTask = onCall({ cors: true }, async (request) => {
             subject,
             gradeLevel,
             context,
-            taskId: taskId || undefined
+            taskId: taskId || undefined,
+            existingItems
         });
     }
     catch (error) {
@@ -352,15 +490,15 @@ ${context}
 Student Question: ${question}
 
 Please provide a helpful, age-appropriate answer. If you don't have enough information to answer, say so and suggest the student ask their teacher.`;
-    const response = await ai.generate({
-        model: gemini15Flash,
-        prompt: prompt,
+    const response = await genai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
         config: {
             temperature: 0.7,
             maxOutputTokens: 500,
         },
     });
-    const answer = response.text;
+    const answer = response.text || "I'm sorry, I couldn't generate an answer. Please try again or ask your teacher.";
     // 4. Log the Q&A for analytics
     await db.collection('ai_interactions').add({
         taskId,
@@ -369,7 +507,10 @@ Please provide a helpful, age-appropriate answer. If you don't have enough infor
         answer,
         timestamp: FieldValue.serverTimestamp(),
     });
-    return { answer, success: true };
+    return {
+        answer,
+        success: !!response.text
+    };
 });
 // Callable function for students to ask questions about a task.
 // Wraps the answerQuestionFlow.

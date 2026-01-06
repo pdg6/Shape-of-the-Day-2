@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Task, TaskFormData, ItemType, TaskStatus, Attachment, LinkAttachment } from '../types';
 import { useClassStore } from '../store/appSettings';
-import { saveTask, deleteTaskWithChildren, reorderTasks } from '../services/firestoreService';
+import { saveTask, deleteTaskWithChildren, reorderTasks, cascadeChildDates } from '../services/firestoreService';
 import { auth } from '../firebase';
 import { serverTimestamp } from 'firebase/firestore';
 
@@ -23,6 +23,7 @@ export const INITIAL_FORM_DATA: TaskFormData = {
     selectedRoomIds: [],
     links: [],
     attachments: [],
+    structuredContent: null,
 };
 
 export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: UseTaskManagerProps) => {
@@ -73,6 +74,8 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
             selectedRoomIds: task.selectedRoomIds || [],
             links: task.links || [],
             attachments: task.attachments || [],
+            status: task.status || 'todo',
+            structuredContent: task.structuredContent || null,
         });
         setIsDirty(false);
     }, []);
@@ -194,6 +197,19 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
 
             const savedId = await saveTask(user.uid, taskToSave);
 
+            // Cascade dates and status to children when saving a parent
+            const taskId = editingTaskId || savedId;
+            const hasChildren = tasks.some(t => t.parentId === taskId);
+            if (hasChildren && formData.startDate && formData.endDate) {
+                await cascadeChildDates(
+                    user.uid,
+                    taskId,
+                    formData.startDate,
+                    formData.endDate,
+                    statusToSave
+                );
+            }
+
             if (!isAutoSave) {
                 handleSuccess(`Task ${isNewTask ? 'created' : 'updated'}!`);
                 resetForm();
@@ -212,15 +228,22 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
         }
     };
 
-    const handleDelete = async (taskId: string, deleteChildren: boolean = true) => {
+    const handleDelete = async (taskId: string, deleteChildren: boolean = true, skipConfirm: boolean = false) => {
         const user = auth.currentUser;
         if (!user) return;
 
-        const message = deleteChildren
-            ? "Are you sure? This will delete the item and all its children."
-            : "Are you sure? Children will become standalone root items.";
+        // Check if task has children
+        const hasChildren = tasks.some(t => t.parentId === taskId);
 
-        if (!window.confirm(message)) return;
+        // If not skipping confirm and task has children, just return - caller should show custom dialog
+        if (!skipConfirm && hasChildren) {
+            return 'has_children';
+        }
+
+        // For tasks without children or when skipConfirm is true
+        if (!skipConfirm && !hasChildren) {
+            if (!window.confirm("Delete this task?")) return;
+        }
 
         setIsSubmitting(true);
         try {

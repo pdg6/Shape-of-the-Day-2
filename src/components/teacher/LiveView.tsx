@@ -324,7 +324,7 @@ const EmptySessionView: React.FC<{
     setCopied: (v: boolean) => void
 }> = ({ currentClass, joinUrl, copied, setCopied }) => {
     return (
-        <div className="text-center py-12 bg-(--color-bg-tile) rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float">
+        <div className="text-center py-12 bg-(--color-bg-tile) tile-blur rounded-2xl border border-border-subtle shadow-layered lift-dynamic transition-float">
             <div className="w-16 h-16 bg-[var(--color-bg-tile-alt)] rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-brand-textSecondary" />
             </div>
@@ -392,7 +392,7 @@ const StudentListView: React.FC<{
     onChat: (student: LiveStudent, taskId?: string) => void
 }> = ({ students, tasks, onDelete, onChat }) => {
     return (
-        <div className="flex-1 min-h-0 bg-(--color-bg-tile) rounded-2xl border border-border-subtle overflow-hidden shadow-layered lift-dynamic transition-float flex flex-col">
+        <div className="flex-1 min-h-0 bg-(--color-bg-tile) tile-blur rounded-2xl border border-border-subtle overflow-hidden shadow-layered lift-dynamic transition-float flex flex-col">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
                 <table className="w-full text-left">
                     <thead className="bg-[var(--color-bg-tile-alt)] border-b border-border-subtle sticky top-0 z-10">
@@ -474,7 +474,7 @@ const TaskListView: React.FC<{
 }> = ({ tasks, students, onChat }) => {
     if (tasks.length === 0) {
         return (
-            <div className="text-center py-12 text-brand-textSecondary bg-(--color-bg-tile) rounded-2xl border border-dashed border-border-subtle shadow-layered-sm lift-dynamic transition-float">
+            <div className="text-center py-12 text-brand-textSecondary bg-(--color-bg-tile) tile-blur rounded-2xl border border-dashed border-border-subtle shadow-layered-sm lift-dynamic transition-float">
                 <Activity className="w-12 h-12 mb-4 opacity-20 mx-auto" />
                 <p>No tasks scheduled for today.</p>
             </div>
@@ -505,7 +505,7 @@ const TaskListView: React.FC<{
                         key={task.id}
                         className={`
                             shrink-0 w-72 snap-start flex flex-col h-full
-                            bg-(--color-bg-tile)
+                            bg-(--color-bg-tile) tile-blur
                             rounded-2xl border transition-float
                             ${hasHelp
                                 ? 'border-[var(--color-status-stuck)] shadow-layered-lg shadow-brand-accent/10 scale-[1.01]'
@@ -674,7 +674,7 @@ const StudentBucketColumn: React.FC<{
                     <button
                         key={s.uid}
                         onClick={() => onChat(s, taskId)}
-                        className="w-full text-left bg-(--color-bg-tile) p-2.5 rounded-lg border border-border-subtle shadow-layered-sm flex flex-col gap-1 hover:border-brand-accent/50 hover:shadow-layered transition-all active:scale-95"
+                        className="w-full text-left bg-(--color-bg-tile) tile-blur p-2.5 rounded-lg border border-border-subtle shadow-layered-sm flex flex-col gap-1 hover:border-brand-accent/50 hover:shadow-layered transition-all active:scale-95"
                     >
                         <span className="text-sm font-bold text-brand-textPrimary">
                             {s.displayName}

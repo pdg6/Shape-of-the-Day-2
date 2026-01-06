@@ -97,6 +97,8 @@
     transform: translateY(var(--elevation-tile-default, 0px));
     transition: transform var(--timing-weightless), box-shadow var(--timing-weightless), border-color var(--timing-weightless), background-color var(--timing-weightless);
     transition-duration: 300ms;
+    backdrop-filter: blur(var(--tile-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
 
     &:hover {
         transform: translateY(var(--elevation-tile-hover, 0px));
@@ -669,6 +671,8 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
         @apply bg-tile;
         @apply rounded-2xl border border-border-subtle;
         box-shadow: var(--shadow-layered);
+        backdrop-filter: blur(var(--tile-blur, 0px));
+        -webkit-backdrop-filter: blur(var(--tile-blur, 0px));
     }
 
     /* ============================================

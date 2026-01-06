@@ -9,6 +9,12 @@ import { auth } from '../../firebase';
 import toast from 'react-hot-toast';
 
 import { CelebrationModal, ProgressCelebration } from '../shared/Celebration';
+import {
+    getFileIcon,
+    getFileIconColor,
+    getUrlDomain,
+    containsHtml
+} from '../../utils/uiHelpers';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 import { formatMessageToHtml } from '../../utils/markdownFormatter';
 
@@ -329,50 +335,6 @@ const HelpModal: React.FC<HelpModalProps> = ({ task, onClose, onUpdateComment, s
 
 // --- Utility Functions ---
 
-// Get file icon based on MIME type
-const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return FileImage;
-    if (mimeType.startsWith('video/')) return FileVideo;
-    if (mimeType.startsWith('audio/')) return FileAudio;
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return FileSpreadsheet;
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return Presentation;
-    if (mimeType === 'application/pdf') return FileText;
-    return File;
-};
-
-// Get file icon color
-const getFileIconColor = (mimeType: string): string => {
-    if (mimeType.startsWith('image/')) return 'text-pink-500';
-    if (mimeType.startsWith('video/')) return 'text-purple-500';
-    if (mimeType.startsWith('audio/')) return 'text-cyan-500';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-green-500';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-orange-500';
-    if (mimeType === 'application/pdf') return 'text-red-500';
-    return 'text-brand-textMuted';
-};
-
-// Extract domain from URL
-const getUrlDomain = (url: string): string => {
-    try {
-        const hostname = new URL(url).hostname.replace('www.', '');
-        if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'YouTube';
-        if (hostname.includes('docs.google.com')) return 'Google Docs';
-        if (hostname.includes('drive.google.com')) return 'Google Drive';
-        if (hostname.includes('google.com')) return 'Google';
-        if (hostname.includes('github.com')) return 'GitHub';
-        if (hostname.includes('notion.')) return 'Notion';
-        if (hostname.includes('canva.com')) return 'Canva';
-        return hostname;
-    } catch {
-        return 'Link';
-    }
-};
-
-// Check if description contains HTML
-const containsHtml = (str: string): boolean => {
-    return /<[a-z][\s\S]*>/i.test(str);
-};
-
 // Get hierarchical number for nested tasks
 const getHierarchicalNumber = (task: Task | undefined, allTasks: Task[]): string => {
     if (!task) return '...';
@@ -508,7 +470,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, allTasks, onUpdateStatus, onO
 
     return (
         <div
-            className={`group relative bg-(--color-bg-tile) 
+            className={`group relative bg-(--color-bg-tile) tile-blur
                 rounded-2xl border border-border-subtle 
                 hover:border-brand-accent/50 shadow-layered lift-dynamic
                 pt-1.5 pb-4 px-5

@@ -28,30 +28,11 @@ import { DatePicker } from '../shared/DatePicker';
 import { Select } from '../shared/Select';
 import { PageLayout } from '../shared/PageLayout';
 
-// Get type-specific icon
-const getTypeIcon = (type: ItemType) => {
-    switch (type) {
-        case 'project': return FolderOpen;
-        case 'assignment': return FileText;
-        case 'task': return ListChecks;
-        case 'subtask': return CheckSquare;
-    }
-};
-
-// Get type label
-const getTypeLabel = (type: ItemType): string => {
-    switch (type) {
-        case 'project': return 'Project';
-        case 'assignment': return 'Assignment';
-        case 'task': return 'Task';
-        case 'subtask': return 'Subtask';
-    }
-};
-
-// Get type color classes (use semantic CSS classes from index.css)
-const getTypeColorClasses = (type: ItemType): string => {
-    return `type-${type}`;
-};
+import {
+    getTypeIcon,
+    getTypeLabel,
+    getTypeColorClasses
+} from '../../utils/uiHelpers';
 
 interface TaskInventoryProps {
     onEditTask?: (task: Task) => void;

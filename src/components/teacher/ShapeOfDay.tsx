@@ -9,59 +9,19 @@ import {
     File, FileImage, FileVideo, FileAudio, FileSpreadsheet, Presentation,
     Maximize2, Minimize2, Pencil
 } from 'lucide-react';
+import {
+    getFileIcon,
+    getFileIconColor,
+    getUrlDomain,
+    containsHtml,
+    getTypeBorderColor
+} from '../../utils/uiHelpers';
 import { ItemType, Task, TaskStatus } from '../../types';
 import { format, parse, isValid } from 'date-fns';
 import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
 import { DatePicker } from '../shared/DatePicker';
 import { getHierarchicalNumber } from '../../utils/taskHierarchy';
 
-// --- Types ---
-
-
-// Get file icon based on MIME type
-const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return FileImage;
-    if (mimeType.startsWith('video/')) return FileVideo;
-    if (mimeType.startsWith('audio/')) return FileAudio;
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return FileSpreadsheet;
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return Presentation;
-    if (mimeType === 'application/pdf') return FileText;
-    return File;
-};
-
-// Get file icon color based on MIME type
-const getFileIconColor = (mimeType: string): string => {
-    if (mimeType.startsWith('image/')) return 'text-[var(--type-project-color)]';
-    if (mimeType.startsWith('video/')) return 'text-[var(--type-project-color)]';
-    if (mimeType.startsWith('audio/')) return 'text-brand-accent';
-    if (mimeType.includes('spreadsheet') || mimeType.includes('excel') || mimeType === 'text/csv') return 'text-[var(--color-status-progress)]';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'text-brand-accent';
-    if (mimeType === 'application/pdf') return 'text-[var(--color-status-stuck)]';
-    return 'text-brand-textSecondary';
-};
-
-// Extract domain from URL for display
-const getUrlDomain = (url: string): string => {
-    try {
-        const hostname = new URL(url).hostname.replace('www.', '');
-        // Special handling for known domains
-        if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) return 'YouTube';
-        if (hostname.includes('google.com')) return 'Google';
-        if (hostname.includes('docs.google.com')) return 'Google Docs';
-        if (hostname.includes('drive.google.com')) return 'Google Drive';
-        if (hostname.includes('github.com')) return 'GitHub';
-        if (hostname.includes('notion.')) return 'Notion';
-        if (hostname.includes('canva.com')) return 'Canva';
-        return hostname;
-    } catch {
-        return 'Link';
-    }
-};
-
-// Check if description contains HTML
-const containsHtml = (str: string): boolean => {
-    return /<[a-z][\s\S]*>/i.test(str);
-};
 
 // Build a tree structure from flat tasks
 interface TaskNode {
@@ -153,21 +113,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
         };
     }, []);
 
-    // Get type-specific border color for left accent
-    const getTypeBorderColor = (type: ItemType): string => {
-        switch (type) {
-            case 'project': return 'border-l-[var(--type-project-color)]';
-            case 'assignment': return 'border-l-[var(--type-assignment-color)]';
-            case 'task': return 'border-l-[var(--type-task-color)]';
-            case 'subtask': return 'border-l-brand-accent';
-        }
-    };
     const typeBorderColor = getTypeBorderColor(task.type || 'task');
 
     // Separate image attachments from other files
     const imageAttachments = task.attachments?.filter(a => a.mimeType.startsWith('image/')) || [];
     const fileAttachments = task.attachments?.filter(a => !a.mimeType.startsWith('image/')) || [];
-    const hasMedia = imageAttachments.length > 0 || fileAttachments.length > 0 || task.linkURL || task.imageURL;
+    const hasMedia = imageAttachments.length > 0 || fileAttachments.length > 0 || task.linkURL || task.imageURL || (task.links && task.links.length > 0);
 
     // Calculate child tasks for progress bar
     const childTasks = allTasks.filter(t => t.parentId === task.id);
@@ -176,7 +127,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, depth, allTasks, today, onEdi
 
     return (
         <div
-            className={`group bg-(--color-bg-tile) 
+            className={`group bg-(--color-bg-tile) tile-blur
                 border border-border-subtle rounded-2xl p-5
                 border-l-4 ${typeBorderColor}
                 transition-float shadow-layered
@@ -571,7 +522,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate, selectedDate: propS
         );
     }
 
-    const joinUrl = `${window.location.origin}/join`;
+    const joinUrl = 'https://shape-of-the-day.web.app/join';
 
     return (
         <div
@@ -632,7 +583,7 @@ const ShapeOfDay: React.FC<ShapeOfDayProps> = ({ onNavigate, selectedDate: propS
                     <div className="text-right">
                         <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Join at</p>
                         <p className="text-base font-medium text-brand-textPrimary mb-2 flex items-center justify-end gap-1">
-                            shapeoftheday.app/join
+                            shape-of-the-day.web.app/join
                         </p>
 
                         <p className="text-xs font-bold text-brand-textPrimary uppercase tracking-wider mb-0.5">Class Code</p>

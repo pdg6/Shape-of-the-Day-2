@@ -7,6 +7,7 @@
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app } from '../firebase';
+import { Task } from '../types';
 
 // Initialize Functions
 const functions = getFunctions(app);
@@ -53,31 +54,116 @@ export const askAIQuestion = async (
 };
 
 /**
+ * Input for the refineTask Cloud Function
+ */
+export interface RefineTaskInput {
+    rawContent: string;
+    subject?: string;
+    gradeLevel?: string;
+    context?: string[];
+    taskId?: string;
+    existingItems?: Task[];
+}
+
+/**
+ * Response from the refineTask Cloud Function
+ */
+export interface RefineTaskResponse {
+    items: Task[];
+    thoughts?: string;
+}
+
+/**
+ * Refines raw teacher notes into structured curriculum items using Genkit.
+ * 
+ * @param input - The refinement parameters
+ * @returns Array of structured Task items
+ */
+export const refineTask = async (input: RefineTaskInput): Promise<RefineTaskResponse> => {
+    try {
+        const refineTaskFn = httpsCallable<RefineTaskInput, RefineTaskResponse>(functions, 'refineTask');
+        const result = await refineTaskFn(input);
+        return result.data;
+    } catch (error) {
+        console.error('[AI Service] Error refining task:', error);
+        throw error;
+    }
+};
+
+/**
+ * Suggests curriculum items based on subject/grade.
+ */
+export const suggestTasks = async (subject: string, gradeLevel?: string): Promise<{ tasks: Task[], thoughts?: string }> => {
+    try {
+        const suggestTasksFn = httpsCallable<{ subject: string; gradeLevel?: string }, { tasks: Task[], thoughts?: string }>(functions, 'suggestTasks');
+        const result = await suggestTasksFn({ subject, gradeLevel });
+        return result.data;
+    } catch (error) {
+        console.error('[AI Service] Error suggesting tasks:', error);
+        throw error;
+    }
+};
+
+/**
+ * Input for the processFile Cloud Function
+ */
+export interface ProcessFileInput {
+    fileUrl: string;
+    filename: string;
+    contentType: string;
+}
+
+/**
+ * Processes an uploaded file to extract its text content for AI context.
+ */
+export const processFileContent = async (input: ProcessFileInput): Promise<string> => {
+    try {
+        const processFileFn = httpsCallable<ProcessFileInput, { text: string }>(functions, 'processFile');
+        const result = await processFileFn(input);
+        return result.data.text;
+    } catch (error) {
+        console.error('[AI Service] Error processing file:', error);
+        throw error;
+    }
+};
+
+/**
+ * Fetches metadata (title, transcript) from a URL for AI context.
+ */
+export interface UrlMetadataResponse {
+    title: string | null;
+    siteName: string | null;
+    transcript?: string;
+    error?: string;
+}
+
+export const fetchUrlMetadata = async (url: string): Promise<UrlMetadataResponse> => {
+    try {
+        const fetchUrlMetadataFn = httpsCallable<{ url: string }, UrlMetadataResponse>(functions, 'fetchUrlMetadata');
+        const result = await fetchUrlMetadataFn({ url });
+        return result.data;
+    } catch (error) {
+        console.error('[AI Service] Error fetching URL metadata:', error);
+        throw error;
+    }
+};
+
+/**
  * Response from the generateSchedule Cloud Function (placeholder)
  */
 interface GenerateScheduleResponse {
-    tasks: {
-        title: string;
-        description: string;
-        type: 'project' | 'assignment' | 'task' | 'subtask';
-        duration?: number;
-    }[];
+    tasks: Partial<Task>[];
     success: boolean;
 }
 
 /**
  * Generates a lesson schedule using AI based on uploaded materials.
- * 
- * @param topic - The topic or prompt for generation
- * @param sourceMaterialIds - IDs of attachments to use as context
- * @param durationMinutes - Target duration for the lesson
- * @returns Array of suggested tasks
  */
 export const generateLessonSchedule = async (
     topic: string,
     sourceMaterialIds: string[],
     durationMinutes: number
-): Promise<GenerateScheduleResponse['tasks']> => {
+): Promise<Partial<Task>[]> => {
     try {
         const generateSchedule = httpsCallable<
             { topic: string; sourceMaterialIds: string[]; durationMinutes: number },
@@ -99,13 +185,9 @@ export const generateLessonSchedule = async (
 
 /**
  * Checks if AI features are available (Cloud Functions deployed)
- * This is a simple health check that can be used to conditionally show AI buttons
  */
 export const isAIAvailable = async (): Promise<boolean> => {
-    // In production, this would ping a health endpoint
-    // For now, we assume AI is available if functions are configured
     try {
-        // Check if functions are initialized
         return functions !== undefined;
     } catch {
         return false;
