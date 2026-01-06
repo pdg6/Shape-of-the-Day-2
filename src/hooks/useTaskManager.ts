@@ -134,7 +134,7 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
     }, [filteredTasks]);
 
     // --- Actions ---
-    const handleSave = async (isAutoSave: boolean = false) => {
+    const handleSave = async (isAutoSave: boolean = false, cascadeToChildren: boolean = true) => {
         const user = auth.currentUser;
         if (!user) return;
 
@@ -198,9 +198,10 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
             const savedId = await saveTask(user.uid, taskToSave);
 
             // Cascade dates, status, and rooms to children when saving a parent
+            // Only cascade if cascadeToChildren is true
             const taskId = editingTaskId || savedId;
             const hasChildren = tasks.some(t => t.parentId === taskId);
-            if (hasChildren && formData.startDate && formData.endDate) {
+            if (cascadeToChildren && hasChildren && formData.startDate && formData.endDate) {
                 await cascadeParentChanges(
                     user.uid,
                     taskId,

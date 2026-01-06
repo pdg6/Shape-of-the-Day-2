@@ -24,7 +24,8 @@ import {
     Trash2,
     Layers,
     Share2,
-    Sparkles
+    Sparkles,
+    Save
 } from 'lucide-react';
 import { Select, SelectOption } from '../shared/Select';
 import { MultiSelect } from '../shared/MultiSelect';
@@ -98,8 +99,9 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     const [isLoadingLinkTitle, setIsLoadingLinkTitle] = useState(false);
     const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
     const [isMobileTasksOpen, setIsMobileTasksOpen] = useState(false);
-    const [contentMode, setContentMode] = useState<ContentMode>('task');
+    const [contentMode, setContentMode] = useState<ContentMode>('ai');
     const [deleteDialogTask, setDeleteDialogTask] = useState<{ id: string; title: string } | null>(null);
+    const [saveDialogTask, setSaveDialogTask] = useState<{ id: string; title: string; childCount: number } | null>(null);
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -158,7 +160,32 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
     };
 
     const handleSave = async (isAutoSave: boolean = false) => {
+        // For manual saves, check if task has children and show dialog
+        if (!isAutoSave) {
+            const taskId = editingTaskId;
+            if (taskId) {
+                // Count all descendants (children and their children)
+                const childCount = tasks.filter(t =>
+                    t.parentId === taskId || t.path?.includes(taskId)
+                ).length;
+
+                if (childCount > 0) {
+                    setSaveDialogTask({
+                        id: taskId,
+                        title: activeFormData.title || 'Untitled',
+                        childCount
+                    });
+                    return;
+                }
+            }
+        }
         await hookHandleSave(isAutoSave);
+    };
+
+    const confirmSave = async (saveChildren: boolean) => {
+        if (!saveDialogTask) return;
+        await hookHandleSave(false, saveChildren); // cascadeToChildren = saveChildren
+        setSaveDialogTask(null);
     };
 
     const handleDelete = async (taskId: string) => {
@@ -643,6 +670,8 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                 <AiAssistant
                                     currentFormData={activeFormData}
                                     taskId={editingTaskId}
+                                    subject={rooms.find(r => r.id === currentClassId)?.subject}
+                                    gradeLevel={rooms.find(r => r.id === currentClassId)?.gradeLevel}
                                     onApply={(suggestion) => {
                                         setFormData(prev => ({
                                             ...prev,
@@ -1206,220 +1235,218 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         )}
                     </div>
 
-                    <div className="flex-1 min-h-0 lg:col-span-1 flex flex-col">
-                        <div className="flex-1 min-h-0 flex flex-col justify-end lg:justify-start overflow-y-auto custom-scrollbar pb-2 pt-2 lg:pb-4 lg:pt-4 lg:px-4">
+                    <div className="flex-1 min-h-0 lg:col-span-1 flex flex-col overflow-y-auto overflow-x-hidden custom-scrollbar pt-2 pb-2 lg:pb-4 lg:-mt-2">
 
 
-                            {/* Mobile Overlay - closes accordion when clicking outside */}
-                            {isMobileTasksOpen && (
-                                <div
-                                    className="lg:hidden fixed inset-0 top-12 bg-black/30 z-30"
-                                    onClick={() => setIsMobileTasksOpen(false)}
-                                    aria-hidden="true"
+                        {/* Mobile Overlay - closes accordion when clicking outside */}
+                        {isMobileTasksOpen && (
+                            <div
+                                className="lg:hidden fixed inset-0 top-12 bg-black/30 z-30"
+                                onClick={() => setIsMobileTasksOpen(false)}
+                                aria-hidden="true"
+                            />
+                        )}
+
+                        {/* Mobile Accordion Header for Task List - only visible on mobile */}
+                        <div className="lg:hidden relative z-30 flex items-center justify-between w-full py-2.5 px-4 mt-2 rounded-lg border border-border-subtle bg-(--color-bg-tile)">
+                            {/* Left: Calendar Icon + Date + Schedule */}
+                            <div className="flex items-center gap-2">
+                                <DatePicker
+                                    value={selectedDate}
+                                    onChange={(value) => {
+                                        if (value instanceof Date) {
+                                            setSelectedDate(format(value, 'yyyy-MM-dd'));
+                                        } else {
+                                            setSelectedDate(value || toDateString());
+                                        }
+                                    }}
+                                    iconOnly={true}
+                                    iconColor="var(--color-brand-accent)"
+                                    className="shrink-0"
                                 />
-                            )}
-
-                            {/* Mobile Accordion Header for Task List - only visible on mobile */}
-                            <div className="lg:hidden relative z-30 flex items-center justify-between w-full py-2.5 px-4 mt-2 rounded-lg border border-border-subtle bg-(--color-bg-tile)">
-                                {/* Left: Calendar Icon + Date + Schedule */}
-                                <div className="flex items-center gap-2">
-                                    <DatePicker
-                                        value={selectedDate}
-                                        onChange={(value) => {
-                                            if (value instanceof Date) {
-                                                setSelectedDate(format(value, 'yyyy-MM-dd'));
-                                            } else {
-                                                setSelectedDate(value || toDateString());
-                                            }
-                                        }}
-                                        iconOnly={true}
-                                        iconColor="var(--color-brand-accent)"
-                                        className="shrink-0"
-                                    />
-                                    <span className="font-bold text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2">
-                                        {(() => {
-                                            const d = new Date(selectedDate + 'T00:00:00');
-                                            return isValid(d) ? format(d, 'MMM d') : selectedDate;
-                                        })()}
-                                    </span>
-                                    <span className="font-medium text-brand-textSecondary">Schedule</span>
-                                </div>
-
-                                {/* Right: Task count + Expand toggle */}
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm">
-                                        <span className="font-medium text-brand-textPrimary"># of tasks:</span>
-                                        <span className="font-bold text-brand-accent ml-1">{filteredTasks.length}</span>
-                                    </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
-                                        className="p-1 rounded hover:bg-(--color-bg-tile-hover) transition-colors"
-                                        title={isMobileTasksOpen ? "Close tasks list" : "Open tasks list"}
-                                    >
-                                        <ChevronDown
-                                            size={18}
-                                            className={`text-brand-textSecondary transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
-                                        />
-                                    </button>
-                                </div>
+                                <span className="font-bold text-brand-textPrimary underline decoration-brand-accent decoration-2 underline-offset-2">
+                                    {(() => {
+                                        const d = new Date(selectedDate + 'T00:00:00');
+                                        return isValid(d) ? format(d, 'MMM d') : selectedDate;
+                                    })()}
+                                </span>
+                                <span className="font-medium text-brand-textSecondary">Schedule</span>
                             </div>
 
-                            {/* Task List - collapsible on mobile, always visible on lg+ */}
-                            {/* Task List - collapsible on mobile, always visible on lg+ */}
-                            <div className={`
+                            {/* Right: Task count + Expand toggle */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm">
+                                    <span className="font-medium text-brand-textPrimary"># of tasks:</span>
+                                    <span className="font-bold text-brand-accent ml-1">{filteredTasks.length}</span>
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMobileTasksOpen(!isMobileTasksOpen)}
+                                    className="p-1 rounded hover:bg-(--color-bg-tile-hover) transition-colors"
+                                    title={isMobileTasksOpen ? "Close tasks list" : "Open tasks list"}
+                                >
+                                    <ChevronDown
+                                        size={18}
+                                        className={`text-brand-textSecondary transition-transform duration-200 ${isMobileTasksOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Task List - collapsible on mobile, always visible on lg+ */}
+                        {/* Task List - collapsible on mobile, always visible on lg+ */}
+                        <div className={`
                                 lg:space-y-3 lg:pt-0 lg:pb-4 lg:relative lg:bg-transparent
                                 ${isMobileTasksOpen
-                                    ? 'fixed inset-x-0 bottom-0 top-auto max-h-[60vh] z-40 bg-[var(--bg-page)] rounded-t-2xl px-4 pt-4 pb-6 space-y-3 overflow-y-auto custom-scrollbar shadow-2xl'
-                                    : 'hidden lg:block'
-                                }
+                                ? 'fixed inset-x-0 bottom-0 top-auto max-h-[60vh] z-40 bg-[var(--bg-page)] rounded-t-2xl px-4 pt-4 pb-6 space-y-3 overflow-y-auto custom-scrollbar shadow-2xl'
+                                : 'hidden lg:block'
+                            }
                                 transition-all duration-300 ease-in-out
                             `}>
-                                {!currentClassId ? (
-                                    <div className="text-center py-8 text-brand-textSecondary italic text-sm">
-                                        Select a class to view schedule.
-                                    </div>
-                                ) : filteredTasks.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                                        <div className="text-brand-textSecondary text-sm font-medium">No tasks scheduled.</div>
-                                        <div className="text-brand-textSecondary/60 text-xs mt-1">Create a task to get started.</div>
-                                    </div>
-                                ) : (() => {
-                                    return filteredTasks.map((task) => {
-                                        const TypeIconSmall = getTypeIcon(task.type);
+                            {!currentClassId ? (
+                                <div className="text-center py-8 text-brand-textSecondary italic text-sm">
+                                    Select a class to view schedule.
+                                </div>
+                            ) : filteredTasks.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <div className="text-brand-textSecondary text-sm font-medium">No tasks scheduled.</div>
+                                    <div className="text-brand-textSecondary/60 text-xs mt-1">Create a task to get started.</div>
+                                </div>
+                            ) : (() => {
+                                return filteredTasks.map((task) => {
+                                    const TypeIconSmall = getTypeIcon(task.type);
 
-                                        const isEditing = editingTaskId === task.id;
+                                    const isEditing = editingTaskId === task.id;
 
-                                        // Get siblings (same parentId) for proper disabled state
-                                        const siblings = tasks.filter(t => t.parentId === task.parentId);
-                                        siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
-                                        const siblingIndex = siblings.findIndex(t => t.id === task.id);
+                                    // Get siblings (same parentId) for proper disabled state
+                                    const siblings = tasks.filter(t => t.parentId === task.parentId);
+                                    siblings.sort((a, b) => (a.presentationOrder || 0) - (b.presentationOrder || 0));
+                                    const siblingIndex = siblings.findIndex(t => t.id === task.id);
 
-                                        return (
-                                            <div
-                                                key={task.id}
-                                                onClick={() => {
-                                                    loadTask(task);
-                                                    setContentMode('task'); // Ensure editor is visible
-                                                    setIsMobileTasksOpen(false); // Close accordion on mobile
-                                                }}
-                                                style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
-                                                className={`
+                                    return (
+                                        <div
+                                            key={task.id}
+                                            onClick={() => {
+                                                loadTask(task);
+                                                setContentMode('task'); // Ensure editor is visible
+                                                setIsMobileTasksOpen(false); // Close accordion on mobile
+                                            }}
+                                            style={{ marginLeft: `${(task.path?.length || 0) * 16}px` }}
+                                            className={`
                                                 group relative p-3 rounded-xl transition-float cursor-pointer levitated-tile
                                                 ${isEditing ? 'active' : ''}
                                                 ${task.status === 'draft' ? 'opacity-50' : ''}
                                             `}
-                                            >
+                                        >
 
-                                                <div className="flex items-start gap-2">
-                                                    {/* Left Column: Arrow + Number/Icon paired rows */}
-                                                    <div className="flex flex-col gap-2 shrink-0" onClick={e => e.stopPropagation()}>
-                                                        {/* Row 1: Up Arrow + Number */}
-                                                        <div className="flex items-center gap-1.5">
-                                                            <button
-                                                                onClick={() => handleReorder(task.id, 'up')}
-                                                                disabled={siblingIndex === 0}
-                                                                title="Move up"
-                                                                className="p-1 rounded-md transition-colors bg-transparent border border-transparent text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent focus:outline-none"
-                                                            >
-                                                                <ArrowUp size={16} />
-                                                            </button>
-                                                            <span className="text-sm font-bold text-brand-textSecondary w-6 text-center">
-                                                                {getHierarchicalNumber(task, filteredTasks, selectedDate)}
-                                                            </span>
-                                                        </div>
-                                                        {/* Row 2: Down Arrow + Type Icon */}
-                                                        <div className="flex items-center gap-1.5">
-                                                            <button
-                                                                onClick={() => handleReorder(task.id, 'down')}
-                                                                disabled={siblingIndex === siblings.length - 1}
-                                                                title="Move down"
-                                                                className="p-1 rounded-md transition-colors bg-transparent border border-transparent text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent focus:outline-none"
-                                                            >
-                                                                <ArrowDown size={16} />
-                                                            </button>
-                                                            <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
-                                                                <TypeIconSmall size={14} />
-                                                            </span>
-                                                        </div>
+                                            <div className="flex items-start gap-2">
+                                                {/* Left Column: Arrow + Number/Icon paired rows */}
+                                                <div className="flex flex-col gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                                                    {/* Row 1: Up Arrow + Number */}
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            onClick={() => handleReorder(task.id, 'up')}
+                                                            disabled={siblingIndex === 0}
+                                                            title="Move up"
+                                                            className="p-1 rounded-md transition-colors bg-transparent border border-transparent text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent focus:outline-none"
+                                                        >
+                                                            <ArrowUp size={16} />
+                                                        </button>
+                                                        <span className="text-sm font-bold text-brand-textSecondary w-6 text-center">
+                                                            {getHierarchicalNumber(task, filteredTasks, selectedDate)}
+                                                        </span>
                                                     </div>
-
-                                                    {/* Content: Title + Due Date + Description Preview */}
-                                                    <div className="flex-1 min-w-0">
-                                                        <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
-                                                            {task.title}
-                                                        </h5>
-
-                                                        {/* Description Preview (Cleaned) */}
-                                                        {task.description && (
-                                                            <p className="text-[10px] text-brand-textSecondary mt-0.5 line-clamp-2 leading-relaxed opacity-70">
-                                                                {task.description.replace(/<[^>]*>/g, '').trim()}
-                                                            </p>
-                                                        )}
-
-                                                        {/* Due Date */}
-                                                        {task.endDate && (
-                                                            <p className="text-xs text-brand-textSecondary mt-0.5 flex items-center gap-1">
-                                                                <CalendarIcon size={10} />
-                                                                {task.endDate === toDateString()
-                                                                    ? 'Due today'
-                                                                    : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
-                                                            </p>
-                                                        )}
-
-
+                                                    {/* Row 2: Down Arrow + Type Icon */}
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            onClick={() => handleReorder(task.id, 'down')}
+                                                            disabled={siblingIndex === siblings.length - 1}
+                                                            title="Move down"
+                                                            className="p-1 rounded-md transition-colors bg-transparent border border-transparent text-brand-textMuted hover:text-brand-accent hover:bg-brand-accent/5 disabled:opacity-30 disabled:hover:text-brand-textMuted disabled:hover:bg-transparent focus:outline-none"
+                                                        >
+                                                            <ArrowDown size={16} />
+                                                        </button>
+                                                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${getTypeColorClasses(task.type)}`}>
+                                                            <TypeIconSmall size={14} />
+                                                        </span>
                                                     </div>
+                                                </div>
 
-                                                    {/* Status/Actions - Top Right */}
-                                                    <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
-                                                        {/* Checkmark for published (non-draft) tasks */}
-                                                        {task.status !== 'draft' && (
-                                                            <div className="p-1 text-brand-accent" title="Published">
-                                                                <Check size={14} />
-                                                            </div>
-                                                        )}
-                                                        {/* Draft indicator for drafts */}
-                                                        {task.status === 'draft' && (
-                                                            <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-brand-textSecondary bg-(--color-bg-tile-hover) border border-border-subtle rounded-md">
-                                                                Draft
-                                                            </div>
-                                                        )}
-                                                        {/* Action Buttons - visible on hover */}
-                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                            {/* Save Button */}
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    e.preventDefault();
-                                                                    handleSave(false);
-                                                                }}
-                                                                className="p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm hover:shadow-layered button-lift-dynamic hover:text-brand-accent hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50 focus:outline-none"
-                                                                title="Save task"
-                                                            >
-                                                                <Check size={14} />
-                                                            </button>
-                                                            {/* Delete Button */}
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    e.preventDefault();
-                                                                    handleDelete(task.id);
-                                                                }}
-                                                                className="p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm hover:shadow-layered button-lift-dynamic hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 focus:outline-none"
-                                                                title="Delete task"
-                                                            >
-                                                                <Trash2 size={14} />
-                                                            </button>
+                                                {/* Content: Title + Due Date + Description Preview */}
+                                                <div className="flex-1 min-w-0">
+                                                    <h5 className={`font-bold text-sm line-clamp-1 ${isEditing ? 'text-brand-textPrimary' : 'text-brand-textPrimary/90'}`}>
+                                                        {task.title}
+                                                    </h5>
+
+                                                    {/* Description Preview (Cleaned) */}
+                                                    {task.description && (
+                                                        <p className="text-[10px] text-brand-textSecondary mt-0.5 line-clamp-2 leading-relaxed opacity-70">
+                                                            {task.description.replace(/<[^>]*>/g, '').trim()}
+                                                        </p>
+                                                    )}
+
+                                                    {/* Due Date */}
+                                                    {task.endDate && (
+                                                        <p className="text-xs text-brand-textSecondary mt-0.5 flex items-center gap-1">
+                                                            <CalendarIcon size={10} />
+                                                            {task.endDate === toDateString()
+                                                                ? 'Due today'
+                                                                : `Due ${new Date(task.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                                                        </p>
+                                                    )}
+
+
+                                                </div>
+
+                                                {/* Status/Actions - Top Right */}
+                                                <div className="flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                                                    {/* Checkmark for published (non-draft) tasks */}
+                                                    {task.status !== 'draft' && (
+                                                        <div className="p-1 text-brand-accent" title="Published">
+                                                            <Check size={14} />
                                                         </div>
+                                                    )}
+                                                    {/* Draft indicator for drafts */}
+                                                    {task.status === 'draft' && (
+                                                        <div className="px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-brand-textSecondary bg-(--color-bg-tile-hover) border border-border-subtle rounded-md">
+                                                            Draft
+                                                        </div>
+                                                    )}
+                                                    {/* Action Buttons - visible on hover */}
+                                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {/* Save Button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                handleSave(false);
+                                                            }}
+                                                            className="p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm hover:shadow-layered button-lift-dynamic hover:text-brand-accent hover:bg-(--color-bg-tile-hover) hover:border-brand-accent/50 focus:outline-none"
+                                                            title="Save task"
+                                                        >
+                                                            <Check size={14} />
+                                                        </button>
+                                                        {/* Delete Button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                e.preventDefault();
+                                                                handleDelete(task.id);
+                                                            }}
+                                                            className="p-1.5 rounded-lg transition-float bg-(--color-bg-tile) border border-border-subtle text-brand-textSecondary shadow-layered-sm hover:shadow-layered button-lift-dynamic hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/50 focus:outline-none"
+                                                            title="Delete task"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
-                                        );
-                                    })
-                                })()}
-                            </div>
+                                        </div>
+                                    );
+                                })
+                            })()}
                         </div>
                     </div>
                 </div>
@@ -1457,6 +1484,44 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         <button
                             onClick={() => setDeleteDialogTask(null)}
                             className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-(--color-bg-tile) text-brand-textSecondary font-bold hover:text-brand-textPrimary hover:border-border-strong transition-all"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {/* Save Confirmation Dialog */}
+        {saveDialogTask && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                <div className="bg-(--color-bg-tile) tile-blur rounded-2xl border border-border-subtle shadow-layered-lg p-6 max-w-md w-full mx-4">
+                    <h3 className="text-lg font-black text-brand-textPrimary mb-2">
+                        Save "{saveDialogTask.title}"?
+                    </h3>
+                    <p className="text-sm text-brand-textSecondary mb-6">
+                        This task has {saveDialogTask.childCount} child item{saveDialogTask.childCount > 1 ? 's' : ''}. Would you like to save them too?
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                        <button
+                            onClick={() => confirmSave(true)}
+                            className="w-full py-3 px-4 rounded-xl border border-brand-accent bg-brand-accent/10 text-brand-accent font-bold hover:bg-brand-accent/20 transition-all"
+                        >
+                            <Save className="w-4 h-4 inline mr-2" />
+                            Save All ({saveDialogTask.childCount + 1} items)
+                        </button>
+
+                        <button
+                            onClick={() => confirmSave(false)}
+                            className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-(--color-bg-tile) text-brand-textSecondary font-bold hover:text-brand-textPrimary hover:border-border-strong transition-all"
+                        >
+                            Save Parent Only
+                        </button>
+
+                        <button
+                            onClick={() => setSaveDialogTask(null)}
+                            className="w-full py-3 px-4 rounded-xl border border-border-subtle bg-(--color-bg-tile) text-brand-textMuted font-bold hover:text-brand-textSecondary transition-all"
                         >
                             Cancel
                         </button>

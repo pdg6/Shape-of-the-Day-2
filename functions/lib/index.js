@@ -11,7 +11,6 @@ dotenv.config();
  * - answerStudentQuestion: Callable function for AI Q&A (disabled - needs Genkit setup)
  * - fetchUrlMetadata: Fetches webpage titles for link resources
  */
-// Disabled imports - used by AI functions that are currently disabled
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
@@ -116,6 +115,7 @@ OUTPUT RULES:
 6. The presence of any "###" or "**Label:**" will result in a parsing error and task rejection.
 7. Use active voice: "Click the button" not "The button should be clicked"
 8. Keep reading level at Grade 10 or below.
+9. ALWAYS set 'startDate' and 'endDate' fields. Default to the "Current Date" provided in the prompt context unless specific timing is mentioned in the request.
 `;
 // --- RAG Components ---
 /**
@@ -194,7 +194,7 @@ export const suggestTasksFlow = ai.defineFlow({
 }, async (input) => {
     const { subject, gradeLevel } = input;
     const response = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: `Generate 3 educational curriculum items (tasks/projects).
             Subject: ${subject}
             ${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
@@ -202,7 +202,7 @@ export const suggestTasksFlow = ai.defineFlow({
             Follow the Gold Standard schema and strict rules.`,
         config: {
             tools: [{ googleSearch: {} }],
-            systemInstruction: CURRICULUM_SYSTEM_PROMPT,
+            systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${new Date().toISOString().split('T')[0]}`,
             temperature: 0,
             responseMimeType: 'application/json',
             responseSchema: {
@@ -316,11 +316,11 @@ export const refineTaskFlow = ai.defineFlow({
     promptParts.push(`Scoping: Break down Project -> Assignment -> Task -> Subtask. Use tempId for linking. Ensure strict plain text output (NO ### HEADERS).`);
     const combinedPrompt = promptParts.join('\n\n');
     const response = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: combinedPrompt,
         config: {
             tools: [{ googleSearch: {} }],
-            systemInstruction: CURRICULUM_SYSTEM_PROMPT,
+            systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${new Date().toISOString().split('T')[0]}`,
             temperature: 0,
             responseMimeType: 'application/json',
             responseSchema: {
@@ -431,6 +431,8 @@ export const analyzeStrugglesFlow = ai.defineFlow({
     inputSchema: z.object({
         classroomId: z.string(),
         taskIds: z.array(z.string()).optional(),
+        subject: z.string().optional(),
+        gradeLevel: z.string().optional(),
     }),
     outputSchema: z.object({
         summary: z.string(),
@@ -438,7 +440,7 @@ export const analyzeStrugglesFlow = ai.defineFlow({
         suggestions: z.array(z.string()),
     }),
 }, async (input) => {
-    const { classroomId, taskIds } = input;
+    const { classroomId, taskIds, subject, gradeLevel } = input;
     // 1. Fetch all unresolved questions for the class
     // Collection group query might be better if we want ALL questions, 
     // but for now we'll query per task if provided, or all tasks in the class.
@@ -478,9 +480,14 @@ export const analyzeStrugglesFlow = ai.defineFlow({
         OUTPUT RULES:
         1. Summary: 2-3 sentences max.
         2. Top Struggles: List 2-3 specific conceptual blockers.
-        3. Suggestions: 2-3 actionable tips for the teacher (e.g., "Clarify the use of signals in Godot").`;
+        3. Suggestions: 2-3 actionable tips for the teacher (e.g., "Clarify the use of signals in Godot").
+        
+        CONTEXT:
+        ${subject ? `Subject: ${subject}` : ''}
+        ${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
+        `;
     const response = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
             temperature: 0.2,
@@ -507,24 +514,30 @@ export const suggestScaffoldingFlow = ai.defineFlow({
     inputSchema: z.object({
         classroomId: z.string(),
         struggleSummary: z.string().optional(),
+        subject: z.string().optional(),
+        gradeLevel: z.string().optional(),
     }),
     outputSchema: z.object({
         suggestedTasks: z.array(CurriculumSchema),
+        thoughts: z.string().optional(),
     }),
 }, async (input) => {
-    const { struggleSummary } = input;
+    const { struggleSummary, subject, gradeLevel } = input;
     const prompt = `You are an instructional designer. 
         Based on these class struggles, suggest 1-2 bridging "Scaffolding" tasks to help students understand the concepts better.
         
         CLASS STRUGGLES:
         ${struggleSummary || 'General extension needed.'}
         
+        ${subject ? `Subject Context: ${subject}` : ''}
+        ${gradeLevel ? `Grade Level Context: ${gradeLevel}` : ''}
+        
         Follow the Gold Standard schema. Set the type to 'task' or 'subtask'.`;
     const response = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
-            systemInstruction: CURRICULUM_SYSTEM_PROMPT,
+            systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${new Date().toISOString().split('T')[0]}`,
             temperature: 0.3,
             responseMimeType: 'application/json',
             responseSchema: {
@@ -566,9 +579,13 @@ export const suggestScaffoldingFlow = ai.defineFlow({
             }
         }
     });
+    const thoughts = response.candidates?.[0]?.content?.parts
+        ?.filter((p) => p.thought)
+        ?.map((p) => p.text)
+        .join('\n') || '';
     const output = JSON.parse(response.text || '{}');
     const scrubbedTasks = (output?.suggestedTasks || []).map(scrubAiOutput);
-    return { suggestedTasks: scrubbedTasks };
+    return { suggestedTasks: scrubbedTasks, thoughts };
 });
 /**
  * AI Flow for expanding task instructions for a student.
@@ -596,25 +613,39 @@ export const expandTaskInstructionsFlow = ai.defineFlow({
         - Use very simple language.
         - Focus on one tiny action per step.
         - No markdown headers or bold text.`;
-    const response = await ai.generate({
-        model: googleAI.model('gemini-1.5-flash'),
-        prompt: prompt,
-        config: { temperature: 0 },
+    const response = await genai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+        config: {
+            temperature: 0,
+            responseMimeType: 'application/json',
+            responseSchema: {
+                type: 'object',
+                properties: {
+                    expandedInstructions: {
+                        type: 'array',
+                        items: { type: 'string' }
+                    }
+                },
+                required: ['expandedInstructions']
+            }
+        }
     });
     const text = response.text;
-    const expandedInstructions = text.split('\n')
-        .map(line => line.replace(/^[#*>\-0-9.\s]+/, '').trim())
-        .filter(Boolean);
-    return { expandedInstructions };
+    if (!text)
+        return { expandedInstructions: [] };
+    const output = JSON.parse(text);
+    const instructions = output.expandedInstructions || [];
+    return { expandedInstructions: instructions.map(scrubAiOutput) };
 });
 // --- Firebase Callable Wrappers for New Flows ---
 export const analyzeStruggles = onCall({ cors: true }, async (request) => {
-    const { classroomId, taskIds } = request.data;
+    const { classroomId, taskIds, subject, gradeLevel } = request.data;
     if (!classroomId) {
         throw new HttpsError('invalid-argument', 'classroomId is required');
     }
     try {
-        return await analyzeStrugglesFlow({ classroomId, taskIds });
+        return await analyzeStrugglesFlow({ classroomId, taskIds, subject, gradeLevel });
     }
     catch (error) {
         console.error('[AI] Error in analyzeStruggles:', error);
@@ -622,12 +653,12 @@ export const analyzeStruggles = onCall({ cors: true }, async (request) => {
     }
 });
 export const suggestScaffolding = onCall({ cors: true }, async (request) => {
-    const { classroomId, struggleSummary } = request.data;
+    const { classroomId, struggleSummary, subject, gradeLevel } = request.data;
     if (!classroomId) {
         throw new HttpsError('invalid-argument', 'classroomId is required');
     }
     try {
-        return await suggestScaffoldingFlow({ classroomId, struggleSummary });
+        return await suggestScaffoldingFlow({ classroomId, struggleSummary, subject, gradeLevel });
     }
     catch (error) {
         console.error('[AI] Error in suggestScaffolding:', error);
@@ -975,6 +1006,12 @@ export const processFile = onCall({ cors: true }, async (request) => {
         }
         else {
             throw new Error('Unsupported file type');
+        }
+        // Optional: Index immediately if taskId is provided
+        // @ts-ignore
+        const taskId = request.data.taskId;
+        if (taskId && text) {
+            await indexContent(taskId, `file_${Date.now()}`, filename, text);
         }
         return { text: text.substring(0, 50000) }; // Cap at 50k chars for safety
     }

@@ -50,7 +50,7 @@ export const useAiStore = create<AiState>()(
                             id,
                             timestamp: Date.now(),
                         }
-                    ]
+                    ].slice(-50)
                 }));
                 return id;
             },

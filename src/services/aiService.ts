@@ -54,6 +54,14 @@ export const askAIQuestion = async (
 };
 
 /**
+ * Input for the suggestTasks Cloud Function
+ */
+export interface SuggestTasksInput {
+    subject: string;
+    gradeLevel?: string;
+}
+
+/**
  * Input for the refineTask Cloud Function
  */
 export interface RefineTaskInput {
@@ -62,7 +70,7 @@ export interface RefineTaskInput {
     gradeLevel?: string;
     context?: string[];
     taskId?: string;
-    existingItems?: Task[];
+    existingItems?: any[];
 }
 
 /**
@@ -111,6 +119,7 @@ export interface ProcessFileInput {
     fileUrl: string;
     filename: string;
     contentType: string;
+    taskId?: string;
 }
 
 /**
@@ -160,10 +169,20 @@ export interface StruggleAnalysis {
 /**
  * Analyzes student struggles in a classroom.
  */
-export const analyzeStruggles = async (classroomId: string, taskIds?: string[]): Promise<StruggleAnalysis> => {
+export const analyzeStruggles = async (
+    classroomId: string,
+    taskIds?: string[],
+    subject?: string,
+    gradeLevel?: string
+): Promise<StruggleAnalysis> => {
     try {
-        const analyzeStrugglesFn = httpsCallable<{ classroomId: string; taskIds?: string[] }, StruggleAnalysis>(functions, 'analyzeStruggles');
-        const result = await analyzeStrugglesFn({ classroomId, taskIds });
+        const analyzeStrugglesFn = httpsCallable<{
+            classroomId: string;
+            taskIds?: string[];
+            subject?: string;
+            gradeLevel?: string;
+        }, StruggleAnalysis>(functions, 'analyzeStruggles');
+        const result = await analyzeStrugglesFn({ classroomId, taskIds, subject, gradeLevel });
         return result.data;
     } catch (error) {
         console.error('[AI Service] Error analyzing struggles:', error);
@@ -174,10 +193,20 @@ export const analyzeStruggles = async (classroomId: string, taskIds?: string[]):
 /**
  * Suggests scaffolding tasks based on class struggles.
  */
-export const suggestScaffolding = async (classroomId: string, struggleSummary?: string): Promise<{ suggestedTasks: Task[] }> => {
+export const suggestScaffolding = async (
+    classroomId: string,
+    struggleSummary?: string,
+    subject?: string,
+    gradeLevel?: string
+): Promise<{ suggestedTasks: Task[], thoughts?: string }> => {
     try {
-        const suggestScaffoldingFn = httpsCallable<{ classroomId: string; struggleSummary?: string }, { suggestedTasks: Task[] }>(functions, 'suggestScaffolding');
-        const result = await suggestScaffoldingFn({ classroomId, struggleSummary });
+        const suggestScaffoldingFn = httpsCallable<{
+            classroomId: string;
+            struggleSummary?: string;
+            subject?: string;
+            gradeLevel?: string;
+        }, { suggestedTasks: Task[], thoughts?: string }>(functions, 'suggestScaffolding');
+        const result = await suggestScaffoldingFn({ classroomId, struggleSummary, subject, gradeLevel });
         return result.data;
     } catch (error) {
         console.error('[AI Service] Error suggesting scaffolding:', error);
@@ -199,40 +228,7 @@ export const expandTaskInstructions = async (taskId: string, currentInstructions
     }
 };
 
-/**
- * Response from the generateSchedule Cloud Function (placeholder)
- */
-interface GenerateScheduleResponse {
-    tasks: Partial<Task>[];
-    success: boolean;
-}
 
-/**
- * Generates a lesson schedule using AI based on uploaded materials.
- */
-export const generateLessonSchedule = async (
-    topic: string,
-    sourceMaterialIds: string[],
-    durationMinutes: number
-): Promise<Partial<Task>[]> => {
-    try {
-        const generateSchedule = httpsCallable<
-            { topic: string; sourceMaterialIds: string[]; durationMinutes: number },
-            GenerateScheduleResponse
-        >(functions, 'generateSchedule');
-
-        const result = await generateSchedule({ topic, sourceMaterialIds, durationMinutes });
-
-        if (result.data.success) {
-            return result.data.tasks;
-        } else {
-            throw new Error('AI failed to generate schedule');
-        }
-    } catch (error) {
-        console.error('[AI Service] Error generating schedule:', error);
-        throw error;
-    }
-};
 
 /**
  * Checks if AI features are available (Cloud Functions deployed)

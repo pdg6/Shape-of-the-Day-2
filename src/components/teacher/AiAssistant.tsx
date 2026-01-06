@@ -14,9 +14,11 @@ interface AiAssistantProps {
     currentFormData: TaskFormData;
     onApply: (suggestion: Task) => void;
     taskId?: string | null;
+    subject?: string;
+    gradeLevel?: string;
 }
 
-export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantProps) => {
+export const AiAssistant = ({ currentFormData, onApply, taskId, subject, gradeLevel }: AiAssistantProps) => {
     const {
         messages,
         addMessage,
@@ -69,10 +71,12 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
             const downloadUrl = await getDownloadURL(storageRef);
 
             // 2. Extract Text via Cloud Function
+            // 2. Extract Text via Cloud Function
             const text = await aiService.processFileContent({
                 fileUrl: downloadUrl,
                 filename: file.name,
-                contentType: file.type
+                contentType: file.type,
+                taskId: taskId || undefined
             });
 
             setAttachments(prev => [...prev, {
@@ -163,7 +167,9 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                 rawContent: currentInput,
                 taskId: taskId || undefined,
                 context: context,
-                existingItems: existingItems as Task[]
+                existingItems: existingItems as Task[],
+                subject,
+                gradeLevel
             });
 
             const { items, thoughts } = response;
@@ -278,24 +284,9 @@ export const AiAssistant = ({ currentFormData, onApply, taskId }: AiAssistantPro
                                                 let descriptionHtml = '';
 
                                                 if (item.structuredContent) {
-                                                    // Helper to strip unwanted "chatty" prefixes
-                                                    const cleanContent = (text: string) => {
-                                                        if (!text) return '';
-                                                        return text
-                                                            .trim()
-                                                            .replace(/^(###?\s*)+(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit):?\s*/im, '')
-                                                            .replace(/^###+\s*/gm, '')
-                                                            .replace(/^\*\*(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit)\*\*:?\s*/im, '')
-                                                            .replace(/^(Why|Steps|Rationale|Instructions|Troubleshooting|Debugging|Concepts|Audit):?\s*/im, '')
-                                                            .replace(/^[#*>\-]+\s*/, '')
-                                                            .trim();
-                                                    };
-
-                                                    const cleanRationale = cleanContent(item.structuredContent.rationale);
-                                                    const cleanInstructions = item.structuredContent.instructions.map(cleanContent);
-                                                    const cleanTroubleshooting = item.structuredContent.troubleshooting
-                                                        ? cleanContent(item.structuredContent.troubleshooting)
-                                                        : '';
+                                                    const cleanRationale = item.structuredContent.rationale;
+                                                    const cleanInstructions = item.structuredContent.instructions;
+                                                    const cleanTroubleshooting = item.structuredContent.troubleshooting || '';
 
                                                     const markdown = [
                                                         `**Objective**: ${cleanRationale}`,

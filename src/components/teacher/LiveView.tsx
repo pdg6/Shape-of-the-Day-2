@@ -109,7 +109,12 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         if (!currentClassId) return;
         setIsAnalyzing(true);
         try {
-            const result = await analyzeStruggles(currentClassId);
+            const result = await analyzeStruggles(
+                currentClassId,
+                undefined,
+                currentClass?.subject,
+                currentClass?.gradeLevel
+            );
             setInsightState({ type: 'struggles', data: result });
         } catch (error) {
             console.error('Error analyzing struggles:', error);
@@ -124,8 +129,18 @@ const LiveView: React.FC<LiveViewProps> = ({ activeView = 'students', onViewChan
         setIsAnalyzing(true);
         try {
             // First analyze struggles for context if possible, or just call scaffolding directly
-            const struggleResult = await analyzeStruggles(currentClassId);
-            const scaffoldResult = await suggestScaffolding(currentClassId, struggleResult.summary);
+            const struggleResult = await analyzeStruggles(
+                currentClassId,
+                undefined,
+                currentClass?.subject,
+                currentClass?.gradeLevel
+            );
+            const scaffoldResult = await suggestScaffolding(
+                currentClassId,
+                struggleResult.summary,
+                currentClass?.subject,
+                currentClass?.gradeLevel
+            );
             setInsightState({ type: 'scaffolding', tasks: scaffoldResult.suggestedTasks });
         } catch (error) {
             console.error('Error suggesting scaffolding:', error);
