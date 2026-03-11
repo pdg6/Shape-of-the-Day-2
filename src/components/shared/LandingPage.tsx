@@ -28,7 +28,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ onLogin, onJoin }) => {
     const [activeTab, setActiveTab] = useState<'student' | 'teacher'>('student');
 
     return (
-        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-transparent select-none">
+        <div className="h-screen flex flex-col items-center justify-center p-4 overflow-hidden bg-transparent select-none relative">
+            {/* Presentation Link */}
+            <div className="absolute top-4 right-4 z-50">
+                <a 
+                    href="/presentation.html" 
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-brand-textSecondary hover:text-white bg-tile-alt border border-border-subtle hover:border-brand-accent/50 transition-float shadow-layered-sm hover:shadow-layered group"
+                >
+                    <span className="uppercase tracking-wider text-xs">Presentation</span>
+                </a>
+            </div>
+
             <div className="text-center mb-8 space-y-2">
                 <LogoCycleLoop size={220} className="mb-1" />
                 <h1 className="text-3xl md:text-4xl font-black text-brand-textPrimary tracking-tighter uppercase leading-none">

@@ -33,10 +33,16 @@ export const formatMessageToHtml = (text: string): string => {
             // Convert bold (**text**)
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="font-black text-brand-textPrimary">$1</strong>');
 
+            // Convert unordered lists (- or *)
+            formatted = formatted.replace(/^[-*] (.*$)/gm, '<div class="flex gap-2 ml-4 my-1.5"><span class="text-brand-accent font-bold">•</span><span class="text-brand-textPrimary">$1</span></div>');
+
+            // Convert ordered lists (1.)
+            formatted = formatted.replace(/^(\d+)\. (.*$)/gm, '<div class="flex gap-2 ml-4 my-1.5"><span class="text-brand-accent font-bold">$1.</span><span class="text-brand-textPrimary">$2</span></div>');
+
             // Convert blockquotes (> text)
             formatted = formatted.replace(/^&gt; (.*$)/gm, '<blockquote class="border-l-4 border-brand-accent/30 pl-4 py-1 my-2 bg-brand-accent/5 rounded-r-lg italic text-brand-textSecondary">$1</blockquote>');
 
-            // Convert newlines to <br>, but avoid double spacing after headers/quotes
+            // Convert newlines to <br>, but avoid double spacing after div-based lists
             return formatted.replace(/\n/g, '<br>');
         } else {
             // Code block - preserve content but ensure it's safe inside <pre><code>

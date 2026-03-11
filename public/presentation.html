@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape of the Day - Presentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
+        :root {
+            --bg-page: #0f1115;
+            --bg-tile-alt: #151921;
+            --bg-tile: #1a1d24;
+            --color-brand-accent: #3b82f6;
+            --color-brand-textPrimary: #F2EFEA;
+            --color-brand-textSecondary: #A8A29D;
+            --color-border-subtle: rgba(255, 255, 255, 0.05);
+            --shadow-layered-lg: 0 15px 30px rgba(0,0,0,0.08), 0 30px 60px rgba(0,0,0,0.1), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+            --tile-blur: 8px;
+        }
+        body {
+            background-color: var(--bg-page);
+            color: var(--color-brand-textPrimary);
+            font-family: 'Inter', system-ui, sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.1) 0%, transparent 60%);
+        }
+        .section-hidden { display: none; }
+        .section-active { display: block; animation: floatUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes floatUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Glass Panel */
+        .glass-panel {
+            background: rgba(26, 29, 36, 0.6);
+            backdrop-filter: blur(var(--tile-blur));
+            -webkit-backdrop-filter: blur(var(--tile-blur));
+            border: 1px solid var(--color-border-subtle);
+            box-shadow: var(--shadow-layered-lg);
+        }
+
+        /* Nav Buttons */
+        .nav-item {
+            position: relative;
+            font-weight: 700;
+            border-radius: 12px;
+            background-color: var(--bg-tile);
+            border: 1px solid var(--color-border-subtle);
+            transform: translateY(0);
+            transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            color: #64748b;
+        }
+        .nav-item:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.1);
+            color: #94a3b8;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        }
+        .nav-item.active {
+            color: white;
+            border-top: 1px solid var(--color-brand-accent);
+            box-shadow: inset 0 3px 6px -2px rgba(59, 130, 246, 0.4), var(--shadow-layered-lg);
+            background-color: var(--bg-tile-alt);
+        }
+
+        /* Abstract Image Stylings */
+        .visual-img {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.8), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 4/3;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .visual-img:hover {
+            transform: scale(1.02) translateY(-4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4 overflow-x-hidden">
+
+    <!-- Header / Nav -->
+    <header class="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center mb-12 gap-6 relative z-20">
+        <a href="/" class="flex flex-col items-center md:items-start group">
+            <img src="/shape of the day logo.png" alt="Shape of the Day Logo" class="w-16 h-16 object-contain mb-2 group-hover:scale-105 transition-transform" onerror="this.src='/logo.png'">
+            <div class="text-xl font-black uppercase tracking-tighter text-white">Shape of the Day</div>
+            <div class="text-[10px] font-bold uppercase tracking-widest text-[#3b82f6] group-hover:text-white transition-colors">Return to App</div>
+        </a>
+        
+        <nav class="flex gap-3 bg-[#151921]/80 backdrop-blur-md p-2 rounded-2xl border border-[rgba(255,255,255,0.05)] shadow-xl">
+            <button onclick="switchSection('users')" id="btn-users" class="nav-item active px-6 py-3 text-xs uppercase tracking-widest">Ideal Users</button>
+            <button onclick="switchSection('problems')" id="btn-problems" class="nav-item px-6 py-3 text-xs uppercase tracking-widest">Problems Solved</button>
+            <button onclick="switchSection('uvp')" id="btn-uvp" class="nav-item px-6 py-3 text-xs uppercase tracking-widest">UVP & Solution</button>
+        </nav>
+    </header>
+
+    <!-- Content Container -->
+    <main class="w-full max-w-6xl glass-panel rounded-3xl p-8 md:p-14 relative overflow-visible z-10">
+        
+        <!-- Glowing Ambient Orbs for visual depth -->
+        <div class="absolute -top-20 -right-20 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div class="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <!-- SECTION 1: Ideal Users -->
+        <section id="sec-users" class="section-active relative z-10">
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <div class="flex-1 space-y-8">
+                    <h2 class="text-4xl font-black text-white tracking-tight">The Ideal Users</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="p-6 bg-[#1a1d24] rounded-2xl border border-[rgba(255,255,255,0.05)] shadow-xl relative overflow-hidden group hover:border-[#3b82f6]/50 transition-colors duration-300 transform hover:-translate-y-1">
+                            <div class="absolute inset-0 bg-gradient-to-br from-[#3b82f6]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <h3 class="text-lg font-black uppercase tracking-widest text-[#3b82f6] mb-3">Educators & Teachers</h3>
+                            <p class="text-[var(--color-brand-textSecondary)] leading-relaxed text-sm font-medium">
+                                Managing K-12 classrooms requires immense coordination. Teachers need a centralized way to outline daily schedules, distribute tasks, and monitor progress without overwhelming overhead or repeating instructions endlessly.
+                            </p>
+                        </div>
+                        
+                        <div class="p-6 bg-[#1a1d24] rounded-2xl border border-[rgba(255,255,255,0.05)] shadow-xl relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-300 transform hover:-translate-y-1">
+                            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            <h3 class="text-lg font-black uppercase tracking-widest text-emerald-500 mb-3">Students & Learners</h3>
+                            <p class="text-[var(--color-brand-textSecondary)] leading-relaxed text-sm font-medium">
+                                Learners benefit immensely from clear, structured direction regarding their daily tasks, assignments, and overarching schedule, avoiding the anxiety of missing critical information or feeling overwhelmed.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 relative">
+                    <img src="/screenshots/users.png" alt="Student and Teacher Views" class="visual-img">
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Problems Solved -->
+        <section id="sec-problems" class="section-hidden relative z-10">
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <div class="flex-1 space-y-8">
+                    <h2 class="text-4xl font-black text-white tracking-tight">Problems<br/>Designed to Solve</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-5 bg-gradient-to-b from-[#1a1d24] to-[#151921] rounded-2xl border border-[rgba(255,255,255,0.05)]">
+                            <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+                                <span class="text-red-500 font-bold text-lg">✕</span>
+                            </div>
+                            <h4 class="text-white font-bold mb-2">Classroom Chaos</h4>
+                            <p class="text-xs text-[var(--color-brand-textSecondary)] font-medium">Disorganized daily schedules leading to lost instruction time and confusion.</p>
+                        </div>
+                        
+                        <div class="p-5 bg-gradient-to-b from-[#1a1d24] to-[#151921] rounded-2xl border border-[rgba(255,255,255,0.05)]">
+                            <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center mb-4">
+                                <span class="text-orange-500 font-bold text-lg">✕</span>
+                            </div>
+                            <h4 class="text-white font-bold mb-2">Student Confusion</h4>
+                            <p class="text-xs text-[var(--color-brand-textSecondary)] font-medium">Students constantly asking "What do I do next?" or losing track of current assignments.</p>
+                        </div>
+
+                        <div class="p-5 bg-gradient-to-b from-[#1a1d24] to-[#151921] rounded-2xl border border-[rgba(255,255,255,0.05)]">
+                            <div class="w-10 h-10 rounded-full bg-[#3b82f6]/10 flex items-center justify-center mb-4">
+                                <span class="text-[#3b82f6] font-bold text-lg">✕</span>
+                            </div>
+                            <h4 class="text-white font-bold mb-2">Lack of Visibility</h4>
+                            <p class="text-xs text-[var(--color-brand-textSecondary)] font-medium">Teachers struggling to identify who needs help and who is progressing smoothly in real-time.</p>
+                        </div>
+
+                        <div class="p-5 bg-gradient-to-b from-[#1a1d24] to-[#151921] rounded-2xl border border-[rgba(255,255,255,0.05)]">
+                            <div class="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
+                                <span class="text-purple-500 font-bold text-lg">✕</span>
+                            </div>
+                            <h4 class="text-white font-bold mb-2">Planning Misalignment</h4>
+                            <p class="text-xs text-[var(--color-brand-textSecondary)] font-medium">Disconnect between the teacher's lesson plan and the student's actual workflow.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <img src="/screenshots/problems.png" alt="Classroom Management" class="visual-img">
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: UVP -->
+        <section id="sec-uvp" class="section-hidden relative z-10">
+            <div class="flex flex-col md:flex-row gap-12 items-center">
+                <div class="flex-1 space-y-8">
+                    <div>
+                        <div class="text-[10px] font-black uppercase tracking-widest text-[#3b82f6] mb-2">The Solution</div>
+                        <h2 class="text-4xl font-black text-white tracking-tight">Unique Value Proposition</h2>
+                    </div>
+                    
+                    <div class="p-8 bg-gradient-to-br from-[#3b82f6]/10 to-transparent border border-[#3b82f6]/20 rounded-2xl border-l-[6px] border-l-[#3b82f6] shadow-2xl relative overflow-hidden backdrop-blur-md">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-[#3b82f6]/20 blur-3xl rounded-full"></div>
+                        <p class="text-2xl font-bold text-white leading-tight relative z-10">
+                            "Shape of the Day provides a centralized, digital daily organizer that aligns teachers and students on their shared schedule and tasks, bringing clarity and structure to the modern classroom."
+                        </p>
+                    </div>
+                    
+                    <p class="text-[var(--color-brand-textSecondary)] leading-relaxed text-sm font-medium">
+                        By digitizing the traditional "Shape of the Day" whiteboard, this application synchronizes the teacher's plan directly to the student's device. It ensures <strong>everyone knows precisely what is happening and what is expected</strong> at any given moment, transforming classroom friction into flow.
+                    </p>
+                </div>
+                <div class="flex-1">
+                    <img src="/screenshots/uvp.png" alt="Primary Solution Statement" class="visual-img">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer Space -->
+    <footer class="mt-12 text-center text-[10px] font-black uppercase tracking-widest text-[var(--color-brand-textSecondary)] opacity-50">
+        Shape of the Day &copy; 2026
+    </footer>
+
+    <script>
+        function switchSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(sec => {
+                sec.classList.remove('section-active');
+                sec.classList.add('section-hidden');
+            });
+            // Show target section trigger reflow for animation
+            const target = document.getElementById('sec-' + sectionId);
+            target.classList.remove('section-hidden');
+            // Trigger reflow
+            void target.offsetWidth;
+            target.classList.add('section-active');
+
+            // Update nav buttons
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('btn-' + sectionId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

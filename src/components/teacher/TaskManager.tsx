@@ -1068,7 +1068,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                         {contentMode === 'bulk' && (
                             <div className="flex-1 min-h-0 flex flex-col">
                                 {/* Scrollable task list */}
-                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
+                                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2 pt-2 -mt-2">
                                     {filteredTasks.length === 0 ? (
                                         <div className="text-center py-12 text-brand-textSecondary">
                                             <p className="text-sm">No tasks scheduled for this date.</p>
