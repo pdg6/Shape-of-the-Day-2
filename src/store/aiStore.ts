@@ -21,14 +21,12 @@ export interface AiMessage {
 
 interface AiState {
     messages: AiMessage[];
-    isAssistantOpen: boolean;
     isProcessing: boolean;
 
     // Actions
     addMessage: (message: Omit<AiMessage, 'id' | 'timestamp'>) => string;
     updateMessage: (id: string, updates: Partial<AiMessage>) => void;
     clearMessages: () => void;
-    toggleAssistant: (isOpen?: boolean) => void;
     setProcessing: (isProcessing: boolean) => void;
     getLatestAssistantMessage: () => AiMessage | undefined;
 }
@@ -37,7 +35,6 @@ export const useAiStore = create<AiState>()(
     persist(
         (set, get) => ({
             messages: [],
-            isAssistantOpen: false,
             isProcessing: false,
 
             addMessage: (message) => {
@@ -62,10 +59,6 @@ export const useAiStore = create<AiState>()(
             })),
 
             clearMessages: () => set({ messages: [] }),
-
-            toggleAssistant: (isOpen) => set((state) => ({
-                isAssistantOpen: isOpen !== undefined ? isOpen : !state.isAssistantOpen
-            })),
 
             setProcessing: (isProcessing) => set({ isProcessing }),
 

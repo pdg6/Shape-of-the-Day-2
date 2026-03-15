@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Brain, ArrowRight, Plus, Loader2, CheckCircle2 } from 'lucide-react';
 import { StruggleAnalysis, Task } from '../../types';
-import { CodeBlockRenderer } from '../shared/CodeBlockRenderer';
-import { formatMessageToHtml } from '../../utils/markdownFormatter';
 import toast from 'react-hot-toast';
 import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -12,7 +10,6 @@ interface AiInsightModalProps {
     insight?: StruggleAnalysis;
     suggestedTasks?: Task[];
     onClose: () => void;
-    onTasksApproved?: (tasks: Task[]) => void;
 }
 
 export const AiInsightModal: React.FC<AiInsightModalProps> = ({
@@ -21,7 +18,6 @@ export const AiInsightModal: React.FC<AiInsightModalProps> = ({
     insight,
     suggestedTasks,
     onClose,
-    onTasksApproved
 }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [addedTaskIds, setAddedTaskIds] = useState<string[]>([]);

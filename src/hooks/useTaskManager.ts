@@ -23,7 +23,7 @@ export const INITIAL_FORM_DATA: TaskFormData = {
     selectedRoomIds: [],
     links: [],
     attachments: [],
-    structuredContent: null,
+    structuredContent: undefined,
 };
 
 export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: UseTaskManagerProps) => {
@@ -75,7 +75,7 @@ export const useTaskManager = ({ tasks, initialTaskId, onSuccess, onError }: Use
             links: task.links || [],
             attachments: task.attachments || [],
             status: task.status || 'todo',
-            structuredContent: task.structuredContent || null,
+            structuredContent: task.structuredContent || undefined,
         });
         setIsDirty(false);
     }, []);

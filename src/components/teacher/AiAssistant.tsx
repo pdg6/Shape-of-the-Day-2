@@ -71,7 +71,6 @@ export const AiAssistant = ({ currentFormData, onApply, taskId, subject, gradeLe
             const downloadUrl = await getDownloadURL(storageRef);
 
             // 2. Extract Text via Cloud Function
-            // 2. Extract Text via Cloud Function
             const text = await aiService.processFileContent({
                 fileUrl: downloadUrl,
                 filename: file.name,

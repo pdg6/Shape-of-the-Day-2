@@ -22,7 +22,6 @@ import { YoutubeTranscript } from 'youtube-transcript';
 import pdf from 'pdf-parse';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { getStorage } from 'firebase-admin/storage';
 
 // Genkit AI imports
 import { genkit } from 'genkit';
@@ -33,11 +32,6 @@ import { GoogleGenAI } from '@google/genai';
 // Initialize Firebase Admin
 initializeApp();
 const db = getFirestore();
-const storage = getStorage();
-
-// Project configuration from environment
-const PROJECT_ID = process.env.GOOGLE_CLOUD_PROJECT || 'shape-of-the-day';
-const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || 'us-central1';
 
 // Initialize New Google Gen AI SDK
 const genai = new GoogleGenAI({
@@ -46,8 +40,10 @@ const genai = new GoogleGenAI({
 
 // Genkit configuration (keeping for RAG and Flow structure)
 const ai = genkit({
-    plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })], // Moving model logic to direct SDK
+    plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })],
 });
+
+const AI_MODEL = 'gemini-3-flash-preview';
 
 // --- Schemas ---
 
@@ -103,6 +99,65 @@ const scrubAiOutput = (obj: any): any => {
         return scrubbed;
     }
     return obj;
+};
+
+/** Extract thinking/thoughts from Gemini response candidates */
+const extractThoughts = (response: any): string =>
+    response.candidates?.[0]?.content?.parts
+        ?.filter((p: any) => p.thought)
+        ?.map((p: any) => p.text)
+        .join('\n') || '';
+
+/** Parse JSON response text and scrub AI output */
+const parseAndScrub = (text: string | undefined, key: string): any[] => {
+    if (!text) return [];
+    const output = JSON.parse(text);
+    return (output?.[key] || []).map(scrubAiOutput);
+};
+
+/** Extract text from a file buffer based on MIME type */
+const extractTextFromBuffer = async (buffer: Buffer, mimeType: string): Promise<string> => {
+    if (mimeType === 'application/pdf') {
+        const data = await pdf(buffer);
+        return data.text;
+    }
+    if (mimeType?.startsWith('text/')) {
+        return buffer.toString('utf-8');
+    }
+    return '';
+};
+
+/** Shared JSON Schema for curriculum item response */
+const CURRICULUM_ITEM_SCHEMA = {
+    type: 'object' as const,
+    properties: {
+        id: { type: 'string' as const },
+        tempId: { type: 'string' as const },
+        type: { type: 'string' as const, enum: ['project', 'assignment', 'task', 'subtask'] },
+        title: { type: 'string' as const, description: 'Concise title.' },
+        structuredContent: {
+            type: 'object' as const,
+            properties: {
+                keyConcepts: { type: 'array' as const, items: { type: 'string' as const } },
+                troubleshooting: { type: 'string' as const, description: 'Student-facing AI prompt.' },
+                rationale: { type: 'string' as const, description: 'Learning value. No labels.' },
+                instructions: { type: 'array' as const, items: { type: 'string' as const } },
+            },
+            required: ['rationale', 'instructions', 'keyConcepts'],
+        },
+        parentId: { type: 'string' as const, nullable: true },
+        accessibilityAudit: {
+            type: 'object' as const,
+            properties: {
+                readingLevelGrade: { type: 'number' as const },
+                hasVisualDualCoding: { type: 'boolean' as const },
+                hasAiPrompt: { type: 'boolean' as const },
+                hasAlternativePath: { type: 'boolean' as const }
+            },
+            required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt', 'hasAlternativePath']
+        }
+    },
+    required: ['title', 'type', 'structuredContent', 'accessibilityAudit'],
 };
 
 const CURRICULUM_SYSTEM_PROMPT = `
@@ -222,76 +277,33 @@ export const suggestTasksFlow = ai.defineFlow(
     },
     async (input) => {
         const { subject, gradeLevel } = input;
+        const today = new Date().toISOString().split('T')[0];
 
         const response = await genai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: AI_MODEL,
             contents: `Generate 3 educational curriculum items (tasks/projects).
             Subject: ${subject}
             ${gradeLevel ? `Grade Level: ${gradeLevel}` : ''}
-            
+
             Follow the Gold Standard schema and strict rules.`,
             config: {
                 tools: [{ googleSearch: {} }],
-                systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${new Date().toISOString().split('T')[0]}`,
+                systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${today}`,
                 temperature: 0,
                 responseMimeType: 'application/json',
                 responseSchema: {
                     type: 'object',
                     properties: {
-                        tasks: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    type: { type: 'string', enum: ['project', 'assignment', 'task', 'subtask'] },
-                                    title: { type: 'string', description: 'Concise title.' },
-                                    structuredContent: {
-                                        type: 'object',
-                                        properties: {
-                                            keyConcepts: { type: 'array', items: { type: 'string' } },
-                                            troubleshooting: { type: 'string', description: 'Student-facing AI prompt. Example: "I\'m stuck on... help?"' },
-                                            rationale: { type: 'string', description: 'Learning value. No labels.' },
-                                            instructions: { type: 'array', items: { type: 'string' } },
-                                        },
-                                        required: ['rationale', 'instructions', 'keyConcepts'],
-                                    },
-                                    accessibilityAudit: {
-                                        type: 'object',
-                                        properties: {
-                                            readingLevelGrade: { type: 'number' },
-                                            hasVisualDualCoding: { type: 'boolean' },
-                                            hasAiPrompt: { type: 'boolean' },
-                                            hasAlternativePath: { type: 'boolean' }
-                                        },
-                                        required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt', 'hasAlternativePath']
-                                    }
-                                },
-                                required: ['title', 'type', 'structuredContent', 'accessibilityAudit'],
-                            }
-                        }
+                        tasks: { type: 'array', items: CURRICULUM_ITEM_SCHEMA }
                     },
                     required: ['tasks']
                 }
             }
         });
 
-        const text = response.text;
-        const thoughts = response.candidates?.[0]?.content?.parts
-            ?.filter((p: any) => p.thought)
-            ?.map((p: any) => p.text)
-            .join('\n') || '';
-
-        if (!text) {
-            return { tasks: [], thoughts };
-        }
-
+        const thoughts = extractThoughts(response);
         try {
-            const output = JSON.parse(text);
-            const scrubbedTasks = (output?.tasks || []).map(scrubAiOutput);
-            return {
-                tasks: scrubbedTasks,
-                thoughts
-            };
+            return { tasks: parseAndScrub(response.text, 'tasks'), thoughts };
         } catch (e) {
             console.error('Failed to parse AI response:', e);
             return { tasks: [], thoughts };
@@ -355,78 +367,37 @@ export const refineTaskFlow = ai.defineFlow(
         promptParts.push(`Scoping: Break down Project -> Assignment -> Task -> Subtask. Use tempId for linking. Ensure strict plain text output (NO ### HEADERS).`);
 
         const combinedPrompt = promptParts.join('\n\n');
+        const today = new Date().toISOString().split('T')[0];
 
         const response = await genai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: AI_MODEL,
             contents: combinedPrompt,
             config: {
                 tools: [{ googleSearch: {} }],
-                systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${new Date().toISOString().split('T')[0]}`,
+                systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${today}`,
                 temperature: 0,
                 responseMimeType: 'application/json',
                 responseSchema: {
                     type: 'object',
                     properties: {
-                        items: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    id: { type: 'string' },
-                                    tempId: { type: 'string' },
-                                    type: { type: 'string', enum: ['project', 'assignment', 'task', 'subtask'] },
-                                    title: { type: 'string', description: 'Concise title.' },
-                                    structuredContent: {
-                                        type: 'object',
-                                        properties: {
-                                            keyConcepts: { type: 'array', items: { type: 'string' } },
-                                            troubleshooting: { type: 'string', description: 'Student-facing prompt.' },
-                                            rationale: { type: 'string', description: 'Learning value.' },
-                                            instructions: { type: 'array', items: { type: 'string' } },
-                                        },
-                                        required: ['rationale', 'instructions', 'keyConcepts'],
-                                    },
-                                    parentId: { type: 'string', nullable: true },
-                                    accessibilityAudit: {
-                                        type: 'object',
-                                        properties: {
-                                            readingLevelGrade: { type: 'number' },
-                                            hasVisualDualCoding: { type: 'boolean' },
-                                            hasAiPrompt: { type: 'boolean' },
-                                            hasAlternativePath: { type: 'boolean' }
-                                        },
-                                        required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt', 'hasAlternativePath']
-                                    }
-                                },
-                                required: ['title', 'type', 'structuredContent', 'accessibilityAudit'],
-                            }
-                        }
+                        items: { type: 'array', items: CURRICULUM_ITEM_SCHEMA }
                     },
                     required: ['items']
                 }
             }
         });
 
-        const text = response.text;
-        const thoughts = response.candidates?.[0]?.content?.parts
-            ?.filter((p: any) => p.thought)
-            ?.map((p: any) => p.text)
-            .join('\n') || '';
-
-        if (!text) {
+        const thoughts = extractThoughts(response);
+        if (!response.text) {
             throw new Error('Failed to generate items from AI: Empty response');
         }
 
         try {
-            const output = JSON.parse(text);
-            if (!output || !output.items) {
+            const items = parseAndScrub(response.text, 'items');
+            if (!items.length) {
                 throw new Error('Failed to generate items from AI: Invalid structured output');
             }
-            const scrubbedItems = (output.items || []).map(scrubAiOutput);
-            return {
-                items: scrubbedItems,
-                thoughts
-            };
+            return { items, thoughts };
         } catch (e) {
             console.error('Failed to parse AI response:', e);
             throw new Error('Failed to parse AI response');
@@ -439,6 +410,7 @@ export const refineTaskFlow = ai.defineFlow(
 export const suggestTasks = onCall(
     { cors: true },
     async (request) => {
+        if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
         const { subject, gradeLevel } = request.data;
         if (!subject) {
             throw new HttpsError('invalid-argument', 'subject is required');
@@ -455,6 +427,7 @@ export const suggestTasks = onCall(
 export const refineTask = onCall(
     { cors: true },
     async (request) => {
+        if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
         const { rawContent, subject, gradeLevel, context, taskId, existingItems } = request.data;
         if (!rawContent) {
             throw new HttpsError('invalid-argument', 'rawContent is required');
@@ -496,30 +469,32 @@ export const analyzeStrugglesFlow = ai.defineFlow(
     async (input) => {
         const { classroomId, taskIds, subject, gradeLevel } = input;
 
-        // 1. Fetch all unresolved questions for the class
-        // Collection group query might be better if we want ALL questions, 
-        // but for now we'll query per task if provided, or all tasks in the class.
-        let questions: any[] = [];
-
+        // 1. Fetch all unresolved questions for the class (parallel subcollection queries)
         const tasksSnapshot = await db.collection('tasks')
             .where('selectedRoomIds', 'array-contains', classroomId)
             .get();
 
-        for (const taskDoc of tasksSnapshot.docs) {
-            if (taskIds && !taskIds.includes(taskDoc.id)) continue;
+        const filteredDocs = taskIds
+            ? tasksSnapshot.docs.filter(doc => taskIds.includes(doc.id))
+            : tasksSnapshot.docs;
 
-            const qSnapshot = await taskDoc.ref.collection('questions')
-                .where('resolved', '==', false)
-                .get();
-
-            qSnapshot.forEach(doc => {
-                questions.push({
-                    taskId: taskDoc.id,
-                    taskTitle: taskDoc.data().title,
-                    ...doc.data()
+        const questionResults = await Promise.all(
+            filteredDocs.map(async (taskDoc) => {
+                const qSnapshot = await taskDoc.ref.collection('questions')
+                    .where('resolved', '==', false)
+                    .get();
+                return qSnapshot.docs.map(doc => {
+                    const data = doc.data();
+                    return {
+                        taskId: taskDoc.id,
+                        taskTitle: taskDoc.data().title,
+                        studentName: data.studentName as string,
+                        question: data.question as string,
+                    };
                 });
-            });
-        }
+            })
+        );
+        const questions = questionResults.flat();
 
         if (questions.length === 0) {
             return {
@@ -551,7 +526,7 @@ export const analyzeStrugglesFlow = ai.defineFlow(
         `;
 
         const response = await genai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: AI_MODEL,
             contents: prompt,
             config: {
                 temperature: 0.2,
@@ -568,8 +543,7 @@ export const analyzeStrugglesFlow = ai.defineFlow(
             }
         });
 
-        const output = JSON.parse(response.text || '{}');
-        return output;
+        return JSON.parse(response.text || '{}');
     }
 );
 
@@ -604,61 +578,27 @@ export const suggestScaffoldingFlow = ai.defineFlow(
         
         Follow the Gold Standard schema. Set the type to 'task' or 'subtask'.`;
 
+        const today = new Date().toISOString().split('T')[0];
+
         const response = await genai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: AI_MODEL,
             contents: prompt,
             config: {
-                systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${new Date().toISOString().split('T')[0]}`,
+                systemInstruction: CURRICULUM_SYSTEM_PROMPT + `\nCONTEXT\nCurrent Date: ${today}`,
                 temperature: 0.3,
                 responseMimeType: 'application/json',
                 responseSchema: {
                     type: 'object',
                     properties: {
-                        suggestedTasks: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    type: { type: 'string', enum: ['task', 'subtask'] },
-                                    title: { type: 'string' },
-                                    structuredContent: {
-                                        type: 'object',
-                                        properties: {
-                                            keyConcepts: { type: 'array', items: { type: 'string' } },
-                                            troubleshooting: { type: 'string' },
-                                            rationale: { type: 'string' },
-                                            instructions: { type: 'array', items: { type: 'string' } },
-                                        },
-                                        required: ['rationale', 'instructions', 'keyConcepts'],
-                                    },
-                                    accessibilityAudit: {
-                                        type: 'object',
-                                        properties: {
-                                            readingLevelGrade: { type: 'number' },
-                                            hasVisualDualCoding: { type: 'boolean' },
-                                            hasAiPrompt: { type: 'boolean' },
-                                            hasAlternativePath: { type: 'boolean' }
-                                        },
-                                        required: ['hasVisualDualCoding', 'readingLevelGrade', 'hasAiPrompt', 'hasAlternativePath']
-                                    }
-                                },
-                                required: ['title', 'type', 'structuredContent', 'accessibilityAudit'],
-                            }
-                        }
+                        suggestedTasks: { type: 'array', items: CURRICULUM_ITEM_SCHEMA }
                     },
                     required: ['suggestedTasks']
                 }
             }
         });
 
-        const thoughts = response.candidates?.[0]?.content?.parts
-            ?.filter((p: any) => p.thought)
-            ?.map((p: any) => p.text)
-            .join('\n') || '';
-
-        const output = JSON.parse(response.text || '{}');
-        const scrubbedTasks = (output?.suggestedTasks || []).map(scrubAiOutput);
-        return { suggestedTasks: scrubbedTasks, thoughts };
+        const thoughts = extractThoughts(response);
+        return { suggestedTasks: parseAndScrub(response.text, 'suggestedTasks'), thoughts };
     }
 );
 
@@ -693,7 +633,7 @@ export const expandTaskInstructionsFlow = ai.defineFlow(
         - No markdown headers or bold text.`;
 
         const response = await genai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: AI_MODEL,
             contents: prompt,
             config: {
                 temperature: 0,
@@ -711,11 +651,7 @@ export const expandTaskInstructionsFlow = ai.defineFlow(
             }
         });
 
-        const text = response.text;
-        if (!text) return { expandedInstructions: [] };
-        const output = JSON.parse(text);
-        const instructions = output.expandedInstructions || [];
-        return { expandedInstructions: instructions.map(scrubAiOutput) };
+        return { expandedInstructions: parseAndScrub(response.text, 'expandedInstructions') };
     }
 );
 
@@ -724,6 +660,7 @@ export const expandTaskInstructionsFlow = ai.defineFlow(
 export const analyzeStruggles = onCall(
     { cors: true },
     async (request) => {
+        if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
         const { classroomId, taskIds, subject, gradeLevel } = request.data;
         if (!classroomId) {
             throw new HttpsError('invalid-argument', 'classroomId is required');
@@ -740,6 +677,7 @@ export const analyzeStruggles = onCall(
 export const suggestScaffolding = onCall(
     { cors: true },
     async (request) => {
+        if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
         const { classroomId, struggleSummary, subject, gradeLevel } = request.data;
         if (!classroomId) {
             throw new HttpsError('invalid-argument', 'classroomId is required');
@@ -756,6 +694,7 @@ export const suggestScaffolding = onCall(
 export const expandTaskInstructions = onCall(
     { cors: true },
     async (request) => {
+        if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
         const { taskId, currentInstructions } = request.data;
         if (!taskId || !currentInstructions) {
             throw new HttpsError('invalid-argument', 'taskId and currentInstructions are required');
@@ -799,74 +738,40 @@ export const onTaskAttachmentChange = onDocumentUpdated(
 
         if (!afterData) return;
 
-        // 1. Process File Attachments
         const afterAttachments = (afterData.attachments || []) as any[];
         const beforeAttachments = (beforeData?.attachments || []) as any[];
-
-        for (const attachment of afterAttachments) {
-            const isNew = !beforeAttachments.some((pa: any) => pa.id === attachment.id);
-            if (!isNew) continue;
-
-            try {
-                // Skip if already processed
-                const existingDoc = await db.collection('task_embeddings')
-                    .where('taskId', '==', taskId)
-                    .where('filename', '==', attachment.filename)
-                    .limit(1)
-                    .get();
-                if (!existingDoc.empty) continue;
-
-                console.log(`[AI] Processing new attachment: ${attachment.filename}`);
-
-                const response = await fetch(attachment.url);
-                if (!response.ok) throw new Error('Failed to download attachment');
-                const buffer = Buffer.from(await response.arrayBuffer());
-
-                let text = '';
-                if (attachment.mimeType === 'application/pdf') {
-                    const data = await pdf(buffer);
-                    text = data.text;
-                } else if (attachment.mimeType?.startsWith('text/')) {
-                    text = buffer.toString('utf-8');
-                }
-
-                if (text) {
-                    await indexContent(taskId, attachment.id, attachment.filename, text);
-                }
-            } catch (error) {
-                console.error(`[AI] Failed to process attachment ${attachment.id}:`, error);
-            }
-        }
-
-        // 2. Process YouTube Links
         const afterLinks = (afterData.links || []) as any[];
         const beforeLinks = (beforeData?.links || []) as any[];
 
-        for (const link of afterLinks) {
-            const isNew = !beforeLinks.some((pl: any) => pl.id === link.id);
-            if (!isNew) continue;
+        const newAttachments = afterAttachments.filter(
+            a => !beforeAttachments.some((pa: any) => pa.id === a.id)
+        );
+        const newYouTubeLinks = afterLinks.filter(
+            l => !beforeLinks.some((pl: any) => pl.id === l.id) &&
+                (l.url.includes('youtube.com') || l.url.includes('youtu.be'))
+        );
 
-            if (link.url.includes('youtube.com') || link.url.includes('youtu.be')) {
-                try {
-                    const existingDoc = await db.collection('task_embeddings')
-                        .where('taskId', '==', taskId)
-                        .where('filename', '==', `Transcript: ${link.title}`)
-                        .limit(1)
-                        .get();
-                    if (!existingDoc.empty) continue;
-
-                    console.log(`[AI] Processing new YouTube link: ${link.url}`);
-                    const transcriptData = await YoutubeTranscript.fetchTranscript(link.url);
-                    const transcript = transcriptData.map(t => t.text).join(' ');
-
-                    if (transcript) {
-                        await indexContent(taskId, link.id, `Transcript: ${link.title || 'YouTube Video'}`, transcript);
-                    }
-                } catch (error) {
-                    console.log(`[AI] Failed to fetch transcript for ${link.url}:`, error);
+        // Process all new attachments and links in parallel
+        await Promise.allSettled([
+            ...newAttachments.map(async (attachment: any) => {
+                console.log(`[AI] Processing new attachment: ${attachment.filename}`);
+                const response = await fetch(attachment.url);
+                if (!response.ok) throw new Error('Failed to download attachment');
+                const buffer = Buffer.from(await response.arrayBuffer());
+                const text = await extractTextFromBuffer(buffer, attachment.mimeType || '');
+                if (text) {
+                    await indexContent(taskId, attachment.id, attachment.filename, text);
                 }
-            }
-        }
+            }),
+            ...newYouTubeLinks.map(async (link: any) => {
+                console.log(`[AI] Processing new YouTube link: ${link.url}`);
+                const transcriptData = await YoutubeTranscript.fetchTranscript(link.url);
+                const transcript = transcriptData.map((t: any) => t.text).join(' ');
+                if (transcript) {
+                    await indexContent(taskId, link.id, `Transcript: ${link.title || 'YouTube Video'}`, transcript);
+                }
+            }),
+        ]);
     }
 );
 
@@ -932,7 +837,7 @@ Student Question: ${question}
 Provide a "tutor-style" response that guides them toward the answer. Use a friendly, Grade 9-10 appropriate tone.`;
 
         const response = await genai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: AI_MODEL,
             contents: prompt,
             config: {
                 temperature: 0.7,
@@ -963,6 +868,7 @@ Provide a "tutor-style" response that guides them toward the answer. Use a frien
 export const answerStudentQuestion = onCall(
     { cors: true },
     async (request) => {
+        if (!request.auth) throw new HttpsError('unauthenticated', 'Must be signed in');
         const { taskId, question, classroomId } = request.data;
 
         if (!taskId || !question) {
@@ -1143,16 +1049,8 @@ export const processFile = onCall(
             if (!response.ok) throw new Error('Failed to download file');
 
             const buffer = Buffer.from(await response.arrayBuffer());
-            let text = '';
-
-            if (contentType === 'application/pdf') {
-                const data = await pdf(buffer);
-                text = data.text;
-            } else if (contentType?.startsWith('text/')) {
-                text = buffer.toString('utf-8');
-            } else {
-                throw new Error('Unsupported file type');
-            }
+            const text = await extractTextFromBuffer(buffer, contentType || '');
+            if (!text) throw new Error('Unsupported file type');
 
             // Optional: Index immediately if taskId is provided
             // @ts-ignore

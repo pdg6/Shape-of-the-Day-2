@@ -29,3 +29,8 @@ dist-ssr
 *.sln
 *.sw?
 serviceAccountKey.json
+
+# Claude Code / MCP config
+.mcp.json
+.claude/
+functions/.claude/

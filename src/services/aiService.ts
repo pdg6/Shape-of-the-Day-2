@@ -7,10 +7,20 @@
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app } from '../firebase';
-import { Task } from '../types';
+import { Task, StruggleAnalysis } from '../types';
 
 // Initialize Functions
 const functions = getFunctions(app);
+
+// Hoist callable references (Firebase SDK caches these, but avoid re-creating per call)
+const answerQuestionFn = httpsCallable<{ taskId: string; question: string; classroomId: string }, AnswerQuestionResponse>(functions, 'answerStudentQuestion');
+const suggestTasksFn = httpsCallable<{ subject: string; gradeLevel?: string }, { tasks: Task[], thoughts?: string }>(functions, 'suggestTasks');
+const refineTaskFn = httpsCallable<RefineTaskInput, RefineTaskResponse>(functions, 'refineTask');
+const processFileFn = httpsCallable<ProcessFileInput, { text: string }>(functions, 'processFile');
+const fetchUrlMetadataFn = httpsCallable<{ url: string }, UrlMetadataResponse>(functions, 'fetchUrlMetadata');
+const analyzeStrugglesFn = httpsCallable<{ classroomId: string; taskIds?: string[]; subject?: string; gradeLevel?: string }, StruggleAnalysis>(functions, 'analyzeStruggles');
+const suggestScaffoldingFn = httpsCallable<{ classroomId: string; struggleSummary?: string; subject?: string; gradeLevel?: string }, { suggestedTasks: Task[], thoughts?: string }>(functions, 'suggestScaffolding');
+const expandTaskInstructionsFn = httpsCallable<{ taskId: string; currentInstructions: string[] }, { expandedInstructions: string[] }>(functions, 'expandTaskInstructions');
 
 /**
  * Response from the answerStudentQuestion Cloud Function
@@ -35,12 +45,7 @@ export const askAIQuestion = async (
     classroomId: string
 ): Promise<string> => {
     try {
-        const answerQuestion = httpsCallable<
-            { taskId: string; question: string; classroomId: string },
-            AnswerQuestionResponse
-        >(functions, 'answerStudentQuestion');
-
-        const result = await answerQuestion({ taskId, question, classroomId });
+        const result = await answerQuestionFn({ taskId, question, classroomId });
 
         if (result.data.success) {
             return result.data.answer;
@@ -89,7 +94,6 @@ export interface RefineTaskResponse {
  */
 export const refineTask = async (input: RefineTaskInput): Promise<RefineTaskResponse> => {
     try {
-        const refineTaskFn = httpsCallable<RefineTaskInput, RefineTaskResponse>(functions, 'refineTask');
         const result = await refineTaskFn(input);
         return result.data;
     } catch (error) {
@@ -103,7 +107,6 @@ export const refineTask = async (input: RefineTaskInput): Promise<RefineTaskResp
  */
 export const suggestTasks = async (subject: string, gradeLevel?: string): Promise<{ tasks: Task[], thoughts?: string }> => {
     try {
-        const suggestTasksFn = httpsCallable<{ subject: string; gradeLevel?: string }, { tasks: Task[], thoughts?: string }>(functions, 'suggestTasks');
         const result = await suggestTasksFn({ subject, gradeLevel });
         return result.data;
     } catch (error) {
@@ -127,7 +130,6 @@ export interface ProcessFileInput {
  */
 export const processFileContent = async (input: ProcessFileInput): Promise<string> => {
     try {
-        const processFileFn = httpsCallable<ProcessFileInput, { text: string }>(functions, 'processFile');
         const result = await processFileFn(input);
         return result.data.text;
     } catch (error) {
@@ -148,7 +150,6 @@ export interface UrlMetadataResponse {
 
 export const fetchUrlMetadata = async (url: string): Promise<UrlMetadataResponse> => {
     try {
-        const fetchUrlMetadataFn = httpsCallable<{ url: string }, UrlMetadataResponse>(functions, 'fetchUrlMetadata');
         const result = await fetchUrlMetadataFn({ url });
         return result.data;
     } catch (error) {
@@ -156,15 +157,6 @@ export const fetchUrlMetadata = async (url: string): Promise<UrlMetadataResponse
         throw error;
     }
 };
-
-/**
- * Interface for classroom struggle analysis.
- */
-export interface StruggleAnalysis {
-    summary: string;
-    topStruggles: string[];
-    suggestions: string[];
-}
 
 /**
  * Analyzes student struggles in a classroom.
@@ -176,12 +168,6 @@ export const analyzeStruggles = async (
     gradeLevel?: string
 ): Promise<StruggleAnalysis> => {
     try {
-        const analyzeStrugglesFn = httpsCallable<{
-            classroomId: string;
-            taskIds?: string[];
-            subject?: string;
-            gradeLevel?: string;
-        }, StruggleAnalysis>(functions, 'analyzeStruggles');
         const result = await analyzeStrugglesFn({ classroomId, taskIds, subject, gradeLevel });
         return result.data;
     } catch (error) {
@@ -200,12 +186,6 @@ export const suggestScaffolding = async (
     gradeLevel?: string
 ): Promise<{ suggestedTasks: Task[], thoughts?: string }> => {
     try {
-        const suggestScaffoldingFn = httpsCallable<{
-            classroomId: string;
-            struggleSummary?: string;
-            subject?: string;
-            gradeLevel?: string;
-        }, { suggestedTasks: Task[], thoughts?: string }>(functions, 'suggestScaffolding');
         const result = await suggestScaffoldingFn({ classroomId, struggleSummary, subject, gradeLevel });
         return result.data;
     } catch (error) {
@@ -219,24 +199,10 @@ export const suggestScaffolding = async (
  */
 export const expandTaskInstructions = async (taskId: string, currentInstructions: string[]): Promise<string[]> => {
     try {
-        const expandTaskInstructionsFn = httpsCallable<{ taskId: string; currentInstructions: string[] }, { expandedInstructions: string[] }>(functions, 'expandTaskInstructions');
         const result = await expandTaskInstructionsFn({ taskId, currentInstructions });
         return result.data.expandedInstructions;
     } catch (error) {
         console.error('[AI Service] Error expanding instructions:', error);
         throw error;
-    }
-};
-
-
-
-/**
- * Checks if AI features are available (Cloud Functions deployed)
- */
-export const isAIAvailable = async (): Promise<boolean> => {
-    try {
-        return functions !== undefined;
-    } catch {
-        return false;
     }
 };

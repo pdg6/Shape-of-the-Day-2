@@ -677,7 +677,7 @@ export default function TaskManager({ initialTask, tasksToAdd, onTasksAdded }: T
                                             ...prev,
                                             title: suggestion.title,
                                             description: suggestion.description,
-                                            structuredContent: suggestion.structuredContent || null,
+                                            structuredContent: suggestion.structuredContent || undefined,
                                             type: suggestion.type as ItemType,
                                             ...(suggestion.startDate && { startDate: suggestion.startDate }),
                                             ...(suggestion.endDate && { endDate: suggestion.endDate }),

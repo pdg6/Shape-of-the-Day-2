@@ -977,10 +977,10 @@ const CurrentTaskList: React.FC<CurrentTaskListProps> = ({
 
     const handleExpandInstructions = async (task: Task) => {
         try {
-            const expanded = await expandTaskInstructions(task.id, task.description || '');
+            const expanded = await expandTaskInstructions(task.id, task.structuredContent?.instructions || [task.description || '']);
             setExpandedInstructions(prev => ({
                 ...prev,
-                [task.id]: expanded
+                [task.id]: expanded.map((s, i) => `${i + 1}. ${s}`).join('\n')
             }));
             // Auto-expand the task card to show the new instructions
             setExpandedTaskId(task.id);
